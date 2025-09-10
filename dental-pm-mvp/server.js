@@ -16,6 +16,9 @@ const supplierRoutes = require('./routes/suppliers');
 const labRoutes = require('./routes/labs');
 const mailingRoutes = require('./routes/mailing');
 const mediaRoutes = require('./routes/media');
+const subscriptionsRoutes = require('./routes/subscriptions');
+const billingRoutes = require('./routes/billing');
+const { getSubscriptionStatus } = require('./middleware/licensing');
 
 const app = express();
 const PORT = process.env.PORT || 8001;
