@@ -185,7 +185,8 @@ const Patient = sequelize.define('patients', {
     { fields: ['phone_primary'] },
     { fields: ['email'] },
     { fields: ['is_active'] },
-    { fields: ['created_by_user_id'] }
+    { fields: ['created_by_user_id'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
