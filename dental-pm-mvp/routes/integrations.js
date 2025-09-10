@@ -255,7 +255,7 @@ router.post('/mobile-money/process-payment', [
           provider,
           amount_mga,
           phone_number,
-          transaction_id,
+          transaction_id: transactionId,
           status: 'SUCCESS'
         },
         ip_address: req.ip,
