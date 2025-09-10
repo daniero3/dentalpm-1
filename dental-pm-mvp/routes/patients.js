@@ -20,11 +20,11 @@ router.get('/', async (req, res) => {
     if (search) {
       whereClause = {
         ...whereClause,
-        $or: [
-          { first_name: { $iLike: `%${search}%` } },
-          { last_name: { $iLike: `%${search}%` } },
-          { phone_primary: { $like: `%${search}%` } },
-          { patient_number: { $like: `%${search}%` } }
+        [Op.or]: [
+          { first_name: { [Op.iLike]: `%${search}%` } },
+          { last_name: { [Op.iLike]: `%${search}%` } },
+          { phone_primary: { [Op.like]: `%${search}%` } },
+          { patient_number: { [Op.like]: `%${search}%` } }
         ]
       };
     }
