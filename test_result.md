@@ -279,6 +279,9 @@ test_plan:
       - working: "NA"
         agent: "main"
         comment: "Pending frontend testing after backend testing completion. Will test full UI workflow, dashboard loading, forms, navigation, authentication flow, and user experience across all priority features."
+      - working: "NA"
+        agent: "main"
+        comment: "Starting comprehensive frontend testing after backend success (93% pass rate). Priority areas: Login/authentication flows with role-based UI permissions (all roles), Dashboard loading and KPI display, Patient management forms with photo/media upload, Appointment booking with dentist_id validation, Invoice creation/viewing with MGA currency and NIF/STAT fields, Inventory management (products, movements, alerts), Dental lab workflow with PDF generation, Patient mailing campaigns UI with mock sending and analytics, General UI responsiveness and UX."
 
 agent_communication:
   - agent: "main"
