@@ -10,9 +10,7 @@ const { Op } = require('sequelize');
  * @desc Get super admin dashboard data
  * @access Super Admin
  */
-router.get('/dashboard', [
-  requireRole('SUPER_ADMIN')
-], async (req, res) => {
+router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
