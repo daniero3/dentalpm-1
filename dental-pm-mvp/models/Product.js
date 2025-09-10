@@ -110,6 +110,15 @@ const Product = sequelize.define('products', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 0
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this product belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
