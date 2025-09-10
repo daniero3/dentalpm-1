@@ -188,15 +188,18 @@ backend:
 
   - task: "Invoice System"
     implemented: true
-    working: false
+    working: true
     file: "/app/dental-pm-mvp/routes/invoices.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "❌ ISSUE: Invoice creation failing due to invoice_number auto-generation hook not working properly. Backend error: 'invoices.invoice_number cannot be null'. The beforeCreate hook in Invoice model is not executing correctly. Invoice listing and retrieval working fine."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Invoice system now working correctly after database schema fix. Invoice creation successful (Invoice: FACT-2025-0001, Total: 127500 MGA). Invoice listing and retrieval working. Auto-generation of invoice numbers functioning properly. All invoice operations tested and working."
 
   - task: "Database Schema Expansion"
     implemented: true
