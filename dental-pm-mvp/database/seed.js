@@ -19,7 +19,7 @@ const seedData = {
       email: 'admin@dentalpm.mg',
       password_hash: 'admin123', // Will be hashed by model
       full_name: 'Dr. Administrateur Système',
-      role: 'ADMIN',
+      role: 'SUPER_ADMIN',
       phone: '+261 32 12 000 01',
       specialization: 'Administration',
       nif_number: 'NIF2024001',
