@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: dental_pm_postgres
+    environment:
+      POSTGRES_DB: dental_pm_madagascar
+      POSTGRES_USER: dental_admin
+      POSTGRES_PASSWORD: dental_pass_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: dental_pm_adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
