@@ -96,19 +96,19 @@ class DentalPracticeAPITester:
         print("\n🔍 Testing Patient Creation API (Phase 1 Fix)...")
         
         # Create patient with Madagascar data using correct field names for Node.js backend
-        # Use unique phone number to avoid conflicts
+        # Use unique phone number to avoid conflicts - format: +261 XX XX XXX XX
         timestamp = datetime.now().strftime('%H%M%S')
         patient_data = {
             "first_name": "Hery",
             "last_name": "Rasoanaivo",
             "date_of_birth": "1985-03-15",
             "gender": "MALE",  # Correct enum format
-            "phone_primary": f"+261 34 12 {timestamp[:3]} {timestamp[3:]}",  # Unique phone
+            "phone_primary": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
             "email": f"hery.rasoanaivo.{timestamp}@gmail.com",
             "address": "Lot II M 25 Antananarivo 101, Madagascar",
             "city": "Antananarivo",
             "emergency_contact_name": "Noro Rasoanaivo",  # Correct field name
-            "emergency_contact_phone": f"+261 33 98 {timestamp[:3]} {timestamp[3:]}",  # Unique phone
+            "emergency_contact_phone": f"+261 33 98 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
             "medical_history": "Hypertension artérielle, diabète type 2",
             "allergies": "Pénicilline, fruits de mer",
             "current_medications": "Metformine 500mg, Amlodipine 5mg"
