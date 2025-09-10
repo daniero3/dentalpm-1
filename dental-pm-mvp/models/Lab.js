@@ -98,7 +98,8 @@ const Lab = sequelize.define('labs', {
   indexes: [
     { fields: ['name'] },
     { fields: ['city'] },
-    { fields: ['is_active'] }
+    { fields: ['is_active'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
