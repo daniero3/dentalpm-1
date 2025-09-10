@@ -53,6 +53,22 @@ router.post('/sms/send', [
       }
     }
 
+    // Validate appointment_id if provided
+    if (appointment_id) {
+      const appointment = await Appointment.findByPk(appointment_id);
+      if (!appointment) {
+        return res.status(404).json({
+          error: 'Rendez-vous non trouvé',
+          details: [{ 
+            type: 'field',
+            msg: 'Rendez-vous avec cet ID n\'existe pas',
+            path: 'appointment_id',
+            location: 'body'
+          }]
+        });
+      }
+    }
+
     // Detect carrier based on phone number (simplified logic)
     let carrier = 'TELMA'; // Default
     const phoneDigits = phone_number.replace(/\D/g, '');
