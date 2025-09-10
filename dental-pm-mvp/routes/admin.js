@@ -351,7 +351,7 @@ router.post('/clinics', [
  * @access Super Admin
  */
 router.put('/clinics/:id', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   param('id').isUUID().withMessage('ID clinique invalide'),
   body('name').optional().isLength({ min: 2, max: 100 }),
   body('is_active').optional().isBoolean()
