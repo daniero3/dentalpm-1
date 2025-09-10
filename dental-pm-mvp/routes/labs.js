@@ -84,8 +84,12 @@ router.get('/', [
   }
 });
 
-// Get single lab with orders
-router.get('/:id', [
+// =============================================================================
+// LAB ORDERS MANAGEMENT (must come before /:id route)
+// =============================================================================
+
+// Get all lab orders with filtering
+router.get('/orders', [
   param('id').isUUID().withMessage('ID laboratoire invalide')
 ], async (req, res) => {
   try {
