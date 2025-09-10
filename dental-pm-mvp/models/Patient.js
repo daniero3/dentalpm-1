@@ -201,8 +201,13 @@ Patient.prototype.getAge = function() {
 // Hooks for auto-generating patient number
 Patient.beforeCreate(async (patient) => {
   if (!patient.patient_number) {
-    const count = await Patient.count();
-    patient.patient_number = `PAT-${String(count + 1).padStart(6, '0')}`;
+    try {
+      const count = await Patient.count();
+      patient.patient_number = `PAT-${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      // If count fails (e.g., table doesn't exist yet), use timestamp
+      patient.patient_number = `PAT-${Date.now().toString().slice(-6)}`;
+    }
   }
 });
 
