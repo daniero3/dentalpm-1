@@ -38,6 +38,16 @@ const User = sequelize.define('users', {
       notEmpty: true
     }
   },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for super-admin users
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    onDelete: 'CASCADE',
+    comment: 'Clinic this user belongs to (null for super-admin)'
+  },
   role: {
     type: DataTypes.ENUM('ADMIN', 'DENTIST', 'ASSISTANT', 'ACCOUNTANT'),
     allowNull: false,
