@@ -91,21 +91,22 @@ class DentalPracticeAPITester:
         
         return True
 
-    def test_patient_management(self):
-        """Test patient CRUD operations with Madagascar-specific data"""
-        print("\n🔍 Testing Patient Management...")
+    def test_patient_creation_api(self):
+        """Test patient creation API with patient_number generation"""
+        print("\n🔍 Testing Patient Creation API (Phase 1 Fix)...")
         
-        # Create patient with Madagascar data
+        # Create patient with Madagascar data using correct field names for Node.js backend
         patient_data = {
             "first_name": "Hery",
             "last_name": "Rasoanaivo",
             "date_of_birth": "1985-03-15",
-            "gender": "male",
-            "phone": "+261 34 12 345 67",  # Madagascar phone format
+            "gender": "MALE",  # Correct enum format
+            "phone_primary": "+261 34 12 345 67",  # Correct field name
             "email": "hery.rasoanaivo@gmail.com",
             "address": "Lot II M 25 Antananarivo 101, Madagascar",
-            "emergency_contact": "Noro Rasoanaivo",
-            "emergency_phone": "+261 33 98 765 43",
+            "city": "Antananarivo",
+            "emergency_contact_name": "Noro Rasoanaivo",  # Correct field name
+            "emergency_contact_phone": "+261 33 98 765 43",  # Correct field name
             "medical_history": "Hypertension artérielle, diabète type 2",
             "allergies": "Pénicilline, fruits de mer",
             "current_medications": "Metformine 500mg, Amlodipine 5mg"
