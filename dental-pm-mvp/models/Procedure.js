@@ -78,6 +78,15 @@ const Procedure = sequelize.define('procedures', {
     allowNull: false,
     defaultValue: 0,
     comment: 'Ordre d\'affichage'
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for global procedures, specific value for clinic-specific procedures
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this procedure belongs to (null = global procedure available to all clinics)'
   }
 }, {
   indexes: [
