@@ -304,20 +304,74 @@ class DentalPracticeAPITester:
         """Test Phase 2 Inventory/Stock Management System"""
         print("\n🔍 Testing Phase 2 - Inventory/Stock Management System...")
         
-        # Test inventory endpoints that should be implemented according to review request
-        endpoints_to_test = [
-            ('GET', 'inventory/products', 200),
-            ('GET', 'inventory/movements', 200),
-            ('GET', 'inventory/low-stock', 200)
-        ]
-        
         all_passed = True
-        for method, endpoint, expected_status in endpoints_to_test:
-            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+        
+        # Test get all products
+        success, response = self.make_request('GET', 'inventory/products', expected_status=200)
+        if success:
+            products = response.get('products', [])
+            self.log_test("Inventory - Get Products", True, f"- Found {len(products)} products")
+        else:
+            self.log_test("Inventory - Get Products", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test create product
+        product_data = {
+            "name": "Composite Dentaire Premium",
+            "sku": f"COMP-{datetime.now().strftime('%H%M%S')}",
+            "description": "Composite dentaire haute qualité pour restaurations esthétiques",
+            "category": "RESTORATIVE",
+            "unit_price_mga": 45000.0,
+            "stock_quantity": 50,
+            "min_stock_level": 10,
+            "supplier_id": None  # Will be set if we have a supplier
+        }
+        
+        success, response = self.make_request('POST', 'inventory/products', product_data, expected_status=201)
+        if success:
+            product = response.get('product', {})
+            created_product_id = product.get('id')
+            self.log_test("Inventory - Create Product", True, f"- Product ID: {created_product_id}, SKU: {product.get('sku')}")
+        else:
+            self.log_test("Inventory - Create Product", False, f"- Error: {response}")
+            all_passed = False
+            created_product_id = None
+        
+        # Test stock movements
+        success, response = self.make_request('GET', 'inventory/movements', expected_status=200)
+        if success:
+            movements = response.get('movements', [])
+            self.log_test("Inventory - Get Movements", True, f"- Found {len(movements)} movements")
+        else:
+            self.log_test("Inventory - Get Movements", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test low stock alerts
+        success, response = self.make_request('GET', 'inventory/low-stock', expected_status=200)
+        if success:
+            low_stock = response.get('products', [])
+            self.log_test("Inventory - Low Stock Alerts", True, f"- Found {len(low_stock)} low stock items")
+        else:
+            self.log_test("Inventory - Low Stock Alerts", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test stock movement creation if we have a product
+        if created_product_id:
+            movement_data = {
+                "product_id": created_product_id,
+                "movement_type": "IN",
+                "quantity": 25,
+                "unit_price_mga": 45000.0,
+                "reference": f"PURCHASE-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                "notes": "Réapprovisionnement stock composite"
+            }
+            
+            success, response = self.make_request('POST', 'inventory/movements', movement_data, expected_status=201)
             if success:
-                self.log_test(f"Inventory - {endpoint}", True, f"- Endpoint accessible")
+                movement = response.get('movement', {})
+                self.log_test("Inventory - Create Movement", True, f"- Movement ID: {movement.get('id')}, Type: {movement.get('movement_type')}")
             else:
-                self.log_test(f"Inventory - {endpoint}", False, f"- Error: {response}")
+                self.log_test("Inventory - Create Movement", False, f"- Error: {response}")
                 all_passed = False
         
         return all_passed
