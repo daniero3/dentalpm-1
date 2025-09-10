@@ -1,0 +1,76 @@
+<analysis>
+The AI engineer initially developed a Dental Practice Management system using a FastAPI backend and React frontend, leveraging MongoDB for data storage. The focus was on Patient Management with basic dental charting, and Invoicing in Malagasy Ariary. Core functionalities like authentication, patient CRUD, and a basic UI were implemented, and the backend was reported as production-ready after several testing rounds. However, the user then requested a complete pivot to a Node.js (Express) backend with PostgreSQL (using SQLite for development) and a React frontend, for a new MVP skeleton with a similar feature set but an expanded scope. The AI engineer successfully set up this new environment, created numerous Sequelize models and API routes, and extensively debugged database seeding and server startup issues. A  confirmed core API functionality (health, auth, patient list, dashboard KPIs) and fixed several bugs, though patient creation and SMS integration validation remain pending. Most recently, the AI engineer began implementing a significant feature expansion for this Node.js MVP, creating new database models for Inventory, Dental Lab, Supplier Management, and Patient Mailing, and is now poised to create their respective API routes.
+</analysis>
+
+<product_requirements>
+The goal is to build a dental practice management software for Madagascar, mirroring features of Agatha 7, with a strong focus on localization.
+**Initial MVP (FastAPI/React/MongoDB):**
+*   **Priority 1**: Patient Management with basic dental charting.
+*   **Priority 2**: Invoicing in Malagasy Ariary (MGA).
+*   **Mocked Integrations**: SMS reminders, Mobile Money (Mvola, Orange Money, Airtel Money).
+*   **Authentication**: Basic username/password.
+**Current Project (Node.js/PostgreSQL/SQLite) - Expanded MVP:**
+*   **Core**: Patient Management, basic Dental Chart, Invoicing in MGA (with NIF/STAT fields).
+*   **Authentication**: Simple username/password; roles: ADMIN, DENTIST, ASSISTANT, ACCOUNTANT.
+*   **Routes**: , , , , , , .
+*   **Backend Entities**: Users, Patients, Appointments, Treatments, Procedures, Invoices, Invoice_Items, Payments, Sms_Logs, Audit_Logs.
+*   **Dashboard**: Basic charts/tables for KPIs.
+*   **Mocked Integrations**: SMS reminders, Mobile Money.
+*   **Deliverables**: Working dev environment with seed data, PDF-ready invoice/estimate templates, README.
+**Latest Feature Expansion (on Node.js MVP):**
+1.  **Inventory/Stock Management**: Products, stock movements, low-stock alerts, suppliers.
+2.  **Dental Lab Management**: Prosthetics, purchase orders (PDF), deliveries, lab orders workflow.
+3.  **Supplier Management**: Directory, attach products, export contacts.
+4.  **Patient Mailing**: Campaigns with audience filters, mock email sender, analytics.
+5.  **UI/UX Upgrade**: Modern, impressive design, responsive layout, dark mode, improved dashboard.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios, React Router DOM.
+-   **Backend**: Node.js, Express.js (current), FastAPI (initial), Sequelize (ORM), JWT.
+-   **Database**: SQLite (current local dev), PostgreSQL (intended for Node.js), MongoDB (initial).
+-   **Deployment**: Kubernetes container environment, Supervisorctl.
+-   **Practices**: Environment variables (), API routing ( prefix).
+</key_technical_concepts>
+
+<code_architecture>
+The project's codebase evolved from an initial  (FastAPI) and  (React/MongoDB) structure to a completely new  directory for the Node.js/Express/SQLite stack.
+
+**Directory Structure ():**
+
+
+**Key Files and Their Importance:**
+-   ****: The main Express.js application entry point. It initializes the server, connects to the database, applies middleware, and sets up all API routes.
+-   ****: Contains the Sequelize ORM configuration for connecting to the database, currently configured for SQLite.
+-   ****: This directory holds all Sequelize model definitions, representing database tables (e.g., , , ). Recently, new models like , , , , , , and  were added to support the expanded features. The  file within this directory aggregates and exports all models.
+-   ****: Defines API endpoints, organized into separate files for different concerns (e.g.,  for authentication,  for patient management,  for billing).
+-   ****: Implements JWT-based authentication to secure API routes, ensuring only authorized users can access protected resources.
+-   ****: A script to populate the database with initial test data. This file has been repeatedly modified and debugged to correctly insert data and resolve Sequelize validation errors.
+-   ****: A specific file created to handle the SQLite database connection, used as a fallback when PostgreSQL/Docker was unavailable in the environment.
+</code_architecture>
+
+<pending_tasks>
+-   Debug the patient creation API to resolve identified errors.
+-   Implement validation for  within the SMS integration module.
+-   Conduct comprehensive workflow tests from patient creation to invoicing and appointments.
+-   Develop the React frontend components and integrate them with the Node.js backend APIs.
+-   Complete the API route definitions for the newly created Inventory, Dental Lab, Supplier, and Patient Mailing modules.
+</pending_tasks>
+
+<current_work>
+The AI engineer is currently working on expanding the  application, which operates on a Node.js (Express) backend using SQLite for local database management. This follows a complete shift from an earlier React/FastAPI/MongoDB project.
+
+So far, the AI engineer has successfully established the new Node.js project structure, including the initial setup of Express, Sequelize, and middleware. Core API functionalities for user authentication (JWT-based), patient listing, and dashboard KPIs are operational and have been tested. The database seeding process for essential entities (users, patients, appointments, invoices) was thoroughly debugged and is now working correctly, populating the SQLite database with test data.
+
+A comprehensive testing cycle performed by a  identified and subsequently fixed several critical bugs related to Sequelize syntax, authentication routes, patient search, and appointment scheduling conflicts. However, the  also highlighted two remaining issues: an error occurring during patient creation via the API and a missing  validation in the mock SMS integration.
+
+Immediately preceding this summary, the AI engineer began implementing the user's latest request for significant feature expansion. This involved creating all necessary Sequelize models for the new modules:
+*   **Inventory/Stock Management**: , , .
+*   **Dental Lab Management**: , , , .
+*   **Patient Mailing**: , .
+These new models have been successfully integrated into the  file, establishing the database schema foundation for these upcoming features. The next step is to create the corresponding API routes.
+</current_work>
+
+<optional_next_step>
+Create the API routes for the newly defined Inventory, Dental Lab, Supplier, and Patient Mailing modules.
+</optional_next_step>
