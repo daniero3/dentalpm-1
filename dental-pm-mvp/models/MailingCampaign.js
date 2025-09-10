@@ -119,7 +119,8 @@ const MailingCampaign = sequelize.define('mailing_campaigns', {
     { fields: ['scheduled_at'] },
     { fields: ['sent_at'] },
     { fields: ['created_by_user_id'] },
-    { fields: ['template_type'] }
+    { fields: ['template_type'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
