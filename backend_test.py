@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend API Testing for Dental Practice Management - Madagascar
-Tests Node.js backend APIs with Madagascar-specific data
+Tests FastAPI backend APIs with Madagascar-specific data
 """
 
 import requests
@@ -19,6 +19,7 @@ class DentalPracticeAPITester:
         self.tests_passed = 0
         self.created_patient_id = None
         self.created_invoice_id = None
+        self.created_user_id = None
 
     def log_test(self, name: str, success: bool, details: str = ""):
         """Log test results"""
