@@ -380,18 +380,49 @@ class DentalPracticeAPITester:
         """Test Phase 2 Supplier Management System"""
         print("\n🔍 Testing Phase 2 - Supplier Management System...")
         
-        # Test supplier endpoints
-        endpoints_to_test = [
-            ('GET', 'suppliers', 200)
-        ]
-        
         all_passed = True
-        for method, endpoint, expected_status in endpoints_to_test:
-            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+        
+        # Test get all suppliers
+        success, response = self.make_request('GET', 'suppliers', expected_status=200)
+        if success:
+            suppliers = response.get('suppliers', [])
+            self.log_test("Supplier - Get Suppliers", True, f"- Found {len(suppliers)} suppliers")
+        else:
+            self.log_test("Supplier - Get Suppliers", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test create supplier with Madagascar data
+        supplier_data = {
+            "name": "Dental Supply Madagascar",
+            "contact_person": "Rakoto Andry",
+            "phone": "+261 20 22 123 45",
+            "email": "contact@dentalsupply.mg",
+            "address": "Zone Industrielle Forello, Antananarivo 101",
+            "city": "Antananarivo",
+            "nif_number": "3000123456",
+            "stat_number": "12345678901234567890",
+            "payment_terms": "30 jours",
+            "notes": "Fournisseur principal équipements dentaires Madagascar"
+        }
+        
+        success, response = self.make_request('POST', 'suppliers', supplier_data, expected_status=201)
+        if success:
+            supplier = response.get('supplier', {})
+            created_supplier_id = supplier.get('id')
+            self.log_test("Supplier - Create Supplier", True, f"- Supplier ID: {created_supplier_id}, Name: {supplier.get('name')}")
+        else:
+            self.log_test("Supplier - Create Supplier", False, f"- Error: {response}")
+            all_passed = False
+            created_supplier_id = None
+        
+        # Test get specific supplier
+        if created_supplier_id:
+            success, response = self.make_request('GET', f'suppliers/{created_supplier_id}', expected_status=200)
             if success:
-                self.log_test(f"Supplier - {endpoint}", True, f"- Endpoint accessible")
+                supplier = response.get('supplier', {})
+                self.log_test("Supplier - Get Specific Supplier", True, f"- Name: {supplier.get('name')}, NIF: {supplier.get('nif_number')}")
             else:
-                self.log_test(f"Supplier - {endpoint}", False, f"- Error: {response}")
+                self.log_test("Supplier - Get Specific Supplier", False, f"- Error: {response}")
                 all_passed = False
         
         return all_passed
