@@ -85,6 +85,15 @@ const StockMovement = sequelize.define('stock_movements', {
     type: DataTypes.INTEGER,
     allowNull: false,
     comment: 'Quantity after this movement'
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this stock movement belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
