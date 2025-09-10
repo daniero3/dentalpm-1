@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { User, AuditLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
