@@ -142,7 +142,7 @@ class DentalPracticeAPITester:
         # Test get all patients
         success, response = self.make_request('GET', 'patients', expected_status=200)
         if success:
-            patients = response.get('patients', [])
+            patients = response if isinstance(response, list) else []
             self.log_test("Get All Patients", True, f"- Found {len(patients)} patients")
         else:
             self.log_test("Get All Patients", False, f"- Error: {response}")
@@ -157,15 +157,21 @@ class DentalPracticeAPITester:
             
         # Test patient update
         update_data = {
-            "phone_primary": "+261 34 11 111 11",  # Updated phone
+            "first_name": "Hery",
+            "last_name": "Rasoanaivo",
+            "date_of_birth": "1985-03-15",
+            "gender": "male",
+            "phone": "+261 34 11 111 11",  # Updated phone
+            "address": "Lot II M 25 Antananarivo 101, Madagascar",
+            "emergency_contact": "Noro Rasoanaivo",
+            "emergency_phone": "+261 33 98 111 11",
             "medical_history": "Hypertension artérielle, diabète type 2, allergie saisonnière"
         }
         
         success, response = self.make_request('PUT', f'patients/{self.created_patient_id}', update_data, expected_status=200)
         if success:
-            updated_patient = response.get('patient', {})
             self.log_test("Patient Update", True, 
-                         f"- Updated phone: {updated_patient.get('phone_primary', 'N/A')}")
+                         f"- Updated phone: {response.get('phone', 'N/A')}")
         else:
             self.log_test("Patient Update", False, f"- Error: {response}")
         
