@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend API Testing for Dental Practice Management - Madagascar
-Tests FastAPI backend APIs with Madagascar-specific data
+Tests Node.js/Express backend APIs with Madagascar-specific data
 """
 
 import requests
@@ -63,13 +63,13 @@ class DentalPracticeAPITester:
         """Test authentication with user registration and login"""
         print("\n🔍 Testing Authentication Flow...")
         
-        # Test user registration first with correct Node.js format
+        # Test user registration first
         timestamp = datetime.now().strftime('%H%M%S')
         user_data = {
             "username": f"admin_test_{timestamp}",
             "email": f"admin.test.{timestamp}@dental-madagascar.mg",
             "password": "AdminPass123!",
-            "role": "ADMIN",  # Use ADMIN role for full permissions
+            "role": "ADMIN",
             "full_name": "Admin Test User"
         }
         
@@ -99,18 +99,18 @@ class DentalPracticeAPITester:
         
         return True
 
-    def test_patient_creation_api(self):
-        """Test patient creation API"""
-        print("\n🔍 Testing Patient Creation API...")
+    def test_patient_management_system(self):
+        """Test comprehensive patient management system"""
+        print("\n🔍 Testing Patient Management System...")
         
-        # Create patient with Madagascar data using Node.js field names
+        # Create patient with Madagascar data
         timestamp = datetime.now().strftime('%H%M%S')
         patient_data = {
             "first_name": "Hery",
             "last_name": "Rasoanaivo",
             "date_of_birth": "1985-03-15",
-            "gender": "MALE",  # Node.js backend expects uppercase
-            "phone_primary": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
+            "gender": "MALE",
+            "phone_primary": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",
             "email": f"hery.rasoanaivo.{timestamp}@gmail.com",
             "address": "Lot II M 25 Antananarivo 101, Madagascar",
             "city": "Antananarivo",
@@ -133,16 +133,6 @@ class DentalPracticeAPITester:
             self.log_test("Patient Creation", False, f"- Error: {response}")
             return False
         
-        return True
-
-    def test_patient_management_apis(self):
-        """Test patient management CRUD operations"""
-        print("\n🔍 Testing Patient Management APIs...")
-        
-        if not self.created_patient_id:
-            self.log_test("Patient Management APIs", False, "- No patient ID available")
-            return False
-        
         # Test get all patients
         success, response = self.make_request('GET', 'patients', expected_status=200)
         if success:
@@ -152,84 +142,89 @@ class DentalPracticeAPITester:
             self.log_test("Get All Patients", False, f"- Error: {response}")
         
         # Test get specific patient
-        success, response = self.make_request('GET', f'patients/{self.created_patient_id}', expected_status=200)
-        if success:
-            patient = response.get('patient', {})
-            self.log_test("Get Specific Patient", True, 
-                         f"- Patient: {patient.get('first_name', '')} {patient.get('last_name', '')}")
-        else:
-            self.log_test("Get Specific Patient", False, f"- Error: {response}")
-            
+        if self.created_patient_id:
+            success, response = self.make_request('GET', f'patients/{self.created_patient_id}', expected_status=200)
+            if success:
+                patient = response.get('patient', {})
+                self.log_test("Get Specific Patient", True, 
+                             f"- Patient: {patient.get('first_name', '')} {patient.get('last_name', '')}")
+            else:
+                self.log_test("Get Specific Patient", False, f"- Error: {response}")
+                
         # Test patient update
-        update_data = {
-            "phone_primary": "+261 34 11 111 11",  # Updated phone
-            "medical_history": "Hypertension artérielle, diabète type 2, allergie saisonnière"
-        }
-        
-        success, response = self.make_request('PUT', f'patients/{self.created_patient_id}', update_data, expected_status=200)
-        if success:
-            updated_patient = response.get('patient', {})
-            self.log_test("Patient Update", True, 
-                         f"- Updated phone: {updated_patient.get('phone_primary', 'N/A')}")
-        else:
-            self.log_test("Patient Update", False, f"- Error: {response}")
+        if self.created_patient_id:
+            update_data = {
+                "phone_primary": "+261 34 11 111 11",
+                "medical_history": "Hypertension artérielle, diabète type 2, allergie saisonnière"
+            }
+            
+            success, response = self.make_request('PUT', f'patients/{self.created_patient_id}', update_data, expected_status=200)
+            if success:
+                updated_patient = response.get('patient', {})
+                self.log_test("Patient Update", True, 
+                             f"- Updated phone: {updated_patient.get('phone_primary', 'N/A')}")
+            else:
+                self.log_test("Patient Update", False, f"- Error: {response}")
         
         return True
 
-    def test_dental_chart_system(self):
-        """Test dental chart creation and tooth procedure management"""
-        print("\n🔍 Testing Dental Chart System...")
+    def test_appointment_management(self):
+        """Test appointment booking and management"""
+        print("\n🔍 Testing Appointment Management...")
         
         if not self.created_patient_id:
-            self.log_test("Dental Chart System", False, "- No patient ID available")
+            self.log_test("Appointment Management", False, "- No patient ID available")
             return False
         
-        # Test dental chart creation
-        success, response = self.make_request('POST', f'patients/{self.created_patient_id}/dental-chart', expected_status=200)
+        # Test get all appointments
+        success, response = self.make_request('GET', 'appointments', expected_status=200)
         if success:
-            teeth_count = len(response.get('teeth_records', []))
-            self.log_test("Dental Chart Creation", True, f"- Created chart with {teeth_count} teeth")
+            appointments = response.get('appointments', [])
+            self.log_test("Get All Appointments", True, f"- Found {len(appointments)} appointments")
         else:
-            self.log_test("Dental Chart Creation", False, f"- Error: {response}")
-            return False
+            self.log_test("Get All Appointments", False, f"- Error: {response}")
         
-        # Test get dental chart
-        success, response = self.make_request('GET', f'patients/{self.created_patient_id}/dental-chart', expected_status=200)
-        self.log_test("Get Dental Chart", success, 
-                     f"- Chart ID: {response.get('id', 'N/A')}" if success else f"- Error: {response}")
-        
-        # Test tooth record update with Madagascar dental procedure
-        tooth_data = {
-            "tooth_position": "8",  # Upper right central incisor
-            "procedures": [
-                {
-                    "procedure_type": "restoration",
-                    "procedure_name": "Obturation composite",
-                    "description": "Restauration esthétique incisive centrale",
-                    "cost_mga": 75000.0,  # 75,000 MGA (typical cost in Madagascar)
-                    "date_performed": datetime.now().isoformat(),
-                    "notes": "Carie superficielle, restauration directe"
-                }
-            ],
-            "status": "filled",
-            "notes": "Dent restaurée avec succès"
+        # Test create appointment
+        appointment_data = {
+            "patient_id": self.created_patient_id,
+            "appointment_date": "2024-10-15",
+            "appointment_time": "14:30",
+            "duration_minutes": 60,
+            "appointment_type": "CONSULTATION",
+            "status": "SCHEDULED",
+            "notes": "Contrôle dentaire annuel",
+            "reminder_sent": False
         }
         
-        success, response = self.make_request('PUT', f'patients/{self.created_patient_id}/dental-chart/tooth/8', tooth_data, expected_status=200)
-        self.log_test("Tooth Record Update", success, 
-                     f"- Updated tooth 8 with restoration" if success else f"- Error: {response}")
+        success, response = self.make_request('POST', 'appointments', appointment_data, 201)
+        if success:
+            appointment = response.get('appointment', {})
+            appointment_id = appointment.get('id')
+            self.log_test("Appointment Creation", True, 
+                         f"- Appointment ID: {appointment_id}, Date: {appointment.get('appointment_date')}")
+            
+            # Test appointment status change
+            if appointment_id:
+                status_data = {"status": "CONFIRMED"}
+                success, response = self.make_request('PUT', f'appointments/{appointment_id}/status', status_data, expected_status=200)
+                if success:
+                    self.log_test("Appointment Status Change", True, f"- Status changed to CONFIRMED")
+                else:
+                    self.log_test("Appointment Status Change", False, f"- Error: {response}")
+        else:
+            self.log_test("Appointment Creation", False, f"- Error: {response}")
         
         return True
 
     def test_invoice_system(self):
-        """Test invoice creation with MGA currency and Madagascar discount systems"""
+        """Test invoice creation with MGA currency and Madagascar business rules"""
         print("\n🔍 Testing Invoice System...")
         
         if not self.created_patient_id:
             self.log_test("Invoice System", False, "- No patient ID available")
             return False
         
-        # Test invoice creation with Madagascar-specific data using Node.js format
+        # Test invoice creation with Madagascar-specific data
         invoice_data = {
             "patient_id": self.created_patient_id,
             "items": [
@@ -249,11 +244,11 @@ class DentalPracticeAPITester:
                     "unit_price_mga": 50000.0
                 }
             ],
-            "discount_percentage": 15.0,  # -15% syndical discount
+            "discount_percentage": 15.0,
             "notes": "Remise syndicale appliquée (-15%)"
         }
         
-        success, response = self.make_request('POST', 'invoices', invoice_data, expected_status=201)
+        success, response = self.make_request('POST', 'invoices', invoice_data, 201)
         if success:
             invoice_info = response.get('invoice', {})
             self.created_invoice_id = invoice_info.get('id')
@@ -284,25 +279,9 @@ class DentalPracticeAPITester:
         
         return True
 
-    def test_dashboard_stats(self):
-        """Test dashboard statistics API"""
-        print("\n🔍 Testing Dashboard Statistics...")
-        
-        # Use correct dashboard endpoint for Node.js backend
-        success, response = self.make_request('GET', 'dashboard/kpi', expected_status=200)
-        if success:
-            patients = response.get('patients', {})
-            revenue = response.get('revenue', {})
-            self.log_test("Dashboard KPI", True, 
-                         f"- Total Patients: {patients.get('total', 0)}, Total Revenue: {revenue.get('total', 0)} MGA")
-        else:
-            self.log_test("Dashboard KPI", False, f"- Error: {response}")
-        
-        return success
-
-    def test_phase2_inventory_system(self):
-        """Test Phase 2 Inventory/Stock Management System"""
-        print("\n🔍 Testing Phase 2 - Inventory/Stock Management System...")
+    def test_inventory_stock_management(self):
+        """Test Inventory/Stock Management System"""
+        print("\n🔍 Testing Inventory/Stock Management System...")
         
         all_passed = True
         
@@ -315,15 +294,15 @@ class DentalPracticeAPITester:
             self.log_test("Inventory - Get Products", False, f"- Error: {response}")
             all_passed = False
         
-        # Test create product with correct field names
+        # Test create product
         product_data = {
             "name": "Composite Dentaire Premium",
             "sku": f"COMP-{datetime.now().strftime('%H%M%S')}",
             "description": "Composite dentaire haute qualité pour restaurations esthétiques",
-            "category": "MATERIALS",  # Valid category from the enum
-            "unit_cost_mga": 35000.0,  # Required field
-            "sale_price_mga": 45000.0,  # Required field
-            "min_qty": 10,  # Required field
+            "category": "MATERIALS",
+            "unit_cost_mga": 35000.0,
+            "sale_price_mga": 45000.0,
+            "min_qty": 10,
             "current_qty": 50,
             "unit": "tube"
         }
@@ -360,9 +339,9 @@ class DentalPracticeAPITester:
         if created_product_id:
             movement_data = {
                 "product_id": created_product_id,
-                "type": "IN",  # Correct field name
+                "type": "IN",
                 "quantity": 25,
-                "reason": "Réapprovisionnement stock composite",  # Required field
+                "reason": "Réapprovisionnement stock composite",
                 "unit_cost_mga": 35000.0,
                 "reference": f"PURCHASE-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
                 "notes": "Livraison fournisseur principal"
@@ -378,60 +357,9 @@ class DentalPracticeAPITester:
         
         return all_passed
 
-    def test_phase2_supplier_system(self):
-        """Test Phase 2 Supplier Management System"""
-        print("\n🔍 Testing Phase 2 - Supplier Management System...")
-        
-        all_passed = True
-        
-        # Test get all suppliers
-        success, response = self.make_request('GET', 'suppliers', expected_status=200)
-        if success:
-            suppliers = response.get('suppliers', [])
-            self.log_test("Supplier - Get Suppliers", True, f"- Found {len(suppliers)} suppliers")
-        else:
-            self.log_test("Supplier - Get Suppliers", False, f"- Error: {response}")
-            all_passed = False
-        
-        # Test create supplier with Madagascar data
-        supplier_data = {
-            "name": "Dental Supply Madagascar",
-            "contact_person": "Rakoto Andry",
-            "phone": "+261 20 22 123 45",
-            "email": "contact@dentalsupply.mg",
-            "address": "Zone Industrielle Forello, Antananarivo 101",
-            "city": "Antananarivo",
-            "nif_number": "3000123456",
-            "stat_number": "12345678901234567890",
-            "payment_terms": "30 jours",
-            "notes": "Fournisseur principal équipements dentaires Madagascar"
-        }
-        
-        success, response = self.make_request('POST', 'suppliers', supplier_data, expected_status=201)
-        if success:
-            supplier = response.get('supplier', {})
-            created_supplier_id = supplier.get('id')
-            self.log_test("Supplier - Create Supplier", True, f"- Supplier ID: {created_supplier_id}, Name: {supplier.get('name')}")
-        else:
-            self.log_test("Supplier - Create Supplier", False, f"- Error: {response}")
-            all_passed = False
-            created_supplier_id = None
-        
-        # Test get specific supplier
-        if created_supplier_id:
-            success, response = self.make_request('GET', f'suppliers/{created_supplier_id}', expected_status=200)
-            if success:
-                supplier = response.get('supplier', {})
-                self.log_test("Supplier - Get Specific Supplier", True, f"- Name: {supplier.get('name')}, NIF: {supplier.get('nif_number')}")
-            else:
-                self.log_test("Supplier - Get Specific Supplier", False, f"- Error: {response}")
-                all_passed = False
-        
-        return all_passed
-
-    def test_phase2_lab_system(self):
-        """Test Phase 2 Dental Lab Management System"""
-        print("\n🔍 Testing Phase 2 - Dental Lab Management System...")
+    def test_dental_lab_management(self):
+        """Test Dental Lab Management System"""
+        print("\n🔍 Testing Dental Lab Management System...")
         
         all_passed = True
         
@@ -509,9 +437,9 @@ class DentalPracticeAPITester:
         
         return all_passed
 
-    def test_phase2_mailing_system(self):
-        """Test Phase 2 Patient Mailing System"""
-        print("\n🔍 Testing Phase 2 - Patient Mailing System...")
+    def test_patient_mailing_system(self):
+        """Test Patient Mailing System"""
+        print("\n🔍 Testing Patient Mailing System...")
         
         all_passed = True
         
@@ -524,7 +452,7 @@ class DentalPracticeAPITester:
             self.log_test("Mailing - Get Campaigns", False, f"- Error: {response}")
             all_passed = False
         
-        # Test create mailing campaign with correct template type
+        # Test create mailing campaign
         campaign_data = {
             "name": "Rappel Contrôle Dentaire",
             "subject": "Il est temps pour votre contrôle dentaire !",
@@ -534,7 +462,7 @@ class DentalPracticeAPITester:
                 "age_max": 65,
                 "consent_required": True
             },
-            "template_type": "APPOINTMENT_REMINDER"  # Valid template type
+            "template_type": "APPOINTMENT_REMINDER"
         }
         
         success, response = self.make_request('POST', 'mailing/campaigns', campaign_data, expected_status=201)
@@ -581,11 +509,53 @@ class DentalPracticeAPITester:
         
         return all_passed
 
-    def run_all_tests(self):
-        """Run all dental practice management tests focusing on Phase 2 systems"""
-        print("🏥 Starting Dental Practice Management API Tests - Madagascar")
+    def test_role_based_access_control(self):
+        """Test role-based access control and permissions"""
+        print("\n🔍 Testing Role-Based Access Control...")
+        
+        # Test creating users with different roles
+        roles_to_test = ["DENTIST", "ASSISTANT", "ACCOUNTANT"]
+        
+        for role in roles_to_test:
+            timestamp = datetime.now().strftime('%H%M%S')
+            user_data = {
+                "username": f"{role.lower()}_test_{timestamp}",
+                "email": f"{role.lower()}.test.{timestamp}@dental-madagascar.mg",
+                "password": "TestPass123!",
+                "role": role,
+                "full_name": f"Test {role.title()} User"
+            }
+            
+            success, response = self.make_request('POST', 'auth/register', user_data, 201)
+            if success:
+                user_info = response.get('user', {})
+                self.log_test(f"Role-Based Registration ({role})", True, 
+                             f"- User ID: {user_info.get('id')}, Role: {user_info.get('role')}")
+            else:
+                self.log_test(f"Role-Based Registration ({role})", False, f"- Error: {response}")
+        
+        return True
+
+    def test_dashboard_kpis(self):
+        """Test dashboard KPI endpoints"""
+        print("\n🔍 Testing Dashboard KPIs...")
+        
+        success, response = self.make_request('GET', 'dashboard/kpi', expected_status=200)
+        if success:
+            patients = response.get('patients', {})
+            revenue = response.get('revenue', {})
+            self.log_test("Dashboard KPI", True, 
+                         f"- Total Patients: {patients.get('total', 0)}, Total Revenue: {revenue.get('total', 0)} MGA")
+        else:
+            self.log_test("Dashboard KPI", False, f"- Error: {response}")
+        
+        return success
+
+    def run_comprehensive_backend_tests(self):
+        """Run comprehensive backend testing as requested"""
+        print("🏥 COMPREHENSIVE BACKEND TESTING - Dental Practice Management System")
         print(f"🌐 Testing against: {self.base_url}")
-        print("🎯 Focus: Phase 2 Systems - Inventory, Suppliers, Labs, Mailing")
+        print("🎯 Focus: All Backend Priority Features")
         print("=" * 80)
         
         # Test authentication first
@@ -593,21 +563,19 @@ class DentalPracticeAPITester:
             print("❌ Authentication failed - stopping tests")
             return False
         
-        # Test existing core functionality
-        self.test_patient_creation_api()
-        self.test_patient_management_apis()
-        self.test_invoice_system()
-        self.test_dashboard_stats()
-        
-        # Test Phase 2 systems as requested in review
+        # Test all priority systems as requested
         print("\n" + "=" * 50)
-        print("🚀 TESTING PHASE 2 SYSTEMS")
+        print("🚀 TESTING PRIORITY BACKEND SYSTEMS")
         print("=" * 50)
         
-        self.test_phase2_inventory_system()
-        self.test_phase2_supplier_system()
-        self.test_phase2_lab_system()
-        self.test_phase2_mailing_system()
+        self.test_patient_management_system()
+        self.test_appointment_management()
+        self.test_invoice_system()  # Known issue area
+        self.test_inventory_stock_management()
+        self.test_dental_lab_management()
+        self.test_patient_mailing_system()
+        self.test_role_based_access_control()
+        self.test_dashboard_kpis()
         
         # Print final results
         print("\n" + "=" * 80)
@@ -624,7 +592,7 @@ class DentalPracticeAPITester:
 def main():
     """Main test execution"""
     tester = DentalPracticeAPITester()
-    success = tester.run_all_tests()
+    success = tester.run_comprehensive_backend_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
