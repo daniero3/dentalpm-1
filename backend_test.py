@@ -60,35 +60,41 @@ class DentalPracticeAPITester:
             return False, {"error": str(e)}
 
     def test_authentication_flow(self):
-        """Test authentication with existing admin user and user registration"""
+        """Test authentication with user registration and login"""
         print("\n🔍 Testing Authentication Flow...")
         
-        # First test login with existing admin user
-        login_data = {
-            "username": "admin",
-            "password": "admin123"
-        }
-        
-        success, response = self.make_request('POST', 'auth/login', login_data, 200)
-        if success and 'token' in response:
-            self.token = response['token']
-            self.log_test("Admin Login", True, f"- Token received, Role: {response.get('user', {}).get('role', 'N/A')}")
-        else:
-            self.log_test("Admin Login", False, f"- Error: {response}")
-            return False
-        
-        # Test user registration with correct role format
-        dentist_data = {
-            "username": f"dr_rakoto_{datetime.now().strftime('%H%M%S')}",
-            "email": f"dr.rakoto.{datetime.now().strftime('%H%M%S')}@dental-madagascar.mg",
+        # Test user registration first
+        timestamp = datetime.now().strftime('%H%M%S')
+        user_data = {
+            "username": f"dr_rakoto_{timestamp}",
+            "email": f"dr.rakoto.{timestamp}@dental-madagascar.mg",
             "password": "MotDePasse123!",
-            "role": "DENTIST",  # Correct role format for Node.js backend
+            "role": "dentist",  # FastAPI enum format
             "full_name": "Dr. Jean Rakoto"
         }
         
-        success, response = self.make_request('POST', 'auth/register', dentist_data, 201)
-        self.log_test("User Registration (Dentist)", success, 
-                     f"- User ID: {response.get('user', {}).get('id', 'N/A')}" if success else f"- Error: {response}")
+        success, response = self.make_request('POST', 'auth/register', user_data, 200)
+        if success:
+            self.created_user_id = response.get('id')
+            self.log_test("User Registration (Dentist)", True, 
+                         f"- User ID: {self.created_user_id}, Role: {response.get('role')}")
+        else:
+            self.log_test("User Registration (Dentist)", False, f"- Error: {response}")
+        
+        # Test login with the created user
+        login_data = {
+            "username": user_data["username"],
+            "password": user_data["password"]
+        }
+        
+        success, response = self.make_request('POST', 'auth/login', login_data, 200)
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            user_info = response.get('user', {})
+            self.log_test("User Login", True, f"- Token received, Role: {user_info.get('role', 'N/A')}")
+        else:
+            self.log_test("User Login", False, f"- Error: {response}")
+            return False
         
         return True
 
