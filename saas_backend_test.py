@@ -68,12 +68,12 @@ class SaaSFeaturesAPITester:
         """Test super admin authentication setup"""
         print("\n🔍 Testing Super Admin Authentication...")
         
-        # First, try to create super admin user if doesn't exist
+        # First, try to create super admin user with unique username
         timestamp = datetime.now().strftime('%H%M%S')
         super_admin_data = {
-            "username": "admin",
-            "email": f"admin.{timestamp}@dental-saas.mg",
-            "password": "admin123",
+            "username": f"superadmin_{timestamp}",
+            "email": f"superadmin.{timestamp}@dental-saas.mg",
+            "password": "SuperAdmin123!",
             "role": "SUPER_ADMIN",
             "first_name": "Super",
             "last_name": "Admin"
@@ -81,15 +81,15 @@ class SaaSFeaturesAPITester:
         
         # Try to register super admin
         success, response = self.make_request('POST', 'auth/register', super_admin_data, expected_status=201, token=None)
-        if not success:
-            # If registration fails, try to login with existing credentials
+        if success:
+            # If registration succeeds, login with the new credentials
             login_data = {
-                "username": "admin",
-                "password": "admin123"
+                "username": super_admin_data["username"],
+                "password": super_admin_data["password"]
             }
             success, response = self.make_request('POST', 'auth/login', login_data, expected_status=200, token=None)
         else:
-            # If registration succeeds, login with the new credentials
+            # If registration fails, try to login with existing admin credentials (might be ADMIN role)
             login_data = {
                 "username": "admin",
                 "password": "admin123"
@@ -99,9 +99,17 @@ class SaaSFeaturesAPITester:
         if success and 'token' in response:
             self.super_admin_token = response['token']
             user_info = response.get('user', {})
-            self.log_test("Super Admin Authentication", True, 
-                         f"- Token received, Role: {user_info.get('role', 'N/A')}")
-            return True
+            user_role = user_info.get('role', 'N/A')
+            
+            # Check if we have SUPER_ADMIN role
+            if user_role == 'SUPER_ADMIN':
+                self.log_test("Super Admin Authentication", True, 
+                             f"- Token received, Role: {user_role}")
+                return True
+            else:
+                self.log_test("Super Admin Authentication", False, 
+                             f"- User has role '{user_role}' but SUPER_ADMIN required")
+                return False
         else:
             self.log_test("Super Admin Authentication", False, f"- Error: {response}")
             return False
