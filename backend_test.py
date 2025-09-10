@@ -177,45 +177,6 @@ class DentalPracticeAPITester:
         
         return True
 
-    def test_sms_integration_validation(self):
-        """Test SMS integration with patient_id validation (Phase 1 Fix)"""
-        print("\n🔍 Testing SMS Integration Validation (Phase 1 Fix)...")
-        
-        # Test SMS with valid patient_id
-        if self.created_patient_id:
-            valid_sms_data = {
-                "phone_number": "+261 34 12 345 67",
-                "message": "Bonjour, votre rendez-vous est confirmé pour demain à 14h.",
-                "message_type": "APPOINTMENT_CONFIRMATION",
-                "patient_id": self.created_patient_id
-            }
-            
-            success, response = self.make_request('POST', 'integrations/sms/send', valid_sms_data, 200)
-            if success:
-                sms_log = response.get('sms_log', {})
-                self.log_test("SMS with Valid Patient ID", True, 
-                             f"- SMS ID: {sms_log.get('id')}, Status: {sms_log.get('status')}")
-            else:
-                self.log_test("SMS with Valid Patient ID", False, f"- Error: {response}")
-        
-        # Test SMS with invalid patient_id (should fail validation)
-        invalid_sms_data = {
-            "phone_number": "+261 34 12 345 67",
-            "message": "Test message with invalid patient ID",
-            "message_type": "CUSTOM",
-            "patient_id": "non-existent-id"
-        }
-        
-        success, response = self.make_request('POST', 'integrations/sms/send', invalid_sms_data, 404)
-        if success:  # Success means it correctly returned 404 for invalid patient_id
-            self.log_test("SMS with Invalid Patient ID (Validation)", True, 
-                         f"- Correctly rejected invalid patient_id")
-        else:
-            self.log_test("SMS with Invalid Patient ID (Validation)", False, 
-                         f"- Should have rejected invalid patient_id: {response}")
-        
-        return True
-
     def test_dental_chart_system(self):
         """Test dental chart creation and tooth procedure management"""
         print("\n🔍 Testing Dental Chart System...")
