@@ -13,7 +13,7 @@ const integrationRoutes = require('./routes/integrations');
 const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 8001;
 
 // Security middleware
 app.use(helmet());
