@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Appointment, Patient, User } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
