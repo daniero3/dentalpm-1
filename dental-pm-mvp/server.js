@@ -51,6 +51,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/labs', labRoutes);
+app.use('/api/mailing', mailingRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
