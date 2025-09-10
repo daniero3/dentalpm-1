@@ -116,7 +116,8 @@ const LabOrder = sequelize.define('lab_orders', {
     { fields: ['lab_id'] },
     { fields: ['status'] },
     { fields: ['due_date'] },
-    { fields: ['work_type'] }
+    { fields: ['work_type'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
