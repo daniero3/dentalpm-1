@@ -248,12 +248,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive System Testing - Backend Priority Features"
     - "Comprehensive System Testing - Frontend UI"
-  stuck_tasks:
-    - "Invoice System"
+  stuck_tasks: []
   test_all: true
-  test_priority: "comprehensive_backend_first"
+  test_priority: "frontend_testing_next"
 
   - task: "Comprehensive System Testing - Backend Priority Features"
     implemented: true
