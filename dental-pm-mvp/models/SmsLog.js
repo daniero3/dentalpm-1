@@ -100,7 +100,8 @@ const SmsLog = sequelize.define('sms_logs', {
     { fields: ['phone_number'] },
     { fields: ['message_type'] },
     { fields: ['status'] },
-    { fields: ['sent_at'] }
+    { fields: ['sent_at'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
