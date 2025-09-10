@@ -236,7 +236,7 @@ router.get('/clinics', [
  * @access Super Admin
  */
 router.post('/clinics', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   body('name').isLength({ min: 2, max: 100 }).withMessage('Nom requis (2-100 caractères)'),
   body('address').isLength({ min: 5, max: 255 }).withMessage('Adresse requise'),
   body('city').isLength({ min: 2, max: 50 }).withMessage('Ville requise'),
