@@ -146,5 +146,9 @@ module.exports = {
   LabOrderItem,
   LabDelivery,
   MailingCampaign,
-  MailingLog
+  MailingLog,
+  // New SaaS models
+  Clinic,
+  Subscription,
+  SubscriptionInvoice
 };
