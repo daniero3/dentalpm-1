@@ -309,6 +309,7 @@ async function seedDatabase() {
       if (invoice.status === 'PAID') {
         await Payment.create({
           invoice_id: invoice.id,
+          payment_number: `PAY-${String(i + 1).padStart(6, '0')}`,
           amount_mga: total,
           payment_method: ['CASH', 'MVOLA', 'ORANGE_MONEY'][i % 3],
           status: 'COMPLETED'
