@@ -149,7 +149,7 @@ router.get('/dashboard', [
  * @access Super Admin
  */
 router.get('/clinics', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('search').optional().isLength({ min: 1 })
