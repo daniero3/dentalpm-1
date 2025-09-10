@@ -214,9 +214,11 @@ async function seedDatabase() {
     const patients = [];
     const dentistUser = users.find(u => u.role === 'DENTIST');
     
-    for (const patientData of seedData.patients) {
+    for (let i = 0; i < seedData.patients.length; i++) {
+      const patientData = seedData.patients[i];
       const patient = await Patient.create({
         ...patientData,
+        patient_number: `PAT-${String(i + 1).padStart(6, '0')}`,
         created_by_user_id: dentistUser.id
       });
       patients.push(patient);
