@@ -145,12 +145,19 @@ class DentalPMTester:
             "phone_secondary": "+261 34 98 765 43",
             "email": "noro.rakoto@email.mg",
             "address": "Lot II M 25 Antananarivo 101, Madagascar",
+            "city": "Antananarivo",
             "emergency_contact_name": "Paul Rakotomalala",
             "emergency_contact_phone": "+261 33 11 222 33",
+            "emergency_contact_relationship": "Époux",
             "medical_history": "Hypertension, allergique à la pénicilline",
             "current_medications": "Amlodipine 5mg",
             "insurance_provider": "ARO",
-            "insurance_number": "ARO123456789"
+            "insurance_number": "ARO123456789",
+            "occupation": "Enseignante",
+            "preferred_language": "FRENCH",
+            "consent_treatment": True,
+            "consent_data_processing": True,
+            "consent_sms_reminders": True
         }
         
         success, data = self.make_request('POST', 'patients', patient_data, 201)
