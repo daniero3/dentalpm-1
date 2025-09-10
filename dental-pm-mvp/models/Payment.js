@@ -115,8 +115,13 @@ Payment.prototype.getStatusLabel = function() {
 // Hooks for auto-generating payment number
 Payment.beforeCreate(async (payment) => {
   if (!payment.payment_number) {
-    const count = await Payment.count();
-    payment.payment_number = `PAY-${String(count + 1).padStart(6, '0')}`;
+    try {
+      const count = await Payment.count();
+      payment.payment_number = `PAY-${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      // If count fails (e.g., table doesn't exist yet), use timestamp
+      payment.payment_number = `PAY-${Date.now().toString().slice(-6)}`;
+    }
   }
 });
 
