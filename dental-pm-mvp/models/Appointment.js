@@ -118,6 +118,15 @@ const Appointment = sequelize.define('appointments', {
   cancelled_at: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this appointment belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
