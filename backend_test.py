@@ -360,11 +360,12 @@ class DentalPracticeAPITester:
         if created_product_id:
             movement_data = {
                 "product_id": created_product_id,
-                "movement_type": "IN",
+                "type": "IN",  # Correct field name
                 "quantity": 25,
-                "unit_price_mga": 45000.0,
+                "reason": "Réapprovisionnement stock composite",  # Required field
+                "unit_cost_mga": 35000.0,
                 "reference": f"PURCHASE-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-                "notes": "Réapprovisionnement stock composite"
+                "notes": "Livraison fournisseur principal"
             }
             
             success, response = self.make_request('POST', 'inventory/movements', movement_data, expected_status=201)
