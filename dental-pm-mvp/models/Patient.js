@@ -168,6 +168,15 @@ const Patient = sequelize.define('patients', {
       model: 'users',
       key: 'id'
     }
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this patient belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
