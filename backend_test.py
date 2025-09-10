@@ -315,16 +315,17 @@ class DentalPracticeAPITester:
             self.log_test("Inventory - Get Products", False, f"- Error: {response}")
             all_passed = False
         
-        # Test create product
+        # Test create product with correct field names
         product_data = {
             "name": "Composite Dentaire Premium",
             "sku": f"COMP-{datetime.now().strftime('%H%M%S')}",
             "description": "Composite dentaire haute qualité pour restaurations esthétiques",
-            "category": "RESTORATIVE",
-            "unit_price_mga": 45000.0,
-            "stock_quantity": 50,
-            "min_stock_level": 10,
-            "supplier_id": None  # Will be set if we have a supplier
+            "category": "MATERIALS",  # Valid category from the enum
+            "unit_cost_mga": 35000.0,  # Required field
+            "sale_price_mga": 45000.0,  # Required field
+            "min_qty": 10,  # Required field
+            "current_qty": 50,
+            "unit": "tube"
         }
         
         success, response = self.make_request('POST', 'inventory/products', product_data, expected_status=201)
