@@ -103,6 +103,15 @@ const MailingCampaign = sequelize.define('mailing_campaigns', {
     ),
     allowNull: false,
     defaultValue: 'CUSTOM'
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this mailing campaign belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
