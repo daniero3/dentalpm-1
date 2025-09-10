@@ -1,42 +1,92 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Users,
+  Calendar,
+  FileText,
+  DollarSign,
+  TrendingUp,
+  Activity,
+  Clock,
+  AlertTriangle
+} from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '../App';
+import { KPICard, KPICardSkeleton } from './KPICard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { 
-  Users, 
-  FileText, 
-  DollarSign, 
-  AlertCircle,
-  TrendingUp,
-  Calendar,
-  Activity,
-  CreditCard
-} from 'lucide-react';
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+
+// Chart color palette matching our theme
+const CHART_COLORS = {
+  primary: 'hsl(var(--primary))',
+  secondary: 'hsl(var(--secondary))',
+  accent: 'hsl(var(--chart-3))',
+  warning: 'hsl(var(--warning))',
+  success: 'hsl(var(--success))',
+};
+
+const COLORS = [
+  CHART_COLORS.primary,
+  CHART_COLORS.secondary,
+  CHART_COLORS.accent,
+  CHART_COLORS.warning,
+  CHART_COLORS.success,
+];
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const [stats, setStats] = useState({
-    total_patients: 0,
-    total_invoices: 0,
-    pending_payments: 0,
-    total_revenue_mga: 0
-  });
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Mock revenue data for charts
+  const mockRevenueData = [
+    { month: 'Jan', revenue: 2400000, patients: 45 },
+    { month: 'Fév', revenue: 2800000, patients: 52 },
+    { month: 'Mar', revenue: 3200000, patients: 48 },
+    { month: 'Avr', revenue: 2900000, patients: 61 },
+    { month: 'Mai', revenue: 3800000, patients: 55 },
+    { month: 'Jun', revenue: 4200000, patients: 67 },
+  ];
+
+  const mockTreatmentData = [
+    { name: 'Consultations', value: 45, color: CHART_COLORS.primary },
+    { name: 'Nettoyages', value: 32, color: CHART_COLORS.secondary },
+    { name: 'Plombages', value: 28, color: CHART_COLORS.accent },
+    { name: 'Couronnes', value: 15, color: CHART_COLORS.warning },
+    { name: 'Extractions', value: 8, color: CHART_COLORS.success },
+  ];
 
   useEffect(() => {
-    fetchDashboardStats();
+    fetchDashboardData();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await axios.get(`${API}/dashboard/stats`);
-      setStats(response.data);
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get(`${BACKEND_URL}/api/dashboard`);
+      setDashboardData(response.data);
     } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
+      console.error('Error fetching dashboard data:', error);
+      setError(error.response?.data?.error || 'Erreur lors du chargement des données');
+      toast.error('Erreur lors du chargement du tableau de bord');
     } finally {
       setLoading(false);
     }
@@ -51,229 +101,338 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const statsCards = [
-    {
-      title: 'Total Patients',
-      value: stats.total_patients,
-      description: 'Patients enregistrés',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      change: '+12%',
-      changeColor: 'text-green-600'
-    },
-    {
-      title: 'Factures Émises',
-      value: stats.total_invoices,
-      description: 'Ce mois-ci',
-      icon: FileText,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      change: '+8%',
-      changeColor: 'text-green-600'
-    },
-    {
-      title: 'Chiffre d\'affaires',
-      value: formatCurrency(stats.total_revenue_mga),
-      description: 'Revenus totaux',
-      icon: DollarSign,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      change: '+15%',
-      changeColor: 'text-green-600'
-    },
-    {
-      title: 'Paiements en attente',
-      value: stats.pending_payments,
-      description: 'Factures impayées',
-      icon: AlertCircle,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      change: '-3%',
-      changeColor: 'text-green-600'
-    }
-  ];
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Bonjour';
-    if (hour < 18) return 'Bon après-midi';
-    return 'Bonsoir';
-  };
-
-  if (loading) {
+  if (error) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-gray-300 h-32 rounded-lg"></div>
-            ))}
+      <motion.div 
+        className="flex items-center justify-center h-96"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="text-center space-y-4">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
+          <div>
+            <h3 className="text-lg font-medium text-foreground">Erreur de chargement</h3>
+            <p className="text-muted-foreground">{error}</p>
           </div>
+          <button
+            onClick={fetchDashboardData}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Réessayer
+          </button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div 
+        className="flex items-center justify-between"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {getGreeting()}, {user?.full_name?.split(' ')[0]}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Voici un aperçu de votre cabinet dentaire aujourd'hui
+          <h1 className="text-3xl font-bold text-foreground">Tableau de bord</h1>
+          <p className="text-muted-foreground mt-1">
+            Vue d'ensemble de votre cabinet dentaire
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">
-            {new Date().toLocaleDateString('fr-FR', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
-        </div>
-      </div>
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+          <Activity className="h-3 w-3 mr-1" />
+          En ligne
+        </Badge>
+      </motion.div>
 
-      {/* Stats Cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index} className="hover:shadow-lg transition-shadow duration-200">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {stat.title}
-                </CardTitle>
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900 mb-1">
-                  {stat.value}
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-500">
-                    {stat.description}
-                  </p>
-                  <Badge variant="secondary" className={`${stat.changeColor} bg-transparent`}>
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    {stat.change}
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {loading ? (
+          // Loading skeletons
+          Array.from({ length: 4 }).map((_, index) => (
+            <KPICardSkeleton key={index} />
+          ))
+        ) : (
+          <>
+            <KPICard
+              title="Total Patients"
+              value={dashboardData?.patients?.total || 0}
+              previousValue={dashboardData?.patients?.previous_total}
+              icon={Users}
+              delay={0}
+            />
+            <KPICard
+              title="RDV Aujourd'hui"
+              value={dashboardData?.appointments?.today || 0}
+              previousValue={dashboardData?.appointments?.yesterday}
+              icon={Calendar}
+              delay={0.1}
+            />
+            <KPICard
+              title="Revenus du Mois"
+              value={dashboardData?.revenue?.current_month || 0}
+              previousValue={dashboardData?.revenue?.previous_month}
+              icon={DollarSign}
+              format="currency"
+              delay={0.2}
+            />
+            <KPICard
+              title="Factures Impayées"
+              value={dashboardData?.invoices?.unpaid_count || 0}
+              previousValue={dashboardData?.invoices?.previous_unpaid}
+              icon={FileText}
+              delay={0.3}
+            />
+          </>
+        )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Activity className="h-5 w-5 mr-2 text-blue-600" />
-              Activité récente
-            </CardTitle>
-            <CardDescription>
-              Dernières actions effectuées dans le système
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <div className="bg-green-100 p-2 rounded-full">
-                <Users className="h-4 w-4 text-green-600" />
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue Chart */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Évolution des Revenus
+              </CardTitle>
+              <CardDescription>
+                Revenus mensuels en Ariary (MGA)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={mockRevenueData}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis 
+                      dataKey="month" 
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                    />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+                              <p className="font-medium text-foreground">{label}</p>
+                              <p className="text-primary">
+                                Revenus: {formatCurrency(payload[0].value)}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar 
+                      dataKey="revenue" 
+                      fill={CHART_COLORS.primary}
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Nouveau patient enregistré</p>
-                <p className="text-xs text-gray-500">Marie Rakoto - Il y a 2 heures</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <div className="bg-blue-100 p-2 rounded-full">
-                <FileText className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Facture générée</p>
-                <p className="text-xs text-gray-500">FACT-000123 - 85,000 MGA</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-              <div className="bg-purple-100 p-2 rounded-full">
-                <CreditCard className="h-4 w-4 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Paiement reçu</p>
-                <p className="text-xs text-gray-500">Jean Ratsimbazafy - Mvola</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-green-600" />
-              Aujourd'hui
-            </CardTitle>
-            <CardDescription>
-              Rendez-vous et tâches du jour
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-sm text-gray-500 mb-2">
-                Système de rendez-vous bientôt disponible
-              </p>
-              <Badge variant="outline">
-                Fonctionnalité en développement
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Patients Chart */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-secondary" />
+                Nouveaux Patients
+              </CardTitle>
+              <CardDescription>
+                Évolution mensuelle des nouveaux patients
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={mockRevenueData}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis 
+                      dataKey="month" 
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+                              <p className="font-medium text-foreground">{label}</p>
+                              <p className="text-secondary">
+                                Patients: {payload[0].value}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="patients" 
+                      stroke={CHART_COLORS.secondary}
+                      strokeWidth={3}
+                      dot={{ fill: CHART_COLORS.secondary, strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, stroke: CHART_COLORS.secondary, strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
-      {/* Welcome Message for New Users */}
-      {stats.total_patients === 0 && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-blue-900">
-              Bienvenue dans votre système de gestion dentaire !
-            </CardTitle>
-            <CardDescription className="text-blue-700">
-              Commencez par ajouter vos premiers patients pour utiliser toutes les fonctionnalités
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex space-x-4">
-              <div className="bg-white p-4 rounded-lg flex-1">
-                <Users className="h-8 w-8 text-blue-600 mb-2" />
-                <h3 className="font-semibold text-blue-900">Gestion des patients</h3>
-                <p className="text-sm text-blue-700">
-                  Enregistrez les informations médicales et personnelles
-                </p>
+      {/* Treatment Distribution and Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Treatment Distribution */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-accent" />
+                Répartition des Traitements
+              </CardTitle>
+              <CardDescription>
+                Distribution des traitements ce mois
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={mockTreatmentData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {mockTreatmentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+                              <p className="font-medium text-foreground">
+                                {payload[0].payload.name}
+                              </p>
+                              <p style={{ color: payload[0].payload.color }}>
+                                Nombre: {payload[0].value}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <div className="bg-white p-4 rounded-lg flex-1">
-                <FileText className="h-8 w-8 text-green-600 mb-2" />
-                <h3 className="font-semibold text-blue-900">Facturation en MGA</h3>
-                <p className="text-sm text-blue-700">
-                  Créez des factures conformes aux standards malgaches
-                </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.7 }}
+        >
+          <Card className="hover:shadow-md transition-shadow duration-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-warning" />
+                Activité Récente
+              </CardTitle>
+              <CardDescription>
+                Dernières actions dans le système
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { action: "Nouveau patient enregistré", patient: "Marie Rasoarivelo", time: "il y a 5 min", type: "patient" },
+                  { action: "Facture créée", amount: "125 000 MGA", time: "il y a 15 min", type: "invoice" },
+                  { action: "RDV confirmé", patient: "Jean Rakoto", time: "il y a 30 min", type: "appointment" },
+                  { action: "Stock mis à jour", item: "Composite A3", time: "il y a 1h", type: "inventory" },
+                ].map((activity, index) => (
+                  <motion.div
+                    key={index}
+                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                  >
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.type === 'patient' ? 'bg-blue-500' :
+                      activity.type === 'invoice' ? 'bg-green-500' :
+                      activity.type === 'appointment' ? 'bg-purple-500' :
+                      'bg-orange-500'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {activity.action}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {activity.patient || activity.amount || activity.item}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {activity.time}
+                    </span>
+                  </motion.div>
+                ))}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 };
 
