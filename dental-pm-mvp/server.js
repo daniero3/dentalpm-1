@@ -73,6 +73,7 @@ app.use('/api/mailing', requireAuth, mailingRoutes);
 app.use('/api/media', requireAuth, mediaRoutes);
 app.use('/api/subscriptions', requireAuth, subscriptionsRoutes);
 app.use('/api/billing', requireAuth, billingRoutes);
+app.use('/api/admin', requireAuth, adminRoutes);
 
 // Licensing status endpoint
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
