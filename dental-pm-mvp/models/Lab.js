@@ -84,6 +84,15 @@ const Lab = sequelize.define('labs', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for shared labs, specific value for clinic-exclusive labs
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this lab belongs to (null = available to all clinics)'
   }
 }, {
   indexes: [
