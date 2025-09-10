@@ -80,7 +80,7 @@ const InvoiceManagement = () => {
   const fetchInvoices = async () => {
     try {
       const response = await axios.get(`${API}/invoices`);
-      setInvoices(response.data);
+      setInvoices(response.data.invoices || []);
     } catch (error) {
       toast.error('Erreur lors du chargement des factures');
     } finally {
@@ -91,7 +91,7 @@ const InvoiceManagement = () => {
   const fetchPatients = async () => {
     try {
       const response = await axios.get(`${API}/patients`);
-      setPatients(response.data);
+      setPatients(response.data.patients || []);
     } catch (error) {
       console.error('Erreur lors du chargement des patients');
     }
