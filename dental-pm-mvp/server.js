@@ -67,9 +67,14 @@ app.use('/api/integrations', integrationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
-app.use('/api/labs', labRoutes);
-app.use('/api/mailing', mailingRoutes);
-app.use('/api/media', mediaRoutes);
+app.use('/api/labs', requireAuth, labRoutes);
+app.use('/api/mailing', requireAuth, mailingRoutes);
+app.use('/api/media', requireAuth, mediaRoutes);
+app.use('/api/subscriptions', requireAuth, subscriptionsRoutes);
+app.use('/api/billing', requireAuth, billingRoutes);
+
+// Licensing status endpoint
+app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
