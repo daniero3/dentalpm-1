@@ -135,7 +135,8 @@ const Appointment = sequelize.define('appointments', {
     { fields: ['appointment_date', 'start_time'] },
     { fields: ['status'] },
     { fields: ['appointment_type'] },
-    { fields: ['chair_number'] }
+    { fields: ['chair_number'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
