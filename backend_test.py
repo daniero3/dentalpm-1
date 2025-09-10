@@ -523,7 +523,7 @@ class DentalPracticeAPITester:
             self.log_test("Mailing - Get Campaigns", False, f"- Error: {response}")
             all_passed = False
         
-        # Test create mailing campaign
+        # Test create mailing campaign with correct template type
         campaign_data = {
             "name": "Rappel Contrôle Dentaire",
             "subject": "Il est temps pour votre contrôle dentaire !",
@@ -533,7 +533,7 @@ class DentalPracticeAPITester:
                 "age_max": 65,
                 "consent_required": True
             },
-            "template_type": "REMINDER"
+            "template_type": "APPOINTMENT_REMINDER"  # Valid template type
         }
         
         success, response = self.make_request('POST', 'mailing/campaigns', campaign_data, expected_status=201)
