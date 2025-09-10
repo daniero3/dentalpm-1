@@ -45,7 +45,7 @@ router.get('/products', [
     // Filter for low stock items
     if (low_stock === 'true') {
       whereClause[Op.and] = [
-        { current_qty: { [Op.lte]: sequelize.col('min_qty') } }
+        { current_qty: { [Op.lt]: { [Op.col]: 'min_qty' } } }
       ];
     }
 
