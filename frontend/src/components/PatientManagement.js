@@ -58,7 +58,7 @@ const PatientManagement = () => {
   const fetchPatients = async () => {
     try {
       const response = await axios.get(`${API}/patients`);
-      setPatients(response.data);
+      setPatients(response.data.patients || []);
     } catch (error) {
       toast.error('Erreur lors du chargement des patients');
     } finally {
