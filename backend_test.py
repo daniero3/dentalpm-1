@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend API Testing for Dental Practice Management - Madagascar
-Tests all dental practice management APIs with Madagascar-specific data
+Tests Node.js backend APIs with Madagascar-specific data
 """
 
 import requests
@@ -58,39 +58,38 @@ class DentalPracticeAPITester:
         except requests.exceptions.RequestException as e:
             return False, {"error": str(e)}
 
-    def test_user_registration(self):
-        """Test user registration with different roles"""
-        print("\n🔍 Testing User Registration...")
+    def test_authentication_flow(self):
+        """Test authentication with existing admin user and user registration"""
+        print("\n🔍 Testing Authentication Flow...")
         
-        # Test dentist registration
+        # First test login with existing admin user
+        login_data = {
+            "username": "admin",
+            "password": "admin123"
+        }
+        
+        success, response = self.make_request('POST', 'auth/login', login_data, 200)
+        if success and 'token' in response:
+            self.token = response['token']
+            self.log_test("Admin Login", True, f"- Token received, Role: {response.get('user', {}).get('role', 'N/A')}")
+        else:
+            self.log_test("Admin Login", False, f"- Error: {response}")
+            return False
+        
+        # Test user registration with correct role format
         dentist_data = {
             "username": f"dr_rakoto_{datetime.now().strftime('%H%M%S')}",
             "email": f"dr.rakoto.{datetime.now().strftime('%H%M%S')}@dental-madagascar.mg",
             "password": "MotDePasse123!",
-            "role": "dentist",
+            "role": "DENTIST",  # Correct role format for Node.js backend
             "full_name": "Dr. Jean Rakoto"
         }
         
-        success, response = self.make_request('POST', 'auth/register', dentist_data, 200)
+        success, response = self.make_request('POST', 'auth/register', dentist_data, 201)
         self.log_test("User Registration (Dentist)", success, 
-                     f"- User ID: {response.get('id', 'N/A')}" if success else f"- Error: {response}")
+                     f"- User ID: {response.get('user', {}).get('id', 'N/A')}" if success else f"- Error: {response}")
         
-        if success:
-            # Test login with the created user
-            login_data = {
-                "username": dentist_data["username"],
-                "password": dentist_data["password"]
-            }
-            
-            success, response = self.make_request('POST', 'auth/login', login_data, 200)
-            if success and 'access_token' in response:
-                self.token = response['access_token']
-                self.log_test("User Login", True, f"- Token received, Role: {response.get('user', {}).get('role', 'N/A')}")
-            else:
-                self.log_test("User Login", False, f"- Error: {response}")
-                return False
-        
-        return success
+        return True
 
     def test_patient_management(self):
         """Test patient CRUD operations with Madagascar-specific data"""
