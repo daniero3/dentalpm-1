@@ -93,7 +93,8 @@ const Payment = sequelize.define('payments', {
     { fields: ['payment_number'] },
     { fields: ['payment_date'] },
     { fields: ['payment_method'] },
-    { fields: ['status'] }
+    { fields: ['status'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
