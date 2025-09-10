@@ -152,6 +152,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Complete inventory system with products, stock movements, suppliers. Business rules implemented: MGA currency, low-stock alerts, prevent negative stock, unique SKUs."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Inventory/Stock Management system fully functional. Product CRUD operations working (created product ID: f294892f-41fa-4277-acaa-fb3c24051c32, SKU: COMP-133025). Stock movements working (IN/OUT/ADJUST types). Low-stock alerts functional. Business rules enforced: MGA currency, unique SKUs, stock validation. All 5 inventory tests passed."
 
   - task: "Dental Lab Management API"
     implemented: true
