@@ -371,7 +371,7 @@ class DentalPracticeAPITester:
             success, response = self.make_request('POST', 'inventory/movements', movement_data, expected_status=201)
             if success:
                 movement = response.get('movement', {})
-                self.log_test("Inventory - Create Movement", True, f"- Movement ID: {movement.get('id')}, Type: {movement.get('movement_type')}")
+                self.log_test("Inventory - Create Movement", True, f"- Movement ID: {movement.get('id')}, Type: {movement.get('type')}")
             else:
                 self.log_test("Inventory - Create Movement", False, f"- Error: {response}")
                 all_passed = False
