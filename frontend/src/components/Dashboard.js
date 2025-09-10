@@ -81,12 +81,30 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching dashboard data from:', `${BACKEND_URL}/api/dashboard/kpi`);
+      
       const response = await axios.get(`${BACKEND_URL}/api/dashboard/kpi`);
+      console.log('Dashboard data received:', response.data);
+      
       setDashboardData(response.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      setError(error.response?.data?.error || 'Erreur lors du chargement des données');
-      toast.error('Erreur lors du chargement du tableau de bord');
+      
+      // More detailed error handling
+      if (error.response) {
+        // Server responded with error status
+        const errorMsg = error.response.data?.error || `Erreur ${error.response.status}: ${error.response.statusText}`;
+        setError(errorMsg);
+        toast.error(`Erreur API: ${errorMsg}`);
+      } else if (error.request) {
+        // Request was made but no response
+        setError('Impossible de contacter le serveur. Vérifiez votre connexion.');
+        toast.error('Connexion au serveur impossible');
+      } else {
+        // Something else happened
+        setError('Erreur inattendue lors du chargement des données');
+        toast.error('Erreur inattendue');
+      }
     } finally {
       setLoading(false);
     }
