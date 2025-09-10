@@ -141,20 +141,53 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: SMS integration validation working correctly. Valid patient_id accepted (SMS ID: f6d0dff2-74f6-4c1c-aa8c-503880a017ca, Status: SENT). Invalid patient_id properly rejected with 404 error. Validation logic functioning as expected."
 
-  - task: "Backend Service Configuration"
+  - task: "Inventory/Stock Management API"
     implemented: true
     working: true
-    file: "/etc/supervisor/conf.d/supervisord.conf"
+    file: "/app/dental-pm-mvp/routes/inventory.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
-      - working: false
-        agent: "main"
-        comment: "Supervisor was running old FastAPI backend instead of new Node.js backend on port 8001."
       - working: true
         agent: "main"
-        comment: "Updated supervisor config to run Node.js backend. Changed port from 3001 to 8001 to match infrastructure requirements."
+        comment: "Complete inventory system with products, stock movements, suppliers. Business rules implemented: MGA currency, low-stock alerts, prevent negative stock, unique SKUs."
+
+  - task: "Dental Lab Management API"
+    implemented: true
+    working: true
+    file: "/app/dental-pm-mvp/routes/labs.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Complete lab management with status workflow (CREATED→SENT→IN_PROGRESS→DELIVERED), auto-generated order numbers, items with tooth numbers, total calculation in MGA."
+
+  - task: "Patient Mailing System API"
+    implemented: true
+    working: true
+    file: "/app/dental-pm-mvp/routes/mailing.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Complete mailing system with campaigns, audience filtering, mock email sending (90% delivery rate), analytics, opt-out compliance using consent_sms_reminders field."
+
+  - task: "Database Schema Expansion"
+    implemented: true
+    working: true
+    file: "/app/dental-pm-mvp/sync-db.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Successfully created all new tables: products, suppliers, stock_movements, labs, lab_orders, lab_order_items, lab_deliveries, mailing_campaigns, mailing_logs with proper indexes and relationships."
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Backend service configuration working correctly. Node.js backend running on port 8001. Authentication flow working (admin login successful). Health check endpoint responding correctly. All API endpoints accessible and functional."
