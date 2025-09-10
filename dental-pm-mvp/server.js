@@ -11,6 +11,8 @@ const appointmentRoutes = require('./routes/appointments');
 const invoiceRoutes = require('./routes/invoices');
 const integrationRoutes = require('./routes/integrations');
 const dashboardRoutes = require('./routes/dashboard');
+const inventoryRoutes = require('./routes/inventory');
+const supplierRoutes = require('./routes/suppliers');
 
 const app = express();
 const PORT = process.env.PORT || 8001;
