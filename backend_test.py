@@ -103,29 +103,32 @@ class DentalPracticeAPITester:
         """Test patient creation API"""
         print("\n🔍 Testing Patient Creation API...")
         
-        # Create patient with Madagascar data using FastAPI field names
+        # Create patient with Madagascar data using Node.js field names
         timestamp = datetime.now().strftime('%H%M%S')
         patient_data = {
             "first_name": "Hery",
             "last_name": "Rasoanaivo",
             "date_of_birth": "1985-03-15",
-            "gender": "male",  # FastAPI enum format
-            "phone": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
+            "gender": "MALE",  # Node.js backend expects uppercase
+            "phone_primary": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
             "email": f"hery.rasoanaivo.{timestamp}@gmail.com",
             "address": "Lot II M 25 Antananarivo 101, Madagascar",
-            "emergency_contact": "Noro Rasoanaivo",
-            "emergency_phone": f"+261 33 98 {timestamp[:3]} {timestamp[3:5]}",
+            "city": "Antananarivo",
+            "emergency_contact_name": "Noro Rasoanaivo",
+            "emergency_contact_phone": f"+261 33 98 {timestamp[:3]} {timestamp[3:5]}",
             "medical_history": "Hypertension artérielle, diabète type 2",
             "allergies": "Pénicilline, fruits de mer",
             "current_medications": "Metformine 500mg, Amlodipine 5mg"
         }
         
         # Test patient creation
-        success, response = self.make_request('POST', 'patients', patient_data, 200)
+        success, response = self.make_request('POST', 'patients', patient_data, 201)
         if success:
-            self.created_patient_id = response.get('id')
+            patient_info = response.get('patient', {})
+            self.created_patient_id = patient_info.get('id')
+            patient_number = patient_info.get('patient_number')
             self.log_test("Patient Creation", True, 
-                         f"- Patient ID: {self.created_patient_id}, Name: {response.get('first_name')} {response.get('last_name')}")
+                         f"- Patient ID: {self.created_patient_id}, Number: {patient_number}")
         else:
             self.log_test("Patient Creation", False, f"- Error: {response}")
             return False
