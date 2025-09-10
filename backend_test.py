@@ -146,7 +146,7 @@ class DentalPracticeAPITester:
         # Test get all patients
         success, response = self.make_request('GET', 'patients', expected_status=200)
         if success:
-            patients = response if isinstance(response, list) else []
+            patients = response.get('patients', [])
             self.log_test("Get All Patients", True, f"- Found {len(patients)} patients")
         else:
             self.log_test("Get All Patients", False, f"- Error: {response}")
@@ -154,28 +154,23 @@ class DentalPracticeAPITester:
         # Test get specific patient
         success, response = self.make_request('GET', f'patients/{self.created_patient_id}', expected_status=200)
         if success:
+            patient = response.get('patient', {})
             self.log_test("Get Specific Patient", True, 
-                         f"- Patient: {response.get('first_name', '')} {response.get('last_name', '')}")
+                         f"- Patient: {patient.get('first_name', '')} {patient.get('last_name', '')}")
         else:
             self.log_test("Get Specific Patient", False, f"- Error: {response}")
             
         # Test patient update
         update_data = {
-            "first_name": "Hery",
-            "last_name": "Rasoanaivo",
-            "date_of_birth": "1985-03-15",
-            "gender": "male",
-            "phone": "+261 34 11 111 11",  # Updated phone
-            "address": "Lot II M 25 Antananarivo 101, Madagascar",
-            "emergency_contact": "Noro Rasoanaivo",
-            "emergency_phone": "+261 33 98 111 11",
+            "phone_primary": "+261 34 11 111 11",  # Updated phone
             "medical_history": "Hypertension artérielle, diabète type 2, allergie saisonnière"
         }
         
         success, response = self.make_request('PUT', f'patients/{self.created_patient_id}', update_data, expected_status=200)
         if success:
+            updated_patient = response.get('patient', {})
             self.log_test("Patient Update", True, 
-                         f"- Updated phone: {response.get('phone', 'N/A')}")
+                         f"- Updated phone: {updated_patient.get('phone_primary', 'N/A')}")
         else:
             self.log_test("Patient Update", False, f"- Error: {response}")
         
