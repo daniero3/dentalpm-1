@@ -101,7 +101,8 @@ const StockMovement = sequelize.define('stock_movements', {
     { fields: ['type'] },
     { fields: ['user_id'] },
     { fields: ['created_at'] },
-    { fields: ['reference'] }
+    { fields: ['reference'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
