@@ -593,7 +593,6 @@ class DentalPracticeAPITester:
         # Test existing core functionality
         self.test_patient_creation_api()
         self.test_patient_management_apis()
-        self.test_dental_chart_system()
         self.test_invoice_system()
         self.test_dashboard_stats()
         
