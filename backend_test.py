@@ -302,25 +302,89 @@ class DentalPracticeAPITester:
         
         return success
 
-    def test_additional_apis(self):
-        """Test additional API endpoints"""
-        print("\n🔍 Testing Additional APIs...")
+    def test_phase2_inventory_system(self):
+        """Test Phase 2 Inventory/Stock Management System"""
+        print("\n🔍 Testing Phase 2 - Inventory/Stock Management System...")
         
-        # Test health check
-        success, response = self.make_request('GET', 'health', expected_status=200)
-        if success:
-            self.log_test("Health Check", True, f"- Status: {response.get('status')}")
-        else:
-            self.log_test("Health Check", False, f"- Error: {response}")
+        # Test inventory endpoints that should be implemented according to review request
+        endpoints_to_test = [
+            ('GET', 'inventory/products', 200),
+            ('GET', 'inventory/movements', 200),
+            ('GET', 'inventory/low-stock', 200)
+        ]
         
-        # Test user profile
-        success, response = self.make_request('GET', 'auth/profile', expected_status=200)
-        if success:
-            self.log_test("User Profile", True, f"- User: {response.get('full_name', 'N/A')}")
-        else:
-            self.log_test("User Profile", False, f"- Error: {response}")
+        all_passed = True
+        for method, endpoint, expected_status in endpoints_to_test:
+            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+            if success:
+                self.log_test(f"Inventory - {endpoint}", True, f"- Endpoint accessible")
+            else:
+                self.log_test(f"Inventory - {endpoint}", False, f"- Error: {response}")
+                all_passed = False
         
-        return True
+        return all_passed
+
+    def test_phase2_supplier_system(self):
+        """Test Phase 2 Supplier Management System"""
+        print("\n🔍 Testing Phase 2 - Supplier Management System...")
+        
+        # Test supplier endpoints
+        endpoints_to_test = [
+            ('GET', 'suppliers', 200)
+        ]
+        
+        all_passed = True
+        for method, endpoint, expected_status in endpoints_to_test:
+            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+            if success:
+                self.log_test(f"Supplier - {endpoint}", True, f"- Endpoint accessible")
+            else:
+                self.log_test(f"Supplier - {endpoint}", False, f"- Error: {response}")
+                all_passed = False
+        
+        return all_passed
+
+    def test_phase2_lab_system(self):
+        """Test Phase 2 Dental Lab Management System"""
+        print("\n🔍 Testing Phase 2 - Dental Lab Management System...")
+        
+        # Test lab endpoints
+        endpoints_to_test = [
+            ('GET', 'labs', 200),
+            ('GET', 'labs/orders', 200)
+        ]
+        
+        all_passed = True
+        for method, endpoint, expected_status in endpoints_to_test:
+            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+            if success:
+                self.log_test(f"Lab - {endpoint}", True, f"- Endpoint accessible")
+            else:
+                self.log_test(f"Lab - {endpoint}", False, f"- Error: {response}")
+                all_passed = False
+        
+        return all_passed
+
+    def test_phase2_mailing_system(self):
+        """Test Phase 2 Patient Mailing System"""
+        print("\n🔍 Testing Phase 2 - Patient Mailing System...")
+        
+        # Test mailing endpoints
+        endpoints_to_test = [
+            ('GET', 'mailing/campaigns', 200),
+            ('GET', 'mailing/analytics', 200)
+        ]
+        
+        all_passed = True
+        for method, endpoint, expected_status in endpoints_to_test:
+            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+            if success:
+                self.log_test(f"Mailing - {endpoint}", True, f"- Endpoint accessible")
+            else:
+                self.log_test(f"Mailing - {endpoint}", False, f"- Error: {response}")
+                all_passed = False
+        
+        return all_passed
 
     def test_additional_scenarios(self):
         """Test additional scenarios and edge cases"""
