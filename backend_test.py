@@ -289,15 +289,15 @@ class DentalPracticeAPITester:
         """Test dashboard statistics API"""
         print("\n🔍 Testing Dashboard Statistics...")
         
-        # Use correct dashboard endpoint for FastAPI
-        success, response = self.make_request('GET', 'dashboard/stats', expected_status=200)
+        # Use correct dashboard endpoint for Node.js backend
+        success, response = self.make_request('GET', 'dashboard/kpi', expected_status=200)
         if success:
-            total_patients = response.get('total_patients', 0)
-            total_revenue = response.get('total_revenue_mga', 0)
-            self.log_test("Dashboard Stats", True, 
-                         f"- Total Patients: {total_patients}, Total Revenue: {total_revenue} MGA")
+            patients = response.get('patients', {})
+            revenue = response.get('revenue', {})
+            self.log_test("Dashboard KPI", True, 
+                         f"- Total Patients: {patients.get('total', 0)}, Total Revenue: {revenue.get('total', 0)} MGA")
         else:
-            self.log_test("Dashboard Stats", False, f"- Error: {response}")
+            self.log_test("Dashboard KPI", False, f"- Error: {response}")
         
         return success
 
