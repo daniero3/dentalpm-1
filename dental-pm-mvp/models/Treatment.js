@@ -128,6 +128,15 @@ const Treatment = sequelize.define('treatments', {
       max: 5
     },
     comment: 'Satisfaction patient (1-5)'
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this treatment belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
