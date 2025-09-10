@@ -66,21 +66,21 @@ class DentalPracticeAPITester:
         # Test user registration first with correct Node.js format
         timestamp = datetime.now().strftime('%H%M%S')
         user_data = {
-            "username": f"dr_rakoto_{timestamp}",
-            "email": f"dr.rakoto.{timestamp}@dental-madagascar.mg",
-            "password": "MotDePasse123!",
-            "role": "DENTIST",  # Node.js backend expects uppercase
-            "full_name": "Dr. Jean Rakoto"
+            "username": f"admin_test_{timestamp}",
+            "email": f"admin.test.{timestamp}@dental-madagascar.mg",
+            "password": "AdminPass123!",
+            "role": "ADMIN",  # Use ADMIN role for full permissions
+            "full_name": "Admin Test User"
         }
         
         success, response = self.make_request('POST', 'auth/register', user_data, 201)
         if success:
             user_info = response.get('user', {})
             self.created_user_id = user_info.get('id')
-            self.log_test("User Registration (Dentist)", True, 
+            self.log_test("User Registration (Admin)", True, 
                          f"- User ID: {self.created_user_id}, Role: {user_info.get('role')}")
         else:
-            self.log_test("User Registration (Dentist)", False, f"- Error: {response}")
+            self.log_test("User Registration (Admin)", False, f"- Error: {response}")
         
         # Test login with the created user
         login_data = {
