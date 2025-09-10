@@ -77,7 +77,7 @@ router.get('/plans', (req, res) => {
  * @access Super Admin
  */
 router.post('/', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   body('clinic_id').isUUID().withMessage('Clinic ID invalide'),
   body('plan').isIn(['ESSENTIAL', 'PRO', 'GROUP']).withMessage('Plan invalide'),
   body('billing_cycle').isIn(['MONTHLY', 'ANNUAL']).withMessage('Cycle de facturation invalide'),
