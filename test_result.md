@@ -226,7 +226,10 @@ test_plan:
   current_focus:
     - "Patient Creation API Fix"
     - "SMS Integration patient_id Validation"
-    - "Backend Service Configuration"
+    - "Inventory/Stock Management API"
+    - "Dental Lab Management API"
+    - "Patient Mailing System API"
+    - "Database Schema Expansion"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
