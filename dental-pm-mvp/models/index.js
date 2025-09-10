@@ -43,6 +43,7 @@ function defineAssociations() {
   User.hasMany(Treatment, { foreignKey: 'performed_by_user_id', as: 'treatments' });
   User.hasMany(Invoice, { foreignKey: 'created_by_user_id', as: 'createdInvoices' });
 
+  Patient.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
   Patient.belongsTo(User, { foreignKey: 'created_by_user_id', as: 'createdBy' });
   Patient.hasMany(Appointment, { foreignKey: 'patient_id', as: 'appointments' });
   Patient.hasMany(Treatment, { foreignKey: 'patient_id', as: 'treatments' });
