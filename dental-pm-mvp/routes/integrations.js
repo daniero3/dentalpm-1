@@ -37,6 +37,22 @@ router.post('/sms/send', [
       appointment_id
     } = req.body;
 
+    // Validate patient_id if provided
+    if (patient_id) {
+      const patient = await Patient.findByPk(patient_id);
+      if (!patient) {
+        return res.status(404).json({
+          error: 'Patient non trouvé',
+          details: [{ 
+            type: 'field',
+            msg: 'Patient avec cet ID n\'existe pas',
+            path: 'patient_id',
+            location: 'body'
+          }]
+        });
+      }
+    }
+
     // Detect carrier based on phone number (simplified logic)
     let carrier = 'TELMA'; // Default
     const phoneDigits = phone_number.replace(/\D/g, '');
