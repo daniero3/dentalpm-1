@@ -84,7 +84,8 @@ const AuditLog = sequelize.define('audit_logs', {
     { fields: ['resource_type'] },
     { fields: ['resource_id'] },
     { fields: ['created_at'] },
-    { fields: ['ip_address'] }
+    { fields: ['ip_address'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
