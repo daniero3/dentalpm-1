@@ -142,7 +142,8 @@ const Invoice = sequelize.define('invoices', {
     { fields: ['status'] },
     { fields: ['invoice_date'] },
     { fields: ['created_by_user_id'] },
-    { fields: ['total_mga'] }
+    { fields: ['total_mga'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
