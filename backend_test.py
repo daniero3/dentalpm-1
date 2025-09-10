@@ -320,18 +320,32 @@ class DentalPracticeAPITester:
         
         success, response = self.make_request('GET', 'dashboard/stats', expected_status=200)
         if success:
-            stats = {
-                'patients': response.get('total_patients', 0),
-                'invoices': response.get('total_invoices', 0),
-                'pending': response.get('pending_payments', 0),
-                'revenue': response.get('total_revenue_mga', 0)
-            }
             self.log_test("Dashboard Stats", True, 
-                         f"- Patients: {stats['patients']}, Invoices: {stats['invoices']}, Pending: {stats['pending']}, Revenue: {stats['revenue']} MGA")
+                         f"- Patients: {response.get('total_patients', 0)}, Active Appointments: {response.get('active_appointments', 0)}")
         else:
             self.log_test("Dashboard Stats", False, f"- Error: {response}")
         
         return success
+
+    def test_additional_apis(self):
+        """Test additional API endpoints"""
+        print("\n🔍 Testing Additional APIs...")
+        
+        # Test health check
+        success, response = self.make_request('GET', 'health', expected_status=200)
+        if success:
+            self.log_test("Health Check", True, f"- Status: {response.get('status')}")
+        else:
+            self.log_test("Health Check", False, f"- Error: {response}")
+        
+        # Test user profile
+        success, response = self.make_request('GET', 'auth/profile', expected_status=200)
+        if success:
+            self.log_test("User Profile", True, f"- User: {response.get('full_name', 'N/A')}")
+        else:
+            self.log_test("User Profile", False, f"- Error: {response}")
+        
+        return True
 
     def test_additional_scenarios(self):
         """Test additional scenarios and edge cases"""
