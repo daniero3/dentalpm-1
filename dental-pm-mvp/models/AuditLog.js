@@ -67,6 +67,15 @@ const AuditLog = sequelize.define('audit_logs', {
     type: DataTypes.TEXT,
     allowNull: true,
     comment: 'Description détaillée de l\'action'
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for system-wide actions
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this audit log belongs to (null for system-wide actions)'
   }
 }, {
   indexes: [
