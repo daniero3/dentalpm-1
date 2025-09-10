@@ -4,6 +4,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Theme Provider
+import { ThemeProvider } from "./components/theme-provider";
 
 // Components
 import LoginForm from "./components/LoginForm";
@@ -11,7 +15,8 @@ import Dashboard from "./components/Dashboard";
 import PatientManagement from "./components/PatientManagement";
 import DentalChart from "./components/DentalChart";
 import InvoiceManagement from "./components/InvoiceManagement";
-import Sidebar from "./components/Sidebar";
+import { ModernSidebar } from "./components/ModernSidebar";
+import { ModernTopbar } from "./components/ModernTopbar";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -48,18 +53,18 @@ const AuthProvider = ({ children }) => {
         password
       });
       
-      const { access_token, user: userData } = response.data;
+      const { token, user: userData } = response.data;
       
-      localStorage.setItem('token', access_token);
+      localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       setUser(userData);
       toast.success("Connexion réussie!");
       return { success: true };
     } catch (error) {
-      toast.error("Erreur de connexion: " + (error.response?.data?.detail || "Erreur inconnue"));
-      return { success: false, error: error.response?.data?.detail || "Erreur de connexion" };
+      toast.error("Erreur de connexion: " + (error.response?.data?.error || "Erreur inconnue"));
+      return { success: false, error: error.response?.data?.error || "Erreur de connexion" };
     }
   };
 
@@ -77,8 +82,8 @@ const AuthProvider = ({ children }) => {
       toast.success("Inscription réussie! Vous pouvez maintenant vous connecter.");
       return { success: true };
     } catch (error) {
-      toast.error("Erreur d'inscription: " + (error.response?.data?.detail || "Erreur inconnue"));
-      return { success: false, error: error.response?.data?.detail || "Erreur d'inscription" };
+      toast.error("Erreur d'inscription: " + (error.response?.data?.error || "Erreur inconnue"));
+      return { success: false, error: error.response?.data?.error || "Erreur d'inscription" };
     }
   };
 
@@ -97,15 +102,36 @@ const AuthProvider = ({ children }) => {
   );
 };
 
+const LoadingSpinner = () => (
+  <motion.div 
+    className="min-h-screen flex items-center justify-center bg-background"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+  >
+    <div className="flex flex-col items-center space-y-4">
+      <motion.div
+        className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.p 
+        className="text-sm text-muted-foreground"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        Chargement...
+      </motion.p>
+    </div>
+  </motion.div>
+);
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return user ? children : <Navigate to="/login" />;
@@ -113,55 +139,140 @@ const ProtectedRoute = ({ children }) => {
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+    <div className="flex h-screen bg-background overflow-hidden">
+      <ModernSidebar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <ModernTopbar />
+        <motion.main 
+          className="flex-1 overflow-auto p-4 bg-background"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </motion.main>
+      </div>
     </div>
   );
 };
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="App">
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Dashboard />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/patients" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <PatientManagement />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/patients/:patientId/chart" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <DentalChart />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/invoices" element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <InvoiceManagement />
-                </MainLayout>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </BrowserRouter>
-        <Toaster position="top-right" />
-      </div>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="system" storageKey="dental-pm-theme">
+      <AuthProvider>
+        <div className="App font-sans antialiased">
+          <BrowserRouter>
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <Dashboard />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/patients" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PatientManagement />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/patients/:patientId/chart" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <DentalChart />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/invoices" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <InvoiceManagement />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                {/* Placeholder routes for new sections */}
+                <Route path="/appointments" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-foreground">Rendez-vous</h1>
+                        <p className="text-muted-foreground mt-2">Module en développement</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/inventory" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-foreground">Inventaire</h1>
+                        <p className="text-muted-foreground mt-2">Module en développement</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/suppliers" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-foreground">Fournisseurs</h1>
+                        <p className="text-muted-foreground mt-2">Module en développement</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/lab" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-foreground">Laboratoire</h1>
+                        <p className="text-muted-foreground mt-2">Module en développement</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/mailing" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-foreground">Mailing</h1>
+                        <p className="text-muted-foreground mt-2">Module en développement</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <div className="text-center py-12">
+                        <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
+                        <p className="text-muted-foreground mt-2">Module en développement</p>
+                      </div>
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </AnimatePresence>
+          </BrowserRouter>
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+                border: '1px solid hsl(var(--border))',
+              },
+            }}
+          />
+        </div>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
