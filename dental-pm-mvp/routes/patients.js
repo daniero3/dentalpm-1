@@ -174,8 +174,14 @@ router.post('/', [
       });
     }
 
+    // Generate patient number before creation
+    const timestamp = Date.now().toString();
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const patientNumber = `PAT-${timestamp.slice(-6)}${randomSuffix}`;
+
     const patient = await Patient.create({
       ...req.body,
+      patient_number: patientNumber,
       created_by_user_id: req.user.id
     });
 
