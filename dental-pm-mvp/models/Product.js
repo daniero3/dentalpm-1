@@ -127,7 +127,8 @@ const Product = sequelize.define('products', {
     { fields: ['supplier_id'] },
     { fields: ['is_active'] },
     { fields: ['current_qty'] },
-    { fields: ['min_qty'] }
+    { fields: ['min_qty'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
