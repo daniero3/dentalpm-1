@@ -320,12 +320,15 @@ class DentalPracticeAPITester:
         """Test dashboard statistics API"""
         print("\n🔍 Testing Dashboard Statistics...")
         
-        success, response = self.make_request('GET', 'dashboard/stats', expected_status=200)
+        # Use correct dashboard endpoint
+        success, response = self.make_request('GET', 'dashboard/kpi', expected_status=200)
         if success:
-            self.log_test("Dashboard Stats", True, 
-                         f"- Patients: {response.get('total_patients', 0)}, Active Appointments: {response.get('active_appointments', 0)}")
+            patients = response.get('patients', {})
+            revenue = response.get('revenue', {})
+            self.log_test("Dashboard KPI", True, 
+                         f"- Total Patients: {patients.get('total', 0)}, Total Revenue: {revenue.get('total', 0)} MGA")
         else:
-            self.log_test("Dashboard Stats", False, f"- Error: {response}")
+            self.log_test("Dashboard KPI", False, f"- Error: {response}")
         
         return success
 
