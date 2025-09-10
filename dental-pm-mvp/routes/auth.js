@@ -25,7 +25,7 @@ router.post('/register', [
     .isLength({ min: 2, max: 100 })
     .withMessage('Le nom complet doit contenir entre 2 et 100 caractères'),
   body('role')
-    .isIn(['ADMIN', 'DENTIST', 'ASSISTANT', 'ACCOUNTANT'])
+    .isIn(['SUPER_ADMIN', 'ADMIN', 'DENTIST', 'ASSISTANT', 'ACCOUNTANT'])
     .withMessage('Rôle invalide')
 ], async (req, res) => {
   try {
