@@ -49,7 +49,7 @@ const User = sequelize.define('users', {
     comment: 'Clinic this user belongs to (null for super-admin)'
   },
   role: {
-    type: DataTypes.ENUM('ADMIN', 'DENTIST', 'ASSISTANT', 'ACCOUNTANT'),
+    type: DataTypes.ENUM('SUPER_ADMIN', 'ADMIN', 'DENTIST', 'ASSISTANT', 'ACCOUNTANT'),
     allowNull: false,
     defaultValue: 'DENTIST'
   },
