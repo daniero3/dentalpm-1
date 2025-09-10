@@ -11,7 +11,7 @@ const { Op } = require('sequelize');
  * @access Super Admin
  */
 router.post('/generate-invoice', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   body('subscription_id').isUUID().withMessage('Subscription ID invalide'),
   body('billing_period_start').isISO8601().withMessage('Date début invalide'),
   body('billing_period_end').isISO8601().withMessage('Date fin invalide')
