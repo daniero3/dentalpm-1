@@ -186,17 +186,17 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: Patient Mailing System fully functional. Campaign management working (created campaign ID: 0f274136-0487-4b59-a463-09f322f9f4b4). Mock email sending working with 90% delivery rate simulation. Campaign logs tracking working (9 log entries). Analytics dashboard functional. Audience filtering with age/consent validation working. All 5 mailing tests passed."
 
-  - task: "Supplier Management System"
+  - task: "Invoice System"
     implemented: true
-    working: true
-    file: "/app/dental-pm-mvp/routes/suppliers.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    working: false
+    file: "/app/dental-pm-mvp/routes/invoices.js"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: false
         agent: "testing"
-        comment: "✅ VERIFIED: Supplier Management system functional. Supplier listing working (found 2 suppliers). Supplier CRUD operations working with proper role-based access control (ADMIN/ACCOUNTANT required). NIF/STAT validation implemented. Madagascar-specific fields supported. Minor: Duplicate name validation prevents creating suppliers with same name (expected behavior)."
+        comment: "❌ ISSUE: Invoice creation failing due to invoice_number auto-generation hook not working properly. Backend error: 'invoices.invoice_number cannot be null'. The beforeCreate hook in Invoice model is not executing correctly. Invoice listing and retrieval working fine."
 
   - task: "Database Schema Expansion"
     implemented: true
