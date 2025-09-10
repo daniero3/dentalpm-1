@@ -63,21 +63,22 @@ class DentalPracticeAPITester:
         """Test authentication with user registration and login"""
         print("\n🔍 Testing Authentication Flow...")
         
-        # Test user registration first
+        # Test user registration first with correct Node.js format
         timestamp = datetime.now().strftime('%H%M%S')
         user_data = {
             "username": f"dr_rakoto_{timestamp}",
             "email": f"dr.rakoto.{timestamp}@dental-madagascar.mg",
             "password": "MotDePasse123!",
-            "role": "dentist",  # FastAPI enum format
+            "role": "DENTIST",  # Node.js backend expects uppercase
             "full_name": "Dr. Jean Rakoto"
         }
         
-        success, response = self.make_request('POST', 'auth/register', user_data, 200)
+        success, response = self.make_request('POST', 'auth/register', user_data, 201)
         if success:
-            self.created_user_id = response.get('id')
+            user_info = response.get('user', {})
+            self.created_user_id = user_info.get('id')
             self.log_test("User Registration (Dentist)", True, 
-                         f"- User ID: {self.created_user_id}, Role: {response.get('role')}")
+                         f"- User ID: {self.created_user_id}, Role: {user_info.get('role')}")
         else:
             self.log_test("User Registration (Dentist)", False, f"- Error: {response}")
         
@@ -88,8 +89,8 @@ class DentalPracticeAPITester:
         }
         
         success, response = self.make_request('POST', 'auth/login', login_data, 200)
-        if success and 'access_token' in response:
-            self.token = response['access_token']
+        if success and 'token' in response:
+            self.token = response['token']
             user_info = response.get('user', {})
             self.log_test("User Login", True, f"- Token received, Role: {user_info.get('role', 'N/A')}")
         else:
