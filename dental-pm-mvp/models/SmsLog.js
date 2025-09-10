@@ -83,6 +83,15 @@ const SmsLog = sequelize.define('sms_logs', {
     allowNull: false,
     defaultValue: true,
     comment: 'True si c\'est un SMS simulé (développement)'
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this SMS log belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
