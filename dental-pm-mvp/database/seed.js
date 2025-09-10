@@ -281,6 +281,7 @@ async function seedDatabase() {
       
       const invoice = await Invoice.create({
         patient_id: patient.id,
+        invoice_number: `FACT-${String(i + 1).padStart(6, '0')}`,
         subtotal_mga: subtotal,
         discount_percentage: discountPercentage,
         discount_amount_mga: discountAmount,
