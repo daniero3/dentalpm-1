@@ -336,9 +336,7 @@ router.post('/invoices/:id/pay', [
  * @desc Get billing statistics
  * @access Super Admin
  */
-router.get('/stats', [
-  requireRole('SUPER_ADMIN')
-], async (req, res) => {
+router.get('/stats', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const { period = 'month' } = req.query;
     
