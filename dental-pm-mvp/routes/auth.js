@@ -114,7 +114,7 @@ router.post('/login', [
     // Find user by username or email
     const user = await User.findOne({
       where: {
-        $or: [{ username }, { email: username }]
+        [Op.or]: [{ username }, { email: username }]
       }
     });
 
