@@ -394,7 +394,7 @@ router.put('/clinics/:id', [
  * @access Super Admin
  */
 router.delete('/clinics/:id', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   param('id').isUUID().withMessage('ID clinique invalide')
 ], async (req, res) => {
   try {
