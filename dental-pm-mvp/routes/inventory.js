@@ -447,7 +447,7 @@ router.get('/low-stock', async (req, res) => {
       where: {
         is_active: true,
         current_qty: {
-          [Op.lte]: sequelize.col('min_qty')
+          [Op.lt]: { [Op.col]: 'min_qty' }
         }
       },
       include: [
