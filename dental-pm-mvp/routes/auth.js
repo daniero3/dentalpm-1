@@ -42,7 +42,7 @@ router.post('/register', [
     // Check if user already exists
     const existingUser = await User.findOne({
       where: {
-        $or: [{ username }, { email }]
+        [Op.or]: [{ username }, { email }]
       }
     });
 
