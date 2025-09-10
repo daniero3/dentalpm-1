@@ -444,12 +444,13 @@ class DentalPracticeAPITester:
             self.log_test("Lab - Get Labs", False, f"- Error: {response}")
             all_passed = False
         
-        # Test create lab
+        # Test create lab with unique name
+        timestamp = datetime.now().strftime('%H%M%S')
         lab_data = {
-            "name": "Laboratoire Dentaire Antananarivo",
+            "name": f"Laboratoire Dentaire Antananarivo {timestamp}",
             "contact_person": "Dr. Rabe Hery",
             "phone": "+261 20 22 456 78",
-            "email": "contact@labdentaire.mg",
+            "email": f"contact{timestamp}@labdentaire.mg",
             "address": "Rue Rainandriamampandry, Antananarivo 101",
             "city": "Antananarivo",
             "specialties": ["PROSTHETICS", "ORTHODONTICS", "IMPLANTS"],
