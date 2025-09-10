@@ -99,38 +99,34 @@ class DentalPracticeAPITester:
         return True
 
     def test_patient_creation_api(self):
-        """Test patient creation API with patient_number generation"""
-        print("\n🔍 Testing Patient Creation API (Phase 1 Fix)...")
+        """Test patient creation API"""
+        print("\n🔍 Testing Patient Creation API...")
         
-        # Create patient with Madagascar data using correct field names for Node.js backend
-        # Use unique phone number to avoid conflicts - format: +261 XX XX XXX XX
+        # Create patient with Madagascar data using FastAPI field names
         timestamp = datetime.now().strftime('%H%M%S')
         patient_data = {
             "first_name": "Hery",
             "last_name": "Rasoanaivo",
             "date_of_birth": "1985-03-15",
-            "gender": "MALE",  # Correct enum format
-            "phone_primary": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
+            "gender": "male",  # FastAPI enum format
+            "phone": f"+261 34 12 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
             "email": f"hery.rasoanaivo.{timestamp}@gmail.com",
             "address": "Lot II M 25 Antananarivo 101, Madagascar",
-            "city": "Antananarivo",
-            "emergency_contact_name": "Noro Rasoanaivo",  # Correct field name
-            "emergency_contact_phone": f"+261 33 98 {timestamp[:3]} {timestamp[3:5]}",  # Valid Madagascar format
+            "emergency_contact": "Noro Rasoanaivo",
+            "emergency_phone": f"+261 33 98 {timestamp[:3]} {timestamp[3:5]}",
             "medical_history": "Hypertension artérielle, diabète type 2",
             "allergies": "Pénicilline, fruits de mer",
             "current_medications": "Metformine 500mg, Amlodipine 5mg"
         }
         
-        # Test patient creation - this should generate patient_number automatically
-        success, response = self.make_request('POST', 'patients', patient_data, 201)
+        # Test patient creation
+        success, response = self.make_request('POST', 'patients', patient_data, 200)
         if success:
-            patient_response = response.get('patient', {})
-            self.created_patient_id = patient_response.get('id')
-            patient_number = patient_response.get('patient_number')
-            self.log_test("Patient Creation with Auto-Generated Number", True, 
-                         f"- Patient ID: {self.created_patient_id}, Number: {patient_number}")
+            self.created_patient_id = response.get('id')
+            self.log_test("Patient Creation", True, 
+                         f"- Patient ID: {self.created_patient_id}, Name: {response.get('first_name')} {response.get('last_name')}")
         else:
-            self.log_test("Patient Creation with Auto-Generated Number", False, f"- Error: {response}")
+            self.log_test("Patient Creation", False, f"- Error: {response}")
             return False
         
         return True
