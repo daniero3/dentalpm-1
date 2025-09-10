@@ -81,10 +81,8 @@ async function startServer() {
     console.log('✅ Connexion à PostgreSQL réussie');
     
     // Sync database (create tables if they don't exist)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Tables de base de données synchronisées');
-    }
+    // Skip sync since we already seeded the database
+    console.log('✅ Base de données prête');
     
     app.listen(PORT, () => {
       console.log(`🚀 Serveur Dental PM Madagascar démarré sur le port ${PORT}`);
