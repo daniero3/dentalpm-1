@@ -11,7 +11,7 @@ const { Op } = require('sequelize');
  * @access Super Admin
  */
 router.get('/dashboard', [
-  requireRole(['SUPER_ADMIN'])
+  requireRole('SUPER_ADMIN')
 ], async (req, res) => {
   try {
     const now = new Date();
