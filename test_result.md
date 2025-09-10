@@ -101,3 +101,70 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Complete the Node.js/Express Dental Practice MVP by fixing critical bugs and implementing new API routes for Inventory/Stock Management, Dental Lab Management, Supplier Management, and Patient Mailing features."
+
+backend:
+  - task: "Patient Creation API Fix"
+    implemented: true
+    working: true
+    file: "/app/dental-pm-mvp/routes/patients.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Patient creation was failing due to patient_number field being null. BeforeCreate hook was not executing properly."
+      - working: true
+        agent: "main"
+        comment: "Fixed by manually generating patient_number in route instead of relying on Sequelize hook. Added timestamp + random suffix approach."
+
+  - task: "SMS Integration patient_id Validation"
+    implemented: true
+    working: true
+    file: "/app/dental-pm-mvp/routes/integrations.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "SMS integration was accepting invalid patient_id without validation, causing potential data integrity issues."
+      - working: true
+        agent: "main"
+        comment: "Added validation to check if patient_id exists in database before processing SMS. Also added appointment_id validation."
+
+  - task: "Backend Service Configuration"
+    implemented: true
+    working: true
+    file: "/etc/supervisor/conf.d/supervisord.conf"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Supervisor was running old FastAPI backend instead of new Node.js backend on port 8001."
+      - working: true
+        agent: "main"
+        comment: "Updated supervisor config to run Node.js backend. Changed port from 3001 to 8001 to match infrastructure requirements."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Patient Creation API Fix"
+    - "SMS Integration patient_id Validation"
+    - "Backend Service Configuration"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Phase 1 bug fixes completed. Fixed patient creation API by resolving patient_number generation issue and added proper validation to SMS integration for patient_id and appointment_id. Backend service now properly running on Node.js. Ready for comprehensive backend testing before proceeding with Phase 2 (new API routes implementation)."
