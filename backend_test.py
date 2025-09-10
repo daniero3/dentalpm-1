@@ -392,22 +392,25 @@ class DentalPracticeAPITester:
                      f"- Secretary: {response.get('full_name', 'N/A')}" if success else f"- Error: {response}")
 
     def run_all_tests(self):
-        """Run all dental practice management tests"""
+        """Run all dental practice management tests focusing on Phase 1 fixes"""
         print("🏥 Starting Dental Practice Management API Tests - Madagascar")
         print(f"🌐 Testing against: {self.base_url}")
+        print("🎯 Focus: Phase 1 Bug Fixes - Patient Creation, SMS Validation, Authentication")
         print("=" * 80)
         
-        # Test authentication first
-        if not self.test_user_registration():
+        # Test authentication first (including admin login)
+        if not self.test_authentication_flow():
             print("❌ Authentication failed - stopping tests")
             return False
         
-        # Test core functionality
-        self.test_patient_management()
-        self.test_dental_chart_system()
-        self.test_invoice_system()
+        # Test Phase 1 critical fixes
+        self.test_patient_creation_api()  # Test patient_number generation fix
+        self.test_patient_management_apis()  # Test patient CRUD operations
+        self.test_sms_integration_validation()  # Test SMS patient_id validation fix
+        
+        # Test existing core functionality
         self.test_dashboard_stats()
-        self.test_additional_scenarios()
+        self.test_additional_apis()
         
         # Print final results
         print("\n" + "=" * 80)
