@@ -112,34 +112,96 @@ class DentalPracticeAPITester:
             "current_medications": "Metformine 500mg, Amlodipine 5mg"
         }
         
-        # Test patient creation
-        success, response = self.make_request('POST', 'patients', patient_data, 200)
+        # Test patient creation - this should generate patient_number automatically
+        success, response = self.make_request('POST', 'patients', patient_data, 201)
         if success:
-            self.created_patient_id = response.get('id')
-            self.log_test("Patient Creation", True, f"- Patient ID: {self.created_patient_id}")
+            patient_response = response.get('patient', {})
+            self.created_patient_id = patient_response.get('id')
+            patient_number = patient_response.get('patient_number')
+            self.log_test("Patient Creation with Auto-Generated Number", True, 
+                         f"- Patient ID: {self.created_patient_id}, Number: {patient_number}")
         else:
-            self.log_test("Patient Creation", False, f"- Error: {response}")
+            self.log_test("Patient Creation with Auto-Generated Number", False, f"- Error: {response}")
+            return False
+        
+        return True
+
+    def test_patient_management_apis(self):
+        """Test patient management CRUD operations"""
+        print("\n🔍 Testing Patient Management APIs...")
+        
+        if not self.created_patient_id:
+            self.log_test("Patient Management APIs", False, "- No patient ID available")
             return False
         
         # Test get all patients
         success, response = self.make_request('GET', 'patients', expected_status=200)
-        self.log_test("Get All Patients", success, 
-                     f"- Found {len(response) if isinstance(response, list) else 0} patients" if success else f"- Error: {response}")
+        if success:
+            patients = response.get('patients', [])
+            self.log_test("Get All Patients", True, f"- Found {len(patients)} patients")
+        else:
+            self.log_test("Get All Patients", False, f"- Error: {response}")
         
         # Test get specific patient
+        success, response = self.make_request('GET', f'patients/{self.created_patient_id}', expected_status=200)
+        if success:
+            self.log_test("Get Specific Patient", True, 
+                         f"- Patient: {response.get('first_name', '')} {response.get('last_name', '')}")
+        else:
+            self.log_test("Get Specific Patient", False, f"- Error: {response}")
+            
+        # Test patient update
+        update_data = {
+            "phone_primary": "+261 34 11 111 11",  # Updated phone
+            "medical_history": "Hypertension artérielle, diabète type 2, allergie saisonnière"
+        }
+        
+        success, response = self.make_request('PUT', f'patients/{self.created_patient_id}', update_data, expected_status=200)
+        if success:
+            updated_patient = response.get('patient', {})
+            self.log_test("Patient Update", True, 
+                         f"- Updated phone: {updated_patient.get('phone_primary', 'N/A')}")
+        else:
+            self.log_test("Patient Update", False, f"- Error: {response}")
+        
+        return True
+
+    def test_sms_integration_validation(self):
+        """Test SMS integration with patient_id validation (Phase 1 Fix)"""
+        print("\n🔍 Testing SMS Integration Validation (Phase 1 Fix)...")
+        
+        # Test SMS with valid patient_id
         if self.created_patient_id:
-            success, response = self.make_request('GET', f'patients/{self.created_patient_id}', expected_status=200)
-            self.log_test("Get Specific Patient", success, 
-                         f"- Patient: {response.get('first_name', '')} {response.get('last_name', '')}" if success else f"- Error: {response}")
+            valid_sms_data = {
+                "phone_number": "+261 34 12 345 67",
+                "message": "Bonjour, votre rendez-vous est confirmé pour demain à 14h.",
+                "message_type": "APPOINTMENT_CONFIRMATION",
+                "patient_id": self.created_patient_id
+            }
             
-            # Test patient update
-            update_data = patient_data.copy()
-            update_data["phone"] = "+261 34 11 111 11"  # Updated phone
-            update_data["medical_history"] = "Hypertension artérielle, diabète type 2, allergie saisonnière"
-            
-            success, response = self.make_request('PUT', f'patients/{self.created_patient_id}', update_data, expected_status=200)
-            self.log_test("Patient Update", success, 
-                         f"- Updated phone: {response.get('phone', 'N/A')}" if success else f"- Error: {response}")
+            success, response = self.make_request('POST', 'integrations/sms/send', valid_sms_data, 200)
+            if success:
+                sms_log = response.get('sms_log', {})
+                self.log_test("SMS with Valid Patient ID", True, 
+                             f"- SMS ID: {sms_log.get('id')}, Status: {sms_log.get('status')}")
+            else:
+                self.log_test("SMS with Valid Patient ID", False, f"- Error: {response}")
+        
+        # Test SMS with invalid patient_id (should fail validation)
+        invalid_sms_data = {
+            "phone_number": "+261 34 12 345 67",
+            "message": "Test message with invalid patient ID",
+            "message_type": "CUSTOM",
+            "patient_id": "non-existent-id"
+        }
+        
+        success, response = self.make_request('POST', 'integrations/sms/send', invalid_sms_data, 404)
+        if success:  # Success means it correctly returned 404 for invalid patient_id
+            self.log_test("SMS with Invalid Patient ID (Validation)", True, 
+                         f"- Correctly rejected invalid patient_id")
+        else:
+            self.log_test("SMS with Invalid Patient ID (Validation)", False, 
+                         f"- Should have rejected invalid patient_id: {response}")
         
         return True
 
