@@ -93,7 +93,8 @@ const Procedure = sequelize.define('procedures', {
     { fields: ['code'] },
     { fields: ['category'] },
     { fields: ['is_active'] },
-    { fields: ['sort_order'] }
+    { fields: ['sort_order'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
