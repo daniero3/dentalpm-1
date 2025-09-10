@@ -46,6 +46,9 @@ const authenticateToken = async (req, res, next) => {
 
 const requireRole = (...roles) => {
   return (req, res, next) => {
+    console.log('DEBUG requireRole called with:', roles);
+    console.log('User role:', req.user?.role);
+    
     if (!req.user) {
       return res.status(401).json({ 
         error: 'Authentication required',
