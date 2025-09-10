@@ -146,7 +146,8 @@ const Treatment = sequelize.define('treatments', {
     { fields: ['performed_by_user_id'] },
     { fields: ['treatment_date'] },
     { fields: ['status'] },
-    { fields: ['follow_up_date'] }
+    { fields: ['follow_up_date'] },
+    { fields: ['clinic_id'] }
   ]
 });
 
