@@ -61,7 +61,9 @@ const mediaTypeConfig = {
   }
 };
 
-export function MediaGallery({ patientId, patient, permissions = { canUpload: true, canDelete: true } }) {
+export function MediaGallery({ patientId, patient, permissions }) {
+  // Set default permissions if not provided
+  const { canUpload = true, canDelete = true } = permissions || {};
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('all');
