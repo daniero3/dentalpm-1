@@ -510,20 +510,71 @@ class DentalPracticeAPITester:
         """Test Phase 2 Patient Mailing System"""
         print("\n🔍 Testing Phase 2 - Patient Mailing System...")
         
-        # Test mailing endpoints
-        endpoints_to_test = [
-            ('GET', 'mailing/campaigns', 200),
-            ('GET', 'mailing/analytics', 200)
-        ]
-        
         all_passed = True
-        for method, endpoint, expected_status in endpoints_to_test:
-            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+        
+        # Test get all campaigns
+        success, response = self.make_request('GET', 'mailing/campaigns', expected_status=200)
+        if success:
+            campaigns = response.get('campaigns', [])
+            self.log_test("Mailing - Get Campaigns", True, f"- Found {len(campaigns)} campaigns")
+        else:
+            self.log_test("Mailing - Get Campaigns", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test create mailing campaign
+        campaign_data = {
+            "name": "Rappel Contrôle Dentaire",
+            "subject": "Il est temps pour votre contrôle dentaire !",
+            "body_html": "<p>Bonjour,</p><p>Nous vous rappelons qu'il est temps de prendre rendez-vous pour votre contrôle dentaire annuel.</p><p>Cordialement,<br>Cabinet Dentaire</p>",
+            "audience_filter": {
+                "age_min": 18,
+                "age_max": 65,
+                "consent_required": True
+            },
+            "template_type": "REMINDER"
+        }
+        
+        success, response = self.make_request('POST', 'mailing/campaigns', campaign_data, expected_status=201)
+        if success:
+            campaign = response.get('campaign', {})
+            created_campaign_id = campaign.get('id')
+            self.log_test("Mailing - Create Campaign", True, f"- Campaign ID: {created_campaign_id}, Name: {campaign.get('name')}")
+        else:
+            self.log_test("Mailing - Create Campaign", False, f"- Error: {response}")
+            all_passed = False
+            created_campaign_id = None
+        
+        # Test send campaign (mock)
+        if created_campaign_id:
+            success, response = self.make_request('POST', f'mailing/campaigns/{created_campaign_id}/send', {}, expected_status=200)
             if success:
-                self.log_test(f"Mailing - {endpoint}", True, f"- Endpoint accessible")
+                result = response.get('result', {})
+                emails_sent = result.get('emails_sent', 0)
+                self.log_test("Mailing - Send Campaign", True, f"- Sent {emails_sent} emails (mock)")
             else:
-                self.log_test(f"Mailing - {endpoint}", False, f"- Error: {response}")
+                self.log_test("Mailing - Send Campaign", False, f"- Error: {response}")
                 all_passed = False
+        
+        # Test get campaign logs
+        if created_campaign_id:
+            success, response = self.make_request('GET', f'mailing/campaigns/{created_campaign_id}/logs', expected_status=200)
+            if success:
+                logs = response.get('logs', [])
+                self.log_test("Mailing - Get Campaign Logs", True, f"- Found {len(logs)} log entries")
+            else:
+                self.log_test("Mailing - Get Campaign Logs", False, f"- Error: {response}")
+                all_passed = False
+        
+        # Test mailing analytics
+        success, response = self.make_request('GET', 'mailing/analytics', expected_status=200)
+        if success:
+            analytics = response
+            total_campaigns = analytics.get('total_campaigns', 0)
+            total_emails = analytics.get('total_emails_sent', 0)
+            self.log_test("Mailing - Analytics", True, f"- Total Campaigns: {total_campaigns}, Total Emails: {total_emails}")
+        else:
+            self.log_test("Mailing - Analytics", False, f"- Error: {response}")
+            all_passed = False
         
         return all_passed
 
