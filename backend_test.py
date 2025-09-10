@@ -431,19 +431,77 @@ class DentalPracticeAPITester:
         """Test Phase 2 Dental Lab Management System"""
         print("\n🔍 Testing Phase 2 - Dental Lab Management System...")
         
-        # Test lab endpoints
-        endpoints_to_test = [
-            ('GET', 'labs', 200),
-            ('GET', 'labs/orders', 200)
-        ]
-        
         all_passed = True
-        for method, endpoint, expected_status in endpoints_to_test:
-            success, response = self.make_request(method, endpoint, expected_status=expected_status)
+        
+        # Test get all labs
+        success, response = self.make_request('GET', 'labs', expected_status=200)
+        if success:
+            labs = response.get('labs', [])
+            self.log_test("Lab - Get Labs", True, f"- Found {len(labs)} labs")
+        else:
+            self.log_test("Lab - Get Labs", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test create lab
+        lab_data = {
+            "name": "Laboratoire Dentaire Antananarivo",
+            "contact_person": "Dr. Rabe Hery",
+            "phone": "+261 20 22 456 78",
+            "email": "contact@labdentaire.mg",
+            "address": "Rue Rainandriamampandry, Antananarivo 101",
+            "city": "Antananarivo",
+            "specialties": ["PROSTHETICS", "ORTHODONTICS", "IMPLANTS"],
+            "lead_time_days": 7,
+            "payment_terms": "Paiement à la livraison",
+            "notes": "Laboratoire spécialisé prothèses dentaires Madagascar"
+        }
+        
+        success, response = self.make_request('POST', 'labs', lab_data, expected_status=201)
+        if success:
+            lab = response.get('lab', {})
+            created_lab_id = lab.get('id')
+            self.log_test("Lab - Create Lab", True, f"- Lab ID: {created_lab_id}, Name: {lab.get('name')}")
+        else:
+            self.log_test("Lab - Create Lab", False, f"- Error: {response}")
+            all_passed = False
+            created_lab_id = None
+        
+        # Test get lab orders
+        success, response = self.make_request('GET', 'labs/orders', expected_status=200)
+        if success:
+            orders = response.get('orders', [])
+            self.log_test("Lab - Get Orders", True, f"- Found {len(orders)} orders")
+        else:
+            self.log_test("Lab - Get Orders", False, f"- Error: {response}")
+            all_passed = False
+        
+        # Test create lab order if we have patient and lab
+        if self.created_patient_id and created_lab_id:
+            order_data = {
+                "patient_id": self.created_patient_id,
+                "lab_id": created_lab_id,
+                "work_type": "CROWN",
+                "shade": "A2",
+                "due_date": "2024-10-15",
+                "priority": "NORMAL",
+                "notes": "Couronne céramique dent 11",
+                "items": [
+                    {
+                        "tooth_number": "11",
+                        "work_description": "Couronne céramique",
+                        "unit_price_mga": 150000.0,
+                        "quantity": 1
+                    }
+                ]
+            }
+            
+            success, response = self.make_request('POST', 'labs/orders', order_data, expected_status=201)
             if success:
-                self.log_test(f"Lab - {endpoint}", True, f"- Endpoint accessible")
+                order = response.get('order', {})
+                order_number = order.get('order_number')
+                self.log_test("Lab - Create Order", True, f"- Order: {order_number}, Total: {order.get('total_mga', 0)} MGA")
             else:
-                self.log_test(f"Lab - {endpoint}", False, f"- Error: {response}")
+                self.log_test("Lab - Create Order", False, f"- Error: {response}")
                 all_passed = False
         
         return all_passed
