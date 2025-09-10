@@ -81,7 +81,7 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`${BACKEND_URL}/api/dashboard`);
+      const response = await axios.get(`${BACKEND_URL}/api/dashboard/kpi`);
       setDashboardData(response.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
