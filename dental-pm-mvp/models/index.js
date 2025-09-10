@@ -23,6 +23,11 @@ const LabDelivery = require('./LabDelivery');
 const MailingCampaign = require('./MailingCampaign');
 const MailingLog = require('./MailingLog');
 
+// New SaaS models
+const Clinic = require('./Clinic');
+const Subscription = require('./Subscription');
+const SubscriptionInvoice = require('./SubscriptionInvoice');
+
 // Define associations
 function defineAssociations() {
   // Existing associations
