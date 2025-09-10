@@ -245,15 +245,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Patient Creation API Fix"
-    - "SMS Integration patient_id Validation"
-    - "Inventory/Stock Management API"
-    - "Dental Lab Management API"
-    - "Patient Mailing System API"
-    - "Database Schema Expansion"
-  stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+    - "Comprehensive System Testing - Backend Priority Features"
+    - "Comprehensive System Testing - Frontend UI"
+  stuck_tasks:
+    - "Invoice System"
+  test_all: true
+  test_priority: "comprehensive_backend_first"
 
   - task: "Comprehensive System Testing - Backend Priority Features"
     implemented: true
