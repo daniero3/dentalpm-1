@@ -2,27 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
-  X, 
   Eye, 
-  Download, 
   Trash2, 
   Image as ImageIcon,
   FileText,
   Camera,
   Stethoscope,
   Filter,
-  Grid,
-  List
+  Grid
 } from 'lucide-react';
 import axios from 'axios';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 
@@ -62,15 +55,13 @@ const mediaTypeConfig = {
 };
 
 export function MediaGallery({ patientId, patient, permissions }) {
-  // Set default permissions if not provided
-  const { canUpload = true, canDelete = true } = permissions || {};
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-  const [selectedMedia, setSelectedMedia] = useState(null);
-  const [showUploader, setShowUploader] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  
+  // Set default permissions if not provided
+  const canUpload = permissions?.canUpload !== false;
+  const canDelete = permissions?.canDelete !== false;
 
   useEffect(() => {
     if (patientId) {
@@ -95,40 +86,6 @@ export function MediaGallery({ patientId, patient, permissions }) {
       toast.error('Erreur lors du chargement des médias');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleUpload = async (files, type, description) => {
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      
-      Array.from(files).forEach(file => {
-        formData.append('files', file);
-      });
-      formData.append('type', type);
-      if (description) {
-        formData.append('description', description);
-      }
-
-      await axios.post(
-        `${BACKEND_URL}/api/media/patients/${patientId}/upload`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      toast.success('Fichiers uploadés avec succès');
-      setShowUploader(false);
-      fetchMedia();
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Erreur lors de l\'upload');
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -186,11 +143,8 @@ export function MediaGallery({ patientId, patient, permissions }) {
           </p>
         </div>
         
-        {permissions.canUpload && (
-          <Button 
-            onClick={() => setShowUploader(true)}
-            className="medical-gradient"
-          >
+        {canUpload && (
+          <Button className="medical-gradient">
             <Upload className="h-4 w-4 mr-2" />
             Ajouter des fichiers
           </Button>
@@ -221,26 +175,9 @@ export function MediaGallery({ patientId, patient, permissions }) {
             {filteredMedia.length} fichier{filteredMedia.length > 1 ? 's' : ''}
           </Badge>
         </div>
-
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('list')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
-      {/* Media Grid/List */}
+      {/* Media Grid */}
       {filteredMedia.length === 0 ? (
         <motion.div 
           className="text-center py-12"
@@ -258,11 +195,7 @@ export function MediaGallery({ patientId, patient, permissions }) {
         </motion.div>
       ) : (
         <motion.div 
-          className={cn(
-            viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-              : 'space-y-4'
-          )}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           layout
         >
           <AnimatePresence>
@@ -270,79 +203,29 @@ export function MediaGallery({ patientId, patient, permissions }) {
               <MediaItem
                 key={item.id}
                 media={item}
-                viewMode={viewMode}
-                onView={setSelectedMedia}
-                onDelete={permissions.canDelete ? handleDelete : null}
+                onDelete={canDelete ? handleDelete : null}
                 delay={index * 0.1}
               />
             ))}
           </AnimatePresence>
         </motion.div>
       )}
-
-      {/* Upload Modal */}
-      <UploadModal
-        isOpen={showUploader}
-        onClose={() => setShowUploader(false)}
-        onUpload={handleUpload}
-        uploading={uploading}
-      />
-
-      {/* Media Viewer Modal */}
-      <MediaViewer
-        media={selectedMedia}
-        onClose={() => setSelectedMedia(null)}
-      />
     </div>
   );
 }
 
 // Individual Media Item Component
-function MediaItem({ media, viewMode, onView, onDelete, delay = 0 }) {
+function MediaItem({ media, onDelete, delay = 0 }) {
   const config = mediaTypeConfig[media.type] || mediaTypeConfig.other;
   const Icon = config.icon;
 
-  if (viewMode === 'list') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ delay }}
-        className="flex items-center p-4 bg-card rounded-lg border hover:shadow-md transition-shadow"
-      >
-        <div className={cn("p-2 rounded-lg mr-4", config.color)}>
-          <Icon className="h-5 w-5 text-white" />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-foreground truncate">
-            {media.original_name}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {config.label} • {formatFileSize(media.file_size)} • 
-            {new Date(media.uploaded_at).toLocaleDateString('fr-FR')}
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => onView(media)}>
-            <Eye className="h-4 w-4" />
-          </Button>
-          {onDelete && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onDelete(media.id)}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </motion.div>
-    );
-  }
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   return (
     <motion.div
@@ -354,18 +237,6 @@ function MediaItem({ media, viewMode, onView, onDelete, delay = 0 }) {
     >
       {/* Media Preview */}
       <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-        {media.mime_type.startsWith('image/') ? (
-          <img 
-            src={media.url} 
-            alt={media.original_name}
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-        ) : null}
-        
         {/* Fallback icon */}
         <div className="absolute inset-0 flex items-center justify-center bg-muted">
           <div className={cn("p-4 rounded-full", config.color)}>
@@ -382,7 +253,7 @@ function MediaItem({ media, viewMode, onView, onDelete, delay = 0 }) {
 
         {/* Action overlay */}
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
-          <Button variant="secondary" size="sm" onClick={() => onView(media)}>
+          <Button variant="secondary" size="sm">
             <Eye className="h-4 w-4" />
           </Button>
           {onDelete && (
@@ -416,194 +287,3 @@ function MediaItem({ media, viewMode, onView, onDelete, delay = 0 }) {
     </motion.div>
   );
 }
-
-// Upload Modal Component
-function UploadModal({ isOpen, onClose, onUpload, uploading }) {
-  const [files, setFiles] = useState([]);
-  const [type, setType] = useState('');
-  const [description, setDescription] = useState('');
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setFiles(selectedFiles);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (files.length === 0 || !type) return;
-    
-    onUpload(files, type, description);
-  };
-
-  const handleClose = () => {
-    if (!uploading) {
-      setFiles([]);
-      setType('');
-      setDescription('');
-      onClose();
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Ajouter des fichiers</DialogTitle>
-          <DialogDescription>
-            Uploadez des photos, radiographies ou documents pour ce patient.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="files">Fichiers</Label>
-            <Input
-              id="files"
-              type="file"
-              multiple
-              accept="image/*,application/pdf"
-              onChange={handleFileChange}
-              disabled={uploading}
-            />
-            {files.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {files.length} fichier{files.length > 1 ? 's' : ''} sélectionné{files.length > 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Type de média</Label>
-            <Select value={type} onValueChange={setType} disabled={uploading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez le type" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(mediaTypeConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
-                    {config.label} - {config.description}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optionnelle)</Label>
-            <Textarea
-              id="description"
-              placeholder="Décrivez le contenu des fichiers..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={uploading}
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleClose}
-              disabled={uploading}
-            >
-              Annuler
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={files.length === 0 || !type || uploading}
-              className="medical-gradient"
-            >
-              {uploading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Upload en cours...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Uploader
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// Media Viewer Modal
-function MediaViewer({ media, onClose }) {
-  if (!media) return null;
-
-  const config = mediaTypeConfig[media.type] || mediaTypeConfig.other;
-  const Icon = config.icon;
-
-  return (
-    <Dialog open={!!media} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <div className={cn("p-1 rounded", config.color)}>
-              <Icon className="h-4 w-4 text-white" />
-            </div>
-            <span>{media.original_name}</span>
-          </DialogTitle>
-          <DialogDescription>
-            {config.label} • {formatFileSize(media.file_size)} • 
-            Uploadé le {new Date(media.uploaded_at).toLocaleDateString('fr-FR')}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Media Display */}
-          <div className="flex justify-center">
-            {media.mime_type.startsWith('image/') ? (
-              <img 
-                src={media.url} 
-                alt={media.original_name}
-                className="max-w-full max-h-96 object-contain rounded-lg border"
-              />
-            ) : (
-              <div className="flex flex-col items-center p-8 border rounded-lg">
-                <div className={cn("p-4 rounded-full mb-4", config.color)}>
-                  <Icon className="h-12 w-12 text-white" />
-                </div>
-                <p className="text-muted-foreground">
-                  Aperçu non disponible pour ce type de fichier
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Media Details */}
-          {media.description && (
-            <div>
-              <h4 className="font-medium text-foreground mb-2">Description</h4>
-              <p className="text-muted-foreground">{media.description}</p>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" asChild>
-              <a href={media.url} download={media.original_name}>
-                <Download className="h-4 w-4 mr-2" />
-                Télécharger
-              </a>
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
