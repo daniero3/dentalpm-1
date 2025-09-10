@@ -173,8 +173,13 @@ Invoice.prototype.getStatusLabel = function() {
 // Hooks for auto-generating invoice number
 Invoice.beforeCreate(async (invoice) => {
   if (!invoice.invoice_number) {
-    const count = await Invoice.count();
-    invoice.invoice_number = `FACT-${String(count + 1).padStart(6, '0')}`;
+    try {
+      const count = await Invoice.count();
+      invoice.invoice_number = `FACT-${String(count + 1).padStart(6, '0')}`;
+    } catch (error) {
+      // If count fails (e.g., table doesn't exist yet), use timestamp
+      invoice.invoice_number = `FACT-${Date.now().toString().slice(-6)}`;
+    }
   }
 });
 
