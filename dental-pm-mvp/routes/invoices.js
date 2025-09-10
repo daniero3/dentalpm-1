@@ -185,6 +185,18 @@ router.post('/', [
       });
     }
 
+    // Generate invoice number before creation
+    const currentYear = new Date().getFullYear();
+    const invoiceCount = await Invoice.count({
+      where: {
+        created_at: {
+          [Op.gte]: new Date(currentYear, 0, 1),
+          [Op.lt]: new Date(currentYear + 1, 0, 1)
+        }
+      }
+    });
+    const invoiceNumber = `FACT-${currentYear}-${String(invoiceCount + 1).padStart(4, '0')}`;
+
     // Calculate totals
     const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price_mga), 0);
     const discountAmount = (subtotal * discount_percentage) / 100;
@@ -192,6 +204,7 @@ router.post('/', [
 
     // Create invoice
     const invoice = await Invoice.create({
+      invoice_number: invoiceNumber,
       patient_id,
       subtotal_mga: subtotal,
       discount_percentage,
