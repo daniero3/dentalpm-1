@@ -132,23 +132,23 @@ router.post('/', [
         dentist_id,
         appointment_date,
         status: {
-          $notIn: ['CANCELLED', 'NO_SHOW']
+          [Op.notIn]: ['CANCELLED', 'NO_SHOW']
         },
-        $or: [
+        [Op.or]: [
           {
             start_time: {
-              $between: [start_time, end_time]
+              [Op.between]: [start_time, end_time]
             }
           },
           {
             end_time: {
-              $between: [start_time, end_time]
+              [Op.between]: [start_time, end_time]
             }
           },
           {
-            $and: [
-              { start_time: { $lte: start_time } },
-              { end_time: { $gte: end_time } }
+            [Op.and]: [
+              { start_time: { [Op.lte]: start_time } },
+              { end_time: { [Op.gte]: end_time } }
             ]
           }
         ]
