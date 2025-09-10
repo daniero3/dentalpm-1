@@ -98,6 +98,15 @@ const LabOrder = sequelize.define('lab_orders', {
   cancelled_reason: {
     type: DataTypes.STRING(255),
     allowNull: true
+  },
+  clinic_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Allow null for backward compatibility
+    references: {
+      model: 'clinics',
+      key: 'id'
+    },
+    comment: 'Clinic this lab order belongs to (for multi-tenancy)'
   }
 }, {
   indexes: [
