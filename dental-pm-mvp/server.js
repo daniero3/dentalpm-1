@@ -15,6 +15,7 @@ const inventoryRoutes = require('./routes/inventory');
 const supplierRoutes = require('./routes/suppliers');
 const labRoutes = require('./routes/labs');
 const mailingRoutes = require('./routes/mailing');
+const mediaRoutes = require('./routes/media');
 
 const app = express();
 const PORT = process.env.PORT || 8001;
