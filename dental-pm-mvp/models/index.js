@@ -30,7 +30,14 @@ const SubscriptionInvoice = require('./SubscriptionInvoice');
 
 // Define associations
 function defineAssociations() {
-  // Existing associations
+  // Clinic relationships
+  Clinic.hasMany(User, { foreignKey: 'clinic_id', as: 'users' });
+  Clinic.hasMany(Patient, { foreignKey: 'clinic_id', as: 'patients' });
+  Clinic.hasMany(Subscription, { foreignKey: 'clinic_id', as: 'subscriptions' });
+  Clinic.hasMany(SubscriptionInvoice, { foreignKey: 'clinic_id', as: 'invoices' });
+
+  // Existing associations (updated with clinic relationships)
+  User.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
   User.hasMany(Patient, { foreignKey: 'created_by_user_id', as: 'createdPatients' });
   User.hasMany(Appointment, { foreignKey: 'dentist_id', as: 'appointments' });
   User.hasMany(Treatment, { foreignKey: 'performed_by_user_id', as: 'treatments' });
