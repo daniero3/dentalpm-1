@@ -340,7 +340,7 @@ router.get('/', async (req, res) => {
  * @access Super Admin
  */
 router.put('/:id', [
-  requireRole(['SUPER_ADMIN']),
+  requireRole('SUPER_ADMIN'),
   param('id').isUUID().withMessage('ID abonnement invalide'),
   body('plan').optional().isIn(['ESSENTIAL', 'PRO', 'GROUP']),
   body('status').optional().isIn(['ACTIVE', 'TRIAL', 'EXPIRED', 'CANCELLED', 'TRIAL_EXPIRED']),
