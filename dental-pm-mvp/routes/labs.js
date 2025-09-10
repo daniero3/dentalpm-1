@@ -85,11 +85,107 @@ router.get('/', [
 });
 
 // =============================================================================
-// LAB ORDERS MANAGEMENT (must come before /:id route)
+// LAB ORDERS MANAGEMENT
 // =============================================================================
 
 // Get all lab orders with filtering
 router.get('/orders', [
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('status').optional().isIn(['CREATED', 'SENT', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED']),
+  query('lab_id').optional().isUUID(),
+  query('dentist_id').optional().isUUID(),
+  query('work_type').optional().isIn(['CROWN', 'BRIDGE', 'DENTURE', 'PARTIAL_DENTURE', 'IMPLANT', 'ORTHODONTICS', 'REPAIR', 'OTHER']),
+  query('due_date_from').optional().isDate(),
+  query('due_date_to').optional().isDate()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Paramètres invalides',
+        details: errors.array()
+      });
+    }
+
+    const { 
+      page = 1, 
+      limit = 20, 
+      status, 
+      lab_id, 
+      dentist_id, 
+      work_type,
+      due_date_from,
+      due_date_to 
+    } = req.query;
+    
+    const offset = (page - 1) * limit;
+    let whereClause = {};
+    
+    if (status) whereClause.status = status;
+    if (lab_id) whereClause.lab_id = lab_id;
+    if (dentist_id) whereClause.dentist_id = dentist_id;
+    if (work_type) whereClause.work_type = work_type;
+    
+    if (due_date_from || due_date_to) {
+      whereClause.due_date = {};
+      if (due_date_from) whereClause.due_date[Op.gte] = due_date_from;
+      if (due_date_to) whereClause.due_date[Op.lte] = due_date_to;
+    }
+
+    const { count, rows: orders } = await LabOrder.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: Lab,
+          as: 'lab',
+          attributes: ['id', 'name', 'phone', 'lead_time_days']
+        },
+        {
+          model: Patient,
+          as: 'patient',
+          attributes: ['id', 'first_name', 'last_name', 'phone_primary']
+        },
+        {
+          model: User,
+          as: 'dentist',
+          attributes: ['id', 'full_name', 'phone']
+        },
+        {
+          model: LabOrderItem,
+          as: 'items',
+          attributes: ['id', 'tooth_number', 'work_description', 'unit_price_mga', 'quantity', 'subtotal_mga']
+        },
+        {
+          model: LabDelivery,
+          as: 'delivery',
+          required: false
+        }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['due_date', 'ASC'], ['created_at', 'DESC']]
+    });
+
+    res.json({
+      orders,
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: Math.ceil(count / limit),
+        total_count: count,
+        per_page: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get lab orders error:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des commandes laboratoire'
+    });
+  }
+});
+
+// Get single lab with orders
+router.get('/:id', [
   param('id').isUUID().withMessage('ID laboratoire invalide')
 ], async (req, res) => {
   try {
