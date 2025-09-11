@@ -182,12 +182,14 @@ router.get('/clinics', [
       include: [
         {
           model: Subscription,
+          as: 'subscriptions',
           attributes: ['id', 'plan', 'status', 'end_date', 'monthly_price_mga'],
           order: [['created_at', 'DESC']],
           limit: 1
         },
         {
           model: User,
+          as: 'users',
           attributes: ['id', 'role'],
           where: { is_active: true },
           required: false
