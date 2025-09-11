@@ -95,7 +95,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       stats: {
         clinics: {
           total: totalClinics,
-          active: activeClinics,
+          active: activeSubscriptions, // Using active subscriptions as proxy for active clinics
           growth_rate: 0 // TODO: Calculate month-over-month growth
         },
         subscriptions: {
