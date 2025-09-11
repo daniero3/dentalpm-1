@@ -239,62 +239,74 @@ function App() {
                 {/* Placeholder routes for new sections */}
                 <Route path="/appointments" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <div className="text-center py-12">
-                        <h1 className="text-2xl font-bold text-foreground">Rendez-vous</h1>
-                        <p className="text-muted-foreground mt-2">Module en développement</p>
-                      </div>
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <div className="text-center py-12">
+                          <h1 className="text-2xl font-bold text-foreground">Rendez-vous</h1>
+                          <p className="text-muted-foreground mt-2">Module en développement</p>
+                        </div>
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/inventory" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <div className="text-center py-12">
-                        <h1 className="text-2xl font-bold text-foreground">Inventaire</h1>
-                        <p className="text-muted-foreground mt-2">Module en développement</p>
-                      </div>
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <div className="text-center py-12">
+                          <h1 className="text-2xl font-bold text-foreground">Inventaire</h1>
+                          <p className="text-muted-foreground mt-2">Module en développement</p>
+                        </div>
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/suppliers" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <div className="text-center py-12">
-                        <h1 className="text-2xl font-bold text-foreground">Fournisseurs</h1>
-                        <p className="text-muted-foreground mt-2">Module en développement</p>
-                      </div>
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <div className="text-center py-12">
+                          <h1 className="text-2xl font-bold text-foreground">Fournisseurs</h1>
+                          <p className="text-muted-foreground mt-2">Module en développement</p>
+                        </div>
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/lab" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <div className="text-center py-12">
-                        <h1 className="text-2xl font-bold text-foreground">Laboratoire</h1>
-                        <p className="text-muted-foreground mt-2">Module en développement</p>
-                      </div>
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <div className="text-center py-12">
+                          <h1 className="text-2xl font-bold text-foreground">Laboratoire</h1>
+                          <p className="text-muted-foreground mt-2">Module en développement</p>
+                        </div>
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/mailing" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <div className="text-center py-12">
-                        <h1 className="text-2xl font-bold text-foreground">Mailing</h1>
-                        <p className="text-muted-foreground mt-2">Module en développement</p>
-                      </div>
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <div className="text-center py-12">
+                          <h1 className="text-2xl font-bold text-foreground">Mailing</h1>
+                          <p className="text-muted-foreground mt-2">Module en développement</p>
+                        </div>
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/settings" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <div className="text-center py-12">
-                        <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
-                        <p className="text-muted-foreground mt-2">Module en développement</p>
-                      </div>
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <div className="text-center py-12">
+                          <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
+                          <p className="text-muted-foreground mt-2">Module en développement</p>
+                        </div>
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
               </Routes>
