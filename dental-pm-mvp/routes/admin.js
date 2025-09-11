@@ -97,8 +97,8 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
           expired: expiredSubscriptions
         },
         revenue: {
-          monthly_mga: monthlyRevenue || 0,
-          yearly_mga: yearlyRevenue || 0
+          monthly_mga: monthlyRevenue,
+          yearly_mga: yearlyRevenue
         },
         users: {
           total: totalUsers
