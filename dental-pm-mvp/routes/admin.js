@@ -38,6 +38,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       Clinic.count({
         include: [{
           model: Subscription,
+          as: 'subscriptions',
           where: { status: 'ACTIVE' },
           required: true
         }]
