@@ -271,8 +271,10 @@ router.post('/clinics', [
     const hashedPassword = await bcrypt.hash(admin_user.password, 10);
 
     const adminUser = await User.create({
-      ...admin_user,
-      password: hashedPassword,
+      username: admin_user.username,
+      email: admin_user.email,
+      password_hash: hashedPassword,
+      full_name: `${admin_user.first_name} ${admin_user.last_name}`,
       role: 'ADMIN',
       clinic_id: clinic.id,
       is_active: true
