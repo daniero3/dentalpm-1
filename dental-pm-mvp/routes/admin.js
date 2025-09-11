@@ -366,6 +366,55 @@ router.put('/clinics/:id', [
 });
 
 /**
+ * @route GET /api/admin/users
+ * @desc Get all users (Super Admin)
+ * @access Super Admin
+ */
+router.get('/users', [
+  requireRole('SUPER_ADMIN'),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 })
+], async (req, res) => {
+  try {
+    const { page = 1, limit = 20, clinic_id, role } = req.query;
+    const offset = (page - 1) * limit;
+
+    let whereClause = {};
+    if (clinic_id) whereClause.clinic_id = clinic_id;
+    if (role) whereClause.role = role;
+
+    const { count, rows: users } = await User.findAndCountAll({
+      where: whereClause,
+      include: [{
+        model: Clinic,
+        as: 'clinic',
+        attributes: ['id', 'name', 'city']
+      }],
+      attributes: { exclude: ['password_hash'] },
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      users,
+      pagination: {
+        current_page: parseInt(page),
+        total_pages: Math.ceil(count / limit),
+        total_count: count,
+        per_page: parseInt(limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des utilisateurs'
+    });
+  }
+});
+
+/**
  * @route DELETE /api/admin/clinics/:id
  * @desc Deactivate clinic
  * @access Super Admin
