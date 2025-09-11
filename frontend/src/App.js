@@ -18,6 +18,12 @@ import InvoiceManagement from "./components/InvoiceManagement";
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
 
+// SaaS Components
+import BillingSettings from "./components/BillingSettings";
+import SuperAdminDashboard from "./components/SuperAdminDashboard";
+import SuperAdminClinics from "./components/SuperAdminClinics";
+import LicensingGuard from "./components/LicensingGuard";
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
