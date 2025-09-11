@@ -73,6 +73,75 @@ class Gender(str, Enum):
     FEMALE = "female"
     OTHER = "other"
 
+# SaaS Models
+class Clinic(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    address: str
+    city: str
+    postal_code: Optional[str] = None
+    phone: Optional[str] = None
+    email: str
+    nif_number: Optional[str] = None
+    stat_number: Optional[str] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Subscription(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    clinic_id: str
+    plan: SubscriptionPlan
+    status: SubscriptionStatus
+    price_mga: int
+    start_date: datetime
+    end_date: Optional[datetime] = None
+    trial_end_date: Optional[datetime] = None
+    auto_renew: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: str
+    password_hash: str
+    full_name: str
+    role: UserRole
+    clinic_id: Optional[str] = None
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Auth Models
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    message: str
+    token: str
+    user: Dict[str, Any]
+
+# SaaS Plan Configuration
+SUBSCRIPTION_PLANS = {
+    "ESSENTIAL": {
+        "name": "Essential",
+        "price_mga": 180000,
+        "max_practitioners": 2,
+        "features": ["Gestion patients", "Rendez-vous", "Facturation MGA"]
+    },
+    "PRO": {
+        "name": "Pro", 
+        "price_mga": 390000,
+        "max_practitioners": 4,
+        "features": ["Inventaire avancé", "Laboratoire", "Mailing patients", "Rapports avancés"]
+    },
+    "GROUP": {
+        "name": "Group",
+        "price_mga": 790000,
+        "max_practitioners": 999,
+        "features": ["Multi-site", "API access", "Formation personnalisée", "Support dédié 24/7"]
+    }
+}
+
 class ToothPosition(str, Enum):
     # Adult teeth numbering (1-32 American system)
     TOOTH_1 = "1"   # Upper right wisdom
