@@ -25,8 +25,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       expiredSubscriptions,
       monthlyRevenue,
       yearlyRevenue,
-      totalUsers,
-      recentInvoices
+      totalUsers
     ] = await Promise.all([
       // Total clinics
       Clinic.count(),
@@ -49,7 +48,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
           status: 'PAID',
           paid_at: { [Op.gte]: startOfMonth }
         }
-      }),
+      }) || 0,
       
       // Yearly revenue
       SubscriptionInvoice.sum('total_mga', {
@@ -57,26 +56,20 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
           status: 'PAID',
           paid_at: { [Op.gte]: startOfYear }
         }
-      }),
+      }) || 0,
       
       // Total users across all clinics
-      User.count({ where: { role: { [Op.ne]: 'SUPER_ADMIN' } } }),
-      
-      // Recent invoices
-      SubscriptionInvoice.findAll({
-        include: [{
-          model: Clinic,
-          as: 'clinic',
-          attributes: ['name']
-        }],
-        limit: 10,
-        order: [['created_at', 'DESC']]
-      })
+      User.count({ where: { role: { [Op.ne]: 'SUPER_ADMIN' } } })
     ]);
 
-    // Get recent clinics and subscription stats separately
+    // Get simple recent data
     const recentClinics = await Clinic.findAll({
       limit: 5,
+      order: [['created_at', 'DESC']]
+    });
+
+    const recentInvoices = await SubscriptionInvoice.findAll({
+      limit: 10,
       order: [['created_at', 'DESC']]
     });
 
@@ -84,8 +77,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       attributes: [
         'plan',
         'status',
-        [Subscription.sequelize.fn('COUNT', Subscription.sequelize.col('id')), 'count'],
-        [Subscription.sequelize.fn('SUM', Subscription.sequelize.col('monthly_price_mga')), 'monthly_revenue']
+        [Subscription.sequelize.fn('COUNT', Subscription.sequelize.col('id')), 'count']
       ],
       group: ['plan', 'status'],
       raw: true
