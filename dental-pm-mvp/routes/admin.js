@@ -203,13 +203,13 @@ router.get('/clinics', [
     // Add user count and latest subscription info
     const enrichedClinics = clinics.map(clinic => {
       const clinicData = clinic.toJSON();
-      clinicData.user_count = clinicData.Users ? clinicData.Users.length : 0;
-      clinicData.latest_subscription = clinicData.Subscriptions && clinicData.Subscriptions.length > 0 
-        ? clinicData.Subscriptions[0] 
+      clinicData.user_count = clinicData.users ? clinicData.users.length : 0;
+      clinicData.latest_subscription = clinicData.subscriptions && clinicData.subscriptions.length > 0 
+        ? clinicData.subscriptions[0] 
         : null;
       
-      delete clinicData.Users;
-      delete clinicData.Subscriptions;
+      delete clinicData.users;
+      delete clinicData.subscriptions;
       
       return clinicData;
     });
