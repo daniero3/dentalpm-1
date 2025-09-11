@@ -32,6 +32,15 @@ const navigation = [
   { name: "Paramètres", href: "/settings", icon: Settings },
 ]
 
+const adminNavigation = [
+  { name: "Admin Dashboard", href: "/admin", icon: Crown },
+  { name: "Cliniques", href: "/admin/clinics", icon: Building2 },
+]
+
+const billingNavigation = [
+  { name: "Facturation", href: "/settings/billing", icon: CreditCard },
+]
+
 export function ModernSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [clinicLogo, setClinicLogo] = useState(null)
