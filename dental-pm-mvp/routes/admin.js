@@ -19,7 +19,6 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
     // Get comprehensive stats
     const [
       totalClinics,
-      activeClinics,
       totalSubscriptions,
       activeSubscriptions,
       trialSubscriptions,
@@ -27,22 +26,10 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       monthlyRevenue,
       yearlyRevenue,
       totalUsers,
-      recentClinics,
-      subscriptionsByPlan,
       recentInvoices
     ] = await Promise.all([
       // Total clinics
       Clinic.count(),
-      
-      // Active clinics (with active subscriptions)
-      Clinic.count({
-        include: [{
-          model: Subscription,
-          as: 'subscriptions',
-          where: { status: 'ACTIVE' },
-          required: true
-        }]
-      }),
       
       // Total subscriptions
       Subscription.count(),
@@ -75,39 +62,34 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       // Total users across all clinics
       User.count({ where: { role: { [Op.ne]: 'SUPER_ADMIN' } } }),
       
-      // Recent clinics
-      Clinic.findAll({
-        include: [{
-          model: Subscription,
-          as: 'subscriptions',
-          attributes: ['plan', 'status', 'created_at']
-        }],
-        limit: 5,
-        order: [['created_at', 'DESC']]
-      }),
-      
-      // Subscriptions by plan
-      Subscription.findAll({
-        attributes: [
-          'plan',
-          'status',
-          [Subscription.sequelize.fn('COUNT', Subscription.sequelize.col('id')), 'count'],
-          [Subscription.sequelize.fn('SUM', Subscription.sequelize.col('monthly_price_mga')), 'monthly_revenue']
-        ],
-        group: ['plan', 'status'],
-        raw: true
-      }),
-      
       // Recent invoices
       SubscriptionInvoice.findAll({
         include: [{
           model: Clinic,
+          as: 'clinic',
           attributes: ['name']
         }],
         limit: 10,
         order: [['created_at', 'DESC']]
       })
     ]);
+
+    // Get recent clinics and subscription stats separately
+    const recentClinics = await Clinic.findAll({
+      limit: 5,
+      order: [['created_at', 'DESC']]
+    });
+
+    const subscriptionsByPlan = await Subscription.findAll({
+      attributes: [
+        'plan',
+        'status',
+        [Subscription.sequelize.fn('COUNT', Subscription.sequelize.col('id')), 'count'],
+        [Subscription.sequelize.fn('SUM', Subscription.sequelize.col('monthly_price_mga')), 'monthly_revenue']
+      ],
+      group: ['plan', 'status'],
+      raw: true
+    });
 
     res.json({
       stats: {
