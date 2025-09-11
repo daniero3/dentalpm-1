@@ -13,7 +13,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
-  Stethoscope
+  Stethoscope,
+  Crown,
+  Building2,
+  CreditCard
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { Button } from "./ui/button"
