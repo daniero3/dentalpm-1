@@ -79,6 +79,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       Clinic.findAll({
         include: [{
           model: Subscription,
+          as: 'subscriptions',
           attributes: ['plan', 'status', 'created_at']
         }],
         limit: 5,
