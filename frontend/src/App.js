@@ -175,29 +175,64 @@ function App() {
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <Dashboard />
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <Dashboard />
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/patients" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <PatientManagement />
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <PatientManagement />
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/patients/:patientId/chart" element={
                   <ProtectedRoute>
-                    <MainLayout>
-                      <DentalChart />
-                    </MainLayout>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <DentalChart />
+                      </MainLayout>
+                    </LicensingGuard>
                   </ProtectedRoute>
                 } />
                 <Route path="/invoices" element={
                   <ProtectedRoute>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <InvoiceManagement />
+                      </MainLayout>
+                    </LicensingGuard>
+                  </ProtectedRoute>
+                } />
+                
+                {/* SaaS Routes */}
+                <Route path="/settings/billing" element={
+                  <ProtectedRoute>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <BillingSettings />
+                      </MainLayout>
+                    </LicensingGuard>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Super Admin Routes */}
+                <Route path="/admin" element={
+                  <ProtectedRoute>
                     <MainLayout>
-                      <InvoiceManagement />
+                      <SuperAdminDashboard />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/clinics" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <SuperAdminClinics />
                     </MainLayout>
                   </ProtectedRoute>
                 } />
