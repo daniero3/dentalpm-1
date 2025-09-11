@@ -6,6 +6,53 @@ const { Clinic, Subscription, SubscriptionInvoice } = require('../models');
 const { Op } = require('sequelize');
 
 /**
+ * @route GET /api/billing/dashboard
+ * @desc Get billing dashboard statistics
+ * @access Super Admin or Clinic Users
+ */
+router.get('/dashboard', async (req, res) => {
+  try {
+    const { user } = req;
+    
+    let whereClause = {};
+    if (user.role !== 'SUPER_ADMIN') {
+      if (!user.clinic_id) {
+        return res.status(403).json({ error: 'Non autorisé' });
+      }
+      whereClause.clinic_id = user.clinic_id;
+    }
+
+    // Get basic billing stats
+    const [
+      totalInvoices,
+      paidInvoices,
+      pendingInvoices,
+      totalRevenue
+    ] = await Promise.all([
+      SubscriptionInvoice.count({ where: whereClause }),
+      SubscriptionInvoice.count({ where: { ...whereClause, status: 'PAID' } }),
+      SubscriptionInvoice.count({ where: { ...whereClause, status: 'PENDING' } }),
+      SubscriptionInvoice.sum('total_mga', { where: { ...whereClause, status: 'PAID' } })
+    ]);
+
+    res.json({
+      stats: {
+        total_invoices: totalInvoices,
+        paid_invoices: paidInvoices,
+        pending_invoices: pendingInvoices,
+        total_revenue_mga: totalRevenue || 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Billing dashboard error:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques de facturation'
+    });
+  }
+});
+
+/**
  * @route POST /api/billing/generate-invoice
  * @desc Generate subscription invoice for a clinic
  * @access Super Admin
