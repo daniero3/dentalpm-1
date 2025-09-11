@@ -136,6 +136,7 @@ export function ModernSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 py-4 space-y-1">
+        {/* Main Navigation */}
         {navigation.map((item, index) => {
           const isActive = location.pathname === item.href
           const Icon = item.icon
@@ -196,6 +197,160 @@ export function ModernSidebar() {
             </motion.div>
           )
         })}
+
+        {/* Billing Section for regular users */}
+        {user?.role !== 'SUPER_ADMIN' && (
+          <>
+            {!isCollapsed && (
+              <motion.div 
+                className="px-3 py-2 mt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Abonnement
+                </h3>
+              </motion.div>
+            )}
+            {billingNavigation.map((item, index) => {
+              const isActive = location.pathname === item.href
+              const Icon = item.icon
+
+              return (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (navigation.length + index) * 0.05 }}
+                >
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center"
+                    >
+                      <Icon className={cn(
+                        "h-4 w-4 flex-shrink-0 transition-colors",
+                        isActive ? "text-primary-foreground" : ""
+                      )} />
+                      
+                      <AnimatePresence>
+                        {!isCollapsed && (
+                          <motion.span
+                            variants={textVariants}
+                            initial="collapsed"
+                            animate="expanded"
+                            exit="collapsed"
+                            transition={{ duration: 0.2 }}
+                            className="ml-3"
+                          >
+                            {item.name}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicatorBilling"
+                        className="absolute left-0 w-1 bg-primary-foreground rounded-r-full"
+                        style={{ height: '20px' }}
+                      />
+                    )}
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </>
+        )}
+
+        {/* Super Admin Section */}
+        {user?.role === 'SUPER_ADMIN' && (
+          <>
+            {!isCollapsed && (
+              <motion.div 
+                className="px-3 py-2 mt-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+              >
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Super Admin
+                </h3>
+              </motion.div>
+            )}
+            {adminNavigation.map((item, index) => {
+              const isActive = location.pathname === item.href
+              const Icon = item.icon
+
+              return (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (navigation.length + billingNavigation.length + index) * 0.05 }}
+                >
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                      "hover:bg-accent hover:text-accent-foreground",
+                      "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                      isActive
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center"
+                    >
+                      <Icon className={cn(
+                        "h-4 w-4 flex-shrink-0 transition-colors",
+                        isActive ? "text-white" : ""
+                      )} />
+                      
+                      <AnimatePresence>
+                        {!isCollapsed && (
+                          <motion.span
+                            variants={textVariants}
+                            initial="collapsed"
+                            animate="expanded"
+                            exit="collapsed"
+                            transition={{ duration: 0.2 }}
+                            className="ml-3"
+                          >
+                            {item.name}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicatorAdmin"
+                        className="absolute left-0 w-1 bg-white rounded-r-full"
+                        style={{ height: '20px' }}
+                      />
+                    )}
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       {/* User Profile */}
