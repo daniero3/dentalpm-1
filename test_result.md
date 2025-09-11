@@ -248,10 +248,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive System Testing - Frontend UI"
+    - "SaaS Frontend Integration Testing"
   stuck_tasks: []
   test_all: true
-  test_priority: "frontend_testing_next"
+  test_priority: "saas_integration_complete"
 
   - task: "Comprehensive System Testing - Backend Priority Features"
     implemented: true
