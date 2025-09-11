@@ -217,7 +217,7 @@ router.post('/clinics', [
   body('address').isLength({ min: 5, max: 255 }).withMessage('Adresse requise'),
   body('city').isLength({ min: 2, max: 50 }).withMessage('Ville requise'),
   body('postal_code').optional().isLength({ max: 10 }),
-  body('contact_email').isEmail().withMessage('Email valide requis'),
+  body('email').isEmail().withMessage('Email valide requis'),
   body('nif_number').optional().isLength({ min: 5, max: 20 }),
   body('stat_number').optional().isLength({ min: 5, max: 20 }),
   body('admin_user').isObject().withMessage('Informations administrateur requises'),
