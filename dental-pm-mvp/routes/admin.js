@@ -157,7 +157,7 @@ router.get('/clinics', [
         {
           model: Subscription,
           as: 'subscriptions',
-          attributes: ['id', 'plan', 'status', 'end_date', 'monthly_price_mga'],
+          attributes: ['id', 'plan', 'status', 'end_date', 'price_mga'],
           order: [['created_at', 'DESC']],
           limit: 1
         },
