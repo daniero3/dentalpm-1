@@ -164,7 +164,7 @@ class SaaSFeaturesAPITester:
             "city": "Antananarivo",
             "postal_code": "101",
             "phone": f"+261 20 22 {timestamp[:3]} {timestamp[3:5]}",
-            "contact_email": f"contact.{timestamp}@cabinet-dental.mg",
+            "email": f"contact.{timestamp}@cabinet-dental.mg",
             "nif_number": f"NIF{timestamp}",
             "stat_number": f"STAT{timestamp}",
             "admin_user": {
