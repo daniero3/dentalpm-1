@@ -28,17 +28,19 @@ const PORT = process.env.PORT || 8001;
 // Security middleware
 app.use(helmet());
 
-// CORS configuration - more permissive for preview environments
+// CORS configuration - permissive for preview environments
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? [
-        'https://dentalpm-1.preview.emergentagent.com',
-        process.env.FRONTEND_URL || 'http://localhost:3000'
-      ]
-    : true, // Allow all origins in development
+  origin: [
+    'http://localhost:3000',
+    'https://localhost:3000',
+    'https://dentalpm-1.preview.emergentagent.com',
+    'https://*.preview.emergentagent.com',
+    'https://*.emergentagent.com',
+    process.env.FRONTEND_URL || 'http://localhost:3000'
+  ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   optionsSuccessStatus: 200
 };
 
