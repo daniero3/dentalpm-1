@@ -7,11 +7,17 @@ const Invoice = sequelize.define('invoices', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
+  document_type: {
+    type: DataTypes.ENUM('INVOICE', 'QUOTE'),
+    allowNull: false,
+    defaultValue: 'INVOICE',
+    comment: 'INVOICE = Facture, QUOTE = Devis'
+  },
   invoice_number: {
     type: DataTypes.STRING(20),
     allowNull: false,
     unique: true,
-    comment: 'Auto-generated: FACT-000001'
+    comment: 'FACT-YYYY-XXXX pour factures, DEV-YYYY-XXXX pour devis'
   },
   patient_id: {
     type: DataTypes.UUID,
