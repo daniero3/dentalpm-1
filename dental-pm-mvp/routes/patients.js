@@ -10,24 +10,40 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all patients
-router.get('/', async (req, res) => {
+// List patients (avec filtrage clinic_id)
+router.get('/', requireClinicId, [
+  query('search').optional().isLength({ min: 1 }),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 100 })
+], async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, is_active = true } = req.query;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Paramètres de recherche invalides',
+        details: errors.array()
+      });
+    }
+
+    const { search, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
+
+    // Build where clause with clinic filtering
+    let whereClause = {};
     
-    let whereClause = { is_active };
-    
+    // Super admin can see all patients, others filtered by clinic
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+
     if (search) {
-      whereClause = {
-        ...whereClause,
-        [Op.or]: [
-          { first_name: { [Op.iLike]: `%${search}%` } },
-          { last_name: { [Op.iLike]: `%${search}%` } },
-          { phone_primary: { [Op.like]: `%${search}%` } },
-          { patient_number: { [Op.like]: `%${search}%` } }
-        ]
-      };
+      whereClause[Op.or] = [
+        { patient_number: { [Op.like]: `%${search}%` } },
+        { first_name: { [Op.like]: `%${search}%` } },
+        { last_name: { [Op.like]: `%${search}%` } },
+        { phone_primary: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
     }
 
     const { count, rows: patients } = await Patient.findAndCountAll({
@@ -35,7 +51,11 @@ router.get('/', async (req, res) => {
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['last_name', 'ASC'], ['first_name', 'ASC']],
-      attributes: { exclude: ['created_by_user_id'] }
+      include: [{
+        model: User,
+        as: 'createdBy',
+        attributes: { exclude: ['password_hash'] }
+      }]
     });
 
     res.json({
@@ -47,8 +67,9 @@ router.get('/', async (req, res) => {
         per_page: parseInt(limit)
       }
     });
+
   } catch (error) {
-    console.error('Get patients error:', error);
+    console.error('List patients error:', error);
     res.status(500).json({
       error: 'Erreur lors de la récupération des patients'
     });
