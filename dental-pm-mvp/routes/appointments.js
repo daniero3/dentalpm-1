@@ -359,7 +359,8 @@ router.get('/:id/export-calendar', [
 
     // Generate ICS content (RFC 5545 compliant)
     const formatDate = (date, time) => {
-      const appointmentDate = new Date(`${date}T${time}:00`);
+      const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const appointmentDate = new Date(`${dateStr}T${time}:00.000Z`);
       return appointmentDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
 
