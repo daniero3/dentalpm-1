@@ -121,7 +121,7 @@ const Appointment = sequelize.define('appointments', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: true, // Allow null for backward compatibility
+    allowNull: false, // Required for multi-tenancy
     references: {
       model: 'clinics',
       key: 'id'
