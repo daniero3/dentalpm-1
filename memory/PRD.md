@@ -1,126 +1,66 @@
-# Dental PM Madagascar - SaaS Multi-Tenant Platform
+# Dental Practice Management SaaS - Madagascar
 
-## Original Problem Statement
-Transform the existing dental practice management application into a multi-tenant Commercial SaaS platform with:
-- Multi-tenancy (data isolation per clinic via `clinic_id`)
-- Subscription & billing system
-- Super-admin portal for platform management
-- Licensing guard for subscription enforcement
+## Problem Statement
+Transform dental practice management into a multi-tenant Commercial SaaS platform for the Madagascar market with local payment methods (MVola, Orange Money, etc.).
 
-## Core Requirements
-- **Multi-tenant Architecture**: All tenant data filtered by `clinic_id`
-- **Subscription Plans**: Trial, Basic, Professional, Enterprise
-- **Role-Based Access**: SUPER_ADMIN, ADMIN, DENTIST, ASSISTANT, ACCOUNTANT, RECEPTIONIST
-- **Data Isolation**: Complete separation of clinic data
+## Architecture
+- **Backend**: Node.js + Express + Sequelize + SQLite
+- **Frontend**: React + Shadcn/Tailwind
+- **Multi-tenancy**: `clinic_id` enforcement across all models
+- **Auth**: JWT + RBAC (SUPER_ADMIN, ADMIN, DENTIST, etc.)
 
-## What's Been Implemented
+## Completed Phases
 
-### Backend (Node.js/Express/Sequelize/SQLite)
-- ✅ **Multi-tenancy middleware** (`/middleware/clinic.js`) - Applied to all routes
-- ✅ **SaaS Models**: Clinic, Subscription, SubscriptionInvoice
-- ✅ **clinic_id filtering** on: patients, appointments, invoices, inventory, labs, suppliers, mailing
-- ✅ **Automatic clinic_id assignment** on all POST operations
-- ✅ **Super Admin routes** (`/api/admin/*`)
-- ✅ **Billing routes** (`/api/billing/*`)
-- ✅ **Subscription routes** (`/api/subscriptions/*`)
-- ✅ **OpenAPI endpoint** (`/api/openapi.json`)
-- ✅ **ICS calendar export** (`/api/appointments/:id/export-calendar`) with clinic check
-- ✅ **Appointments CRUD** with dentist_id default strategy (= current user if not provided)
-- ✅ **Date filtering** (date_from/date_to ISO8601)
+### P0 - Critical Bug Fixes (✓)
+- `clinic_id: null` enforcement via `requireClinicId` middleware
+- `/openapi.json` returns JSON correctly
 
-### Frontend (React/Tailwind/Shadcn)
-- ✅ **SuperAdminDashboard** component
-- ✅ **SuperAdminClinics** component
-- ✅ **BillingSettings** component
-- ✅ **LicensingGuard** component
-- ✅ **AppointmentManagement** component (NEW - full CRUD + ICS export)
-- ✅ **Role-based navigation** in ModernSidebar
+### P1 - Appointments Stabilization (✓)
+- Time validation, default `dentist_id`, date filtering
+- Cross-clinic security
+- Full CRUD frontend (`AppointmentManagement.jsx`)
 
-### Database
-- ✅ All existing data migrated with `clinic_id`
-- ✅ Default clinic: "Clinique Dentaire Antananarivo"
-- ✅ Test clinic for isolation: "Cabinet Dentaire Antananarivo 081515"
+### P2 - Security & DB Hardening (✓)
+- RBAC middleware
+- Rate-limiting on login (keys by username)
+- Audit logging for CUD operations
+- `clinic_id` NOT NULL constraint in DB
 
-## Changelog
+### P2.5 - Data Standardization (✓)
+- Sequential `patient_number` (PAT-XXXXXX) per clinic
+- Gender normalization (M/F)
 
-### 2026-01-19 (P2 - Stabilisation Production)
-- **P2-1 Sécurité**: Rate limiter sur login (5 max/15min), Audit logger sur patients/appointments/invoices
-- **P2-2 DB**: clinic_id NOT NULL sur Patient/Appointment/Invoice, index déjà présents
-- **Fichiers créés**: `middleware/rateLimiter.js`, `middleware/auditLogger.js`
+### P3 - Local Payment System (✓)
+- `PaymentRequest` model
+- Clinic admin submits proof → Super-admin verifies → Subscription activates
+- File uploads via `multer` (PNG/JPEG/PDF, 5MB max)
 
-### 2026-01-19 (P1)
-- **P1-1 API**: dentist_id optional (defaults to user.id), date_from/date_to filtering, clinic check on all appointment routes
-- **P1-2 Frontend**: New AppointmentManagement.jsx with CRUD and ICS download
-- **P1-3 E2E**: Validated 4-step SaaS workflow (admin → clinic1 data → clinic2 isolation → ICS cross-clinic)
+### P3.5 - Payment Hardening (✓) - 2026-01-19
+- **Unique constraint**: `(clinic_id, reference)` prevents duplicate submissions
+- **409 Conflict**: Returned for duplicate references and already-processed requests
+- **Licensing guard**: `/api/patients` blocked with 403 if subscription expired
+- **Migration**: `20260120-unique-clinic-reference.js`
 
-### 2026-01-19 (P0)
-- **P0-1 FIXED**: Applied `requireClinicId` middleware to ALL routes
-- **P0-2 VALIDATED**: `/api/openapi.json` returns valid JSON
-- **VERIFIED**: Data isolation between clinics (Admin sees 6 patients, test_clinic2 sees 0)
+### P4 - Documentation (✓) - 2026-01-19
+- OpenAPI spec updated with billing/admin endpoints
+- `BILLING.md` created with workflow description (~10 lines)
 
-### 2025-09-11
-- Created Clinic, Subscription, SubscriptionInvoice models
-- Added clinic_id column to Patient, Appointment, Invoice, Treatment, Product, LabOrder
-- Implemented Super Admin portal routes
-- Created frontend SaaS components
+## Key Files Modified (P3.5/P4)
+- `/app/dental-pm-mvp/models/PaymentRequest.js` - unique index
+- `/app/dental-pm-mvp/routes/billing.js` - 409 for duplicate reference
+- `/app/dental-pm-mvp/routes/admin.js` - 409 for already-processed requests
+- `/app/dental-pm-mvp/routes/patients.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/server.js` - OpenAPI spec extended
+- `/app/dental-pm-mvp/BILLING.md` - new doc
 
-## Prioritized Backlog
-
-### P0 (Critical) - COMPLETED ✅
-- [x] Multi-tenancy enforcement (clinic_id filtering)
-- [x] OpenAPI endpoint fix
-
-### P1 (High Priority) - COMPLETED ✅
-- [x] Appointments API: validations + multi-tenancy
-- [x] Appointments Frontend: CRUD + ICS export
-- [x] E2E minimal SaaS workflow
-
-### P2 (Medium Priority)
-- [ ] Replace mock payment processor with real integration (Stripe/local)
-- [ ] Subscription upgrade/downgrade workflow
-- [ ] Invoice PDF generation
-
-### P3 (Low Priority)
-- [ ] User documentation/training materials
-- [ ] Email notifications for subscription events
-- [ ] Analytics dashboard for super-admin
-- [ ] Inventory module frontend
-- [ ] Suppliers module frontend
-
-## Technical Architecture
-
-```
-/app
-├── dental-pm-mvp/          # Backend
-│   ├── middleware/
-│   │   ├── auth.js         # JWT authentication
-│   │   ├── clinic.js       # Multi-tenancy enforcement (SUPER_ADMIN keeps clinic_id)
-│   │   └── licensing.js    # Subscription checks
-│   ├── models/             # Sequelize models
-│   ├── routes/
-│   │   └── appointments.js # Full CRUD + ICS + clinic isolation
-│   └── server.js
-└── frontend/               # React SPA
-    └── src/components/
-        ├── AppointmentManagement.jsx  # NEW
-        └── ...
-```
-
-## API Endpoints - Appointments
-
-| Method | Endpoint | Description | Clinic Check |
-|--------|----------|-------------|--------------|
-| GET | /api/appointments | List with date_from/date_to | ✅ |
-| GET | /api/appointments/:id | Single appointment | ✅ |
-| POST | /api/appointments | Create (dentist_id optional) | ✅ |
-| PUT | /api/appointments/:id | Update | ✅ |
-| DELETE | /api/appointments/:id | Soft delete | ✅ |
-| GET | /api/appointments/:id/export-calendar | ICS export | ✅ |
+## Backlog / Future
+- Stripe integration (real payment gateway)
+- Full frontend UI for billing pages
+- Comprehensive user documentation
 
 ## Test Credentials
-- **Super Admin**: admin / admin123 (clinic_id: d072a421-...)
-- **Clinic 2 Test**: test_clinic2 / test123 (clinic_id: 7cc65b54-...)
+- **Super Admin**: admin / admin123
+- **Clinic Admin**: test_clinic2 / test123
 
-## Known Limitations
-- **MOCKED**: Payment processing (no real transactions)
-- SQLite for development (should migrate to PostgreSQL for production)
+## MOCKED Components
+- **Payments**: Local proof-of-payment (no live gateway)
