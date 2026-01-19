@@ -244,13 +244,14 @@ const PatientManagement = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone *</Label>
+                  <Label htmlFor="phone_primary">Téléphone *</Label>
                   <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    id="phone_primary"
+                    value={formData.phone_primary}
+                    onChange={(e) => setFormData({...formData, phone_primary: e.target.value})}
                     placeholder="+261 32 00 000 00"
                     required
+                    data-testid="phone-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -266,36 +267,33 @@ const PatientManagement = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="address">Adresse *</Label>
+                <Label htmlFor="address">Adresse</Label>
                 <Textarea
                   id="address"
                   value={formData.address}
                   onChange={(e) => setFormData({...formData, address: e.target.value})}
                   placeholder="Adresse complète"
                   rows={2}
-                  required
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="emergency_contact">Contact d'urgence *</Label>
+                  <Label htmlFor="emergency_contact_name">Contact d'urgence</Label>
                   <Input
-                    id="emergency_contact"
-                    value={formData.emergency_contact}
-                    onChange={(e) => setFormData({...formData, emergency_contact: e.target.value})}
-                    placeholder="Nom du contact"
-                    required
+                    id="emergency_contact_name"
+                    value={formData.emergency_contact_name}
+                    onChange={(e) => setFormData({...formData, emergency_contact_name: e.target.value})}
+                    placeholder="Nom du contact (optionnel)"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="emergency_phone">Téléphone d'urgence *</Label>
+                  <Label htmlFor="emergency_contact_phone">Téléphone d'urgence</Label>
                   <Input
-                    id="emergency_phone"
-                    value={formData.emergency_phone}
-                    onChange={(e) => setFormData({...formData, emergency_phone: e.target.value})}
-                    placeholder="+261 32 00 000 00"
-                    required
+                    id="emergency_contact_phone"
+                    value={formData.emergency_contact_phone}
+                    onChange={(e) => setFormData({...formData, emergency_contact_phone: e.target.value})}
+                    placeholder="+261 32 00 000 00 (optionnel)"
                   />
                 </div>
               </div>
