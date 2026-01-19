@@ -158,7 +158,7 @@ router.post('/login', loginRateLimiter, [
     });
 
     // Reset rate limit on successful login
-    resetLoginAttempts(req.ip, username);
+    resetLoginAttempts(req, username);
 
     res.json({
       message: 'Connexion réussie',
