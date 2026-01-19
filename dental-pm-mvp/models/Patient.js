@@ -38,22 +38,20 @@ const Patient = sequelize.define('patients', {
     }
   },
   gender: {
-    type: DataTypes.ENUM('MALE', 'FEMALE', 'OTHER'),
-    allowNull: false
+    type: DataTypes.STRING(10),
+    allowNull: false,
+    validate: {
+      isIn: [['male', 'female', 'other', 'MALE', 'FEMALE', 'OTHER', 'M', 'F']]
+    }
   },
   phone_primary: {
     type: DataTypes.STRING(20),
-    allowNull: false,
-    validate: {
-      is: /^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/ // Madagascar phone format
-    }
+    allowNull: false
+    // Removed strict regex validation - handled in route
   },
   phone_secondary: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    validate: {
-      is: /^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/
-    }
+    allowNull: true
   },
   email: {
     type: DataTypes.STRING(100),
@@ -81,18 +79,13 @@ const Patient = sequelize.define('patients', {
   },
   emergency_contact_name: {
     type: DataTypes.STRING(100),
-    allowNull: false,
-    validate: {
-      len: [2, 100],
-      notEmpty: true
-    }
+    allowNull: true, // Made optional
+    defaultValue: null
   },
   emergency_contact_phone: {
     type: DataTypes.STRING(20),
-    allowNull: false,
-    validate: {
-      is: /^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/
-    }
+    allowNull: true, // Made optional
+    defaultValue: null
   },
   emergency_contact_relationship: {
     type: DataTypes.STRING(50),
