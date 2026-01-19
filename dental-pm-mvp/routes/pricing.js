@@ -177,8 +177,17 @@ router.get('/:id/fees', requireClinicId, [
   param('id').isUUID()
 ], async (req, res) => {
   try {
+    const { Op } = require('sequelize');
+    
+    // Allow access to clinic schedules + global SYNDICAL
     const schedule = await PricingSchedule.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id }
+      where: { 
+        id: req.params.id,
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          { clinic_id: null, type: 'SYNDICAL' }
+        ]
+      }
     });
 
     if (!schedule) {
@@ -207,6 +216,7 @@ router.get('/:id/fees', requireClinicId, [
       schedule_id: schedule.id,
       schedule_type: schedule.type,
       schedule_name: schedule.name,
+      clinic_id: schedule.clinic_id,  // NULL for global SYNDICAL
       fees,
       by_category: categories,
       total_count: fees.length
