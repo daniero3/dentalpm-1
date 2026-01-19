@@ -523,4 +523,153 @@ router.get('/stats', requireRole('SUPER_ADMIN'), async (req, res) => {
   }
 });
 
+// =============================================================================
+// PAYMENT REQUESTS (Local Payment Proof System)
+// =============================================================================
+
+/**
+ * @route GET /api/billing/plans
+ * @desc Get available plans with pricing
+ * @access Authenticated
+ */
+router.get('/plans', (req, res) => {
+  res.json({
+    plans: [
+      { code: 'ESSENTIAL', name: 'Essentiel', price_mga: PLAN_PRICING.ESSENTIAL, features: ['1 praticien', '100 patients', 'Support email'] },
+      { code: 'PRO', name: 'Professionnel', price_mga: PLAN_PRICING.PRO, features: ['3 praticiens', '500 patients', 'Support prioritaire', 'Rapports avancés'] },
+      { code: 'GROUP', name: 'Groupe', price_mga: PLAN_PRICING.GROUP, features: ['Praticiens illimités', 'Patients illimités', 'Support dédié', 'Multi-sites'] }
+    ],
+    payment_methods: [
+      { code: 'MVOLA', name: 'MVola', instructions: 'Envoyer au 034 00 000 00' },
+      { code: 'ORANGE_MONEY', name: 'Orange Money', instructions: 'Envoyer au 032 00 000 00' },
+      { code: 'AIRTEL_MONEY', name: 'Airtel Money', instructions: 'Envoyer au 033 00 000 00' },
+      { code: 'BANK_TRANSFER', name: 'Virement bancaire', instructions: 'RIB: 00001 00002 00000000001 00' },
+      { code: 'CASH', name: 'Espèces', instructions: 'À nos bureaux' }
+    ]
+  });
+});
+
+/**
+ * @route GET /api/billing/subscription
+ * @desc Get current clinic subscription status
+ * @access Clinic Users
+ */
+router.get('/subscription', requireClinicId, async (req, res) => {
+  try {
+    const subscription = await Subscription.findOne({
+      where: { clinic_id: req.clinic_id },
+      include: [{ model: Clinic, as: 'clinic', attributes: ['name'] }],
+      order: [['created_at', 'DESC']]
+    });
+
+    if (!subscription) {
+      return res.json({
+        subscription: null,
+        status: 'NO_SUBSCRIPTION',
+        message: 'Aucun abonnement actif'
+      });
+    }
+
+    res.json({
+      subscription: {
+        id: subscription.id,
+        plan: subscription.plan,
+        status: subscription.status,
+        start_date: subscription.start_date,
+        end_date: subscription.end_date,
+        monthly_price_mga: subscription.monthly_price_mga,
+        clinic_name: subscription.clinic?.name
+      }
+    });
+  } catch (error) {
+    console.error('Get subscription error:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération de l\'abonnement' });
+  }
+});
+
+/**
+ * @route POST /api/billing/payment-requests
+ * @desc Submit payment request with receipt
+ * @access Clinic Admin
+ */
+router.post('/payment-requests', requireClinicId, upload.single('receipt'), [
+  body('plan_code').isIn(['ESSENTIAL', 'PRO', 'GROUP']).withMessage('Plan invalide'),
+  body('payment_method').isIn(['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY', 'BANK_TRANSFER', 'CASH']).withMessage('Méthode de paiement invalide'),
+  body('reference').optional().isLength({ max: 100 }).withMessage('Référence trop longue')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    }
+
+    const { plan_code, payment_method, reference } = req.body;
+    const amount_mga = PLAN_PRICING[plan_code];
+
+    // Check for pending request
+    const pendingRequest = await PaymentRequest.findOne({
+      where: { clinic_id: req.clinic_id, status: 'PENDING' }
+    });
+
+    if (pendingRequest) {
+      return res.status(400).json({
+        error: 'Demande en attente',
+        message: 'Une demande de paiement est déjà en cours de validation'
+      });
+    }
+
+    // Create payment request
+    const paymentRequest = await PaymentRequest.create({
+      clinic_id: req.clinic_id,
+      plan_code,
+      amount_mga,
+      payment_method,
+      reference: reference || null,
+      receipt_url: req.file ? `/uploads/receipts/${req.file.filename}` : null,
+      status: 'PENDING',
+      submitted_by_user_id: req.user.id
+    });
+
+    res.status(201).json({
+      message: 'Demande de paiement soumise',
+      paymentRequest: {
+        id: paymentRequest.id,
+        clinic_id: paymentRequest.clinic_id,
+        plan_code: paymentRequest.plan_code,
+        amount_mga: paymentRequest.amount_mga,
+        payment_method: paymentRequest.payment_method,
+        reference: paymentRequest.reference,
+        status: paymentRequest.status,
+        created_at: paymentRequest.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Create payment request error:', error);
+    res.status(500).json({ error: 'Erreur lors de la soumission de la demande' });
+  }
+});
+
+/**
+ * @route GET /api/billing/payment-requests
+ * @desc Get clinic payment requests
+ * @access Clinic Users
+ */
+router.get('/payment-requests', requireClinicId, async (req, res) => {
+  try {
+    const requests = await PaymentRequest.findAll({
+      where: { clinic_id: req.clinic_id },
+      include: [
+        { model: User, as: 'submittedBy', attributes: ['id', 'full_name'] },
+        { model: User, as: 'verifiedBy', attributes: ['id', 'full_name'] }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({ paymentRequests: requests });
+  } catch (error) {
+    console.error('Get payment requests error:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des demandes' });
+  }
+});
+
 module.exports = router;
