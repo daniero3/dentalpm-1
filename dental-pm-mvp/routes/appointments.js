@@ -360,7 +360,13 @@ router.get('/:id/export-calendar', [
     // Generate ICS content (RFC 5545 compliant)
     const formatDate = (date, time) => {
       const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
-      const appointmentDate = new Date(`${dateStr}T${time}:00.000Z`);
+      
+      // Parse time (format "H:MM" or "HH:MM")
+      const [hours, minutes] = time.split(':').map(t => parseInt(t, 10));
+      
+      const appointmentDate = new Date(dateStr);
+      appointmentDate.setUTCHours(hours, minutes, 0, 0);
+      
       return appointmentDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
 
