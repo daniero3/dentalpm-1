@@ -633,4 +633,108 @@ async function seedDefaultSchedules(clinicId) {
   }
 }
 
+/**
+ * @route GET /api/pricing-schedules/:id/export-fees
+ * @desc Export fees as CSV
+ */
+router.get('/:id/export-fees', requireClinicId, [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const { Op } = require('sequelize');
+    
+    const schedule = await PricingSchedule.findOne({
+      where: { 
+        id: req.params.id,
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          { clinic_id: null, type: 'SYNDICAL' }
+        ]
+      }
+    });
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
+    }
+
+    const fees = await ProcedureFee.findAll({
+      where: { schedule_id: schedule.id },
+      order: [['category', 'ASC'], ['procedure_code', 'ASC']]
+    });
+
+    // Generate CSV
+    const csvHeader = 'code,acte,tarif_mga,category,active\n';
+    const csvRows = fees.map(fee => 
+      `"${fee.procedure_code}","${fee.label.replace(/"/g, '""')}",${fee.price_mga},"${fee.category || 'GENERAL'}",${fee.is_active ? 1 : 0}`
+    ).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=tarifs_${schedule.type}_${schedule.year || 2026}.csv`);
+    res.send(csvHeader + csvRows);
+  } catch (error) {
+    console.error('Export fees error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+/**
+ * @route POST /api/pricing-schedules/:id/import-template-maeva
+ * @desc Import MAEVA template into CABINET schedule (1-click)
+ */
+router.post('/:id/import-template-maeva', requireClinicId, [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const schedule = await PricingSchedule.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id, type: 'CABINET' }
+    });
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Grille CABINET non trouvée' });
+    }
+
+    // Replace=true: deactivate all existing fees first
+    await ProcedureFee.update(
+      { is_active: false },
+      { where: { schedule_id: schedule.id } }
+    );
+
+    const stats = { inserted: 0, updated: 0, total: CABINET_TEMPLATE_MAEVA_2026.length };
+
+    for (const fee of CABINET_TEMPLATE_MAEVA_2026) {
+      const [feeRecord, created] = await ProcedureFee.findOrCreate({
+        where: { schedule_id: schedule.id, procedure_code: fee.procedure_code },
+        defaults: {
+          label: fee.label,
+          price_mga: fee.price_mga,
+          category: fee.category,
+          is_active: true
+        }
+      });
+
+      if (!created) {
+        await feeRecord.update({
+          label: fee.label,
+          price_mga: fee.price_mga,
+          category: fee.category,
+          is_active: true
+        });
+        stats.updated++;
+      } else {
+        stats.inserted++;
+      }
+    }
+
+    res.json({
+      message: 'Template MAEVA importé avec succès',
+      schedule_id: schedule.id,
+      stats,
+      active_count: stats.inserted + stats.updated
+    });
+  } catch (error) {
+    console.error('Import template MAEVA error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;
