@@ -24,6 +24,8 @@ import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import SuperAdminClinics from "./components/SuperAdminClinics";
 import LicensingGuard from "./components/LicensingGuard";
 import AppointmentManagement from "./components/AppointmentManagement";
+import PaymentRequestPage from "./components/PaymentRequestPage";
+import PaymentValidationPage from "./components/PaymentValidationPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
