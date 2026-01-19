@@ -80,6 +80,7 @@ app.use('/api/media', requireAuth, mediaRoutes);
 app.use('/api/subscriptions', requireAuth, subscriptionsRoutes);
 app.use('/api/billing', requireAuth, billingRoutes);
 app.use('/api/admin', requireAuth, adminRoutes);
+app.use('/api/legal', legalRoutes);  // Public access for legal pages
 
 // Licensing status endpoint
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
