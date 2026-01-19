@@ -592,7 +592,20 @@ router.get('/subscription', requireClinicId, async (req, res) => {
  * @desc Submit payment request with receipt
  * @access Clinic Admin
  */
-router.post('/payment-requests', requireClinicId, upload.single('receipt'), [
+router.post('/payment-requests', requireClinicId, (req, res, next) => {
+  upload.single('receipt')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Fichier trop volumineux', message: 'Taille max: 5MB' });
+      }
+      if (err.message && err.message.includes('non autorisé')) {
+        return res.status(400).json({ error: 'Type de fichier invalide', message: err.message });
+      }
+      return res.status(400).json({ error: 'Erreur upload', message: err.message });
+    }
+    next();
+  });
+}, [
   body('plan_code').isIn(['ESSENTIAL', 'PRO', 'GROUP']).withMessage('Plan invalide'),
   body('payment_method').isIn(['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY', 'BANK_TRANSFER', 'CASH']).withMessage('Méthode de paiement invalide'),
   body('reference').notEmpty().withMessage('Référence requise').isLength({ min: 1, max: 100 }).withMessage('Référence: 1-100 caractères')
