@@ -138,43 +138,24 @@ router.get('/:id', [
   }
 });
 
-// Create new patient
-router.post('/', [
-  body('first_name')
-    .isLength({ min: 1, max: 50 })
-    .withMessage('Prénom requis (max 50 caractères)')
-    .trim(),
-  body('last_name')
-    .isLength({ min: 1, max: 50 })
-    .withMessage('Nom requis (max 50 caractères)')
-    .trim(),
-  body('date_of_birth')
-    .isDate()
-    .withMessage('Date de naissance invalide')
-    .isBefore(new Date().toISOString())
-    .withMessage('La date de naissance ne peut pas être dans le futur'),
-  body('gender')
-    .isIn(['MALE', 'FEMALE', 'OTHER'])
-    .withMessage('Genre invalide'),
-  body('phone_primary')
-    .matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/)
-    .withMessage('Numéro de téléphone malgache invalide'),
-  body('email')
-    .optional()
-    .isEmail()
-    .withMessage('Email invalide')
-    .normalizeEmail(),
-  body('address')
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Adresse requise (10-500 caractères)')
-    .trim(),
-  body('emergency_contact_name')
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Nom du contact d\'urgence requis')
-    .trim(),
-  body('emergency_contact_phone')
-    .matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/)
-    .withMessage('Numéro de téléphone d\'urgence malgache invalide')
+// Create patient (avec clinic_id automatique)
+router.post('/', requireClinicId, [
+  body('first_name').isLength({ min: 2, max: 50 }).withMessage('Prénom requis (2-50 caractères)'),
+  body('last_name').isLength({ min: 2, max: 50 }).withMessage('Nom requis (2-50 caractères)'),
+  body('date_of_birth').isISO8601().withMessage('Date de naissance invalide'),
+  body('gender').isIn(['male', 'female', 'other']).withMessage('Genre invalide'),
+  body('phone_primary').isMobilePhone().withMessage('Numéro de téléphone invalide'),
+  body('email').optional().isEmail().withMessage('Email invalide'),
+  body('address').optional().isLength({ max: 255 }).withMessage('Adresse trop longue'),
+  body('city').optional().isLength({ max: 50 }).withMessage('Ville trop longue'),
+  body('postal_code').optional().isLength({ max: 10 }).withMessage('Code postal invalide'),
+  body('nif_number').optional().isLength({ max: 20 }).withMessage('Numéro NIF invalide'),
+  body('stat_number').optional().isLength({ max: 20 }).withMessage('Numéro STAT invalide'),
+  body('emergency_contact_name').optional().isLength({ max: 100 }),
+  body('emergency_contact_phone').optional().isMobilePhone(),
+  body('medical_history').optional().isLength({ max: 1000 }),
+  body('allergies').optional().isLength({ max: 500 }),
+  body('current_medications').optional().isLength({ max: 500 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -185,44 +166,19 @@ router.post('/', [
       });
     }
 
-    // Check if patient with same phone already exists
-    const existingPatient = await Patient.findOne({
-      where: { phone_primary: req.body.phone_primary }
-    });
-
-    if (existingPatient) {
-      return res.status(409).json({
-        error: 'Un patient avec ce numéro de téléphone existe déjà'
-      });
-    }
-
-    // Generate patient number before creation
-    const timestamp = Date.now().toString();
-    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const patientNumber = `PAT-${timestamp.slice(-6)}${randomSuffix}`;
-
-    const patient = await Patient.create({
+    const patientData = {
       ...req.body,
-      patient_number: patientNumber,
+      clinic_id: req.clinic_id, // Assign automatically
       created_by_user_id: req.user.id
-    });
+    };
 
-    // Log patient creation
-    await AuditLog.create({
-      user_id: req.user.id,
-      action: 'CREATE',
-      resource_type: 'patients',
-      resource_id: patient.id,
-      new_values: req.body,
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
-      description: `Nouveau patient créé: ${patient.getFullName()}`
-    });
+    const patient = await Patient.create(patientData);
 
     res.status(201).json({
       message: 'Patient créé avec succès',
       patient
     });
+
   } catch (error) {
     console.error('Create patient error:', error);
     res.status(500).json({
