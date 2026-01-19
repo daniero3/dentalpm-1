@@ -595,7 +595,7 @@ router.get('/subscription', requireClinicId, async (req, res) => {
 router.post('/payment-requests', requireClinicId, upload.single('receipt'), [
   body('plan_code').isIn(['ESSENTIAL', 'PRO', 'GROUP']).withMessage('Plan invalide'),
   body('payment_method').isIn(['MVOLA', 'ORANGE_MONEY', 'AIRTEL_MONEY', 'BANK_TRANSFER', 'CASH']).withMessage('Méthode de paiement invalide'),
-  body('reference').optional().isLength({ max: 100 }).withMessage('Référence trop longue')
+  body('reference').notEmpty().withMessage('Référence requise').isLength({ min: 1, max: 100 }).withMessage('Référence: 1-100 caractères')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -604,6 +604,12 @@ router.post('/payment-requests', requireClinicId, upload.single('receipt'), [
     }
 
     const { plan_code, payment_method, reference } = req.body;
+    
+    // Double-check reference is not empty string
+    if (!reference || reference.trim() === '') {
+      return res.status(400).json({ error: 'Référence requise', message: 'La référence de paiement ne peut pas être vide' });
+    }
+    
     const amount_mga = PLAN_PRICING[plan_code];
 
     // Check for pending request
