@@ -156,6 +156,9 @@ router.post('/', requireClinicId, [
   body('patient_id')
     .isUUID()
     .withMessage('ID patient invalide'),
+  body('schedule_id')
+    .isUUID()
+    .withMessage('ID grille tarifaire invalide'),
   body('items')
     .isArray({ min: 1 })
     .withMessage('Au moins un article requis'),
