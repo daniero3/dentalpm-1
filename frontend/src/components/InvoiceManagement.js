@@ -26,7 +26,13 @@ import {
   Minus,
   AlertTriangle,
   Shield,
-  Wallet
+  Wallet,
+  Share2,
+  Download,
+  Copy,
+  X,
+  Banknote,
+  Smartphone
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
