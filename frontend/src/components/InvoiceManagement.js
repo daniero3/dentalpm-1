@@ -66,6 +66,21 @@ const InvoiceManagement = () => {
   });
   const [scheduleOverride, setScheduleOverride] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  
+  // Payment modal state
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [invoicePayments, setInvoicePayments] = useState([]);
+  const [paymentData, setPaymentData] = useState({
+    amount_mga: '',
+    payment_method: 'CASH',
+    reference_number: ''
+  });
+  const [invoicePaymentStats, setInvoicePaymentStats] = useState({
+    total_mga: 0,
+    paid_total_mga: 0,
+    balance_mga: 0,
+    payment_status: 'UNPAID'
+  });
 
   const paymentMethods = {
     cash: 'Espèces',
