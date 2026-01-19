@@ -229,7 +229,7 @@ router.post('/:id/fees', requireClinicId, [
 /**
  * @route PUT /api/procedure-fees/:id
  * @desc Update procedure fee
- * @access Authenticated
+ * @access Authenticated (SYNDICAL: SUPER_ADMIN only)
  */
 router.put('/:id', requireClinicId, [
   param('id').isUUID(),
@@ -244,17 +244,32 @@ router.put('/:id', requireClinicId, [
       return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
+    const { Op } = require('sequelize');
+    
     const fee = await ProcedureFee.findOne({
       where: { id: req.params.id },
       include: [{
         model: PricingSchedule,
         as: 'schedule',
-        where: { clinic_id: req.clinic_id }
+        where: { 
+          [Op.or]: [
+            { clinic_id: req.clinic_id },
+            { clinic_id: null }  // Global SYNDICAL
+          ]
+        }
       }]
     });
 
     if (!fee) {
       return res.status(404).json({ error: 'Acte non trouvé' });
+    }
+
+    // Block SYNDICAL edit except SUPER_ADMIN
+    if (fee.schedule.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ 
+        error: 'Non autorisé', 
+        message: 'Seul un super-administrateur peut modifier la grille Syndicale'
+      });
     }
 
     const { label, price_mga, category, is_active } = req.body;
