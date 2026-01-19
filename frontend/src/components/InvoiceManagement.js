@@ -832,6 +832,172 @@ const InvoiceManagement = () => {
           })
         )}
       </div>
+      
+      {/* Payment Modal */}
+      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              Facture {selectedInvoice?.invoice_number}
+            </DialogTitle>
+            <DialogDescription>
+              {getPatientName(selectedInvoice?.patient_id)}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedInvoice && (
+            <div className="space-y-6">
+              {/* Payment Summary */}
+              <div className="grid grid-cols-4 gap-4">
+                <Card className="bg-gray-50">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-gray-500">Total</p>
+                    <p className="text-xl font-bold">{formatCurrency(invoicePaymentStats.total_mga)}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-green-50">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-green-600">Payé</p>
+                    <p className="text-xl font-bold text-green-700">{formatCurrency(invoicePaymentStats.paid_total_mga)}</p>
+                  </CardContent>
+                </Card>
+                <Card className={invoicePaymentStats.balance_mga > 0 ? "bg-amber-50" : "bg-green-50"}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-amber-600">Reste</p>
+                    <p className={`text-xl font-bold ${invoicePaymentStats.balance_mga > 0 ? 'text-amber-700' : 'text-green-700'}`}>
+                      {formatCurrency(invoicePaymentStats.balance_mga)}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-gray-500">Statut</p>
+                    <Badge className={
+                      invoicePaymentStats.payment_status === 'PAID' ? 'bg-green-100 text-green-800' :
+                      invoicePaymentStats.payment_status === 'PARTIAL' ? 'bg-amber-100 text-amber-800' :
+                      'bg-red-100 text-red-800'
+                    }>
+                      {invoicePaymentStats.payment_status === 'PAID' ? 'Payé' :
+                       invoicePaymentStats.payment_status === 'PARTIAL' ? 'Partiel' : 'Impayé'}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Add Payment Form */}
+              {invoicePaymentStats.balance_mga > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Ajouter un paiement
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleSubmitPayment} className="grid grid-cols-4 gap-4">
+                      <div>
+                        <Label>Montant (MGA)</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max={invoicePaymentStats.balance_mga}
+                          value={paymentData.amount_mga}
+                          onChange={(e) => setPaymentData({...paymentData, amount_mga: e.target.value})}
+                          placeholder={`Max: ${formatCurrency(invoicePaymentStats.balance_mga)}`}
+                          data-testid="payment-amount"
+                        />
+                      </div>
+                      <div>
+                        <Label>Méthode</Label>
+                        <Select value={paymentData.payment_method} onValueChange={(v) => setPaymentData({...paymentData, payment_method: v})}>
+                          <SelectTrigger data-testid="payment-method">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(paymentMethods).map(([key, { name }]) => (
+                              <SelectItem key={key} value={key}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Référence</Label>
+                        <Input
+                          value={paymentData.reference_number}
+                          onChange={(e) => setPaymentData({...paymentData, reference_number: e.target.value})}
+                          placeholder="N° transaction/chèque"
+                          data-testid="payment-reference"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <Button type="submit" disabled={!paymentData.amount_mga} data-testid="submit-payment">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Enregistrer
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Payment History */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Historique des paiements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {invoicePayments.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">Aucun paiement enregistré</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {invoicePayments.map((payment) => {
+                        const MethodIcon = paymentMethods[payment.payment_method]?.icon || CreditCard;
+                        return (
+                          <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <MethodIcon className="h-5 w-5 text-gray-500" />
+                              <div>
+                                <p className="font-medium">{paymentMethods[payment.payment_method]?.name || payment.payment_method}</p>
+                                <p className="text-sm text-gray-500">
+                                  {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
+                                  {payment.reference_number && ` • Réf: ${payment.reference_number}`}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="font-bold text-green-600">+{formatCurrency(payment.amount_mga)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Actions */}
+              <div className="flex justify-between pt-4 border-t">
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleDownload(selectedInvoice.id)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
+                  <Button variant="outline" onClick={() => handleShare(selectedInvoice)}>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Partager
+                  </Button>
+                  <Button variant="outline" onClick={() => handlePrint(selectedInvoice.id)}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Imprimer
+                  </Button>
+                </div>
+                <Button variant="ghost" onClick={() => setIsPaymentModalOpen(false)}>
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
