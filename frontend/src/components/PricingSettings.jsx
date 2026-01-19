@@ -18,11 +18,15 @@ import {
   Search, 
   Edit2, 
   Upload,
+  Download,
   Lock,
   Unlock,
   DollarSign,
   FileText,
-  Save
+  Save,
+  Trash2,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
