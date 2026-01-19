@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Product, StockMovement, Supplier, User, AuditLog, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireClinicId } = require('../middleware/clinic');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -9,8 +10,8 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all products with filtering
-router.get('/products', [
+// Get all products with filtering - with clinic filtering
+router.get('/products', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('category').optional().isIn(['INSTRUMENTS', 'CONSUMABLES', 'MATERIALS', 'EQUIPMENT', 'PROSTHETICS', 'ORTHODONTICS', 'HYGIENE', 'ANESTHESIA', 'RADIOLOGY', 'OTHER']),
@@ -30,6 +31,11 @@ router.get('/products', [
     const offset = (page - 1) * limit;
     
     let whereClause = { is_active: true };
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
     
     if (category) whereClause.category = category;
     if (supplier_id) whereClause.supplier_id = supplier_id;
@@ -88,8 +94,8 @@ router.get('/products', [
   }
 });
 
-// Get single product with movements
-router.get('/products/:id', [
+// Get single product with movements - with clinic check
+router.get('/products/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID produit invalide')
 ], async (req, res) => {
   try {
@@ -156,8 +162,8 @@ router.get('/products/:id', [
   }
 });
 
-// Create new product
-router.post('/products', [
+// Create new product - with automatic clinic_id assignment
+router.post('/products', requireClinicId, [
   requireRole('ADMIN', 'DENTIST'),
   body('name').isLength({ min: 1, max: 100 }).withMessage('Nom requis (max 100 caractères)').trim(),
   body('sku').isLength({ min: 1, max: 50 }).withMessage('SKU requis (max 50 caractères)').trim(),
@@ -187,7 +193,10 @@ router.post('/products', [
       });
     }
 
-    const product = await Product.create(req.body);
+    const product = await Product.create({
+      ...req.body,
+      clinic_id: req.clinic_id // Automatic clinic assignment
+    });
 
     // Log product creation
     await AuditLog.create({
@@ -213,8 +222,8 @@ router.post('/products', [
   }
 });
 
-// Update product
-router.put('/products/:id', [
+// Update product - with clinic check
+router.put('/products/:id', requireClinicId, [
   requireRole('ADMIN', 'DENTIST'),
   param('id').isUUID().withMessage('ID produit invalide'),
   body('name').optional().isLength({ min: 1, max: 100 }).trim(),
@@ -266,8 +275,8 @@ router.put('/products/:id', [
   }
 });
 
-// Record stock movement (IN/OUT/ADJUST)
-router.post('/movements', [
+// Record stock movement (IN/OUT/ADJUST) - with clinic check
+router.post('/movements', requireClinicId, [
   requireRole('ADMIN', 'DENTIST', 'ASSISTANT'),
   body('product_id').isUUID().withMessage('ID produit invalide'),
   body('type').isIn(['IN', 'OUT', 'ADJUST']).withMessage('Type de mouvement invalide'),
@@ -371,8 +380,8 @@ router.post('/movements', [
   }
 });
 
-// Get stock movements with filtering
-router.get('/movements', [
+// Get stock movements with filtering - with clinic filtering
+router.get('/movements', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('product_id').optional().isUUID(),
@@ -440,16 +449,23 @@ router.get('/movements', [
   }
 });
 
-// Get low stock alerts
-router.get('/low-stock', async (req, res) => {
+// Get low stock alerts - with clinic filtering
+router.get('/low-stock', requireClinicId, async (req, res) => {
   try {
+    let whereClause = {
+      is_active: true,
+      current_qty: {
+        [Op.lt]: { [Op.col]: 'min_qty' }
+      }
+    };
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+    
     const lowStockProducts = await Product.findAll({
-      where: {
-        is_active: true,
-        current_qty: {
-          [Op.lt]: { [Op.col]: 'min_qty' }
-        }
-      },
+      where: whereClause,
       include: [
         {
           model: Supplier,
