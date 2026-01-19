@@ -25,6 +25,9 @@ const { authenticateToken: requireAuth } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 8001;
 
+// Trust proxy for correct IP behind load balancer/reverse proxy
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
