@@ -1,100 +1,95 @@
 <analysis>**original_problem_statement:**
-The user wants to transform a dental practice management application into a multi-tenant Commercial SaaS platform. The project has moved through several phases of stabilization (P0, P1, P2) to fix critical bugs related to multi-tenancy ( enforcement), API specifications (), and core module functionality (Appointments).
+The user is developing a multi-tenant Dental Practice Management SaaS platform for the Madagascar market. The project has progressed through multiple stabilization phases, including bug fixes, security hardening, and the implementation of a local proof-of-payment billing system.
 
-Most recently, the agent implemented a local proof-of-payment billing system (P3) for the Madagascar market, where clinic admins can submit payment proofs (e.g., for MVola, Orange Money) and a super-admin can verify them to activate subscriptions.
+The most recent work focuses on implementing a dual-tariff pricing system:
+1.  **SYNDICAL**: A global, official tariff schedule for insured patients, managed only by a SUPER_ADMIN.
+2.  **CABINET**: A customizable tariff schedule for each individual clinic for self-paying patients.
 
-The user has now requested a final hardening phase (P3.5) for the new payment system and a documentation update (P4) before considering the stabilization complete. The user operates under strict anti-credit rules, demanding direct execution of tasks with  proofs and minimal agent-initiated planning or questioning.
+The user has provided a CSV file with the official SYNDICAL 2026 tariffs to be imported. The backend models (, ), APIs, and CSV import logic have been implemented. The invoice creation process has been updated to require a , which snapshots the price at the time of invoicing.
 
-**User's preferred language**: French. The user is very direct and provides explicit, technical instructions. The next agent **MUST** respond in **French** and follow the user's direct-execution style.
+The current, immediate task is to finalize this implementation by:
+1.  Enforcing the business rule that the  schedule is global () and can only be modified/imported by a .
+2.  Ensuring clinic admins can only manage their own  schedule.
+3.  Improving the CSV import endpoint to provide a detailed report (inserted, updated, ignored, deactivated records).
+4.  Validating the frontend UI to ensure the new pricing logic works correctly in the invoice creation form.
+
+The user operates under a strict anti-credit policy, demanding direct execution of tasks with  proofs and minimal agent-initiated planning or questioning.
+
+**User's preferred language**: French. The next agent **MUST** respond in **French** and follow the user's direct-execution style.
 
 **what currently exists?**
-A full-stack application with a Node.js/Express/Sequelize backend and a React/Shadcn/Tailwind frontend.
--   **Backend**: Multi-tenancy is fully implemented and enforced across all relevant models and API routes using a  middleware. Security measures like RBAC, rate-limiting, and audit logging are in place. A local, proof-of-payment billing system has been implemented with models (), API endpoints for clinic admins to submit requests () and for super-admins to manage them (), and logic to activate subscriptions upon verification. File uploads for receipts are handled by  and served from a static  directory.
--   **Frontend**: UI components exist for managing appointments (), patients (), and new stub components for the billing workflow ( for clinics,  for super-admins). The navigation sidebar () has been updated with links to these new pages.
+-   **Backend (Node.js/Express/Sequelize)**: A multi-tenant application with JWT authentication, RBAC, and middleware for tenancy () and subscription status ().
+    -   A new pricing module exists with  and  models. The  model now includes a .
+    -   API routes under  allow for managing schedules and fees.
+    -   An endpoint  exists to import fees from a CSV file, with logic to handle  and  operations. This endpoint has just been modified to include more detailed reporting and role-based access control.
+    -   Legal and operational documents (, , , etc.) are served via a  endpoint.
+-   **Frontend (React/Shadcn)**:
+    -   A  handles 403 errors via a global axios interceptor.
+    -    has been modified to include a dropdown to select the pricing schedule (/) and an autocomplete field for adding procedures to an invoice.
+    -   A new, stubbed-out page  exists for editing tariffs.
+    -   Legal pages are rendered under  via the  component.
 
 **Last working item**:
--   Last item agent was working: The agent received instructions for P3.5 (harden payment system) and P4 (documentation). The agent acknowledged the request and was about to begin the first sub-task of P3.5: adding a unique constraint to the  model for .
--   Status: NOT STARTED
+-   Last item agent was working: The agent was implementing the user's request to make the  pricing schedule a global, -only entity. This involved modifying the backend logic in  to:
+    1.  Fetch the global  schedule (where  is null) alongside clinic-specific schedules.
+    2.  Add RBAC checks to prevent clinic admins from editing the  schedule.
+    3.  Enhance the CSV import response to include detailed statistics (, , etc.).
+    4.  Update seeding logic to create the global  schedule correctly.
+-   Status: IN PROGRESS
 -   Agent Testing Done: N
 -   Which testing method agent to use? manual testing by curl
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: **P3.5: Harden PaymentRequest Workflow (Idempotency and Constraints)**
--   Issue 2: **P3.5: Harden PaymentRequest Workflow (Licensing Guard)**
--   Issue 3: **P3.5: Harden PaymentRequest Workflow (Secure Uploads)**
--   Issue 4: **P4: Finalize OpenAPI and Create Minimal Documentation**
+-   Issue 1: **Finalize SYNDICAL Global Logic & UI Validation** (Priority: P0)
 
 **Issues Detail**:
--   **Issue 1: P3.5: Harden PaymentRequest Workflow (Idempotency and Constraints)** (Priority: P0)
+-   **Issue 1: Finalize SYNDICAL Global Logic & UI Validation**
+    -   **Attempted fixes**: The agent modified  to add the required logic for global SYNDICAL schedules and improved reporting. However, the database state has not been cleaned/migrated, and the new logic has not been tested.
     -   **Next debug checklist**:
-        1.  In , add a unique constraint to  for  where  is not null. Handle the potential  and return a  error.
-        2.  In , modify the  and  endpoints. Before processing, check the current status of the . If it's not , return a  or  with an explicit message (e.g., Request already processed).
-    -   **Why fix this issue and what will be achieved with the fix?** Prevents duplicate payment submissions for the same transaction reference and ensures that verified/rejected payments cannot be processed again, guaranteeing data integrity.
-    -   **Status**: NOT STARTED
+        1.  **DB State**: The database contains old, clinic-specific SYNDICAL schedules. These must be deleted. Use a script or direct DB command to run . Then, restart the server to trigger the updated seeding logic which should create one global SYNDICAL schedule with  as .
+        2.  **Backend Proof (RBAC)**:
+            -   As , attempt to  a fee or  an import to the global  schedule ID. Prove it returns .
+            -   As ,  the  to the global  schedule ID. Prove it returns  with the detailed report (, , , , etc.).
+        3.  **Backend Proof (Invoice)**: Create a patient with . Create an invoice for this patient via the API and confirm the  automatically defaults to the active global  schedule's ID.
+        4.  **Frontend Validation**:
+            -   In , test the procedure autocomplete to ensure it fetches and displays acts from the newly imported SYNDICAL schedule (e.g., SC40 @ 140,000 MGA).
+            -   Create and save an invoice via the UI and verify the price is correctly snapshotted.
+            -   In , verify that for a , the SYNDICAL schedule is read-only while the CABINET schedule is editable.
+    -   **Why fix this issue and what will be achieved with the fix?** To correctly implement the core business logic of a centrally-managed official tariff (SYNDICAL) vs. a locally-managed clinic tariff (CABINET), ensuring data integrity and enforcing business rules.
+    -   **Status**: IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue**: None
-
--   **Issue 2: P3.5: Harden PaymentRequest Workflow (Licensing Guard)** (Priority: P1)
-    -   **Next debug checklist**:
-        1.  Modify the  middleware in .
-        2.  Inside the middleware, if a subscription is found, check if  is in the past.
-        3.  If expired, update the subscription status to  in the database.
-        4.  Return a  error with a clear message indicating the subscription has expired.
-    -   **Why fix this issue and what will be achieved with the fix?** Enforces the commercial aspect of the SaaS by automatically blocking access for clinics with expired subscriptions.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue**: None
-
--   **Issue 3: P3.5: Harden PaymentRequest Workflow (Secure Uploads)** (Priority: P1)
-    -   **Next debug checklist**:
-        1.  In , configure the  instance used for receipt uploads.
-        2.  Implement a  to allow only specific MIME types (e.g., , , ).
-        3.  Set a  object with a  property (e.g., 5MB) to prevent large uploads.
-        4.  Ensure the  is generated internally by the server and not taken from user input.
-    -   **Why fix this issue and what will be achieved with the fix?** Secures the application by preventing malicious file uploads and controlling server resource usage.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue**: None
-
--   **Issue 4: P4: Finalize OpenAPI and Create Minimal Documentation** (Priority: P2)
-    -   **Next debug checklist**:
-        1.  Ensure the auto-generated OpenAPI spec at  includes the new endpoints for billing and admin payment validation. Add  comments if necessary.
-        2.  Create a new file, , or add a section to .
-        3.  Briefly describe the billing workflow in ~10 lines: Clinic admin submits proof -> Super-admin verifies -> Subscription activates.
-    -   **Why fix this issue and what will be achieved with the fix?** Provides up-to-date API documentation for developers and basic workflow documentation for users/admins.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1: Complete P3.5 & P4 Stabilization** (Priority: P0)
-    -   **Where to resume**: Start with Issue 1 above: Implement the unique constraint for  in . Then proceed sequentially through the other P3.5 and P4 tasks.
-    -   **What will be achieved with this?** The application's billing and subscription system will be secure, robust, and documented, completing the final user-requested stabilization phase.
-    -   **Status**: NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** backend
+-   **Task 1: Complete P6 Pricing Implementation** (Priority: P0)
+    -   **Where to resume**: Resume at . The code has been modified. The immediate next step is to fix the database state by deleting old schedules, restart the server, and run the backend  proofs for RBAC and invoice creation. After the backend is confirmed working, proceed to test and fix the frontend UI.
+    -   **What will be achieved with this?** The pricing feature will be functionally complete on the backend and validated on the frontend, fulfilling the user's P6 request.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
--   **Future Tasks:**
-    -   Integrate a real payment processor (e.g., Stripe) to replace the local proof-of-payment system.
-    -   Build out the full frontend UI for the billing and payment management pages.
-    -   Complete user training materials and comprehensive documentation.
+-   **Upcoming Tasks**:
+    -   **P6-2 Frontend — Settings Tarifs (P1)**: Fully implement the  page. It currently exists as a stub but needs functionality for clinic admins to add/edit/disable procedures in their  tariff schedule.
+-   **Future Tasks**:
+    -   Integrate a real payment processor (e.g., Stripe).
+    -   Build out a comprehensive UI for the billing/payment management pages.
+    -   Implement native PDF generation for patient consent forms.
+    -   Complete user training materials and documentation.
 
 **Completed work in this session**
--   **P0 Bugs Fixed**: Fully resolved the  issue by applying  middleware to all tenant-specific routes and migrating existing data. Fixed the  endpoint to return JSON.
--   **P1 Appointments Stabilized**: Hardened the appointments API with time validation, default , cross-clinic security, and date filtering. Created a full CRUD frontend component ().
--   **P2 Security & DB Hardening**: Implemented role-based access control (RBAC), rate-limiting on login, and an audit log for major CUD operations. Made   in the database models.
--   **Patient Creation Bug Fixed**: Diagnosed and fixed a bug preventing patient creation from the frontend by relaxing backend validation, making model fields nullable, and improving frontend error display.
--   **P2.5 Data Standardization**: Implemented a deterministic, sequential  generator () per clinic and normalized  input to 'M'/'F'.
--   **P3 Local Billing Implemented**: Created the entire backend and frontend stubs for a local proof-of-payment system, including models, API endpoints,  for file uploads, and subscription activation logic.
+-   **P3.5 + P4 Hardening & Docs**: Implemented idempotency, upload validation, subscription checks, and documentation for the billing system.
+-   **Go-Live Prep**: Created , a  script, , and .
+-   **Subscription Expired UI**: Created a dedicated frontend page and global error handling for expired subscriptions.
+-   **Legal Pack**: Implemented backend and frontend components to serve legal documents (CGU, Privacy Policy, etc.).
+-   **P6 Pricing Backend**: Created models (, ), APIs (), and CSV import logic for the dual-tariff system.
+-   **P6 Pricing Frontend (Initial)**: Updated the invoice creation form to select a pricing schedule and created a stub for the pricing settings page.
+-   **SYNDICAL 2026 Import**: Implemented logic to parse and import the user-provided , including  and  functionality.
 
 **Earlier issues found/mentioned but not fixed**
--   None. The agent has diligently followed the user's prioritized list.
+-   None.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -103,73 +98,170 @@ A full-stack application with a Node.js/Express/Sequelize backend and a React/Sh
 
 
 **Key Technical Concepts**
--   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios.
--   **Backend**: Node.js, Express.js, Sequelize (ORM), JWT,  for file uploads.
+-   **Backend**: Node.js, Express.js, Sequelize (ORM), JWT,  for file uploads,  for CSV processing.
+-   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios, .
 -   **Database**: SQLite.
--   **Architecture**: Multi-Tenant SaaS, REST API.
+-   **Architecture**: Multi-Tenant SaaS, REST API. Global (null ) vs. Tenant-Specific data models.
 
 **key DB schema**
 -   : 
 -   : 
--   : 
--   : 
--   : 
+-   :  (Updated, NOT NULL)
+-   :  (Updated)
 
 **changes in tech stack**
--    library added for handling file uploads.
+-    was added as a backend dependency.
+-    was added as a frontend dependency.
 
 **All files of reference**
--   : Needs to be updated for idempotency checks.
--   : Needs to be updated for unique reference constraint and upload validation.
--   : Needs to be updated to check for expired subscriptions.
--   : The core model for the billing workflow.
--   : Updated with  setting.
--   : New UI component for clinics.
--   : New UI component for super-admins.
-
-**key api endpoints**
--   : User authentication with rate limiting.
--   : Patient CRUD with  filtering.
--   : Appointment CRUD with  filtering.
--   : (POST, GET) For clinics to manage payment submissions.
--   : (GET) For super-admins to list pending requests.
--   : (PATCH) For super-admins to approve requests and activate subscriptions.
--   : (PATCH) For super-admins to reject requests.
+-   : **Primary file for next actions.** Contains the core logic for pricing, import, and RBAC.
+-   : Defines the SYNDICAL/CABINET schedule model.
+-   : Defines the patient model with the new .
+-   : Frontend component for creating invoices, needs UI validation.
+-   : Stubbed frontend component for managing tariffs, needs implementation.
+-   : Contains routing and the global axios interceptor.
 
 **Critical Info for New Agent**
--   **Execute, Don't Ask**: The user has a strict anti-credit policy. Do not ask for clarification or provide planning. Read the request, execute the tasks directly, and provide the required  proofs.
--   **Périmètre Strict (Strict Scope)**: Do not implement any new features, improvements, or refactoring unless explicitly requested. The current focus is solely on P3.5 (hardening) and P4 (docs).
--   **Evidence is Mandatory**: Every backend fix or implementation must be accompanied by the exact  command output requested by the user.
--   **Proxy Awareness**: The  setting is enabled. The rate limiter now keys on  to function correctly behind the proxy.
+-   **Execute, Don't Ask**: The user has a strict anti-credit policy. Read the request, execute tasks directly, and provide  proofs. Do not propose alternative plans.
+-   **SYNDICAL is Global**: The  pricing schedule is a special case. It must be unique, have a  of , and only be editable by a . All other clinics use this single global schedule for their insured patients.
+-   **CABINET is Local**: Each clinic has its own  pricing schedule that they can manage themselves.
+-   **DB State is Dirty**: The previous agent created clinic-specific  schedules. These must be deleted before the new global logic can work correctly.
 
 **documents and test reports created in this job**
--   : Updated with the progress of each phase.
+-   
+-   ==============================================
+SMOKE TEST - Dental PM Madagascar
+API: https://dental-pay-stable.preview.emergentagent.com
+==============================================
+
+--- TEST 1: Health Check ---
+✅ Health Check HTTP 200
+✅ Health Check status:ok
+
+--- TEST 2: Login Super Admin ---
+✅ Login Admin HTTP 200
+✅ Token admin obtenu
+
+--- TEST 3: OpenAPI Spec ---
+✅ OpenAPI HTTP 200
+✅ OpenAPI billing paths
+
+--- TEST 4: Liste Cliniques (Admin) ---
+✅ Clinics HTTP 200
+✅ Clinics array présent
+
+--- TEST 5: Plans Billing ---
+✅ Plans HTTP 200
+✅ Plan ESSENTIAL présent
+
+--- TEST 6: Payment Requests (Admin) ---
+✅ PaymentRequests HTTP 200
+✅ PaymentRequests array
+
+--- TEST 7: Accès non-authentifié ---
+✅ Patients sans token -> 401
+
+--- TEST 8: Reference vide rejetée ---
+✅ Reference vide -> 400
+
+--- TEST 9: Upload MIME invalide ---
+✅ Upload .txt rejeté -> 400
+
+--- TEST 10: Legal Pages API ---
+✅ Legal CGU -> 200
+✅ Legal Privacy -> 200
+
+==============================================
+RÉSUMÉ SMOKE TEST
+==============================================
+✅ Passés: 17
+❌ Échoués: 0
+
+🎉 TOUS LES TESTS PASSÉS - GO-LIVE OK
+-   
+-   
+-   
+-    (contains , , etc.)
+-   
+-    (updated throughout the session)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Fixes the P2 rate-limiting issue and DB constraints.
-2.  **Agent**: Implements the fixes for rate-limiting and DB constraints with proofs.
-3.  **User**: Reports a bug where patient creation fails from the frontend.
-4.  **Agent**: Reproduces the bug, identifies validation and model constraint issues, and fixes them on the backend and frontend.
-5.  **User**: Requests hardening of the patient creation logic (P2.5): standardize  and normalize .
-6.  **Agent**: Implements a DB-backed counter for sequential  and normalizes gender data, providing proofs.
-7.  **User**: Approves P2.5 and initiates P3: implement a local proof-of-payment system for Madagascar.
-8.  **Agent**: Implements the entire P3 workflow (models, backend API, frontend stubs) with proofs.
-9.  **User**: (Interrupted and resumed) Restates the P3 request.
-10. **Agent**: Completes the full P3 implementation with all required  proofs and frontend components.
-11. **User**: Acknowledges P3 completion and initiates P3.5 (harden payment system) and P4 (documentation), providing a checklist of required tasks and proofs. This is the current pending task.
+1.  **User**: Instructed agent to create Go-Live Pack (runbook, backup policy, legal pages, patient consent template).
+2.  **Agent**: Created all requested documentation and backend/frontend pages for legal content.
+3.  **User**: Acknowledged completion and initiated new task: add SYNDICAL vs. CABINET pricing, backend only.
+4.  **Agent**: Implemented the backend models, APIs, and invoice logic for the dual-tariff system and provided curl proofs.
+5.  **User**: Acknowledged backend completion. Initiated P6: implement frontend for pricing selection, a settings page for tariffs, and replace placeholder seed data with a real CSV import for the SYNDICAL 2026 tariff. Provided PDF files containing tariff data.
+6.  **Agent**: Extracted data, updated models, implemented the real CSV seed logic, and created stubs for the frontend pricing components.
+7.  **User**: Initiated next task: import a specific CSV file and implement the import endpoint with  functionality.
+8.  **Agent**: Implemented and tested the CSV import endpoint with  logic and provided curl proofs.
+9.  **User**: Final request (current task):
+    -   Finalize UI validation for the invoice form.
+    -   Improve the import report with ignored/deactivated counts.
+    -   Make  a global, -only schedule.
+    -   Ensure  can't edit  but can edit their own  schedule.
+    -   Prove the changes with  and stop.
 
 **Project Health Check:**
--   **Broken**: None.
--   **Mocked**:
-    -   **Payments**: The billing system is a local, manual proof-of-payment workflow, not integrated with a live payment gateway like Stripe.
+-   **Broken**: The frontend UI for pricing (, ) is incomplete and its functionality is unverified. The screenshot tool failed to run, suggesting potential issues with UI test selectors.
+-   **Mocked**: The payment system remains a local, manual proof-of-payment workflow, not integrated with a live payment gateway.
 
 **3rd Party Integrations**
--   : Used for handling file uploads for payment receipts.
+-   : For file uploads.
+-   : For parsing CSV files on the backend.
 
 **Testing status**
--   Testing agent used after significant changes: NO (in this session)
+-   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: []
+-   Test files created:
+    -   ==============================================
+SMOKE TEST - Dental PM Madagascar
+API: https://dentist-tariffs.preview.emergentagent.com
+==============================================
+
+--- TEST 1: Health Check ---
+✅ Health Check HTTP 200
+✅ Health Check status:ok
+
+--- TEST 2: Login Super Admin ---
+✅ Login Admin HTTP 200
+✅ Token admin obtenu
+
+--- TEST 3: OpenAPI Spec ---
+✅ OpenAPI HTTP 200
+✅ OpenAPI billing paths
+
+--- TEST 4: Liste Cliniques (Admin) ---
+✅ Clinics HTTP 200
+✅ Clinics array présent
+
+--- TEST 5: Plans Billing ---
+✅ Plans HTTP 200
+✅ Plan ESSENTIAL présent
+
+--- TEST 6: Payment Requests (Admin) ---
+✅ PaymentRequests HTTP 200
+✅ PaymentRequests array
+
+--- TEST 7: Accès non-authentifié ---
+✅ Patients sans token -> 401
+
+--- TEST 8: Reference vide rejetée ---
+✅ Reference vide -> 400
+
+--- TEST 9: Upload MIME invalide ---
+✅ Upload .txt rejeté -> 400
+
+--- TEST 10: Legal Pages API ---
+✅ Legal CGU -> 200
+✅ Legal Privacy -> 200
+
+==============================================
+RÉSUMÉ SMOKE TEST
+==============================================
+✅ Passés: 17
+❌ Échoués: 0
+
+🎉 TOUS LES TESTS PASSÉS - GO-LIVE OK
 -   Known regressions: None.
 
 **Credentials to test flow:**
@@ -177,8 +269,9 @@ A full-stack application with a Node.js/Express/Sequelize backend and a React/Sh
     -   Username: 
     -   Password: 
 -   **Clinic Admin**:
-    -   Username: 
+    -   Username:  (or the one created in the session)
     -   Password: 
 
 **What agent forgot to execute**
--   The agent has been following the user's explicit instructions precisely and has not forgotten any requested tasks. The next action is to start the P3.5/P4 tasks given in the last user message.</analysis>
+-   The agent did not successfully run the UI validation tests (screenshots) for the pricing feature as requested in task P6. The frontend part of the latest request remains un-started.
+-   The agent did not fully clean up the database state after changing the logic for  schedules from clinic-specific to global. This will cause conflicts until resolved.</analysis>

@@ -5,7 +5,7 @@
 # Exemple: ./smoke_test.sh https://app.dental-madagascar.com
 # =============================================================================
 
-API_URL="${1:-https://dental-pay-stable.preview.emergentagent.com}"
+API_URL="${1:-https://dentist-tariffs.preview.emergentagent.com}"
 PASSED=0
 FAILED=0
 

@@ -38,8 +38,8 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',
     'https://localhost:3000',
-    'https://dental-pay-stable.preview.emergentagent.com',
-    'https://dental-pay-stable.preview.emergentagent.com',
+    'https://dentist-tariffs.preview.emergentagent.com',
+    'https://dentist-tariffs.preview.emergentagent.com',
     'https://*.emergentagent.com',
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ],
@@ -110,7 +110,7 @@ app.get('/api/openapi.json', (req, res) => {
     },
     "servers": [
       {
-        "url": "https://dental-pay-stable.preview.emergentagent.com/api",
+        "url": "https://dentist-tariffs.preview.emergentagent.com/api",
         "description": "Preview Environment"
       }
     ],
