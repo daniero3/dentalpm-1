@@ -323,4 +323,97 @@ router.get('/availability/:dentist_id', [
   }
 });
 
+// Export appointment to calendar (.ics file)
+router.get('/:id/export-calendar', [
+  param('id').isUUID().withMessage('ID rendez-vous invalide')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Paramètres invalides',
+        details: errors.array()
+      });
+    }
+
+    const appointment = await Appointment.findByPk(req.params.id, {
+      include: [
+        {
+          model: Patient,
+          as: 'patient',
+          attributes: ['id', 'first_name', 'last_name', 'phone_primary', 'email']
+        },
+        {
+          model: User,
+          as: 'dentist',
+          attributes: ['id', 'full_name', 'specialization']
+        }
+      ]
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        error: 'Rendez-vous non trouvé'
+      });
+    }
+
+    // Generate ICS content (RFC 5545 compliant)
+    const formatDate = (date, time) => {
+      const appointmentDate = new Date(`${date}T${time}:00`);
+      return appointmentDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const startDateTime = formatDate(appointment.appointment_date, appointment.start_time);
+    const endDateTime = formatDate(appointment.appointment_date, appointment.end_time);
+    const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    
+    const patientName = `${appointment.patient.first_name} ${appointment.patient.last_name}`;
+    const dentistName = appointment.dentist.full_name;
+    const appointmentTypeMap = {
+      'CONSULTATION': 'Consultation',
+      'TREATMENT': 'Traitement',
+      'FOLLOW_UP': 'Suivi',
+      'EMERGENCY': 'Urgence',
+      'CLEANING': 'Nettoyage',
+      'CHECK_UP': 'Contrôle'
+    };
+    const typeLabel = appointmentTypeMap[appointment.appointment_type] || appointment.appointment_type;
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Dental PM Madagascar//Appointment//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:appointment-${appointment.id}@dental-madagascar.mg
+DTSTART:${startDateTime}
+DTEND:${endDateTime}
+DTSTAMP:${now}
+SUMMARY:${typeLabel} - ${patientName}
+DESCRIPTION:Rendez-vous dentaire\\n\\nPatient: ${patientName}\\nType: ${typeLabel}\\nDentiste: ${dentistName}${appointment.reason ? `\\nMotif: ${appointment.reason}` : ''}${appointment.notes ? `\\nNotes: ${appointment.notes}` : ''}\\nTéléphone: ${appointment.patient.phone_primary || 'Non renseigné'}\\n\\nClinique Dentaire Madagascar
+LOCATION:Clinique Dentaire Madagascar${appointment.chair_number ? ` - Fauteuil ${appointment.chair_number}` : ''}
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+BEGIN:VALARM
+TRIGGER:-PT30M
+DESCRIPTION:Rappel rendez-vous dentaire
+ACTION:DISPLAY
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="rdv-${patientName.replace(/\s+/g, '-')}-${appointment.appointment_date}.ics"`);
+    
+    res.send(icsContent);
+
+  } catch (error) {
+    console.error('Export calendar error:', error);
+    res.status(500).json({
+      error: 'Erreur lors de l\'export du calendrier'
+    });
+  }
+});
+
 module.exports = router;
