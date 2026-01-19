@@ -38,12 +38,21 @@ Transform dental practice management into a multi-tenant Commercial SaaS platfor
 ### P3.5 - Payment Hardening (✓) - 2026-01-19
 - **Unique constraint**: `(clinic_id, reference)` prevents duplicate submissions
 - **409 Conflict**: Returned for duplicate references and already-processed requests
-- **Licensing guard**: `/api/patients` blocked with 403 if subscription expired
+- **Licensing guard**: All business routes blocked with 403 if subscription expired
+- **Reference required**: Non-empty reference mandatory
+- **Upload security**: MIME filter (png/jpg/pdf), 5MB max
 - **Migration**: `20260120-unique-clinic-reference.js`
 
 ### P4 - Documentation (✓) - 2026-01-19
 - OpenAPI spec updated with billing/admin endpoints
 - `BILLING.md` created with workflow description (~10 lines)
+- **Unified 403 messages**: code + action field for frontend handling
+
+### P5 - GO-LIVE Preparation (✓) - 2026-01-19
+- `DEPLOY_CHECKLIST.md`: Variables env, sécurité, migrations, backup
+- `smoke_test.sh`: 10 tests automatisés post-deploy
+- `SubscriptionExpiredPage.jsx`: Page frontend dédiée 403
+- Axios interceptor: Capture automatique erreurs subscription
 
 ## Key Files Modified (P3.5/P4)
 - `/app/dental-pm-mvp/models/PaymentRequest.js` - unique index
