@@ -477,23 +477,54 @@ router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
 });
 
 /**
- * Seed default schedules for a clinic
+ * Get or create the global SYNDICAL schedule (clinic_id: NULL)
+ */
+async function getOrCreateGlobalSyndical() {
+  try {
+    // Find existing global SYNDICAL
+    let syndical = await PricingSchedule.findOne({
+      where: { type: 'SYNDICAL', clinic_id: null, year: 2026, is_active: true }
+    });
+
+    if (!syndical) {
+      // Create global SYNDICAL (clinic_id: NULL)
+      syndical = await PricingSchedule.create({
+        clinic_id: null,  // GLOBAL
+        type: 'SYNDICAL',
+        name: 'Tarification Syndicale 2026',
+        description: 'Tarifs conventionnés - Nomenclature officielle Madagascar 2026',
+        is_active: true,
+        is_default: true,
+        year: 2026,
+        version_code: 'SYNDICAL_2026'
+      });
+
+      // Seed SYNDICAL fees from official 2026 data
+      for (const fee of SYNDICAL_2026_FEES) {
+        await ProcedureFee.create({
+          schedule_id: syndical.id,
+          ...fee,
+          is_active: true
+        });
+      }
+      console.log(`Created global SYNDICAL schedule with ${SYNDICAL_2026_FEES.length} fees`);
+    }
+    return syndical;
+  } catch (error) {
+    console.error('Error creating global SYNDICAL:', error);
+    throw error;
+  }
+}
+
+/**
+ * Seed default schedules for a clinic (CABINET only, SYNDICAL is global)
  */
 async function seedDefaultSchedules(clinicId) {
   try {
-    // Create SYNDICAL schedule with year
-    const syndicalSchedule = await PricingSchedule.create({
-      clinic_id: clinicId,
-      type: 'SYNDICAL',
-      name: 'Tarification Syndicale 2026',
-      description: 'Tarifs conventionnés - Nomenclature officielle Madagascar 2026',
-      is_active: true,
-      is_default: true,
-      year: 2026,
-      version_code: 'SYNDICAL_2026'
-    });
+    // Ensure global SYNDICAL exists
+    await getOrCreateGlobalSyndical();
 
-    // Create CABINET schedule
+    // Create CABINET schedule for this clinic
     const cabinetSchedule = await PricingSchedule.create({
       clinic_id: clinicId,
       type: 'CABINET',
@@ -505,15 +536,6 @@ async function seedDefaultSchedules(clinicId) {
       version_code: 'CABINET_2026'
     });
 
-    // Seed SYNDICAL fees from official 2026 data
-    for (const fee of SYNDICAL_2026_FEES) {
-      await ProcedureFee.create({
-        schedule_id: syndicalSchedule.id,
-        ...fee,
-        is_active: true
-      });
-    }
-
     // Seed CABINET fees (+30%)
     for (const fee of DEFAULT_CABINET_FEES) {
       await ProcedureFee.create({
@@ -523,8 +545,8 @@ async function seedDefaultSchedules(clinicId) {
       });
     }
 
-    console.log(`Seeded pricing schedules for clinic ${clinicId} (${SYNDICAL_2026_FEES.length} SYNDICAL + ${DEFAULT_CABINET_FEES.length} CABINET fees)`);
-    return { syndicalSchedule, cabinetSchedule };
+    console.log(`Seeded CABINET schedule for clinic ${clinicId} (${DEFAULT_CABINET_FEES.length} fees)`);
+    return { cabinetSchedule };
   } catch (error) {
     console.error('Error seeding schedules:', error);
     throw error;
