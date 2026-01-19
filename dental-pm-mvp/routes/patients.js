@@ -190,10 +190,17 @@ router.post('/', requireClinicId, [
       });
     }
 
-    // Generate patient_number
-    const timestamp = Date.now().toString();
-    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const patient_number = `PAT-${timestamp.slice(-6)}${randomSuffix}`;
+    // Generate patient_number with DB counter (PAT-XXXXXX per clinic)
+    const [counterResult] = await sequelize.query(`
+      INSERT INTO counters (id, clinic_id, counter_type, current_value, created_at, updated_at)
+      VALUES (lower(hex(randomblob(16))), '${req.clinic_id}', 'patient', 1, datetime('now'), datetime('now'))
+      ON CONFLICT(clinic_id, counter_type) DO UPDATE SET 
+        current_value = current_value + 1,
+        updated_at = datetime('now')
+      RETURNING current_value
+    `);
+    const counterValue = counterResult[0]?.current_value || 1;
+    const patient_number = `PAT-${String(counterValue).padStart(6, '0')}`;
 
     const patientData = {
       ...req.body,
