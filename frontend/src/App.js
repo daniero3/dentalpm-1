@@ -262,6 +262,16 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
+                <Route path="/quotes" element={
+                  <ProtectedRoute>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <QuoteManagement />
+                      </MainLayout>
+                    </LicensingGuard>
+                  </ProtectedRoute>
+                } />
+                
                 {/* SaaS Routes */}
                 <Route path="/settings/billing" element={
                   <ProtectedRoute>
