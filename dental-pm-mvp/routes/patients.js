@@ -4,12 +4,16 @@ const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = 
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
 const { auditLogger } = require('../middleware/auditLogger');
+const { requireValidSubscription } = require('../middleware/licensing');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// All routes require valid subscription (licensing guard)
+router.use(requireValidSubscription);
 
 // Audit logging for write operations
 router.use(auditLogger('patients'));
