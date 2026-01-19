@@ -442,6 +442,7 @@ router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
     }
 
     // Replace mode: deactivate fees not in import
+    const deactivated = [];
     if (replaceMode) {
       const allFees = await ProcedureFee.findAll({
         where: { schedule_id: schedule.id, is_active: true }
@@ -450,18 +451,24 @@ router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
       for (const fee of allFees) {
         if (!importedCodes.has(fee.procedure_code)) {
           await fee.update({ is_active: false });
-          deleted++;
+          deactivated.push({ code: fee.procedure_code, label: fee.label, reason: 'not_in_import' });
         }
       }
     }
+
+    // Build ignored examples from errors
+    const ignored = errors.map(err => ({ line: err, reason: 'invalid_data' }));
 
     res.json({
       message: 'Import terminé',
       inserted,
       updated,
-      deleted,
+      deleted: deactivated.length,
       total: inserted + updated,
-      errors: errors.length > 0 ? errors.slice(0, 10) : undefined
+      ignored_count: ignored.length,
+      ignored_examples: ignored.slice(0, 10),
+      deactivated_count: deactivated.length,
+      deactivated_examples: deactivated.slice(0, 10)
     });
   } catch (error) {
     console.error('Import fees error:', error);
