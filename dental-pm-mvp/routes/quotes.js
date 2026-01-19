@@ -607,4 +607,51 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
   }
 });
 
+/**
+ * @route GET /api/quotes/:id/pdf
+ * @desc Generate and download PDF of quote (Premium)
+ */
+router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res) => {
+  try {
+    const { generatePDF, generateQuoteHTML } = require('../utils/pdfGenerator');
+    
+    const quote = await Invoice.findOne({
+      where: { 
+        id: req.params.id, 
+        document_type: 'QUOTE',
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          ...(req.user.role === 'SUPER_ADMIN' ? [{}] : [])
+        ]
+      },
+      include: [
+        { model: Patient, as: 'patient' },
+        { model: InvoiceItem, as: 'items' }
+      ]
+    });
+
+    if (!quote) {
+      return res.status(404).json({ error: 'Devis non trouvé' });
+    }
+
+    // Get clinic info
+    const clinic = await Clinic.findByPk(quote.clinic_id);
+
+    // Generate premium HTML
+    const html = generateQuoteHTML(quote, clinic);
+    
+    // Generate PDF
+    const pdfBuffer = await generatePDF(html);
+    
+    // Send PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${quote.invoice_number}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF quote error:', error);
+    res.status(500).json({ error: 'Erreur génération PDF', details: error.message });
+  }
+});
+
 module.exports = router;
