@@ -322,4 +322,3 @@ async function seedDefaultSchedules(clinicId) {
 }
 
 module.exports = router;
-module.exports.seedDefaultSchedules = seedDefaultSchedules;
