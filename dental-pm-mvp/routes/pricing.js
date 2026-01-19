@@ -268,18 +268,135 @@ router.put('/:id', requireClinicId, [
 });
 
 /**
+ * @route POST /api/pricing-schedules/:id/import-fees
+ * @desc Import fees from CSV/JSON file (Admin only)
+ * @access Clinic Admin or Super Admin
+ */
+router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const schedule = await PricingSchedule.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
+    }
+
+    // Only allow import for SYNDICAL if SUPER_ADMIN, CABINET for clinic ADMIN
+    if (schedule.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ 
+        error: 'Non autorisé', 
+        message: 'Seul un administrateur peut modifier la grille Syndicale' 
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Fichier requis' });
+    }
+
+    let feesData = [];
+    const fileContent = req.file.buffer.toString('utf-8');
+
+    // Parse CSV or JSON
+    if (req.file.originalname.endsWith('.json') || req.file.mimetype === 'application/json') {
+      feesData = JSON.parse(fileContent);
+    } else {
+      // CSV parsing
+      feesData = csv.parse(fileContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+    }
+
+    // Validate data
+    const validFees = [];
+    const errors = [];
+    
+    for (let i = 0; i < feesData.length; i++) {
+      const row = feesData[i];
+      const code = row.procedure_code || row.code;
+      const label = row.label || row.description;
+      const price = parseFloat(row.price_mga || row.price);
+      const category = row.category || 'GENERAL';
+
+      if (!code || !label || isNaN(price) || price <= 0) {
+        errors.push(`Ligne ${i + 1}: données invalides`);
+        continue;
+      }
+
+      validFees.push({
+        procedure_code: code.trim(),
+        label: label.trim(),
+        price_mga: price,
+        category: category.trim()
+      });
+    }
+
+    if (validFees.length === 0) {
+      return res.status(400).json({ 
+        error: 'Aucune donnée valide',
+        details: errors 
+      });
+    }
+
+    // Import fees (upsert)
+    let imported = 0;
+    let updated = 0;
+
+    for (const fee of validFees) {
+      const existing = await ProcedureFee.findOne({
+        where: { schedule_id: schedule.id, procedure_code: fee.procedure_code }
+      });
+
+      if (existing) {
+        await existing.update({
+          label: fee.label,
+          price_mga: fee.price_mga,
+          category: fee.category,
+          is_active: true
+        });
+        updated++;
+      } else {
+        await ProcedureFee.create({
+          schedule_id: schedule.id,
+          ...fee,
+          is_active: true
+        });
+        imported++;
+      }
+    }
+
+    res.json({
+      message: 'Import terminé',
+      imported,
+      updated,
+      total: imported + updated,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (error) {
+    console.error('Import fees error:', error);
+    res.status(500).json({ error: 'Erreur import', details: error.message });
+  }
+});
+
+/**
  * Seed default schedules for a clinic
  */
 async function seedDefaultSchedules(clinicId) {
   try {
-    // Create SYNDICAL schedule
+    // Create SYNDICAL schedule with year
     const syndicalSchedule = await PricingSchedule.create({
       clinic_id: clinicId,
       type: 'SYNDICAL',
-      name: 'Tarification Syndicale',
-      description: 'Tarifs conventionnés pour patients assurés',
+      name: 'Tarification Syndicale 2026',
+      description: 'Tarifs conventionnés - Nomenclature officielle Madagascar 2026',
       is_active: true,
-      is_default: true
+      is_default: true,
+      year: 2026,
+      version_code: 'SYNDICAL_2026'
     });
 
     // Create CABINET schedule
@@ -287,13 +404,15 @@ async function seedDefaultSchedules(clinicId) {
       clinic_id: clinicId,
       type: 'CABINET',
       name: 'Tarification Cabinet',
-      description: 'Tarifs libres du cabinet',
+      description: 'Tarifs libres du cabinet (+30% base syndicale)',
       is_active: true,
-      is_default: false
+      is_default: false,
+      year: 2026,
+      version_code: 'CABINET_2026'
     });
 
-    // Seed SYNDICAL fees
-    for (const fee of DEFAULT_SYNDICAL_FEES) {
+    // Seed SYNDICAL fees from official 2026 data
+    for (const fee of SYNDICAL_2026_FEES) {
       await ProcedureFee.create({
         schedule_id: syndicalSchedule.id,
         ...fee,
@@ -301,7 +420,7 @@ async function seedDefaultSchedules(clinicId) {
       });
     }
 
-    // Seed CABINET fees
+    // Seed CABINET fees (+30%)
     for (const fee of DEFAULT_CABINET_FEES) {
       await ProcedureFee.create({
         schedule_id: cabinetSchedule.id,
@@ -310,7 +429,7 @@ async function seedDefaultSchedules(clinicId) {
       });
     }
 
-    console.log(`Seeded pricing schedules for clinic ${clinicId}`);
+    console.log(`Seeded pricing schedules for clinic ${clinicId} (${SYNDICAL_2026_FEES.length} SYNDICAL + ${DEFAULT_CABINET_FEES.length} CABINET fees)`);
     return { syndicalSchedule, cabinetSchedule };
   } catch (error) {
     console.error('Error seeding schedules:', error);
