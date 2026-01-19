@@ -23,12 +23,16 @@ import BillingSettings from "./components/BillingSettings";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import SuperAdminClinics from "./components/SuperAdminClinics";
 import LicensingGuard from "./components/LicensingGuard";
+import SubscriptionExpiredPage from "./components/SubscriptionExpiredPage";
 import AppointmentManagement from "./components/AppointmentManagement";
 import PaymentRequestPage from "./components/PaymentRequestPage";
 import PaymentValidationPage from "./components/PaymentValidationPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// Subscription error state (global)
+let setGlobalSubscriptionError = null;
 
 // Auth Context
 const AuthContext = React.createContext();
