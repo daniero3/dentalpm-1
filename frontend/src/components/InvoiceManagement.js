@@ -363,18 +363,33 @@ const InvoiceManagement = () => {
                   <SelectContent>
                     {patients.map((patient) => (
                       <SelectItem key={patient.id} value={patient.id}>
-                        {patient.first_name} {patient.last_name} 
-                        {patient.payer_type === 'INSURED' && <Badge variant="outline" className="ml-2">Assuré</Badge>}
+                        <div className="flex items-center gap-2">
+                          {patient.first_name} {patient.last_name}
+                          {patient.payer_type === 'INSURED' ? (
+                            <Badge variant="default" className="bg-blue-600"><Shield className="h-3 w-3 mr-1" />Assuré</Badge>
+                          ) : (
+                            <Badge variant="outline"><Wallet className="h-3 w-3 mr-1" />Non assuré</Badge>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedPatient && (
+                  <div className={`text-sm p-2 rounded ${selectedPatient.payer_type === 'INSURED' ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-700'}`}>
+                    {selectedPatient.payer_type === 'INSURED' ? (
+                      <span className="flex items-center gap-1"><Shield className="h-4 w-4" /> Patient assuré → Grille SYNDICAL recommandée</span>
+                    ) : (
+                      <span className="flex items-center gap-1"><Wallet className="h-4 w-4" /> Patient non assuré → Grille CABINET recommandée</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Pricing Schedule Selection */}
               <div className="space-y-2">
                 <Label htmlFor="schedule_id">Grille Tarifaire *</Label>
-                <Select value={formData.schedule_id} onValueChange={handleScheduleChange}>
+                <Select value={formData.schedule_id} onValueChange={handleManualScheduleChange}>
                   <SelectTrigger data-testid="schedule-select">
                     <SelectValue placeholder="Sélectionnez une tarification" />
                   </SelectTrigger>
@@ -391,6 +406,12 @@ const InvoiceManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {scheduleOverride && (
+                  <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded text-amber-800 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Attention: Vous utilisez une grille différente de celle recommandée pour ce type de patient.</span>
+                  </div>
+                )}
                 <p className="text-sm text-gray-500">
                   {formData.schedule_id && pricingSchedules.find(s => s.id === formData.schedule_id)?.type === 'SYNDICAL' 
                     ? 'Tarifs conventionnés (assurés)' 
