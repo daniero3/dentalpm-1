@@ -1,1 +1,22 @@
-{"error":"Token d'accès requis","code":"MISSING_TOKEN"}
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Dental PM Madagascar//Appointment//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:appointment-eb6161e3-a771-46c5-b6f4-52494d83faba@dental-madagascar.mg
+DTSTART:20250910T090000Z
+DTEND:20250910T100000Z
+DTSTAMP:20260119T083644Z
+SUMMARY:Consultation - Hery Rasoanaivo
+DESCRIPTION:Rendez-vous dentaire\n\nPatient: Hery Rasoanaivo\nType: Consultation\nDentiste: Dr. Jean Rakoto\nMotif: Douleur dentaire\nTéléphone: +261 34 12 345 67\n\nClinique Dentaire Madagascar
+LOCATION:Clinique Dentaire Madagascar
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+BEGIN:VALARM
+TRIGGER:-PT30M
+DESCRIPTION:Rappel rendez-vous dentaire
+ACTION:DISPLAY
+END:VALARM
+END:VEVENT
+END:VCALENDAR
