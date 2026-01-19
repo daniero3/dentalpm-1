@@ -37,12 +37,13 @@ const navigation = [
 ]
 
 const adminNavigation = [
-  { name: "Admin Dashboard", href: "/admin", icon: Crown },
+  { name: "Dashboard Admin", href: "/admin", icon: LayoutDashboard },
   { name: "Cliniques", href: "/admin/clinics", icon: Building2 },
+  { name: "Validation Paiements", href: "/admin/payments", icon: CreditCard },
 ]
 
 const billingNavigation = [
-  { name: "Facturation", href: "/settings/billing", icon: CreditCard },
+  { name: "Paiement/Abonnement", href: "/payment", icon: CreditCard },
 ]
 
 export function ModernSidebar() {
