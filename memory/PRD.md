@@ -54,6 +54,18 @@ Transform dental practice management into a multi-tenant Commercial SaaS platfor
 - `SubscriptionExpiredPage.jsx`: Page frontend dédiée 403
 - Axios interceptor: Capture automatique erreurs subscription
 
+### P6 - GO-LIVE Pack Opérationnel + Conformité (✓) - 2026-01-19
+- `RUNBOOK_PROD.md`: Procédures incidents, rollback, restore, rotation secrets
+- `BACKUP_POLICY.md`: Fréquence, rétention, scripts, tests restauration
+- **Pages légales Madagascar**:
+  - `/legal/CGU.md`: Conditions Générales d'Utilisation
+  - `/legal/PRIVACY_POLICY.md`: Politique de Confidentialité
+  - `/legal/MENTIONS_LEGALES.md`: Mentions Légales
+  - `/legal/PATIENT_CONSENT_TEMPLATE.md`: Modèle consentement patient
+- **API `/api/legal/*`**: Endpoints publics CGU, privacy, mentions, consent
+- **Frontend `/legal/*`**: Pages React avec tabs, impression
+- **PDF Consentement**: Template HTML imprimable par patient
+
 ## Key Files Modified (P3.5/P4/P5)
 - `/app/dental-pm-mvp/models/PaymentRequest.js` - unique index
 - `/app/dental-pm-mvp/routes/billing.js` - 409, reference required, upload handler
