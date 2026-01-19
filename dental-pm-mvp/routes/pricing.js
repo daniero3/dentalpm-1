@@ -88,6 +88,47 @@ router.get('/', requireClinicId, async (req, res) => {
 });
 
 /**
+ * @route DELETE /api/pricing-schedules/cleanup-syndical
+ * @desc Delete all SYNDICAL schedules with clinic_id != NULL (SUPER_ADMIN only)
+ * @access SUPER_ADMIN
+ */
+router.delete('/cleanup-syndical', requireClinicId, async (req, res) => {
+  try {
+    if (req.user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Non autorisé', message: 'SUPER_ADMIN requis' });
+    }
+
+    const { Op } = require('sequelize');
+    
+    // Find all SYNDICAL with clinic_id != NULL
+    const badSchedules = await PricingSchedule.findAll({
+      where: { type: 'SYNDICAL', clinic_id: { [Op.ne]: null } }
+    });
+
+    const deletedIds = [];
+    for (const schedule of badSchedules) {
+      // Delete associated fees first
+      await ProcedureFee.destroy({ where: { schedule_id: schedule.id } });
+      deletedIds.push(schedule.id);
+      await schedule.destroy();
+    }
+
+    // Ensure global SYNDICAL exists
+    const globalSyndical = await getOrCreateGlobalSyndical();
+
+    res.json({
+      message: 'Cleanup terminé',
+      deleted_count: deletedIds.length,
+      deleted_ids: deletedIds,
+      global_syndical_id: globalSyndical.id
+    });
+  } catch (error) {
+    console.error('Cleanup SYNDICAL error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+/**
  * @route GET /api/pricing-schedules/:id
  * @desc Get single pricing schedule with fees
  * @access Authenticated
@@ -96,8 +137,17 @@ router.get('/:id', requireClinicId, [
   param('id').isUUID()
 ], async (req, res) => {
   try {
+    const { Op } = require('sequelize');
+    
+    // Allow access to clinic schedules + global SYNDICAL
     const schedule = await PricingSchedule.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id },
+      where: { 
+        id: req.params.id,
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          { clinic_id: null, type: 'SYNDICAL' }
+        ]
+      },
       include: [{
         model: ProcedureFee,
         as: 'fees',
