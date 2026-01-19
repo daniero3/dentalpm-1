@@ -3,12 +3,16 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Product, StockMovement, Supplier, User, AuditLog, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
+const { requireValidSubscription } = require('../middleware/licensing');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// All routes require valid subscription
+router.use(requireValidSubscription);
 
 // Get all products with filtering - with clinic filtering
 router.get('/products', requireClinicId, [

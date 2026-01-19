@@ -3,12 +3,16 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Lab, LabOrder, LabOrderItem, LabDelivery, Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
+const { requireValidSubscription } = require('../middleware/licensing');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// All routes require valid subscription
+router.use(requireValidSubscription);
 
 // =============================================================================
 // LAB MANAGEMENT

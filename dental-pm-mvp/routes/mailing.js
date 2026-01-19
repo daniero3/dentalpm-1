@@ -3,12 +3,16 @@ const { body, validationResult, param, query } = require('express-validator');
 const { MailingCampaign, MailingLog, Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
+const { requireValidSubscription } = require('../middleware/licensing');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// All routes require valid subscription
+router.use(requireValidSubscription);
 
 // =============================================================================
 // MAILING CAMPAIGNS MANAGEMENT
