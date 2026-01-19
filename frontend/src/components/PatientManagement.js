@@ -41,11 +41,11 @@ const PatientManagement = () => {
     last_name: '',
     date_of_birth: '',
     gender: '',
-    phone: '',
+    phone_primary: '',
     email: '',
     address: '',
-    emergency_contact: '',
-    emergency_phone: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
     medical_history: '',
     allergies: '',
     current_medications: ''
@@ -80,7 +80,18 @@ const PatientManagement = () => {
       resetForm();
       setIsDialogOpen(false);
     } catch (error) {
-      toast.error('Erreur lors de l\'enregistrement du patient');
+      // Display API error message instead of generic toast
+      const apiError = error.response?.data;
+      if (apiError?.details && Array.isArray(apiError.details)) {
+        // Show validation errors
+        const messages = apiError.details.map(d => d.msg || d.message).join(', ');
+        toast.error(`Erreur: ${messages}`);
+      } else if (apiError?.error) {
+        toast.error(apiError.error);
+      } else {
+        toast.error('Erreur lors de l\'enregistrement du patient');
+      }
+      console.error('Patient save error:', error.response?.data || error);
     }
   };
 
@@ -90,11 +101,11 @@ const PatientManagement = () => {
       last_name: '',
       date_of_birth: '',
       gender: '',
-      phone: '',
+      phone_primary: '',
       email: '',
       address: '',
-      emergency_contact: '',
-      emergency_phone: '',
+      emergency_contact_name: '',
+      emergency_contact_phone: '',
       medical_history: '',
       allergies: '',
       current_medications: ''
