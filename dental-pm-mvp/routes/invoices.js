@@ -203,9 +203,16 @@ router.post('/', requireClinicId, [
       });
     }
 
-    // Verify pricing schedule exists and belongs to clinic
+    // Verify pricing schedule exists and belongs to clinic (or is global SYNDICAL)
     const pricingSchedule = await PricingSchedule.findOne({
-      where: { id: schedule_id, clinic_id: req.clinic_id, is_active: true }
+      where: { 
+        id: schedule_id, 
+        is_active: true,
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          { clinic_id: null, type: 'SYNDICAL' }  // Global SYNDICAL accessible to all
+        ]
+      }
     });
     if (!pricingSchedule) {
       return res.status(404).json({
