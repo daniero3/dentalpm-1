@@ -91,7 +91,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // OpenAPI JSON endpoint
-app.get('/openapi.json', (req, res) => {
+app.get('/api/openapi.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   const openApiSpec = {
     "openapi": "3.0.0",
@@ -116,7 +116,7 @@ app.get('/openapi.json', (req, res) => {
       }
     },
     "paths": {
-      "/api/auth/login": {
+      "/auth/login": {
         "post": {
           "summary": "Authenticate user",
           "requestBody": {
@@ -138,7 +138,7 @@ app.get('/openapi.json', (req, res) => {
           }
         }
       },
-      "/api/patients": {
+      "/patients": {
         "get": {
           "summary": "Get patients list",
           "security": [{ "bearerAuth": [] }],
@@ -154,7 +154,7 @@ app.get('/openapi.json', (req, res) => {
           }
         }
       },
-      "/api/appointments": {
+      "/appointments": {
         "get": {
           "summary": "Get appointments list",
           "security": [{ "bearerAuth": [] }],
@@ -170,7 +170,7 @@ app.get('/openapi.json', (req, res) => {
           }
         }
       },
-      "/api/appointments/{id}/export-calendar": {
+      "/appointments/{id}/export-calendar": {
         "get": {
           "summary": "Export appointment to calendar (.ics)",
           "security": [{ "bearerAuth": [] }],
@@ -192,7 +192,7 @@ app.get('/openapi.json', (req, res) => {
           }
         }
       },
-      "/api/health": {
+      "/health": {
         "get": {
           "summary": "Health check",
           "responses": {
@@ -204,6 +204,11 @@ app.get('/openapi.json', (req, res) => {
   };
   
   res.json(openApiSpec);
+});
+
+// Redirect /openapi.json to /api/openapi.json for compatibility
+app.get('/openapi.json', (req, res) => {
+  res.redirect('/api/openapi.json');
 });
 
 // Error handling middleware
