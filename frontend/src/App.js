@@ -108,7 +108,12 @@ const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    setSubscriptionError(null);
     toast.success("Déconnexion réussie");
+  };
+
+  const clearSubscriptionError = () => {
+    setSubscriptionError(null);
   };
 
   const register = async (userData) => {
