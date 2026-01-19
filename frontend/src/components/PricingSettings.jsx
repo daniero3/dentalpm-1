@@ -252,8 +252,18 @@ const PricingSettings = () => {
                     <CardDescription>{schedule.description}</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    {/* Import Button (SYNDICAL: Admin only) */}
-                    {(!isReadOnly || user?.role === 'SUPER_ADMIN') && schedule.type === 'SYNDICAL' && (
+                    {/* Export CSV Button */}
+                    <Button 
+                      variant="outline" 
+                      onClick={handleExportCSV}
+                      disabled={fees.length === 0}
+                      data-testid="export-btn"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Exporter CSV
+                    </Button>
+                    {/* Import Button (SYNDICAL: Admin only, CABINET: always) */}
+                    {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
                       <>
                         <input
                           type="file"
