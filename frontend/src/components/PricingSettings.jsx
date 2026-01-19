@@ -294,6 +294,18 @@ const PricingSettings = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Exporter CSV
                     </Button>
+                    {/* Import Template MAEVA (CABINET only) */}
+                    {schedule.type === 'CABINET' && (
+                      <Button 
+                        variant="outline" 
+                        onClick={handleImportTemplateMAEVA}
+                        data-testid="import-maeva-btn"
+                        className="bg-green-50 hover:bg-green-100 border-green-300"
+                      >
+                        <FileText className="h-4 w-4 mr-2 text-green-600" />
+                        Template MAEVA
+                      </Button>
+                    )}
                     {/* Import Button (SYNDICAL: Admin only, CABINET: always) */}
                     {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
                       <>
