@@ -134,6 +134,15 @@ const Invoice = sequelize.define('invoices', {
       key: 'id'
     },
     comment: 'Clinic this invoice belongs to (for multi-tenancy)'
+  },
+  schedule_id: {
+    type: DataTypes.UUID,
+    allowNull: true, // Nullable for existing invoices, required for new ones
+    references: {
+      model: 'pricing_schedules',
+      key: 'id'
+    },
+    comment: 'Grille tarifaire utilisée (SYNDICAL ou CABINET)'
   }
 }, {
   indexes: [
