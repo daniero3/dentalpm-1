@@ -808,15 +808,19 @@ const InvoiceManagement = () => {
                     </div>
                     
                     <div className="flex items-center space-x-3">
-                      <Badge className={paymentStatuses[invoice.payment_status]?.color}>
+                      <Badge className={paymentStatuses[invoice.payment_status]?.color || paymentStatuses.pending.color}>
                         <StatusIcon className="h-3 w-3 mr-1" />
-                        {paymentStatuses[invoice.payment_status]?.name}
+                        {paymentStatuses[invoice.payment_status]?.name || invoice.payment_status}
                       </Badge>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => openPaymentModal(invoice)} data-testid={`view-${invoice.invoice_number}`}>
                         <Eye className="h-4 w-4 mr-2" />
                         Voir
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => handleShare(invoice)} data-testid={`share-${invoice.invoice_number}`}>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Partager
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handlePrint(invoice.id)} data-testid={`print-${invoice.invoice_number}`}>
                         <Printer className="h-4 w-4 mr-2" />
                         Imprimer
                       </Button>
