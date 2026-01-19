@@ -2,8 +2,48 @@ const express = require('express');
 const router = express.Router();
 const { body, param, query, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');
-const { Clinic, Subscription, SubscriptionInvoice } = require('../models');
+const { requireClinicId } = require('../middleware/clinic');
+const { Clinic, Subscription, SubscriptionInvoice, PaymentRequest, User, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for receipt uploads
+const uploadDir = path.join(__dirname, '../uploads/receipts');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `receipt-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non autorisé (jpg, png, pdf uniquement)'));
+    }
+  }
+});
+
+// Plan pricing (MGA)
+const PLAN_PRICING = {
+  ESSENTIAL: 150000,
+  PRO: 300000,
+  GROUP: 500000
+};
 
 /**
  * @route GET /api/billing/dashboard
