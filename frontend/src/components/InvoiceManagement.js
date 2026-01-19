@@ -33,17 +33,23 @@ const InvoiceManagement = () => {
   const { user } = useAuth();
   const [invoices, setInvoices] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [pricingSchedules, setPricingSchedules] = useState([]);
+  const [procedureFees, setProcedureFees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [procedureSearch, setProcedureSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [formData, setFormData] = useState({
     patient_id: '',
+    schedule_id: '',
     items: [{
       description: '',
+      procedure_code: '',
       quantity: 1,
       unit_price_mga: '',
-      total_mga: 0
+      total_mga: 0,
+      tooth_number: ''
     }],
     discount_percentage: 0,
     notes: '',
