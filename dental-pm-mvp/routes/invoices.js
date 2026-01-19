@@ -509,9 +509,11 @@ router.post('/:id/payments', requireClinicId, [
     }
 
     // Create payment
+    const paymentCount = await Payment.count();
     const payment = await Payment.create({
       invoice_id: invoice.id,
       clinic_id: req.clinic_id,
+      payment_number: `PAY-${String(paymentCount + 1).padStart(6, '0')}`,
       amount_mga: parseFloat(amount_mga),
       payment_method,
       reference_number,
