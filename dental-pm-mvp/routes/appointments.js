@@ -10,8 +10,8 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get appointments (calendar view)
-router.get('/', [
+// Get appointments (calendar view) - with clinic filtering
+router.get('/', requireClinicId, [
   query('start_date').optional().isDate(),
   query('end_date').optional().isDate(),
   query('dentist_id').optional().isUUID()
@@ -27,6 +27,11 @@ router.get('/', [
 
     let whereClause = {};
     const { start_date, end_date, dentist_id, status } = req.query;
+
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
 
     if (start_date && end_date) {
       whereClause.appointment_date = {
@@ -74,8 +79,8 @@ router.get('/', [
   }
 });
 
-// Create new appointment
-router.post('/', [
+// Create new appointment - with automatic clinic_id assignment
+router.post('/', requireClinicId, [
   body('patient_id').isUUID().withMessage('ID patient invalide'),
   body('dentist_id').isUUID().withMessage('ID dentiste invalide'),
   body('appointment_date').isDate().withMessage('Date invalide'),
@@ -172,7 +177,8 @@ router.post('/', [
       appointment_type,
       reason,
       notes,
-      chair_number
+      chair_number,
+      clinic_id: req.clinic_id // Automatic clinic assignment
     });
 
     // Fetch complete appointment with relations
@@ -203,8 +209,8 @@ router.post('/', [
   }
 });
 
-// Update appointment status
-router.patch('/:id/status', [
+// Update appointment status - with clinic check
+router.patch('/:id/status', requireClinicId, [
   param('id').isUUID().withMessage('ID rendez-vous invalide'),
   body('status').isIn(['SCHEDULED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'RESCHEDULED'])
 ], async (req, res) => {
