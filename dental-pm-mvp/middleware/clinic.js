@@ -4,8 +4,12 @@ const requireClinicId = async (req, res, next) => {
   try {
     const { user } = req;
     
-    // Super admin bypasses clinic filtering
+    // Super admin can operate on their own clinic if assigned, otherwise bypass
     if (user.role === 'SUPER_ADMIN') {
+      // Still attach clinic_id if available for data creation
+      if (user.clinic_id) {
+        req.clinic_id = user.clinic_id;
+      }
       return next();
     }
     
