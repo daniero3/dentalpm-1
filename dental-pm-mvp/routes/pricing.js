@@ -29,6 +29,9 @@ router.use(requireValidSubscription);
 // Load SYNDICAL 2026 official fees
 const { SYNDICAL_2026_FEES } = require('../data/syndical_2026');
 
+// Load CABINET template MAEVA 2026
+const { CABINET_TEMPLATE_MAEVA_2026 } = require('../data/cabinet_template_maeva_2026');
+
 // Cabinet fees = Syndical * 1.3 (tarifs libres - majoration 30%)
 const DEFAULT_CABINET_FEES = SYNDICAL_2026_FEES.map(fee => ({
   ...fee,
