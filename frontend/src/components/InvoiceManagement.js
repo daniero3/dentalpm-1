@@ -188,9 +188,11 @@ const InvoiceManagement = () => {
       ...formData,
       items: [...formData.items, {
         description: '',
+        procedure_code: '',
         quantity: 1,
         unit_price_mga: '',
-        total_mga: 0
+        total_mga: 0,
+        tooth_number: ''
       }]
     });
   };
