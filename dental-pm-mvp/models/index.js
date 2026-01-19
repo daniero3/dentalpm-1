@@ -120,6 +120,12 @@ function defineAssociations() {
   SubscriptionInvoice.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
   SubscriptionInvoice.belongsTo(Subscription, { foreignKey: 'subscription_id', as: 'subscription' });
   SubscriptionInvoice.belongsTo(User, { foreignKey: 'created_by_user_id', as: 'createdBy' });
+
+  // PaymentRequest relationships
+  PaymentRequest.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  PaymentRequest.belongsTo(User, { foreignKey: 'submitted_by_user_id', as: 'submittedBy' });
+  PaymentRequest.belongsTo(User, { foreignKey: 'verified_by_user_id', as: 'verifiedBy' });
+  Clinic.hasMany(PaymentRequest, { foreignKey: 'clinic_id', as: 'paymentRequests' });
 }
 
 // Initialize associations
