@@ -153,20 +153,20 @@ router.get('/:id', requireClinicId, [
 router.post('/', requireClinicId, [
   body('first_name').isLength({ min: 2, max: 50 }).withMessage('Prénom requis (2-50 caractères)'),
   body('last_name').isLength({ min: 2, max: 50 }).withMessage('Nom requis (2-50 caractères)'),
-  body('date_of_birth').isISO8601().withMessage('Date de naissance invalide'),
-  body('gender').isIn(['male', 'female', 'other']).withMessage('Genre invalide'),
-  body('phone_primary').isMobilePhone().withMessage('Numéro de téléphone invalide'),
-  body('email').optional().isEmail().withMessage('Email invalide'),
-  body('address').optional().isLength({ max: 255 }).withMessage('Adresse trop longue'),
-  body('city').optional().isLength({ max: 50 }).withMessage('Ville trop longue'),
-  body('postal_code').optional().isLength({ max: 10 }).withMessage('Code postal invalide'),
-  body('nif_number').optional().isLength({ max: 20 }).withMessage('Numéro NIF invalide'),
-  body('stat_number').optional().isLength({ max: 20 }).withMessage('Numéro STAT invalide'),
-  body('emergency_contact_name').optional().isLength({ max: 100 }),
-  body('emergency_contact_phone').optional().isMobilePhone(),
-  body('medical_history').optional().isLength({ max: 1000 }),
-  body('allergies').optional().isLength({ max: 500 }),
-  body('current_medications').optional().isLength({ max: 500 })
+  body('date_of_birth').isISO8601().withMessage('Date de naissance invalide (format YYYY-MM-DD)'),
+  body('gender').isIn(['M', 'F', 'male', 'female', 'other', 'MALE', 'FEMALE', 'OTHER']).withMessage('Genre invalide (M/F/male/female/other)'),
+  body('phone_primary').matches(/^\+?261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$|^\d{10}$|^\+\d{10,15}$/).withMessage('Numéro de téléphone invalide'),
+  body('email').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Email invalide'),
+  body('address').optional({ nullable: true, checkFalsy: true }).isLength({ max: 255 }).withMessage('Adresse trop longue'),
+  body('city').optional({ nullable: true, checkFalsy: true }).isLength({ max: 50 }).withMessage('Ville trop longue'),
+  body('postal_code').optional({ nullable: true, checkFalsy: true }).isLength({ max: 10 }).withMessage('Code postal invalide'),
+  body('nif_number').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Numéro NIF invalide'),
+  body('stat_number').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Numéro STAT invalide'),
+  body('emergency_contact_name').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }),
+  body('emergency_contact_phone').optional({ nullable: true, checkFalsy: true }).matches(/^\+?261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$|^\d{10}$|^\+\d{10,15}$|^$/),
+  body('medical_history').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }),
+  body('allergies').optional({ nullable: true, checkFalsy: true }).isLength({ max: 500 }),
+  body('current_medications').optional({ nullable: true, checkFalsy: true }).isLength({ max: 500 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -177,10 +177,27 @@ router.post('/', requireClinicId, [
       });
     }
 
+    // Normalize gender
+    let gender = req.body.gender;
+    if (gender === 'M' || gender === 'MALE') gender = 'male';
+    if (gender === 'F' || gender === 'FEMALE') gender = 'female';
+
+    // Check clinic_id is available
+    if (!req.clinic_id) {
+      return res.status(400).json({
+        error: 'clinic_id requis',
+        message: 'Utilisateur non assigné à une clinique'
+      });
+    }
+
     const patientData = {
       ...req.body,
-      clinic_id: req.clinic_id, // Assign automatically
-      created_by_user_id: req.user.id
+      gender,
+      clinic_id: req.clinic_id,
+      created_by_user_id: req.user.id,
+      // Set empty strings to null for optional fields
+      emergency_contact_name: req.body.emergency_contact_name || null,
+      emergency_contact_phone: req.body.emergency_contact_phone || null
     };
 
     const patient = await Patient.create(patientData);
@@ -192,8 +209,18 @@ router.post('/', requireClinicId, [
 
   } catch (error) {
     console.error('Create patient error:', error);
+    
+    // Return detailed error for debugging
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({
+        error: 'Erreur de validation',
+        details: error.errors.map(e => ({ field: e.path, message: e.message }))
+      });
+    }
+    
     res.status(500).json({
-      error: 'Erreur lors de la création du patient'
+      error: 'Erreur lors de la création du patient',
+      message: error.message
     });
   }
 });
