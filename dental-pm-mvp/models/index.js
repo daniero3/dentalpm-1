@@ -29,6 +29,10 @@ const Subscription = require('./Subscription');
 const SubscriptionInvoice = require('./SubscriptionInvoice');
 const PaymentRequest = require('./PaymentRequest');
 
+// Pricing models
+const PricingSchedule = require('./PricingSchedule');
+const ProcedureFee = require('./ProcedureFee');
+
 // Define associations
 function defineAssociations() {
   // Clinic relationships
