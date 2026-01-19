@@ -423,15 +423,27 @@ const PricingSettings = () => {
                           </TableCell>
                           {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
                             <TableCell>
-                              {editingFee?.id === fee.id ? (
-                                <Button size="sm" onClick={() => handleUpdateFee(editingFee)}>
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button size="sm" variant="ghost" onClick={() => setEditingFee({...fee})}>
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                              )}
+                              <div className="flex gap-1">
+                                {editingFee?.id === fee.id ? (
+                                  <>
+                                    <Button size="sm" onClick={() => handleUpdateFee(editingFee)} data-testid={`save-${fee.procedure_code}`}>
+                                      <Save className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setEditingFee(null)}>
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button size="sm" variant="ghost" onClick={() => setEditingFee({...fee})} data-testid={`edit-${fee.procedure_code}`}>
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={() => handleDeleteFee(fee)} data-testid={`delete-${fee.procedure_code}`}>
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </TableCell>
                           )}
                         </TableRow>
