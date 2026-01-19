@@ -139,8 +139,11 @@ const InvoiceManagement = () => {
 
   // When patient changes, auto-select schedule based on payer_type
   const handlePatientChange = (patientId) => {
-    setFormData({ ...formData, patient_id: patientId });
     const patient = patients.find(p => p.id === patientId);
+    setSelectedPatient(patient);
+    setFormData({ ...formData, patient_id: patientId });
+    setScheduleOverride(false);
+    
     if (patient && pricingSchedules.length > 0) {
       const defaultType = patient.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
       const defaultSchedule = pricingSchedules.find(s => s.type === defaultType);
@@ -148,6 +151,19 @@ const InvoiceManagement = () => {
         handleScheduleChange(defaultSchedule.id);
       }
     }
+  };
+
+  // When schedule is manually changed (override)
+  const handleManualScheduleChange = (scheduleId) => {
+    const newSchedule = pricingSchedules.find(s => s.id === scheduleId);
+    const expectedType = selectedPatient?.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
+    
+    if (newSchedule && newSchedule.type !== expectedType) {
+      setScheduleOverride(true);
+    } else {
+      setScheduleOverride(false);
+    }
+    handleScheduleChange(scheduleId);
   };
 
   // Add procedure from fees list
