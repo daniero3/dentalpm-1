@@ -1,6 +1,6 @@
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
-const { Patient, Treatment, Appointment, Invoice, AuditLog, User } = require('../models');
+const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
 const { auditLogger } = require('../middleware/auditLogger');
