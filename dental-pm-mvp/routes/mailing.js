@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { MailingCampaign, MailingLog, Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireClinicId } = require('../middleware/clinic');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -13,8 +14,8 @@ router.use(authenticateToken);
 // MAILING CAMPAIGNS MANAGEMENT
 // =============================================================================
 
-// Get all mailing campaigns
-router.get('/campaigns', [
+// Get all mailing campaigns - with clinic filtering
+router.get('/campaigns', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isIn(['DRAFT', 'SCHEDULED', 'SENT']),
@@ -33,6 +34,12 @@ router.get('/campaigns', [
     const offset = (page - 1) * limit;
     
     let whereClause = {};
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+    
     if (status) whereClause.status = status;
     if (template_type) whereClause.template_type = template_type;
 
@@ -82,8 +89,8 @@ router.get('/campaigns', [
   }
 });
 
-// Get single campaign with full details
-router.get('/campaigns/:id', [
+// Get single campaign with full details - with clinic check
+router.get('/campaigns/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID campagne invalide')
 ], async (req, res) => {
   try {
@@ -142,8 +149,8 @@ router.get('/campaigns/:id', [
   }
 });
 
-// Create new mailing campaign
-router.post('/campaigns', [
+// Create new mailing campaign - with automatic clinic_id assignment
+router.post('/campaigns', requireClinicId, [
   requireRole('ADMIN', 'DENTIST', 'ASSISTANT'),
   body('name')
     .isLength({ min: 1, max: 100 })
@@ -227,6 +234,7 @@ router.post('/campaigns', [
 
     const campaign = await MailingCampaign.create({
       ...req.body,
+      clinic_id: req.clinic_id, // Automatic clinic assignment
       created_by_user_id: req.user.id,
       total_recipients: audienceCount,
       status: req.body.scheduled_at ? 'SCHEDULED' : 'DRAFT'
@@ -259,8 +267,8 @@ router.post('/campaigns', [
   }
 });
 
-// Send mailing campaign (mock implementation)
-router.post('/campaigns/:id/send', [
+// Send mailing campaign (mock implementation) - with clinic check
+router.post('/campaigns/:id/send', requireClinicId, [
   param('id').isUUID().withMessage('ID campagne invalide'),
   requireRole('ADMIN', 'DENTIST', 'ASSISTANT')
 ], async (req, res) => {
@@ -402,8 +410,8 @@ router.post('/campaigns/:id/send', [
   }
 });
 
-// Get campaign analytics/logs
-router.get('/campaigns/:id/logs', [
+// Get campaign analytics/logs - with clinic check
+router.get('/campaigns/:id/logs', requireClinicId, [
   param('id').isUUID().withMessage('ID campagne invalide'),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -455,18 +463,25 @@ router.get('/campaigns/:id/logs', [
   }
 });
 
-// Get mailing analytics summary
-router.get('/analytics', async (req, res) => {
+// Get mailing analytics summary - with clinic filtering
+router.get('/analytics', requireClinicId, async (req, res) => {
   try {
-    const totalCampaigns = await MailingCampaign.count();
-    const sentCampaigns = await MailingCampaign.count({ where: { status: 'SENT' } });
-    const draftCampaigns = await MailingCampaign.count({ where: { status: 'DRAFT' } });
+    let whereClause = {};
     
-    const totalEmailsSent = await MailingCampaign.sum('emails_sent') || 0;
-    const totalEmailsDelivered = await MailingCampaign.sum('emails_delivered') || 0;
-    const totalEmailsOpened = await MailingCampaign.sum('emails_opened') || 0;
-    const totalEmailsClicked = await MailingCampaign.sum('emails_clicked') || 0;
-    const totalEmailsBounced = await MailingCampaign.sum('emails_bounced') || 0;
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+    
+    const totalCampaigns = await MailingCampaign.count({ where: whereClause });
+    const sentCampaigns = await MailingCampaign.count({ where: { ...whereClause, status: 'SENT' } });
+    const draftCampaigns = await MailingCampaign.count({ where: { ...whereClause, status: 'DRAFT' } });
+    
+    const totalEmailsSent = await MailingCampaign.sum('emails_sent', { where: whereClause }) || 0;
+    const totalEmailsDelivered = await MailingCampaign.sum('emails_delivered', { where: whereClause }) || 0;
+    const totalEmailsOpened = await MailingCampaign.sum('emails_opened', { where: whereClause }) || 0;
+    const totalEmailsClicked = await MailingCampaign.sum('emails_clicked', { where: whereClause }) || 0;
+    const totalEmailsBounced = await MailingCampaign.sum('emails_bounced', { where: whereClause }) || 0;
 
     // Calculate rates
     const deliveryRate = totalEmailsSent > 0 ? (totalEmailsDelivered / totalEmailsSent * 100).toFixed(1) : 0;
@@ -474,14 +489,20 @@ router.get('/analytics', async (req, res) => {
     const clickRate = totalEmailsOpened > 0 ? (totalEmailsClicked / totalEmailsOpened * 100).toFixed(1) : 0;
     const bounceRate = totalEmailsSent > 0 ? (totalEmailsBounced / totalEmailsSent * 100).toFixed(1) : 0;
 
-    // Get eligible patients count
+    // Get eligible patients count - with clinic filtering
+    let patientWhereClause = {
+      is_active: true,
+      email: { [Op.ne]: null },
+      email: { [Op.ne]: '' },
+      consent_sms_reminders: true
+    };
+    
+    if (req.clinic_id) {
+      patientWhereClause.clinic_id = req.clinic_id;
+    }
+    
     const eligiblePatients = await Patient.count({
-      where: {
-        is_active: true,
-        email: { [Op.ne]: null },
-        email: { [Op.ne]: '' },
-        consent_sms_reminders: true
-      }
+      where: patientWhereClause
     });
 
     res.json({
