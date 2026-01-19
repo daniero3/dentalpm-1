@@ -132,8 +132,23 @@ const AuthProvider = ({ children }) => {
     login,
     logout,
     register,
-    loading
+    loading,
+    subscriptionError,
+    clearSubscriptionError
   };
+
+  // Show subscription expired page if error
+  if (subscriptionError) {
+    return (
+      <AuthContext.Provider value={value}>
+        <SubscriptionExpiredPage 
+          errorData={subscriptionError}
+          onRetry={clearSubscriptionError}
+          onLogout={logout}
+        />
+      </AuthContext.Provider>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>
