@@ -90,6 +90,122 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// OpenAPI JSON endpoint
+app.get('/openapi.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  const openApiSpec = {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Dental Practice Management API - Madagascar",
+      "version": "1.0.0",
+      "description": "API SaaS pour la gestion de cliniques dentaires à Madagascar"
+    },
+    "servers": [
+      {
+        "url": "https://dentalpm-1.preview.emergentagent.com/api",
+        "description": "Preview Environment"
+      }
+    ],
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    },
+    "paths": {
+      "/api/auth/login": {
+        "post": {
+          "summary": "Authenticate user",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": { "type": "string" },
+                    "password": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": { "description": "Login successful" }
+          }
+        }
+      },
+      "/api/patients": {
+        "get": {
+          "summary": "Get patients list",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": { "description": "Patients list" }
+          }
+        },
+        "post": {
+          "summary": "Create patient",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "201": { "description": "Patient created" }
+          }
+        }
+      },
+      "/api/appointments": {
+        "get": {
+          "summary": "Get appointments list",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": { "description": "Appointments list" }
+          }
+        },
+        "post": {
+          "summary": "Create appointment",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "201": { "description": "Appointment created" }
+          }
+        }
+      },
+      "/api/appointments/{id}/export-calendar": {
+        "get": {
+          "summary": "Export appointment to calendar (.ics)",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Calendar file",
+              "content": {
+                "text/calendar": {}
+              }
+            }
+          }
+        }
+      },
+      "/api/health": {
+        "get": {
+          "summary": "Health check",
+          "responses": {
+            "200": { "description": "Service status" }
+          }
+        }
+      }
+    }
+  };
+  
+  res.json(openApiSpec);
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
