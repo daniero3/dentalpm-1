@@ -435,13 +435,16 @@ const PricingSettings = () => {
                         <TableHead className="w-[150px]">Catégorie</TableHead>
                         <TableHead className="w-[150px] text-right">Prix (MGA)</TableHead>
                         {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
-                          <TableHead className="w-[100px]">Actions</TableHead>
+                          <>
+                            <TableHead className="w-[80px] text-center">Actif</TableHead>
+                            <TableHead className="w-[100px]">Actions</TableHead>
+                          </>
                         )}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredFees.map(fee => (
-                        <TableRow key={fee.id} className={!fee.is_active ? 'opacity-50' : ''}>
+                        <TableRow key={fee.id} className={!fee.is_active ? 'opacity-50 bg-gray-50' : ''}>
                           <TableCell className="font-mono">{fee.procedure_code}</TableCell>
                           <TableCell>
                             {editingFee?.id === fee.id ? (
@@ -466,29 +469,33 @@ const PricingSettings = () => {
                             ) : formatCurrency(fee.price_mga)}
                           </TableCell>
                           {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {editingFee?.id === fee.id ? (
-                                  <>
-                                    <Button size="sm" onClick={() => handleUpdateFee(editingFee)} data-testid={`save-${fee.procedure_code}`}>
-                                      <Save className="h-4 w-4" />
-                                    </Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setEditingFee(null)}>
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <>
+                            <>
+                              <TableCell className="text-center">
+                                <Switch
+                                  checked={fee.is_active}
+                                  onCheckedChange={() => handleToggleActive(fee)}
+                                  data-testid={`toggle-${fee.procedure_code}`}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  {editingFee?.id === fee.id ? (
+                                    <>
+                                      <Button size="sm" onClick={() => handleUpdateFee(editingFee)} data-testid={`save-${fee.procedure_code}`}>
+                                        <Save className="h-4 w-4" />
+                                      </Button>
+                                      <Button size="sm" variant="ghost" onClick={() => setEditingFee(null)}>
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </>
+                                  ) : (
                                     <Button size="sm" variant="ghost" onClick={() => setEditingFee({...fee})} data-testid={`edit-${fee.procedure_code}`}>
                                       <Edit2 className="h-4 w-4" />
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={() => handleDeleteFee(fee)} data-testid={`delete-${fee.procedure_code}`}>
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </TableCell>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </>
                           )}
                         </TableRow>
                       ))}
@@ -496,8 +503,10 @@ const PricingSettings = () => {
                   </Table>
                 </div>
 
-                <div className="mt-4 text-sm text-gray-500">
-                  {filteredFees.length} actes affichés sur {fees.length}
+                <div className="mt-4 text-sm text-gray-500 flex justify-between">
+                  <span>{filteredFees.length} actes affichés sur {fees.length}</span>
+                  <span className="text-green-600">{fees.filter(f => f.is_active).length} actifs</span>
+                </div>
                 </div>
               </CardContent>
             </Card>
