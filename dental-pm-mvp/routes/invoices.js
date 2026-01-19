@@ -193,13 +193,23 @@ router.post('/', requireClinicId, [
       });
     }
 
-    const { patient_id, items, discount_percentage = 0, discount_type, nif_number, stat_number, notes } = req.body;
+    const { patient_id, schedule_id, items, discount_percentage = 0, discount_type, nif_number, stat_number, notes } = req.body;
 
     // Verify patient exists
     const patient = await Patient.findByPk(patient_id);
     if (!patient) {
       return res.status(404).json({
         error: 'Patient non trouvé'
+      });
+    }
+
+    // Verify pricing schedule exists and belongs to clinic
+    const pricingSchedule = await PricingSchedule.findOne({
+      where: { id: schedule_id, clinic_id: req.clinic_id, is_active: true }
+    });
+    if (!pricingSchedule) {
+      return res.status(404).json({
+        error: 'Grille tarifaire non trouvée'
       });
     }
 
