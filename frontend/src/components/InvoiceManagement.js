@@ -249,16 +249,21 @@ const InvoiceManagement = () => {
   const resetForm = () => {
     setFormData({
       patient_id: '',
+      schedule_id: '',
       items: [{
         description: '',
+        procedure_code: '',
         quantity: 1,
         unit_price_mga: '',
-        total_mga: 0
+        total_mga: 0,
+        tooth_number: ''
       }],
       discount_percentage: 0,
       notes: '',
       payment_method: ''
     });
+    setProcedureFees([]);
+    setProcedureSearch('');
   };
 
   const formatCurrency = (amount) => {
