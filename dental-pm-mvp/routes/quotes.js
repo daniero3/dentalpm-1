@@ -326,14 +326,21 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
 
     // Generate invoice number
     const year = new Date().getFullYear();
-    const invoiceCount = await Invoice.count({
+    const allInvoices = await Invoice.findAll({
       where: {
-        clinic_id: req.clinic_id,
         document_type: 'INVOICE',
         invoice_number: { [Op.like]: `FACT-${year}-%` }
-      }
+      },
+      order: [['invoice_number', 'DESC']],
+      limit: 1
     });
-    const invoiceNumber = `FACT-${year}-${String(invoiceCount + 1).padStart(4, '0')}`;
+    
+    let nextNum = 1;
+    if (allInvoices.length > 0) {
+      const lastNum = allInvoices[0].invoice_number.split('-').pop();
+      nextNum = parseInt(lastNum) + 1;
+    }
+    const invoiceNumber = `FACT-${year}-${String(nextNum).padStart(4, '0')}`;
 
     // Create invoice from quote
     const invoice = await Invoice.create({
