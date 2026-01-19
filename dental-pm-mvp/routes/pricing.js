@@ -296,8 +296,11 @@ router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
       return res.status(400).json({ error: 'Fichier requis' });
     }
 
+    const replaceMode = req.body.replace === 'true' || req.body.replace === true;
+    
     let feesData = [];
-    const fileContent = req.file.buffer.toString('utf-8');
+    // Remove BOM and parse
+    const fileContent = req.file.buffer.toString('utf-8').replace(/^\uFEFF/, '');
 
     // Parse CSV or JSON
     if (req.file.originalname.endsWith('.json') || req.file.mimetype === 'application/json') {
@@ -307,47 +310,131 @@ router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
       feesData = csv.parse(fileContent, {
         columns: true,
         skip_empty_lines: true,
-        trim: true
+        trim: true,
+        bom: true
       });
     }
 
-    // Validate data
+    // Validate and normalize data
     const validFees = [];
     const errors = [];
+    const importedCodes = new Set();
     
     for (let i = 0; i < feesData.length; i++) {
       const row = feesData[i];
-      const code = row.procedure_code || row.code;
-      const label = row.label || row.description;
-      const price = parseFloat(row.price_mga || row.price);
-      const category = row.category || 'GENERAL';
+      
+      // Support multiple column formats
+      // Format 1: procedure_code, label, price_mga
+      // Format 2: code, acte, tarif_mga (CSV from user)
+      // Format 3: famille (code court), code (code complet comme PA100), acte (description), tarif_mga
+      let code = row.procedure_code || row.code || row.famille;
+      let label = row.label || row.description || row.acte;
+      let price = parseFloat(row.price_mga || row.tarif_mga || row.price || row.coefficient);
+      let category = row.category || row.section || 'GENERAL';
+      
+      // If 'code' column contains full code like PA100, use it
+      if (row.code && /^[A-Za-z]+\d+/.test(row.code)) {
+        code = row.code;
+      }
+      // If 'famille' is the code and there's no numeric suffix, keep as is
+      else if (row.famille && !row.code?.match(/\d/)) {
+        code = row.famille;
+      }
+
+      // Normalize: remove double spaces, trim
+      if (code) code = code.trim().replace(/\s+/g, ' ');
+      if (label) label = label.trim().replace(/\s+/g, ' ');
+      
+      // Determine category from section or famille
+      if (row.famille) {
+        const fam = row.famille.toUpperCase();
+        if (fam.startsWith('SC')) category = 'SOINS_CONSERVATEURS';
+        else if (fam.startsWith('TC')) category = 'EXTRACTION';
+        else if (fam.startsWith('TP')) category = 'PARODONTOLOGIE';
+        else if (fam.startsWith('PC')) category = 'PROTHESE_CONJOINTE';
+        else if (fam.startsWith('PA')) category = 'PROTHESE_ADJOINTE';
+        else if (fam.startsWith('TO')) category = 'ORTHODONTIE';
+        else if (fam.startsWith('Ti')) category = 'IMPLANTOLOGIE';
+        else if (fam === 'X' || fam.startsWith('X')) category = 'RADIOLOGIE';
+        else if (fam === 'C' || fam === 'Cs' || fam === 'EXP' || fam === 'V' || fam === 'Vs' || fam === 'IFD' || fam === 'MNFD') category = 'CONSULTATION';
+      }
 
       if (!code || !label || isNaN(price) || price <= 0) {
-        errors.push(`Ligne ${i + 1}: données invalides`);
+        errors.push(`Ligne ${i + 2}: données invalides (code=${code}, price=${price})`);
         continue;
       }
 
       validFees.push({
-        procedure_code: code.trim(),
-        label: label.trim(),
-        price_mga: price,
-        category: category.trim()
+        procedure_code: code,
+        label: label,
+        price_mga: Math.round(price),
+        category: category
       });
+      importedCodes.add(code);
     }
 
     if (validFees.length === 0) {
       return res.status(400).json({ 
         error: 'Aucune donnée valide',
-        details: errors 
+        details: errors.slice(0, 10)
       });
     }
 
     // Import fees (upsert)
-    let imported = 0;
+    let inserted = 0;
     let updated = 0;
+    let deleted = 0;
 
     for (const fee of validFees) {
       const existing = await ProcedureFee.findOne({
+        where: { schedule_id: schedule.id, procedure_code: fee.procedure_code }
+      });
+
+      if (existing) {
+        await existing.update({
+          label: fee.label,
+          price_mga: fee.price_mga,
+          category: fee.category,
+          is_active: true
+        });
+        updated++;
+      } else {
+        await ProcedureFee.create({
+          schedule_id: schedule.id,
+          ...fee,
+          is_active: true
+        });
+        inserted++;
+      }
+    }
+
+    // Replace mode: deactivate fees not in import
+    if (replaceMode) {
+      const allFees = await ProcedureFee.findAll({
+        where: { schedule_id: schedule.id, is_active: true }
+      });
+      
+      for (const fee of allFees) {
+        if (!importedCodes.has(fee.procedure_code)) {
+          await fee.update({ is_active: false });
+          deleted++;
+        }
+      }
+    }
+
+    res.json({
+      message: 'Import terminé',
+      inserted,
+      updated,
+      deleted,
+      total: inserted + updated,
+      errors: errors.length > 0 ? errors.slice(0, 10) : undefined
+    });
+  } catch (error) {
+    console.error('Import fees error:', error);
+    res.status(500).json({ error: 'Erreur import', details: error.message });
+  }
+});
         where: { schedule_id: schedule.id, procedure_code: fee.procedure_code }
       });
 
