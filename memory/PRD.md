@@ -43,6 +43,11 @@ Transform the existing dental practice management application into a multi-tenan
 
 ## Changelog
 
+### 2026-01-19 (P2 - Stabilisation Production)
+- **P2-1 Sécurité**: Rate limiter sur login (5 max/15min), Audit logger sur patients/appointments/invoices
+- **P2-2 DB**: clinic_id NOT NULL sur Patient/Appointment/Invoice, index déjà présents
+- **Fichiers créés**: `middleware/rateLimiter.js`, `middleware/auditLogger.js`
+
 ### 2026-01-19 (P1)
 - **P1-1 API**: dentist_id optional (defaults to user.id), date_from/date_to filtering, clinic check on all appointment routes
 - **P1-2 Frontend**: New AppointmentManagement.jsx with CRUD and ICS download
