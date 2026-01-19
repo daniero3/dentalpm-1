@@ -54,13 +54,24 @@ Transform dental practice management into a multi-tenant Commercial SaaS platfor
 - `SubscriptionExpiredPage.jsx`: Page frontend dédiée 403
 - Axios interceptor: Capture automatique erreurs subscription
 
-## Key Files Modified (P3.5/P4)
+## Key Files Modified (P3.5/P4/P5)
 - `/app/dental-pm-mvp/models/PaymentRequest.js` - unique index
-- `/app/dental-pm-mvp/routes/billing.js` - 409 for duplicate reference
+- `/app/dental-pm-mvp/routes/billing.js` - 409, reference required, upload handler
 - `/app/dental-pm-mvp/routes/admin.js` - 409 for already-processed requests
 - `/app/dental-pm-mvp/routes/patients.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/routes/appointments.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/routes/invoices.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/routes/inventory.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/routes/labs.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/routes/suppliers.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/routes/mailing.js` - added `requireValidSubscription`
+- `/app/dental-pm-mvp/middleware/licensing.js` - unified 403 messages
 - `/app/dental-pm-mvp/server.js` - OpenAPI spec extended
-- `/app/dental-pm-mvp/BILLING.md` - new doc
+- `/app/dental-pm-mvp/BILLING.md` - workflow doc
+- `/app/dental-pm-mvp/DEPLOY_CHECKLIST.md` - GO-LIVE checklist
+- `/app/dental-pm-mvp/smoke_test.sh` - 10 automated tests
+- `/app/frontend/src/components/SubscriptionExpiredPage.jsx` - 403 page
+- `/app/frontend/src/App.js` - axios interceptor for 403
 
 ## Backlog / Future
 - Stripe integration (real payment gateway)
