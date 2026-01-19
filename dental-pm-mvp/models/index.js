@@ -173,5 +173,8 @@ module.exports = {
   Clinic,
   Subscription,
   SubscriptionInvoice,
-  PaymentRequest
+  PaymentRequest,
+  // Pricing models
+  PricingSchedule,
+  ProcedureFee
 };
