@@ -507,7 +507,6 @@ const PricingSettings = () => {
                   <span>{filteredFees.length} actes affichés sur {fees.length}</span>
                   <span className="text-green-600">{fees.filter(f => f.is_active).length} actifs</span>
                 </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
