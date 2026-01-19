@@ -790,4 +790,58 @@ router.get('/:id/print', requireClinicId, [
   }
 });
 
+/**
+ * @route GET /api/invoices/:id/pdf
+ * @desc Generate and download PDF of invoice (Premium)
+ */
+router.get('/:id/pdf', requireClinicId, [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const { generatePDF, generateInvoiceHTML } = require('../utils/pdfGenerator');
+    
+    const invoice = await Invoice.findOne({
+      where: { 
+        id: req.params.id,
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          ...(req.user.role === 'SUPER_ADMIN' ? [{}] : [])
+        ]
+      },
+      include: [
+        { model: Patient, as: 'patient' },
+        { model: InvoiceItem, as: 'items' }
+      ]
+    });
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Facture non trouvée' });
+    }
+
+    // Get clinic info
+    const clinic = await Clinic.findByPk(invoice.clinic_id);
+
+    // Get payments
+    const payments = await Payment.findAll({
+      where: { invoice_id: invoice.id, status: 'COMPLETED' },
+      order: [['payment_date', 'ASC']]
+    });
+
+    // Generate premium HTML
+    const html = generateInvoiceHTML(invoice, clinic, payments);
+    
+    // Generate PDF
+    const pdfBuffer = await generatePDF(html);
+    
+    // Send PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${invoice.invoice_number}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF invoice error:', error);
+    res.status(500).json({ error: 'Erreur génération PDF', details: error.message });
+  }
+});
+
 module.exports = router;
