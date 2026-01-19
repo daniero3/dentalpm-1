@@ -37,13 +37,22 @@ const DEFAULT_CABINET_FEES = SYNDICAL_2026_FEES.map(fee => ({
 
 /**
  * @route GET /api/pricing-schedules
- * @desc Get all pricing schedules for clinic
+ * @desc Get all pricing schedules for clinic (+ global SYNDICAL)
  * @access Authenticated
  */
 router.get('/', requireClinicId, async (req, res) => {
   try {
+    const { Op } = require('sequelize');
+    
+    // Get clinic-specific schedules + global SYNDICAL (clinic_id NULL)
     let schedules = await PricingSchedule.findAll({
-      where: { clinic_id: req.clinic_id, is_active: true },
+      where: { 
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          { clinic_id: null, type: 'SYNDICAL' }  // Global SYNDICAL
+        ],
+        is_active: true 
+      },
       include: [{
         model: ProcedureFee,
         as: 'fees',
