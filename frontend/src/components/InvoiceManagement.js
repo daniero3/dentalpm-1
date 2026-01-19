@@ -333,19 +333,84 @@ const InvoiceManagement = () => {
               {/* Patient Selection */}
               <div className="space-y-2">
                 <Label htmlFor="patient_id">Patient *</Label>
-                <Select value={formData.patient_id} onValueChange={(value) => setFormData({...formData, patient_id: value})}>
-                  <SelectTrigger>
+                <Select value={formData.patient_id} onValueChange={handlePatientChange}>
+                  <SelectTrigger data-testid="patient-select">
                     <SelectValue placeholder="Sélectionnez un patient" />
                   </SelectTrigger>
                   <SelectContent>
                     {patients.map((patient) => (
                       <SelectItem key={patient.id} value={patient.id}>
-                        {patient.first_name} {patient.last_name}
+                        {patient.first_name} {patient.last_name} 
+                        {patient.payer_type === 'INSURED' && <Badge variant="outline" className="ml-2">Assuré</Badge>}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Pricing Schedule Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="schedule_id">Grille Tarifaire *</Label>
+                <Select value={formData.schedule_id} onValueChange={handleScheduleChange}>
+                  <SelectTrigger data-testid="schedule-select">
+                    <SelectValue placeholder="Sélectionnez une tarification" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pricingSchedules.map((schedule) => (
+                      <SelectItem key={schedule.id} value={schedule.id}>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={schedule.type === 'SYNDICAL' ? 'default' : 'secondary'}>
+                            {schedule.type}
+                          </Badge>
+                          {schedule.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-500">
+                  {formData.schedule_id && pricingSchedules.find(s => s.id === formData.schedule_id)?.type === 'SYNDICAL' 
+                    ? 'Tarifs conventionnés (assurés)' 
+                    : 'Tarifs libres du cabinet'}
+                </p>
+              </div>
+
+              {/* Procedure Search & Add */}
+              {formData.schedule_id && (
+                <div className="space-y-2">
+                  <Label>Ajouter un acte</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Rechercher un acte (code, libellé)..."
+                      value={procedureSearch}
+                      onChange={(e) => setProcedureSearch(e.target.value)}
+                      className="pl-10"
+                      data-testid="procedure-search"
+                    />
+                  </div>
+                  {procedureSearch && filteredProcedures.length > 0 && (
+                    <div className="border rounded-lg max-h-48 overflow-y-auto bg-white shadow-lg">
+                      {filteredProcedures.map((fee) => (
+                        <button
+                          key={fee.id}
+                          type="button"
+                          onClick={() => addProcedureFromFee(fee)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center border-b last:border-0"
+                          data-testid={`procedure-${fee.procedure_code}`}
+                        >
+                          <div>
+                            <span className="font-mono text-sm text-blue-600">{fee.procedure_code}</span>
+                            <span className="ml-2">{fee.label}</span>
+                            <Badge variant="outline" className="ml-2 text-xs">{fee.category}</Badge>
+                          </div>
+                          <span className="font-semibold">{formatCurrency(fee.price_mga)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Items */}
               <div className="space-y-4">
