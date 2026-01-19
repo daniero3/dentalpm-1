@@ -213,20 +213,25 @@ const InvoiceManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.schedule_id) {
+      toast.error('Veuillez sélectionner une grille tarifaire');
+      return;
+    }
+    
     try {
       const invoiceData = {
         patient_id: formData.patient_id,
+        schedule_id: formData.schedule_id,
         date_issued: new Date().toISOString().split('T')[0],
-        items: formData.items.map(item => ({
-          ...item,
+        items: formData.items.filter(i => i.description).map(item => ({
+          description: item.description,
+          procedure_code: item.procedure_code,
+          quantity: parseInt(item.quantity),
           unit_price_mga: parseFloat(item.unit_price_mga),
-          total_mga: calculateItemTotal(item)
+          tooth_number: item.tooth_number || null
         })),
-        subtotal_mga: calculateSubtotal(),
         discount_percentage: formData.discount_percentage,
-        discount_amount_mga: (calculateSubtotal() * formData.discount_percentage) / 100,
-        total_mga: calculateTotal(),
-        payment_status: 'pending',
         payment_method: formData.payment_method || null,
         notes: formData.notes
       };
@@ -237,7 +242,7 @@ const InvoiceManagement = () => {
       resetForm();
       setIsDialogOpen(false);
     } catch (error) {
-      toast.error('Erreur lors de la création de la facture');
+      toast.error(error.response?.data?.error || 'Erreur lors de la création de la facture');
     }
   };
 
