@@ -27,6 +27,7 @@ const MailingLog = require('./MailingLog');
 const Clinic = require('./Clinic');
 const Subscription = require('./Subscription');
 const SubscriptionInvoice = require('./SubscriptionInvoice');
+const PaymentRequest = require('./PaymentRequest');
 
 // Define associations
 function defineAssociations() {
