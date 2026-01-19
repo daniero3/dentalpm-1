@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Invoice, InvoiceItem, Patient, Payment, Procedure, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireClinicId } = require('../middleware/clinic');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -9,8 +10,8 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all invoices
-router.get('/', [
+// Get all invoices - with clinic filtering
+router.get('/', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isIn(['DRAFT', 'SENT', 'PAID', 'PARTIAL', 'OVERDUE', 'CANCELLED'])
@@ -28,6 +29,11 @@ router.get('/', [
     const offset = (page - 1) * limit;
     
     let whereClause = {};
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
     
     if (status) whereClause.status = status;
     if (patient_id) whereClause.patient_id = patient_id;
@@ -74,8 +80,8 @@ router.get('/', [
   }
 });
 
-// Get single invoice
-router.get('/:id', [
+// Get single invoice - with clinic check
+router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID facture invalide')
 ], async (req, res) => {
   try {
@@ -137,8 +143,8 @@ router.get('/:id', [
   }
 });
 
-// Create new invoice
-router.post('/', [
+// Create new invoice - with automatic clinic_id assignment
+router.post('/', requireClinicId, [
   body('patient_id')
     .isUUID()
     .withMessage('ID patient invalide'),
@@ -215,6 +221,7 @@ router.post('/', [
       nif_number,
       stat_number,
       notes,
+      clinic_id: req.clinic_id, // Automatic clinic assignment
       created_by_user_id: req.user.id
     });
 
@@ -271,8 +278,8 @@ router.post('/', [
   }
 });
 
-// Update invoice status
-router.patch('/:id/status', [
+// Update invoice status - with clinic check
+router.patch('/:id/status', requireClinicId, [
   param('id').isUUID().withMessage('ID facture invalide'),
   body('status')
     .isIn(['DRAFT', 'SENT', 'PAID', 'PARTIAL', 'OVERDUE', 'CANCELLED'])
@@ -328,8 +335,8 @@ router.patch('/:id/status', [
   }
 });
 
-// Delete invoice (only drafts)
-router.delete('/:id', [
+// Delete invoice (only drafts) - with clinic check
+router.delete('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID facture invalide'),
   requireRole('ADMIN', 'DENTIST', 'ACCOUNTANT')
 ], async (req, res) => {
