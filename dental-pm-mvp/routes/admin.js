@@ -458,4 +458,218 @@ router.delete('/clinics/:id', [
   }
 });
 
+// =============================================================================
+// PAYMENT REQUESTS VALIDATION (Super Admin)
+// =============================================================================
+
+// Plan pricing (MGA) - 30 days
+const PLAN_PRICING = {
+  ESSENTIAL: 150000,
+  PRO: 300000,
+  GROUP: 500000
+};
+
+/**
+ * @route GET /api/admin/payment-requests
+ * @desc Get all payment requests (filterable by status)
+ * @access Super Admin
+ */
+router.get('/payment-requests', [
+  requireRole('SUPER_ADMIN'),
+  query('status').optional().isIn(['PENDING', 'VERIFIED', 'REJECTED'])
+], async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let whereClause = {};
+    if (status) whereClause.status = status;
+
+    const { count, rows: requests } = await PaymentRequest.findAndCountAll({
+      where: whereClause,
+      include: [
+        { model: Clinic, as: 'clinic', attributes: ['id', 'name', 'city'] },
+        { model: User, as: 'submittedBy', attributes: ['id', 'full_name', 'email'] },
+        { model: User, as: 'verifiedBy', attributes: ['id', 'full_name'] }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      paymentRequests: requests,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(count / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get payment requests error:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des demandes' });
+  }
+});
+
+/**
+ * @route PATCH /api/admin/payment-requests/:id/verify
+ * @desc Verify payment request and activate subscription
+ * @access Super Admin
+ */
+router.patch('/payment-requests/:id/verify', [
+  requireRole('SUPER_ADMIN'),
+  param('id').isUUID().withMessage('ID demande invalide'),
+  body('note_admin').optional().isLength({ max: 500 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    }
+
+    const { id } = req.params;
+    const { note_admin } = req.body;
+
+    const paymentRequest = await PaymentRequest.findByPk(id, {
+      include: [{ model: Clinic, as: 'clinic' }]
+    });
+
+    if (!paymentRequest) {
+      return res.status(404).json({ error: 'Demande introuvable' });
+    }
+
+    if (paymentRequest.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Cette demande a déjà été traitée' });
+    }
+
+    // Update payment request
+    await paymentRequest.update({
+      status: 'VERIFIED',
+      verified_by_user_id: req.user.id,
+      verified_at: new Date(),
+      note_admin: note_admin || null
+    });
+
+    // Calculate subscription dates (30 days)
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+
+    // Find or create subscription for clinic
+    let subscription = await Subscription.findOne({
+      where: { clinic_id: paymentRequest.clinic_id }
+    });
+
+    const planFeatures = {
+      ESSENTIAL: { max_practitioners: 1, features: ['patients', 'appointments', 'invoicing'] },
+      PRO: { max_practitioners: 3, features: ['patients', 'appointments', 'invoicing', 'reports', 'support'] },
+      GROUP: { max_practitioners: 999, features: ['patients', 'appointments', 'invoicing', 'reports', 'support', 'multi_site'] }
+    };
+
+    const plan = planFeatures[paymentRequest.plan_code] || planFeatures.ESSENTIAL;
+
+    if (subscription) {
+      // Update existing subscription
+      await subscription.update({
+        plan: paymentRequest.plan_code,
+        status: 'ACTIVE',
+        billing_cycle: 'MONTHLY',
+        monthly_price_mga: paymentRequest.amount_mga,
+        start_date: startDate,
+        end_date: endDate,
+        trial_end_date: null,
+        max_practitioners: plan.max_practitioners,
+        features: plan.features
+      });
+    } else {
+      // Create new subscription
+      subscription = await Subscription.create({
+        clinic_id: paymentRequest.clinic_id,
+        plan: paymentRequest.plan_code,
+        status: 'ACTIVE',
+        billing_cycle: 'MONTHLY',
+        monthly_price_mga: paymentRequest.amount_mga,
+        annual_price_mga: paymentRequest.amount_mga * 10,
+        start_date: startDate,
+        end_date: endDate,
+        auto_renew: false,
+        max_practitioners: plan.max_practitioners,
+        features: plan.features
+      });
+    }
+
+    res.json({
+      message: 'Paiement vérifié et abonnement activé',
+      paymentRequest: {
+        id: paymentRequest.id,
+        status: 'VERIFIED',
+        verified_at: paymentRequest.verified_at,
+        note_admin: paymentRequest.note_admin
+      },
+      subscription: {
+        id: subscription.id,
+        clinic_id: subscription.clinic_id,
+        plan: subscription.plan,
+        status: subscription.status,
+        start_date: subscription.start_date,
+        end_date: subscription.end_date
+      }
+    });
+  } catch (error) {
+    console.error('Verify payment request error:', error);
+    res.status(500).json({ error: 'Erreur lors de la vérification' });
+  }
+});
+
+/**
+ * @route PATCH /api/admin/payment-requests/:id/reject
+ * @desc Reject payment request
+ * @access Super Admin
+ */
+router.patch('/payment-requests/:id/reject', [
+  requireRole('SUPER_ADMIN'),
+  param('id').isUUID().withMessage('ID demande invalide'),
+  body('note_admin').notEmpty().withMessage('Motif de rejet requis')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    }
+
+    const { id } = req.params;
+    const { note_admin } = req.body;
+
+    const paymentRequest = await PaymentRequest.findByPk(id);
+
+    if (!paymentRequest) {
+      return res.status(404).json({ error: 'Demande introuvable' });
+    }
+
+    if (paymentRequest.status !== 'PENDING') {
+      return res.status(400).json({ error: 'Cette demande a déjà été traitée' });
+    }
+
+    await paymentRequest.update({
+      status: 'REJECTED',
+      verified_by_user_id: req.user.id,
+      verified_at: new Date(),
+      note_admin
+    });
+
+    res.json({
+      message: 'Demande de paiement rejetée',
+      paymentRequest: {
+        id: paymentRequest.id,
+        status: 'REJECTED',
+        note_admin: paymentRequest.note_admin
+      }
+    });
+  } catch (error) {
+    console.error('Reject payment request error:', error);
+    res.status(500).json({ error: 'Erreur lors du rejet' });
+  }
+});
+
 module.exports = router;
