@@ -149,6 +149,102 @@ const InvoiceManagement = () => {
     }
   };
 
+  // Fetch payments for an invoice
+  const fetchInvoicePayments = async (invoiceId) => {
+    try {
+      const response = await axios.get(`${API}/invoices/${invoiceId}/payments`);
+      setInvoicePayments(response.data.payments || []);
+      setInvoicePaymentStats({
+        total_mga: response.data.total_mga,
+        paid_total_mga: response.data.paid_total_mga,
+        balance_mga: response.data.balance_mga,
+        payment_status: response.data.payment_status
+      });
+    } catch (error) {
+      console.error('Erreur lors du chargement des paiements');
+    }
+  };
+
+  // Open invoice detail/payment modal
+  const openPaymentModal = async (invoice) => {
+    setSelectedInvoice(invoice);
+    await fetchInvoicePayments(invoice.id);
+    setPaymentData({ amount_mga: '', payment_method: 'CASH', reference_number: '' });
+    setIsPaymentModalOpen(true);
+  };
+
+  // Submit payment
+  const handleSubmitPayment = async (e) => {
+    e.preventDefault();
+    if (!selectedInvoice || !paymentData.amount_mga) return;
+    
+    try {
+      const response = await axios.post(`${API}/invoices/${selectedInvoice.id}/payments`, {
+        amount_mga: parseFloat(paymentData.amount_mga),
+        payment_method: paymentData.payment_method,
+        reference_number: paymentData.reference_number || null
+      });
+      
+      toast.success('Paiement enregistré');
+      setPaymentData({ amount_mga: '', payment_method: 'CASH', reference_number: '' });
+      await fetchInvoicePayments(selectedInvoice.id);
+      fetchInvoices(); // Refresh invoice list
+    } catch (error) {
+      if (error.response?.data?.error === 'OVERPAYMENT_NOT_ALLOWED') {
+        toast.error(`Montant maximum: ${formatCurrency(error.response.data.balance_mga)}`);
+      } else {
+        toast.error(error.response?.data?.message || 'Erreur lors du paiement');
+      }
+    }
+  };
+
+  // Print invoice
+  const handlePrint = (invoiceId) => {
+    const printUrl = `${API}/invoices/${invoiceId}/print`;
+    const printWindow = window.open(printUrl, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => printWindow.print();
+    }
+  };
+
+  // Share invoice
+  const handleShare = async (invoice) => {
+    const shareUrl = `${API}/invoices/${invoice.id}/print`;
+    const shareData = {
+      title: `Facture ${invoice.invoice_number}`,
+      text: `Facture ${invoice.invoice_number} - ${formatCurrency(invoice.total_mga)}`,
+      url: shareUrl
+    };
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Partagé!');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          handleCopyLink(shareUrl);
+        }
+      }
+    } else {
+      handleCopyLink(shareUrl);
+    }
+  };
+
+  // Copy link
+  const handleCopyLink = async (url) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Lien copié!');
+    } catch (err) {
+      toast.error('Impossible de copier le lien');
+    }
+  };
+
+  // Download invoice
+  const handleDownload = (invoiceId) => {
+    window.open(`${API}/invoices/${invoiceId}/print`, '_blank');
+  };
+
   // When schedule changes, load fees
   const handleScheduleChange = (scheduleId) => {
     setFormData({ ...formData, schedule_id: scheduleId });
