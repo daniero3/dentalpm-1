@@ -17,8 +17,15 @@ Multi-tenant Dental Practice Management platform for Madagascar market with:
 ### P6 - Dual Tariff System ✅
 - Global SYNDICAL schedule (clinic_id: NULL) - SUPER_ADMIN only
 - CABINET schedules per clinic - CLINIC_ADMIN editable
-- CSV import with detailed report
+- CSV import/export with detailed report
 - Invoice creation with schedule_id
+
+### P6.2 - CABINET Tarification Complete ✅
+- Template MAEVA 2026 (48 actes) - import 1-click
+- Toggle actif/inactif pour actes
+- Export CSV, Import CSV avec replace
+- SYNDICAL read-only pour clinic_admin
+- Autocomplete basé sur schedule sélectionné
 
 ### P7 - Payments System ✅
 - Payment model: CASH, CHEQUE, CARD, MVOLA, ORANGE_MONEY, AIRTEL_MONEY, BANK_TRANSFER
@@ -39,6 +46,15 @@ Multi-tenant Dental Practice Management platform for Madagascar market with:
 
 ## API Endpoints
 
+### Pricing
+- GET /api/pricing-schedules
+- GET /api/pricing-schedules/:id/fees
+- POST /api/pricing-schedules/:id/fees
+- PUT /api/procedure-fees/:id
+- POST /api/pricing-schedules/:id/import-fees
+- GET /api/pricing-schedules/:id/export-fees
+- POST /api/pricing-schedules/:id/import-template-maeva
+
 ### Invoices & Payments
 - GET/POST /api/invoices
 - GET /api/invoices/:id
@@ -54,23 +70,16 @@ Multi-tenant Dental Practice Management platform for Madagascar market with:
 - POST /api/quotes/:id/convert
 - GET /api/quotes/:id/print
 
-### Pricing
-- GET /api/pricing-schedules
-- GET /api/pricing-schedules/:id/fees
-- POST /api/pricing-schedules/:id/fees (SYNDICAL: SUPER_ADMIN only)
-- POST /api/pricing-schedules/:id/import-fees
-
 ## Credentials
 - **SUPER_ADMIN**: admin / admin123
 - **CLINIC_ADMIN (Clinic 1)**: clinic_admin_test / testpass123
 - **CLINIC_ADMIN (Clinic 2)**: clinic2_admin_test / testpass123
 
 ## Backlog
-- [ ] PricingSettings.jsx - Full CRUD for CABINET tariffs
-- [ ] Payment processor integration (Stripe/local)
 - [ ] PDF generation for invoices/quotes
+- [ ] Payment processor integration (Stripe/local)
 - [ ] Patient consent forms (PDF)
 - [ ] User training materials
 
 ## Last Updated
-2026-01-19 - P7 Payments + Quotes completed
+2026-01-19 - P6.2 CABINET Tarification completed
