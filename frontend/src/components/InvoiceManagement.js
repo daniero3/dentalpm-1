@@ -83,12 +83,13 @@ const InvoiceManagement = () => {
   });
 
   const paymentMethods = {
-    cash: 'Espèces',
-    bank_transfer: 'Virement bancaire',
-    cheque: 'Chèque',
-    mvola: 'Mvola',
-    orange_money: 'Orange Money',
-    airtel_money: 'Airtel Money'
+    CASH: { name: 'Espèces', icon: Banknote },
+    BANK_TRANSFER: { name: 'Virement bancaire', icon: CreditCard },
+    CHEQUE: { name: 'Chèque', icon: Receipt },
+    MVOLA: { name: 'Mvola', icon: Smartphone },
+    ORANGE_MONEY: { name: 'Orange Money', icon: Smartphone },
+    AIRTEL_MONEY: { name: 'Airtel Money', icon: Smartphone },
+    CARD: { name: 'Carte bancaire', icon: CreditCard }
   };
 
   const paymentStatuses = {
