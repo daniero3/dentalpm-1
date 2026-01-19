@@ -798,7 +798,7 @@ router.get('/:id/pdf', requireClinicId, [
   param('id').isUUID()
 ], async (req, res) => {
   try {
-    const { generatePDF, generateInvoiceHTML } = require('../utils/pdfGenerator');
+    const { generateInvoicePDF } = require('../utils/pdfGenerator');
     
     const invoice = await Invoice.findOne({
       where: { 
@@ -827,11 +827,8 @@ router.get('/:id/pdf', requireClinicId, [
       order: [['payment_date', 'ASC']]
     });
 
-    // Generate premium HTML
-    const html = generateInvoiceHTML(invoice, clinic, payments);
-    
-    // Generate PDF
-    const pdfBuffer = await generatePDF(html);
+    // Generate PDF using PDFKit
+    const pdfBuffer = await generateInvoicePDF(invoice, clinic, payments);
     
     // Send PDF
     res.setHeader('Content-Type', 'application/pdf');
