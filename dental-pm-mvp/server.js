@@ -119,10 +119,11 @@ async function startServer() {
     // Skip sync since we already seeded the database
     console.log('✅ Base de données prête');
     
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur Dental PM Madagascar démarré sur le port ${PORT}`);
       console.log(`📍 API Health Check: http://localhost:${PORT}/api/health`);
       console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Host binding: 0.0.0.0:${PORT} (accessible via preview proxy)`);
     });
   } catch (error) {
     console.error('❌ Erreur de démarrage du serveur:', error);
