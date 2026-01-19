@@ -234,6 +234,7 @@ router.post('/', requireClinicId, [
     const invoice = await Invoice.create({
       invoice_number: invoiceNumber,
       patient_id,
+      schedule_id: pricingSchedule.id,
       subtotal_mga: subtotal,
       discount_percentage,
       discount_amount_mga: discountAmount,
