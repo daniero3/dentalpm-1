@@ -48,6 +48,28 @@ export const useAuth = () => {
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionError, setSubscriptionError] = useState(null);
+
+  // Setup axios interceptor for 403 errors
+  useEffect(() => {
+    setGlobalSubscriptionError = setSubscriptionError;
+    
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 403) {
+          const code = error.response?.data?.code;
+          if (['SUBSCRIPTION_EXPIRED', 'TRIAL_EXPIRED', 'NO_ACTIVE_SUBSCRIPTION'].includes(code)) {
+            setSubscriptionError(error.response.data);
+            return Promise.reject(error);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
