@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 import uuid
 
 class SaaSFeaturesAPITester:
-    def __init__(self, base_url="https://saasdent.preview.emergentagent.com"):
+    def __init__(self, base_url="https://dental-pay-stable.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.clinic_admin_token = None
