@@ -151,19 +151,15 @@ check "Upload .txt rejeté -> 400" "400" "$HTTP"
 rm -f /tmp/smoke_test.txt
 
 # =============================================================================
-# TEST 10: Rate Limit Header présent
-# Attendu: X-RateLimit headers
+# TEST 10: Legal Pages API
+# Attendu: HTTP 200, content présent
 # =============================================================================
 echo ""
-echo "--- TEST 10: Rate Limit Headers ---"
-HEADERS=$(curl -s -I "$API_URL/api/health")
-if echo "$HEADERS" | grep -qi "x-ratelimit\|ratelimit"; then
-  echo "✅ Rate limit headers présents"
-  ((PASSED++))
-else
-  echo "⚠️  Rate limit headers absents (vérifier proxy config)"
-  ((PASSED++))  # Warning, not failure
-fi
+echo "--- TEST 10: Legal Pages API ---"
+HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/legal/cgu")
+check "Legal CGU -> 200" "200" "$HTTP"
+HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/legal/privacy")
+check "Legal Privacy -> 200" "200" "$HTTP"
 
 # =============================================================================
 # RÉSUMÉ
