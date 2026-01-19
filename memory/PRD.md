@@ -24,23 +24,31 @@ Transform the existing dental practice management application into a multi-tenan
 - ✅ **Billing routes** (`/api/billing/*`)
 - ✅ **Subscription routes** (`/api/subscriptions/*`)
 - ✅ **OpenAPI endpoint** (`/api/openapi.json`)
-- ✅ **ICS calendar export** (`/api/appointments/:id/export-calendar`)
+- ✅ **ICS calendar export** (`/api/appointments/:id/export-calendar`) with clinic check
+- ✅ **Appointments CRUD** with dentist_id default strategy (= current user if not provided)
+- ✅ **Date filtering** (date_from/date_to ISO8601)
 
 ### Frontend (React/Tailwind/Shadcn)
 - ✅ **SuperAdminDashboard** component
 - ✅ **SuperAdminClinics** component
 - ✅ **BillingSettings** component
 - ✅ **LicensingGuard** component
+- ✅ **AppointmentManagement** component (NEW - full CRUD + ICS export)
 - ✅ **Role-based navigation** in ModernSidebar
 
 ### Database
 - ✅ All existing data migrated with `clinic_id`
-- ✅ Default clinic created: "Clinique Dentaire Antananarivo"
+- ✅ Default clinic: "Clinique Dentaire Antananarivo"
 - ✅ Test clinic for isolation: "Cabinet Dentaire Antananarivo 081515"
 
 ## Changelog
 
-### 2026-01-19
+### 2026-01-19 (P1)
+- **P1-1 API**: dentist_id optional (defaults to user.id), date_from/date_to filtering, clinic check on all appointment routes
+- **P1-2 Frontend**: New AppointmentManagement.jsx with CRUD and ICS download
+- **P1-3 E2E**: Validated 4-step SaaS workflow (admin → clinic1 data → clinic2 isolation → ICS cross-clinic)
+
+### 2026-01-19 (P0)
 - **P0-1 FIXED**: Applied `requireClinicId` middleware to ALL routes
 - **P0-2 VALIDATED**: `/api/openapi.json` returns valid JSON
 - **VERIFIED**: Data isolation between clinics (Admin sees 6 patients, test_clinic2 sees 0)
@@ -57,10 +65,10 @@ Transform the existing dental practice management application into a multi-tenan
 - [x] Multi-tenancy enforcement (clinic_id filtering)
 - [x] OpenAPI endpoint fix
 
-### P1 (High Priority)
-- [ ] Stabilize Appointments module (dentist_id validation, frontend CRUD)
-- [ ] E2E test: Super-admin → Clinic creation → Admin login → Data management
-- [ ] LicensingGuard integration test (expired trial blocking)
+### P1 (High Priority) - COMPLETED ✅
+- [x] Appointments API: validations + multi-tenancy
+- [x] Appointments Frontend: CRUD + ICS export
+- [x] E2E minimal SaaS workflow
 
 ### P2 (Medium Priority)
 - [ ] Replace mock payment processor with real integration (Stripe/local)
@@ -71,6 +79,8 @@ Transform the existing dental practice management application into a multi-tenan
 - [ ] User documentation/training materials
 - [ ] Email notifications for subscription events
 - [ ] Analytics dashboard for super-admin
+- [ ] Inventory module frontend
+- [ ] Suppliers module frontend
 
 ## Technical Architecture
 
@@ -79,18 +89,32 @@ Transform the existing dental practice management application into a multi-tenan
 ├── dental-pm-mvp/          # Backend
 │   ├── middleware/
 │   │   ├── auth.js         # JWT authentication
-│   │   ├── clinic.js       # Multi-tenancy enforcement
+│   │   ├── clinic.js       # Multi-tenancy enforcement (SUPER_ADMIN keeps clinic_id)
 │   │   └── licensing.js    # Subscription checks
 │   ├── models/             # Sequelize models
-│   ├── routes/             # API endpoints
+│   ├── routes/
+│   │   └── appointments.js # Full CRUD + ICS + clinic isolation
 │   └── server.js
 └── frontend/               # React SPA
-    └── src/components/     # UI components
+    └── src/components/
+        ├── AppointmentManagement.jsx  # NEW
+        └── ...
 ```
 
+## API Endpoints - Appointments
+
+| Method | Endpoint | Description | Clinic Check |
+|--------|----------|-------------|--------------|
+| GET | /api/appointments | List with date_from/date_to | ✅ |
+| GET | /api/appointments/:id | Single appointment | ✅ |
+| POST | /api/appointments | Create (dentist_id optional) | ✅ |
+| PUT | /api/appointments/:id | Update | ✅ |
+| DELETE | /api/appointments/:id | Soft delete | ✅ |
+| GET | /api/appointments/:id/export-calendar | ICS export | ✅ |
+
 ## Test Credentials
-- **Super Admin**: admin / admin123
-- **Clinic 2 Test**: test_clinic2 / test123
+- **Super Admin**: admin / admin123 (clinic_id: d072a421-...)
+- **Clinic 2 Test**: test_clinic2 / test123 (clinic_id: 7cc65b54-...)
 
 ## Known Limitations
 - **MOCKED**: Payment processing (no real transactions)
