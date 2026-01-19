@@ -239,6 +239,22 @@ function App() {
                     </MainLayout>
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/payments" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PaymentValidationPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Payment Request (Clinic) */}
+                <Route path="/payment" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <PaymentRequestPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
                 {/* Placeholder routes for new sections */}
                 <Route path="/appointments" element={
                   <ProtectedRoute>
