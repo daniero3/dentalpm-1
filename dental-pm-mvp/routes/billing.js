@@ -632,7 +632,7 @@ router.post('/payment-requests', requireClinicId, upload.single('receipt'), [
         plan_code,
         amount_mga,
         payment_method,
-        reference: reference || null,
+        reference: reference.trim(),
         receipt_url: req.file ? `/uploads/receipts/${req.file.filename}` : null,
         status: 'PENDING',
         submitted_by_user_id: req.user.id
