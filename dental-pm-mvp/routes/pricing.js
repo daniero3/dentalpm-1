@@ -1,41 +1,38 @@
 const express = require('express');
 const { body, validationResult, param } = require('express-validator');
 const { PricingSchedule, ProcedureFee, Clinic } = require('../models');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
 const { requireValidSubscription } = require('../middleware/licensing');
+const multer = require('multer');
+const csv = require('csv-parse/sync');
 
 const router = express.Router();
+
+// Multer for CSV upload
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 1024 * 1024 }, // 1MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv') || file.mimetype === 'application/json' || file.originalname.endsWith('.json')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format non autorisé. Utilisez CSV ou JSON.'));
+    }
+  }
+});
 
 // All routes require authentication and valid subscription
 router.use(authenticateToken);
 router.use(requireValidSubscription);
 
-// Default fees for seeding
-const DEFAULT_SYNDICAL_FEES = [
-  { procedure_code: 'CONS01', label: 'Consultation simple', price_mga: 15000, category: 'CONSULTATION' },
-  { procedure_code: 'CONS02', label: 'Consultation spécialisée', price_mga: 25000, category: 'CONSULTATION' },
-  { procedure_code: 'DET01', label: 'Détartrage', price_mga: 30000, category: 'SOINS' },
-  { procedure_code: 'OBT01', label: 'Obturation (composite)', price_mga: 40000, category: 'SOINS' },
-  { procedure_code: 'OBT02', label: 'Obturation (amalgame)', price_mga: 35000, category: 'SOINS' },
-  { procedure_code: 'EXT01', label: 'Extraction simple', price_mga: 25000, category: 'EXTRACTION' },
-  { procedure_code: 'EXT02', label: 'Extraction complexe', price_mga: 50000, category: 'EXTRACTION' },
-  { procedure_code: 'EXT03', label: 'Extraction dent de sagesse', price_mga: 80000, category: 'EXTRACTION' },
-  { procedure_code: 'ENDO01', label: 'Traitement canalaire mono-radiculaire', price_mga: 80000, category: 'SOINS' },
-  { procedure_code: 'ENDO02', label: 'Traitement canalaire multi-radiculaire', price_mga: 120000, category: 'SOINS' },
-  { procedure_code: 'PROT01', label: 'Couronne céramique', price_mga: 250000, category: 'PROTHESE' },
-  { procedure_code: 'PROT02', label: 'Couronne métallique', price_mga: 150000, category: 'PROTHESE' },
-  { procedure_code: 'PROT03', label: 'Bridge 3 éléments', price_mga: 600000, category: 'PROTHESE' },
-  { procedure_code: 'PROT04', label: 'Prothèse amovible partielle', price_mga: 350000, category: 'PROTHESE' },
-  { procedure_code: 'PROT05', label: 'Prothèse amovible complète', price_mga: 500000, category: 'PROTHESE' },
-  { procedure_code: 'RAD01', label: 'Radio panoramique', price_mga: 35000, category: 'RADIOLOGIE' },
-  { procedure_code: 'RAD02', label: 'Radio rétro-alvéolaire', price_mga: 10000, category: 'RADIOLOGIE' }
-];
+// Load SYNDICAL 2026 official fees
+const { SYNDICAL_2026_FEES } = require('../data/syndical_2026');
 
-// Cabinet fees = Syndical * 1.5 (tarifs libres)
-const DEFAULT_CABINET_FEES = DEFAULT_SYNDICAL_FEES.map(fee => ({
+// Cabinet fees = Syndical * 1.3 (tarifs libres - majoration 30%)
+const DEFAULT_CABINET_FEES = SYNDICAL_2026_FEES.map(fee => ({
   ...fee,
-  price_mga: Math.round(fee.price_mga * 1.5)
+  price_mga: Math.round(fee.price_mga * 1.3)
 }));
 
 /**
