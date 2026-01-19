@@ -3,12 +3,16 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Appointment, Patient, User } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
+const { auditLogger } = require('../middleware/auditLogger');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Audit logging for write operations
+router.use(auditLogger('appointments'));
 
 // Get appointments (calendar view) - with clinic filtering and date_from/date_to
 router.get('/', requireClinicId, [

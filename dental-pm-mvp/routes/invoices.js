@@ -3,12 +3,16 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Invoice, InvoiceItem, Patient, Payment, Procedure, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
+const { auditLogger } = require('../middleware/auditLogger');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Audit logging for write operations
+router.use(auditLogger('invoices'));
 
 // Get all invoices - with clinic filtering
 router.get('/', requireClinicId, [
