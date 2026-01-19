@@ -154,7 +154,7 @@ router.post('/', requireClinicId, [
   body('first_name').isLength({ min: 2, max: 50 }).withMessage('Prénom requis (2-50 caractères)'),
   body('last_name').isLength({ min: 2, max: 50 }).withMessage('Nom requis (2-50 caractères)'),
   body('date_of_birth').isISO8601().withMessage('Date de naissance invalide (format YYYY-MM-DD)'),
-  body('gender').isIn(['M', 'F', 'male', 'female', 'other', 'MALE', 'FEMALE', 'OTHER']).withMessage('Genre invalide (M/F/male/female/other)'),
+  body('gender').notEmpty().withMessage('Genre requis (M/F/male/female/homme/femme)'),
   body('phone_primary').matches(/^\+?261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$|^\d{10}$|^\+\d{10,15}$/).withMessage('Numéro de téléphone invalide'),
   body('email').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Email invalide'),
   body('address').optional({ nullable: true, checkFalsy: true }).isLength({ max: 255 }).withMessage('Adresse trop longue'),
