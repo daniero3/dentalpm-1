@@ -190,8 +190,14 @@ router.post('/', requireClinicId, [
       });
     }
 
+    // Generate patient_number
+    const timestamp = Date.now().toString();
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const patient_number = `PAT-${timestamp.slice(-6)}${randomSuffix}`;
+
     const patientData = {
       ...req.body,
+      patient_number,
       gender,
       clinic_id: req.clinic_id,
       created_by_user_id: req.user.id,
