@@ -293,26 +293,35 @@ router.put('/:id', requireClinicId, [
 
 /**
  * @route POST /api/pricing-schedules/:id/import-fees
- * @desc Import fees from CSV/JSON file (Admin only)
- * @access Clinic Admin or Super Admin
+ * @desc Import fees from CSV/JSON file (SYNDICAL: SUPER_ADMIN only)
+ * @access Clinic Admin (CABINET) or Super Admin (SYNDICAL)
  */
 router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
   param('id').isUUID()
 ], async (req, res) => {
   try {
+    const { Op } = require('sequelize');
+    
+    // Find schedule (clinic-specific or global SYNDICAL)
     const schedule = await PricingSchedule.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id }
+      where: { 
+        id: req.params.id,
+        [Op.or]: [
+          { clinic_id: req.clinic_id },
+          { clinic_id: null, type: 'SYNDICAL' }
+        ]
+      }
     });
 
     if (!schedule) {
       return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
     }
 
-    // Only allow import for SYNDICAL if SUPER_ADMIN, CABINET for clinic ADMIN
-    if (schedule.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'ADMIN') {
+    // SYNDICAL: SUPER_ADMIN only
+    if (schedule.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ 
         error: 'Non autorisé', 
-        message: 'Seul un administrateur peut modifier la grille Syndicale' 
+        message: 'Seul un super-administrateur peut modifier la grille Syndicale' 
       });
     }
 
