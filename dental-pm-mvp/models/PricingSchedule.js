@@ -9,16 +9,17 @@ const PricingSchedule = sequelize.define('pricing_schedules', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true,  // NULL for global SYNDICAL
     references: {
       model: 'clinics',
       key: 'id'
-    }
+    },
+    comment: 'NULL for global SYNDICAL, clinic UUID for CABINET'
   },
   type: {
     type: DataTypes.ENUM('SYNDICAL', 'CABINET'),
     allowNull: false,
-    comment: 'SYNDICAL = tarifs conventionnés, CABINET = tarifs libres'
+    comment: 'SYNDICAL = tarifs conventionnés (global), CABINET = tarifs libres (per clinic)'
   },
   name: {
     type: DataTypes.STRING(100),
@@ -55,7 +56,8 @@ const PricingSchedule = sequelize.define('pricing_schedules', {
   tableName: 'pricing_schedules',
   underscored: true,
   indexes: [
-    { fields: ['clinic_id', 'type'], unique: true },
+    { fields: ['type', 'year'], where: { clinic_id: null }, unique: true, name: 'unique_global_syndical' },
+    { fields: ['clinic_id', 'type'], unique: true, name: 'unique_clinic_schedule' },
     { fields: ['clinic_id', 'is_active'] }
   ]
 });
