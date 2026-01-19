@@ -19,6 +19,7 @@ const mediaRoutes = require('./routes/media');
 const subscriptionsRoutes = require('./routes/subscriptions');
 const billingRoutes = require('./routes/billing');
 const adminRoutes = require('./routes/admin');
+const legalRoutes = require('./routes/legal');
 const { getSubscriptionStatus } = require('./middleware/licensing');
 const { authenticateToken: requireAuth } = require('./middleware/auth');
 
