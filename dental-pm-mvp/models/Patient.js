@@ -62,15 +62,11 @@ const Patient = sequelize.define('patients', {
   },
   address: {
     type: DataTypes.TEXT,
-    allowNull: false,
-    validate: {
-      len: [10, 500],
-      notEmpty: true
-    }
+    allowNull: true
   },
   city: {
     type: DataTypes.STRING(50),
-    allowNull: false,
+    allowNull: true,
     defaultValue: 'Antananarivo'
   },
   postal_code: {
