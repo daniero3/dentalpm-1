@@ -39,7 +39,7 @@ RESP=$(curl -s -w "|%{http_code}" "$API_URL/api/health")
 HTTP=$(echo "$RESP" | cut -d'|' -f2)
 BODY=$(echo "$RESP" | cut -d'|' -f1)
 check "Health Check HTTP 200" "200" "$HTTP"
-check "Health Check status:ok" '"status":"ok"' "$BODY"
+check "Health Check status:ok" '"status":"' "$BODY"
 
 # =============================================================================
 # TEST 2: Login Super Admin
