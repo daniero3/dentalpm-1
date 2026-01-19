@@ -157,5 +157,6 @@ module.exports = {
   // New SaaS models
   Clinic,
   Subscription,
-  SubscriptionInvoice
+  SubscriptionInvoice,
+  PaymentRequest
 };
