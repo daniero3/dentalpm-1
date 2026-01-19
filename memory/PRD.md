@@ -1,98 +1,63 @@
 # Dental Practice Management SaaS - Madagascar
 
-## Problem Statement
-Transform dental practice management into a multi-tenant Commercial SaaS platform for the Madagascar market with local payment methods (MVola, Orange Money, etc.).
+## Original Problem Statement
+Multi-tenant Dental Practice Management platform for Madagascar market with:
+- Patient management
+- Appointment scheduling  
+- Invoicing with dual-tariff pricing (SYNDICAL/CABINET)
+- Subscription-based licensing
+- Local proof-of-payment billing
 
-## Architecture
-- **Backend**: Node.js + Express + Sequelize + SQLite
-- **Frontend**: React + Shadcn/Tailwind
-- **Multi-tenancy**: `clinic_id` enforcement across all models
-- **Auth**: JWT + RBAC (SUPER_ADMIN, ADMIN, DENTIST, etc.)
+## Core Architecture
+- **Backend**: Node.js, Express, Sequelize ORM, SQLite (dev)
+- **Frontend**: React, Shadcn UI, Tailwind CSS
+- **Auth**: JWT with RBAC (SUPER_ADMIN, CLINIC_ADMIN, DENTIST, ASSISTANT, ACCOUNTANT)
 
-## Completed Phases
+## Key Data Models
+- `PricingSchedule`: `{ clinic_id (nullable for global), type: SYNDICAL|CABINET, year, is_active }`
+- `ProcedureFee`: `{ schedule_id, procedure_code, label, price_mga, category }`
+- `Invoice`: `{ schedule_id (FK), patient_id, total_mga, status }`
+- `Patient`: `{ payer_type: INSURED|SELF_PAY }`
 
-### P0 - Critical Bug Fixes (✓)
-- `clinic_id: null` enforcement via `requireClinicId` middleware
-- `/openapi.json` returns JSON correctly
+## Implemented Features (P6 - Dual Tariff System)
 
-### P1 - Appointments Stabilization (✓)
-- Time validation, default `dentist_id`, date filtering
-- Cross-clinic security
-- Full CRUD frontend (`AppointmentManagement.jsx`)
+### Backend - COMPLETED ✅
+- [x] Global SYNDICAL schedule (clinic_id: NULL) - single source of truth
+- [x] CABINET schedules per clinic (clinic_id: UUID)
+- [x] RBAC: SYNDICAL editable only by SUPER_ADMIN
+- [x] RBAC: CABINET editable by CLINIC_ADMIN of owning clinic
+- [x] CSV import with detailed report (inserted, updated, ignored, deactivated)
+- [x] Invoice creation accepts global SYNDICAL schedule_id
+- [x] Inter-clinic coherence: all clinics see same SYNDICAL tariffs
 
-### P2 - Security & DB Hardening (✓)
-- RBAC middleware
-- Rate-limiting on login (keys by username)
-- Audit logging for CUD operations
-- `clinic_id` NOT NULL constraint in DB
+### Credentials
+- **SUPER_ADMIN**: admin / admin123
+- **CLINIC_ADMIN (Clinic 1)**: clinic_admin_test / testpass123
+- **CLINIC_ADMIN (Clinic 2)**: clinic2_admin_test / testpass123
 
-### P2.5 - Data Standardization (✓)
-- Sequential `patient_number` (PAT-XXXXXX) per clinic
-- Gender normalization (M/F)
+### API Endpoints (Pricing)
+- `GET /api/pricing-schedules` - List schedules (clinic + global SYNDICAL)
+- `GET /api/pricing-schedules/:id/fees` - Get fees for a schedule
+- `POST /api/pricing-schedules/:id/fees` - Add fee (SYNDICAL: SUPER_ADMIN only)
+- `PUT /api/pricing-schedules/:id` - Update fee (SYNDICAL: SUPER_ADMIN only)
+- `POST /api/pricing-schedules/:id/import-fees` - Import CSV (SYNDICAL: SUPER_ADMIN only)
+- `DELETE /api/pricing-schedules/cleanup-syndical` - Clean old schedules (SUPER_ADMIN only)
 
-### P3 - Local Payment System (✓)
-- `PaymentRequest` model
-- Clinic admin submits proof → Super-admin verifies → Subscription activates
-- File uploads via `multer` (PNG/JPEG/PDF, 5MB max)
+## Pending Tasks
 
-### P3.5 - Payment Hardening (✓) - 2026-01-19
-- **Unique constraint**: `(clinic_id, reference)` prevents duplicate submissions
-- **409 Conflict**: Returned for duplicate references and already-processed requests
-- **Licensing guard**: All business routes blocked with 403 if subscription expired
-- **Reference required**: Non-empty reference mandatory
-- **Upload security**: MIME filter (png/jpg/pdf), 5MB max
-- **Migration**: `20260120-unique-clinic-reference.js`
+### P1 - Frontend Validation
+- [ ] InvoiceManagement.js - test procedure autocomplete with SYNDICAL fees
+- [ ] PricingSettings.jsx - implement full CRUD for CABINET tariffs
+- [ ] Verify read-only mode for SYNDICAL in clinic_admin view
 
-### P4 - Documentation (✓) - 2026-01-19
-- OpenAPI spec updated with billing/admin endpoints
-- `BILLING.md` created with workflow description (~10 lines)
-- **Unified 403 messages**: code + action field for frontend handling
+### P2 - Backlog
+- [ ] Payment processor integration (Stripe/local)
+- [ ] PDF generation for invoices
+- [ ] Native PDF for patient consent forms
+- [ ] User training materials
 
-### P5 - GO-LIVE Preparation (✓) - 2026-01-19
-- `DEPLOY_CHECKLIST.md`: Variables env, sécurité, migrations, backup
-- `smoke_test.sh`: 10 tests automatisés post-deploy
-- `SubscriptionExpiredPage.jsx`: Page frontend dédiée 403
-- Axios interceptor: Capture automatique erreurs subscription
+## Known Issues
+- None currently
 
-### P6 - GO-LIVE Pack Opérationnel + Conformité (✓) - 2026-01-19
-- `RUNBOOK_PROD.md`: Procédures incidents, rollback, restore, rotation secrets
-- `BACKUP_POLICY.md`: Fréquence, rétention, scripts, tests restauration
-- **Pages légales Madagascar**:
-  - `/legal/CGU.md`: Conditions Générales d'Utilisation
-  - `/legal/PRIVACY_POLICY.md`: Politique de Confidentialité
-  - `/legal/MENTIONS_LEGALES.md`: Mentions Légales
-  - `/legal/PATIENT_CONSENT_TEMPLATE.md`: Modèle consentement patient
-- **API `/api/legal/*`**: Endpoints publics CGU, privacy, mentions, consent
-- **Frontend `/legal/*`**: Pages React avec tabs, impression
-- **PDF Consentement**: Template HTML imprimable par patient
-
-## Key Files Modified (P3.5/P4/P5)
-- `/app/dental-pm-mvp/models/PaymentRequest.js` - unique index
-- `/app/dental-pm-mvp/routes/billing.js` - 409, reference required, upload handler
-- `/app/dental-pm-mvp/routes/admin.js` - 409 for already-processed requests
-- `/app/dental-pm-mvp/routes/patients.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/routes/appointments.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/routes/invoices.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/routes/inventory.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/routes/labs.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/routes/suppliers.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/routes/mailing.js` - added `requireValidSubscription`
-- `/app/dental-pm-mvp/middleware/licensing.js` - unified 403 messages
-- `/app/dental-pm-mvp/server.js` - OpenAPI spec extended
-- `/app/dental-pm-mvp/BILLING.md` - workflow doc
-- `/app/dental-pm-mvp/DEPLOY_CHECKLIST.md` - GO-LIVE checklist
-- `/app/dental-pm-mvp/smoke_test.sh` - 10 automated tests
-- `/app/frontend/src/components/SubscriptionExpiredPage.jsx` - 403 page
-- `/app/frontend/src/App.js` - axios interceptor for 403
-
-## Backlog / Future
-- Stripe integration (real payment gateway)
-- Full frontend UI for billing pages
-- Comprehensive user documentation
-
-## Test Credentials
-- **Super Admin**: admin / admin123
-- **Clinic Admin**: test_clinic2 / test123
-
-## MOCKED Components
-- **Payments**: Local proof-of-payment (no live gateway)
+## Last Updated
+2026-01-19 - P6 Backend Dual-Tariff System completed with curl proofs
