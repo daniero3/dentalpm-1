@@ -58,6 +58,8 @@ const InvoiceManagement = () => {
     notes: '',
     payment_method: ''
   });
+  const [scheduleOverride, setScheduleOverride] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   const paymentMethods = {
     cash: 'Espèces',
