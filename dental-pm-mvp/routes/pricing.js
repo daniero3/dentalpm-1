@@ -225,7 +225,7 @@ router.post('/:id/fees', requireClinicId, [
  * @desc Update procedure fee
  * @access Authenticated
  */
-router.put('/fees/:id', requireClinicId, [
+router.put('/:id', requireClinicId, [
   param('id').isUUID(),
   body('label').optional().isLength({ min: 1, max: 200 }),
   body('price_mga').optional().isFloat({ min: 0 }),
