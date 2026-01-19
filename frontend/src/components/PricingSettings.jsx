@@ -122,8 +122,37 @@ const PricingSettings = () => {
       setEditingFee(null);
       fetchFees(selectedSchedule.id);
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
+      toast.error(error.response?.data?.error || 'Erreur lors de la mise à jour');
     }
+  };
+
+  const handleDeleteFee = async (fee) => {
+    if (!confirm(`Désactiver l'acte "${fee.procedure_code}" ?`)) return;
+    try {
+      await axios.put(`${API}/procedure-fees/${fee.id}`, {
+        is_active: false
+      });
+      toast.success('Acte désactivé');
+      fetchFees(selectedSchedule.id);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Erreur lors de la désactivation');
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!selectedSchedule || fees.length === 0) return;
+    
+    const csvHeaders = 'procedure_code,label,price_mga,category\n';
+    const csvRows = fees.map(fee => 
+      `"${fee.procedure_code}","${fee.label.replace(/"/g, '""')}",${fee.price_mga},"${fee.category}"`
+    ).join('\n');
+    
+    const blob = new Blob([csvHeaders + csvRows], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `tarifs_${selectedSchedule.type}_${selectedSchedule.year || '2026'}.csv`;
+    link.click();
+    toast.success('Export CSV terminé');
   };
 
   const handleImportCSV = async (e) => {
