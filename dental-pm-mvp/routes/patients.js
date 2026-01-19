@@ -76,8 +76,8 @@ router.get('/', requireClinicId, [
   }
 });
 
-// Get single patient
-router.get('/:id', [
+// Get single patient - with clinic check
+router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
   try {
@@ -89,7 +89,14 @@ router.get('/:id', [
       });
     }
 
-    const patient = await Patient.findByPk(req.params.id, {
+    // Build where clause with clinic filtering
+    let whereClause = { id: req.params.id };
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+
+    const patient = await Patient.findOne({
+      where: whereClause,
       include: [
         {
           model: Appointment,
@@ -187,8 +194,8 @@ router.post('/', requireClinicId, [
   }
 });
 
-// Update patient
-router.put('/:id', [
+// Update patient - with clinic check
+router.put('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide'),
   body('first_name').optional().isLength({ min: 1, max: 50 }).trim(),
   body('last_name').optional().isLength({ min: 1, max: 50 }).trim(),
@@ -205,7 +212,13 @@ router.put('/:id', [
       });
     }
 
-    const patient = await Patient.findByPk(req.params.id);
+    // Build where clause with clinic filtering
+    let whereClause = { id: req.params.id };
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+
+    const patient = await Patient.findOne({ where: whereClause });
     if (!patient) {
       return res.status(404).json({
         error: 'Patient non trouvé'
@@ -240,8 +253,8 @@ router.put('/:id', [
   }
 });
 
-// Soft delete patient
-router.delete('/:id', [
+// Soft delete patient - with clinic check
+router.delete('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide'),
   requireRole('ADMIN', 'DENTIST')
 ], async (req, res) => {
@@ -254,7 +267,13 @@ router.delete('/:id', [
       });
     }
 
-    const patient = await Patient.findByPk(req.params.id);
+    // Build where clause with clinic filtering
+    let whereClause = { id: req.params.id };
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+
+    const patient = await Patient.findOne({ where: whereClause });
     if (!patient) {
       return res.status(404).json({
         error: 'Patient non trouvé'
@@ -286,12 +305,18 @@ router.delete('/:id', [
   }
 });
 
-// Get patient dental chart (basic teeth status)
-router.get('/:id/dental-chart', [
+// Get patient dental chart (basic teeth status) - with clinic check
+router.get('/:id/dental-chart', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
   try {
-    const patient = await Patient.findByPk(req.params.id);
+    // Build where clause with clinic filtering
+    let whereClause = { id: req.params.id };
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+    
+    const patient = await Patient.findOne({ where: whereClause });
     if (!patient) {
       return res.status(404).json({
         error: 'Patient non trouvé'
