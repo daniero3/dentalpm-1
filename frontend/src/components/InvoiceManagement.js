@@ -285,6 +285,8 @@ const InvoiceManagement = () => {
     });
     setProcedureFees([]);
     setProcedureSearch('');
+    setSelectedPatient(null);
+    setScheduleOverride(false);
   };
 
   const formatCurrency = (amount) => {
