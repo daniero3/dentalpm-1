@@ -202,6 +202,123 @@ app.get('/api/openapi.json', (req, res) => {
             "200": { "description": "Service status" }
           }
         }
+      },
+      "/billing/plans": {
+        "get": {
+          "summary": "Get available subscription plans",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": { "description": "Plans list with pricing" }
+          }
+        }
+      },
+      "/billing/subscription": {
+        "get": {
+          "summary": "Get current clinic subscription",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": { "description": "Subscription details" }
+          }
+        }
+      },
+      "/billing/payment-requests": {
+        "get": {
+          "summary": "Get clinic payment requests",
+          "security": [{ "bearerAuth": [] }],
+          "responses": {
+            "200": { "description": "Payment requests list" }
+          }
+        },
+        "post": {
+          "summary": "Submit payment request with receipt",
+          "security": [{ "bearerAuth": [] }],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "plan_code": { "type": "string", "enum": ["ESSENTIAL", "PRO", "GROUP"] },
+                    "payment_method": { "type": "string", "enum": ["MVOLA", "ORANGE_MONEY", "AIRTEL_MONEY", "BANK_TRANSFER", "CASH"] },
+                    "reference": { "type": "string" },
+                    "receipt": { "type": "string", "format": "binary" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": { "description": "Payment request created" },
+            "409": { "description": "Duplicate reference" }
+          }
+        }
+      },
+      "/admin/payment-requests": {
+        "get": {
+          "summary": "Get all payment requests (Super Admin)",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "schema": { "type": "string", "enum": ["PENDING", "VERIFIED", "REJECTED"] }
+            }
+          ],
+          "responses": {
+            "200": { "description": "Payment requests list" }
+          }
+        }
+      },
+      "/admin/payment-requests/{id}/verify": {
+        "patch": {
+          "summary": "Verify payment request and activate subscription",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string", "format": "uuid" }
+            }
+          ],
+          "responses": {
+            "200": { "description": "Payment verified, subscription activated" },
+            "409": { "description": "Request already processed" }
+          }
+        }
+      },
+      "/admin/payment-requests/{id}/reject": {
+        "patch": {
+          "summary": "Reject payment request",
+          "security": [{ "bearerAuth": [] }],
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string", "format": "uuid" }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "note_admin": { "type": "string" }
+                  },
+                  "required": ["note_admin"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": { "description": "Payment rejected" },
+            "409": { "description": "Request already processed" }
+          }
+        }
       }
     }
   };
