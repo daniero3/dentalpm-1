@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Supplier, Product, StockMovement, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireClinicId } = require('../middleware/clinic');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -9,8 +10,8 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Get all suppliers
-router.get('/', [
+// Get all suppliers - with clinic filtering
+router.get('/', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('search').optional().isString(),
@@ -29,6 +30,11 @@ router.get('/', [
     const offset = (page - 1) * limit;
     
     let whereClause = { is_active: true };
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
     
     if (city) whereClause.city = city;
     
@@ -81,8 +87,8 @@ router.get('/', [
   }
 });
 
-// Get single supplier with products
-router.get('/:id', [
+// Get single supplier with products - with clinic check
+router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID fournisseur invalide')
 ], async (req, res) => {
   try {
@@ -129,8 +135,8 @@ router.get('/:id', [
   }
 });
 
-// Create new supplier
-router.post('/', [
+// Create new supplier - with automatic clinic_id assignment
+router.post('/', requireClinicId, [
   requireRole('ADMIN', 'ACCOUNTANT'),
   body('name').isLength({ min: 1, max: 100 }).withMessage('Nom requis (max 100 caractères)').trim(),
   body('phone').matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/).withMessage('Numéro de téléphone malgache invalide'),
@@ -159,7 +165,10 @@ router.post('/', [
       });
     }
 
-    const supplier = await Supplier.create(req.body);
+    const supplier = await Supplier.create({
+      ...req.body,
+      clinic_id: req.clinic_id // Automatic clinic assignment
+    });
 
     // Log supplier creation
     await AuditLog.create({
@@ -185,8 +194,8 @@ router.post('/', [
   }
 });
 
-// Update supplier
-router.put('/:id', [
+// Update supplier - with clinic check
+router.put('/:id', requireClinicId, [
   requireRole('ADMIN', 'ACCOUNTANT'),
   param('id').isUUID().withMessage('ID fournisseur invalide'),
   body('name').optional().isLength({ min: 1, max: 100 }).trim(),
@@ -238,8 +247,8 @@ router.put('/:id', [
   }
 });
 
-// Get supplier products
-router.get('/:id/products', [
+// Get supplier products - with clinic check
+router.get('/:id/products', requireClinicId, [
   param('id').isUUID().withMessage('ID fournisseur invalide')
 ], async (req, res) => {
   try {
@@ -291,8 +300,8 @@ router.get('/:id/products', [
   }
 });
 
-// Soft delete supplier
-router.delete('/:id', [
+// Soft delete supplier - with clinic check
+router.delete('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID fournisseur invalide'),
   requireRole('ADMIN')
 ], async (req, res) => {
