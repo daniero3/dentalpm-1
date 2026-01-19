@@ -81,6 +81,7 @@ const InvoiceManagement = () => {
   useEffect(() => {
     fetchInvoices();
     fetchPatients();
+    fetchPricingSchedules();
   }, []);
 
   const fetchInvoices = async () => {
@@ -102,6 +103,71 @@ const InvoiceManagement = () => {
       console.error('Erreur lors du chargement des patients');
     }
   };
+
+  const fetchPricingSchedules = async () => {
+    try {
+      const response = await axios.get(`${API}/pricing-schedules`);
+      setPricingSchedules(response.data.schedules || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des grilles tarifaires');
+    }
+  };
+
+  const fetchProcedureFees = async (scheduleId) => {
+    try {
+      const response = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`);
+      setProcedureFees(response.data.fees || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des actes');
+    }
+  };
+
+  // When schedule changes, load fees
+  const handleScheduleChange = (scheduleId) => {
+    setFormData({ ...formData, schedule_id: scheduleId });
+    if (scheduleId) {
+      fetchProcedureFees(scheduleId);
+    } else {
+      setProcedureFees([]);
+    }
+  };
+
+  // When patient changes, auto-select schedule based on payer_type
+  const handlePatientChange = (patientId) => {
+    setFormData({ ...formData, patient_id: patientId });
+    const patient = patients.find(p => p.id === patientId);
+    if (patient && pricingSchedules.length > 0) {
+      const defaultType = patient.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
+      const defaultSchedule = pricingSchedules.find(s => s.type === defaultType);
+      if (defaultSchedule) {
+        handleScheduleChange(defaultSchedule.id);
+      }
+    }
+  };
+
+  // Add procedure from fees list
+  const addProcedureFromFee = (fee) => {
+    const newItem = {
+      description: fee.label,
+      procedure_code: fee.procedure_code,
+      quantity: 1,
+      unit_price_mga: fee.price_mga,
+      total_mga: fee.price_mga,
+      tooth_number: ''
+    };
+    setFormData({
+      ...formData,
+      items: [...formData.items.filter(i => i.description !== ''), newItem]
+    });
+    setProcedureSearch('');
+  };
+
+  // Filter procedures by search
+  const filteredProcedures = procedureFees.filter(fee =>
+    fee.procedure_code.toLowerCase().includes(procedureSearch.toLowerCase()) ||
+    fee.label.toLowerCase().includes(procedureSearch.toLowerCase()) ||
+    fee.category.toLowerCase().includes(procedureSearch.toLowerCase())
+  ).slice(0, 10);
 
   const calculateItemTotal = (item) => {
     return item.quantity * (parseFloat(item.unit_price_mga) || 0);
