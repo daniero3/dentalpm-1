@@ -80,9 +80,20 @@ const Invoice = sequelize.define('invoices', {
     comment: 'Montant total en Ariary malgache'
   },
   status: {
-    type: DataTypes.ENUM('DRAFT', 'SENT', 'PAID', 'PARTIAL', 'OVERDUE', 'CANCELLED'),
+    type: DataTypes.ENUM('DRAFT', 'SENT', 'PAID', 'PARTIAL', 'OVERDUE', 'CANCELLED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CONVERTED'),
     allowNull: false,
     defaultValue: 'DRAFT'
+  },
+  converted_to_invoice_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    comment: 'ID de la facture créée à partir de ce devis'
+  },
+  validity_days: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 30,
+    comment: 'Durée de validité du devis en jours'
   },
   payment_terms: {
     type: DataTypes.STRING(100),
