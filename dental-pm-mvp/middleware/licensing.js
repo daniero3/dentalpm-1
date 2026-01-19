@@ -65,9 +65,10 @@ const requireValidSubscription = async (req, res, next) => {
 
     if (!subscription) {
       return res.status(403).json({
-        error: 'Accès refusé',
-        message: 'Aucun abonnement actif trouvé. Veuillez contacter votre administrateur.',
-        code: 'NO_ACTIVE_SUBSCRIPTION'
+        error: 'Abonnement requis',
+        message: 'Aucun abonnement actif. Veuillez souscrire pour accéder au service.',
+        code: 'NO_ACTIVE_SUBSCRIPTION',
+        action: 'subscribe'
       });
     }
 
@@ -79,8 +80,9 @@ const requireValidSubscription = async (req, res, next) => {
       
       return res.status(403).json({
         error: 'Abonnement expiré',
-        message: 'Votre abonnement a expiré. Veuillez le renouveler pour continuer à utiliser le service.',
+        message: 'Votre abonnement a expiré. Renouvelez pour continuer.',
         code: 'SUBSCRIPTION_EXPIRED',
+        action: 'renew',
         expired_date: subscription.end_date
       });
     }
@@ -91,9 +93,10 @@ const requireValidSubscription = async (req, res, next) => {
         await subscription.update({ status: 'TRIAL_EXPIRED' });
         
         return res.status(403).json({
-          error: 'Période d\'essai expirée',
-          message: 'Votre période d\'essai de 14 jours a expiré. Veuillez souscrire à un abonnement pour continuer.',
+          error: 'Essai expiré',
+          message: 'Votre période d\'essai est terminée. Choisissez un plan pour continuer.',
           code: 'TRIAL_EXPIRED',
+          action: 'subscribe',
           trial_end_date: subscription.trial_end_date
         });
       }
