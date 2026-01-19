@@ -161,6 +161,7 @@ const PricingSettings = () => {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('replace', 'true');
 
     try {
       const response = await axios.post(
@@ -168,12 +169,43 @@ const PricingSettings = () => {
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      toast.success(`Import terminé: ${response.data.imported} ajoutés, ${response.data.updated} mis à jour`);
+      toast.success(`Import terminé: ${response.data.inserted || response.data.imported || 0} ajoutés, ${response.data.updated || 0} mis à jour`);
       fetchFees(selectedSchedule.id);
     } catch (error) {
       toast.error(error.response?.data?.error || 'Erreur lors de l\'import');
     }
     e.target.value = '';
+  };
+
+  const handleImportTemplateMAEVA = async () => {
+    if (!selectedSchedule || selectedSchedule.type !== 'CABINET') {
+      toast.error('Sélectionnez une grille CABINET');
+      return;
+    }
+    
+    if (!confirm('Importer le template MAEVA 2026 ?\nCela remplacera les tarifs actuels.')) return;
+
+    try {
+      const response = await axios.post(
+        `${API}/pricing-schedules/${selectedSchedule.id}/import-template-maeva`
+      );
+      toast.success(`Template MAEVA importé: ${response.data.stats.inserted} ajoutés, ${response.data.stats.updated} mis à jour`);
+      fetchFees(selectedSchedule.id);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Erreur lors de l\'import du template');
+    }
+  };
+
+  const handleToggleActive = async (fee) => {
+    try {
+      await axios.put(`${API}/procedure-fees/${fee.id}`, {
+        is_active: !fee.is_active
+      });
+      toast.success(fee.is_active ? 'Acte désactivé' : 'Acte activé');
+      fetchFees(selectedSchedule.id);
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour');
+    }
   };
 
   const formatCurrency = (amount) => {
