@@ -1,48 +1,76 @@
 # Dental Practice Management SaaS - Madagascar
 
 ## Original Problem Statement
-Multi-tenant Dental Practice Management platform for Madagascar market with dual-tariff pricing (SYNDICAL/CABINET).
+Multi-tenant Dental Practice Management platform for Madagascar market with:
+- Patient management, Appointment scheduling
+- Invoicing with dual-tariff pricing (SYNDICAL global / CABINET local)
+- Subscription-based licensing, Local proof-of-payment billing
+- Quotes (Devis) with conversion to invoices
 
 ## Core Architecture
-- **Backend**: Node.js, Express, Sequelize ORM, SQLite
+- **Backend**: Node.js, Express, Sequelize ORM, SQLite (dev)
 - **Frontend**: React, Shadcn UI, Tailwind CSS
-- **Auth**: JWT with RBAC
+- **Auth**: JWT with RBAC (SUPER_ADMIN, CLINIC_ADMIN, DENTIST, ASSISTANT, ACCOUNTANT)
 
 ## Implemented Features
 
-### P6 - Dual Tariff System ✅ COMPLETE
+### P6 - Dual Tariff System ✅
+- Global SYNDICAL schedule (clinic_id: NULL) - SUPER_ADMIN only
+- CABINET schedules per clinic - CLINIC_ADMIN editable
+- CSV import with detailed report
+- Invoice creation with schedule_id
 
-**Backend:**
-- [x] Global SYNDICAL schedule (clinic_id: NULL)
-- [x] CABINET schedules per clinic
-- [x] RBAC: SYNDICAL = SUPER_ADMIN only
-- [x] CSV import with detailed report
-- [x] Invoice accepts global SYNDICAL
+### P7 - Payments System ✅
+- Payment model: CASH, CHEQUE, CARD, MVOLA, ORANGE_MONEY, AIRTEL_MONEY, BANK_TRANSFER
+- POST /api/invoices/:id/payments (with overpayment protection)
+- GET /api/invoices/:id/payments (list + stats)
+- DELETE /api/invoices/payments/:id (cancel)
+- GET /api/invoices/:id/print (HTML printable)
+- UI: Payment modal, history, share/print buttons
 
-**Frontend:**
-- [x] PricingSettings.jsx - CRUD complet CABINET
-  - Add/Edit/Delete actes
-  - Import/Export CSV
-  - SYNDICAL read-only pour clinic_admin
-- [x] InvoiceManagement.js - Auto-select schedule
-  - payer_type display (INSURED/SELF_PAY)
-  - Auto-select SYNDICAL/CABINET
-  - Override warning
+### P7 - Quotes (Devis) System ✅
+- Document type: QUOTE vs INVOICE
+- Numbering: DEV-YYYY-XXXX / FACT-YYYY-XXXX
+- Statuses: DRAFT, SENT, ACCEPTED, REJECTED, EXPIRED, CONVERTED
+- Validity period (days)
+- POST /api/quotes/:id/convert -> creates invoice
+- GET /api/quotes/:id/print (HTML with watermark)
+- UI: QuoteManagement.jsx with full CRUD
 
-### Preuves validées
-| Scénario | Patient | Grille | Total |
-|----------|---------|--------|-------|
-| 1 | INSURED | SYNDICAL | 180,000 MGA |
-| 2 | SELF_PAY | CABINET | 227,500 MGA |
+## API Endpoints
+
+### Invoices & Payments
+- GET/POST /api/invoices
+- GET /api/invoices/:id
+- PATCH /api/invoices/:id/status
+- GET/POST /api/invoices/:id/payments
+- DELETE /api/invoices/payments/:paymentId
+- GET /api/invoices/:id/print
+
+### Quotes
+- GET/POST /api/quotes
+- GET/PUT/DELETE /api/quotes/:id
+- PATCH /api/quotes/:id/status
+- POST /api/quotes/:id/convert
+- GET /api/quotes/:id/print
+
+### Pricing
+- GET /api/pricing-schedules
+- GET /api/pricing-schedules/:id/fees
+- POST /api/pricing-schedules/:id/fees (SYNDICAL: SUPER_ADMIN only)
+- POST /api/pricing-schedules/:id/import-fees
 
 ## Credentials
 - **SUPER_ADMIN**: admin / admin123
-- **CLINIC_ADMIN**: clinic_admin_test / testpass123
+- **CLINIC_ADMIN (Clinic 1)**: clinic_admin_test / testpass123
+- **CLINIC_ADMIN (Clinic 2)**: clinic2_admin_test / testpass123
 
-## Pending (Backlog)
-- [ ] Intégration paiement (Stripe/local)
-- [ ] Génération PDF factures
-- [ ] Documentation utilisateur
+## Backlog
+- [ ] PricingSettings.jsx - Full CRUD for CABINET tariffs
+- [ ] Payment processor integration (Stripe/local)
+- [ ] PDF generation for invoices/quotes
+- [ ] Patient consent forms (PDF)
+- [ ] User training materials
 
 ## Last Updated
-2026-01-19 - P6 UI Tarification CABINET + Workflow Facture complet
+2026-01-19 - P7 Payments + Quotes completed
