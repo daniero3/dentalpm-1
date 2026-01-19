@@ -619,16 +619,27 @@ router.post('/payment-requests', requireClinicId, upload.single('receipt'), [
     }
 
     // Create payment request
-    const paymentRequest = await PaymentRequest.create({
-      clinic_id: req.clinic_id,
-      plan_code,
-      amount_mga,
-      payment_method,
-      reference: reference || null,
-      receipt_url: req.file ? `/uploads/receipts/${req.file.filename}` : null,
-      status: 'PENDING',
-      submitted_by_user_id: req.user.id
-    });
+    let paymentRequest;
+    try {
+      paymentRequest = await PaymentRequest.create({
+        clinic_id: req.clinic_id,
+        plan_code,
+        amount_mga,
+        payment_method,
+        reference: reference || null,
+        receipt_url: req.file ? `/uploads/receipts/${req.file.filename}` : null,
+        status: 'PENDING',
+        submitted_by_user_id: req.user.id
+      });
+    } catch (err) {
+      if (err.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+          error: 'Référence en double',
+          message: `Une demande avec la référence "${reference}" existe déjà pour cette clinique`
+        });
+      }
+      throw err;
+    }
 
     res.status(201).json({
       message: 'Demande de paiement soumise',

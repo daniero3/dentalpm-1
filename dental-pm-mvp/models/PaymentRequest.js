@@ -79,7 +79,13 @@ const PaymentRequest = sequelize.define('payment_requests', {
   indexes: [
     { fields: ['clinic_id', 'status'] },
     { fields: ['clinic_id', 'created_at'] },
-    { fields: ['status'] }
+    { fields: ['status'] },
+    { 
+      fields: ['clinic_id', 'reference'], 
+      unique: true,
+      where: { reference: { [require('sequelize').Op.ne]: null } },
+      name: 'unique_clinic_reference'
+    }
   ]
 });
 

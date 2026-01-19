@@ -540,7 +540,10 @@ router.patch('/payment-requests/:id/verify', [
     }
 
     if (paymentRequest.status !== 'PENDING') {
-      return res.status(400).json({ error: 'Cette demande a déjà été traitée' });
+      return res.status(409).json({ 
+        error: 'Conflit', 
+        message: `Cette demande a déjà été traitée (statut: ${paymentRequest.status})` 
+      });
     }
 
     // Update payment request
@@ -650,7 +653,10 @@ router.patch('/payment-requests/:id/reject', [
     }
 
     if (paymentRequest.status !== 'PENDING') {
-      return res.status(400).json({ error: 'Cette demande a déjà été traitée' });
+      return res.status(409).json({ 
+        error: 'Conflit', 
+        message: `Cette demande a déjà été traitée (statut: ${paymentRequest.status})` 
+      });
     }
 
     await paymentRequest.update({
