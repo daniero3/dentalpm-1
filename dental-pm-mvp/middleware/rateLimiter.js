@@ -21,10 +21,22 @@ const cleanupOldEntries = () => {
 // Cleanup every 5 minutes
 setInterval(cleanupOldEntries, 5 * 60 * 1000);
 
+// Get real IP behind proxy (X-Forwarded-For)
+const getRealIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || 'unknown';
+};
+
 const loginRateLimiter = (req, res, next) => {
-  const ip = req.ip || req.connection.remoteAddress || 'unknown';
-  const username = req.body?.username || 'unknown';
-  const key = `${ip}:${username}`;
+  // Use username as primary key (more reliable than IP behind proxy)
+  const username = req.body?.username || req.body?.email || '';
+  const ip = getRealIp(req);
+  
+  // Key = username if provided, otherwise IP
+  const key = username ? `user:${username.toLowerCase()}` : `ip:${ip}`;
   const now = Date.now();
 
   const data = loginAttempts.get(key);
@@ -68,9 +80,11 @@ const loginRateLimiter = (req, res, next) => {
 };
 
 // Reset attempts on successful login
-const resetLoginAttempts = (ip, username) => {
-  const key = `${ip}:${username}`;
-  loginAttempts.delete(key);
+const resetLoginAttempts = (req, username) => {
+  const ip = getRealIp(req);
+  // Reset both username and IP keys
+  loginAttempts.delete(`user:${username.toLowerCase()}`);
+  loginAttempts.delete(`ip:${ip}`);
 };
 
 module.exports = { loginRateLimiter, resetLoginAttempts };
