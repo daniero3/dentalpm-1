@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const patientRoutes = require('./routes/patients');
 const appointmentRoutes = require('./routes/appointments');
 const invoiceRoutes = require('./routes/invoices');
+const quoteRoutes = require('./routes/quotes');
 const integrationRoutes = require('./routes/integrations');
 const dashboardRoutes = require('./routes/dashboard');
 const inventoryRoutes = require('./routes/inventory');
