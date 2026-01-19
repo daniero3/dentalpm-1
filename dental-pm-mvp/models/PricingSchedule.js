@@ -39,6 +39,17 @@ const PricingSchedule = sequelize.define('pricing_schedules', {
     allowNull: false,
     defaultValue: false,
     comment: 'Grille par défaut pour les nouveaux patients'
+  },
+  year: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 2026,
+    comment: 'Année de validité (ex: 2026)'
+  },
+  version_code: {
+    type: DataTypes.STRING(30),
+    allowNull: true,
+    comment: 'Ex: SYNDICAL_2026, CABINET_2026'
   }
 }, {
   tableName: 'pricing_schedules',
