@@ -435,39 +435,6 @@ router.post('/:id/import-fees', requireClinicId, upload.single('file'), [
     res.status(500).json({ error: 'Erreur import', details: error.message });
   }
 });
-        where: { schedule_id: schedule.id, procedure_code: fee.procedure_code }
-      });
-
-      if (existing) {
-        await existing.update({
-          label: fee.label,
-          price_mga: fee.price_mga,
-          category: fee.category,
-          is_active: true
-        });
-        updated++;
-      } else {
-        await ProcedureFee.create({
-          schedule_id: schedule.id,
-          ...fee,
-          is_active: true
-        });
-        imported++;
-      }
-    }
-
-    res.json({
-      message: 'Import terminé',
-      imported,
-      updated,
-      total: imported + updated,
-      errors: errors.length > 0 ? errors : undefined
-    });
-  } catch (error) {
-    console.error('Import fees error:', error);
-    res.status(500).json({ error: 'Erreur import', details: error.message });
-  }
-});
 
 /**
  * Seed default schedules for a clinic
