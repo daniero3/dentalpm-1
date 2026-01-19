@@ -177,10 +177,18 @@ router.post('/', requireClinicId, [
       });
     }
 
-    // Normalize gender
-    let gender = req.body.gender;
-    if (gender === 'M' || gender === 'MALE') gender = 'male';
-    if (gender === 'F' || gender === 'FEMALE') gender = 'female';
+    // Normalize gender to M/F only
+    let gender = (req.body.gender || '').toString().toLowerCase().trim();
+    if (['m', 'male', 'homme', 'masculin'].includes(gender)) {
+      gender = 'M';
+    } else if (['f', 'female', 'femme', 'féminin', 'feminin'].includes(gender)) {
+      gender = 'F';
+    } else {
+      return res.status(400).json({
+        error: 'Genre invalide',
+        message: 'Le genre doit être M, F, male, female, homme ou femme'
+      });
+    }
 
     // Check clinic_id is available
     if (!req.clinic_id) {
