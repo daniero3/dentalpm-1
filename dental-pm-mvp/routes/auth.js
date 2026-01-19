@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { User, AuditLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
+const { loginRateLimiter, resetLoginAttempts } = require('../middleware/rateLimiter');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -95,8 +96,8 @@ router.post('/register', [
   }
 });
 
-// Login user
-router.post('/login', [
+// Login user - with rate limiting
+router.post('/login', loginRateLimiter, [
   body('username').notEmpty().withMessage('Nom d\'utilisateur requis'),
   body('password').notEmpty().withMessage('Mot de passe requis')
 ], async (req, res) => {
