@@ -28,6 +28,7 @@ const navigation = [
   { name: "Tableau de bord", href: "/", icon: Home },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Rendez-vous", href: "/appointments", icon: Calendar },
+  { name: "Devis", href: "/quotes", icon: FileText },
   { name: "Factures", href: "/invoices", icon: FileText },
   { name: "Inventaire", href: "/inventory", icon: Package },
   { name: "Fournisseurs", href: "/suppliers", icon: Truck },
