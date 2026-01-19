@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Lab, LabOrder, LabOrderItem, LabDelivery, Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireClinicId } = require('../middleware/clinic');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -13,8 +14,8 @@ router.use(authenticateToken);
 // LAB MANAGEMENT
 // =============================================================================
 
-// Get all labs
-router.get('/', [
+// Get all labs - with clinic filtering
+router.get('/', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('search').optional().isLength({ max: 100 }),
@@ -33,6 +34,11 @@ router.get('/', [
     const offset = (page - 1) * limit;
     
     let whereClause = { is_active: true };
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
     
     if (city) whereClause.city = city;
     
@@ -88,8 +94,8 @@ router.get('/', [
 // LAB ORDERS MANAGEMENT
 // =============================================================================
 
-// Get all lab orders with filtering
-router.get('/orders', [
+// Get all lab orders with filtering - with clinic filtering
+router.get('/orders', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('status').optional().isIn(['CREATED', 'SENT', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED']),
@@ -121,6 +127,11 @@ router.get('/orders', [
     
     const offset = (page - 1) * limit;
     let whereClause = {};
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
     
     if (status) whereClause.status = status;
     if (lab_id) whereClause.lab_id = lab_id;
@@ -184,8 +195,8 @@ router.get('/orders', [
   }
 });
 
-// Get single lab with orders
-router.get('/:id', [
+// Get single lab with orders - with clinic check
+router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID laboratoire invalide')
 ], async (req, res) => {
   try {
@@ -235,8 +246,8 @@ router.get('/:id', [
   }
 });
 
-// Create new lab
-router.post('/', [
+// Create new lab - with automatic clinic_id assignment
+router.post('/', requireClinicId, [
   requireRole('ADMIN', 'DENTIST'),
   body('name')
     .isLength({ min: 1, max: 100 })
@@ -292,7 +303,10 @@ router.post('/', [
       });
     }
 
-    const lab = await Lab.create(req.body);
+    const lab = await Lab.create({
+      ...req.body,
+      clinic_id: req.clinic_id // Automatic clinic assignment
+    });
 
     // Log lab creation
     await AuditLog.create({
