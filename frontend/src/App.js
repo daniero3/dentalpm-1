@@ -372,6 +372,11 @@ function App() {
                     </LicensingGuard>
                   </ProtectedRoute>
                 } />
+                {/* Legal Pages - Public Access */}
+                <Route path="/legal" element={<LegalPages />} />
+                <Route path="/legal/cgu" element={<LegalPages />} />
+                <Route path="/legal/privacy" element={<LegalPages />} />
+                <Route path="/legal/mentions" element={<LegalPages />} />
               </Routes>
             </AnimatePresence>
           </BrowserRouter>
