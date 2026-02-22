@@ -533,7 +533,7 @@ const QuoteManagement = () => {
                         <Eye className="h-4 w-4 mr-2" />
                         Voir
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(quote.id)} data-testid={`pdf-${quote.invoice_number}`}>
+                      <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(quote.id, quote.invoice_number)} data-testid={`pdf-${quote.invoice_number}`}>
                         <Download className="h-4 w-4 mr-2" />
                         PDF
                       </Button>
