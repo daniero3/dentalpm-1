@@ -178,6 +178,20 @@ function defineAssociations() {
   Patient.hasMany(ToothStatus, { foreignKey: 'patient_id', as: 'toothStatuses' });
   ToothHistory.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
   ToothHistory.belongsTo(User, { foreignKey: 'performed_by', as: 'performedBy' });
+
+  // Messaging associations
+  MessageTemplate.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  Clinic.hasMany(MessageTemplate, { foreignKey: 'clinic_id', as: 'messageTemplates' });
+
+  MessageQueue.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  MessageQueue.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  Clinic.hasMany(MessageQueue, { foreignKey: 'clinic_id', as: 'messageQueue' });
+  Patient.hasMany(MessageQueue, { foreignKey: 'patient_id', as: 'messageQueue' });
+
+  MessageLog.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  MessageLog.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  Clinic.hasMany(MessageLog, { foreignKey: 'clinic_id', as: 'messageLogs' });
+  Patient.hasMany(MessageLog, { foreignKey: 'patient_id', as: 'messageLogs' });
 }
 
 // Initialize associations
