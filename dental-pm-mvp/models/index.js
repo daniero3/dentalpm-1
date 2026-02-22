@@ -40,6 +40,10 @@ const Document = require('./Document');
 const Prescription = require('./Prescription');
 const PrescriptionLog = require('./PrescriptionLog');
 
+// Odontogram models
+const ToothStatus = require('./ToothStatus');
+const ToothHistory = require('./ToothHistory');
+
 // Define associations
 function defineAssociations() {
   // Clinic relationships
