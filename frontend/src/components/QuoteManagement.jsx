@@ -212,6 +212,24 @@ const QuoteManagement = () => {
     window.open(`${API}/quotes/${quoteId}/print`, '_blank');
   };
 
+  // Download quote PDF
+  const handleDownloadPDF = (quoteId) => {
+    const token = localStorage.getItem('token');
+    fetch(`${API}/quotes/${quoteId}/pdf`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `devis-${quoteId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(() => toast.error('Erreur téléchargement PDF'));
+  };
+
   const handleShare = async (quote) => {
     const shareUrl = `${API}/quotes/${quote.id}/print`;
     if (navigator.share) {
