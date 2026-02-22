@@ -21,6 +21,7 @@ import PatientPrescriptions from "./components/PatientPrescriptions";
 import PatientOdontogram from "./components/PatientOdontogram";
 import InventoryManagement from "./components/InventoryManagement";
 import LabManagement from "./components/LabManagement";
+import PatientLabOrders from "./components/PatientLabOrders";
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
 
