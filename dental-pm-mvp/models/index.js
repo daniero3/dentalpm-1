@@ -33,6 +33,9 @@ const PaymentRequest = require('./PaymentRequest');
 const PricingSchedule = require('./PricingSchedule');
 const ProcedureFee = require('./ProcedureFee');
 
+// Document model
+const Document = require('./Document');
+
 // Define associations
 function defineAssociations() {
   // Clinic relationships
