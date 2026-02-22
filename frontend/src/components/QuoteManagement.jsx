@@ -213,21 +213,35 @@ const QuoteManagement = () => {
   };
 
   // Download quote PDF
-  const handleDownloadPDF = (quoteId) => {
-    const token = localStorage.getItem('token');
-    fetch(`${API}/quotes/${quoteId}/pdf`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.blob())
-    .then(blob => {
+  const handleDownloadPDF = async (quoteId, quoteNumber) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/quotes/${quoteId}/pdf`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        toast.error(`Erreur PDF: ${response.status} - ${errorText}`);
+        return;
+      }
+      
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
-      a.download = `devis-${quoteId}.pdf`;
+      a.download = `${quoteNumber || 'devis'}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    })
-    .catch(() => toast.error('Erreur téléchargement PDF'));
+      toast.success('PDF téléchargé');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast.error('Erreur téléchargement PDF');
+    }
   };
 
   const handleShare = async (quote) => {
