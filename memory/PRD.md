@@ -47,12 +47,18 @@ Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tar
 - Backend: Node.js, Express, Sequelize, SQLite
 - Frontend: React, Shadcn UI, Tailwind CSS
 - PDF: pdfkit (pure JS), qrcode (QR generation)
+- Messaging: MessageTemplate, MessageQueue, MessageLog tables (simulation only)
 
 ## Key Files
 - `/app/dental-pm-mvp/utils/pdfGenerator.js` - PDF generation with logo & QR code
 - `/app/dental-pm-mvp/routes/invoices.js` - Invoice routes + PDF + status filter
 - `/app/dental-pm-mvp/routes/quotes.js` - Quote routes + PDF
+- `/app/dental-pm-mvp/routes/messaging.js` - Mailing/SMS API routes
+- `/app/dental-pm-mvp/models/MessageTemplate.js` - Template model
+- `/app/dental-pm-mvp/models/MessageQueue.js` - Queue model
+- `/app/dental-pm-mvp/models/MessageLog.js` - Log model
 - `/app/frontend/src/components/InvoiceManagement.js` - Invoice UI with status filters
+- `/app/frontend/src/components/MessagingManagement.jsx` - Mailing/SMS UI
 
 ## Credentials
 - Super Admin: admin / admin123
