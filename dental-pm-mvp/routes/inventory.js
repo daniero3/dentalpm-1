@@ -168,7 +168,7 @@ router.get('/products/:id', requireClinicId, [
 
 // Create new product - with automatic clinic_id assignment
 router.post('/products', requireClinicId, [
-  requireRole('ADMIN', 'DENTIST'),
+  requireRole('SUPER_ADMIN', 'ADMIN', 'DENTIST'),
   body('name').isLength({ min: 1, max: 100 }).withMessage('Nom requis (max 100 caractères)').trim(),
   body('sku').isLength({ min: 1, max: 50 }).withMessage('SKU requis (max 50 caractères)').trim(),
   body('category').isIn(['INSTRUMENTS', 'CONSUMABLES', 'MATERIALS', 'EQUIPMENT', 'PROSTHETICS', 'ORTHODONTICS', 'HYGIENE', 'ANESTHESIA', 'RADIOLOGY', 'OTHER']),
