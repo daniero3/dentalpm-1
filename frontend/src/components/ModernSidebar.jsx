@@ -31,6 +31,7 @@ const navigation = [
   { name: "Rendez-vous", href: "/appointments", icon: Calendar },
   { name: "Devis", href: "/quotes", icon: FileText },
   { name: "Factures", href: "/invoices", icon: FileText },
+  { name: "Rapports", href: "/reports", icon: BarChart3 },
   { name: "Inventaire", href: "/inventory", icon: Package },
   { name: "Fournisseurs", href: "/suppliers", icon: Truck },
   { name: "Laboratoire", href: "/lab", icon: FlaskConical },
