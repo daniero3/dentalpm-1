@@ -263,6 +263,15 @@ function App() {
                     </LicensingGuard>
                   </ProtectedRoute>
                 } />
+                <Route path="/patients/:patientId/prescriptions" element={
+                  <ProtectedRoute>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <PatientPrescriptions />
+                      </MainLayout>
+                    </LicensingGuard>
+                  </ProtectedRoute>
+                } />
                 <Route path="/invoices" element={
                   <ProtectedRoute>
                     <LicensingGuard>
