@@ -49,9 +49,9 @@ router.get('/finance', requireClinicId, [
     const payments = await Payment.findAll({
       where: {
         clinic_id: clinicId,
-        paid_at: { [Op.between]: [fromDate, toDate] }
+        payment_date: { [Op.between]: [fromDate, toDate] }
       },
-      attributes: ['id', 'invoice_id', 'amount_mga', 'method', 'provider']
+      attributes: ['id', 'invoice_id', 'amount_mga', 'payment_method']
     });
 
     const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount_mga || 0), 0);
@@ -60,7 +60,7 @@ router.get('/finance', requireClinicId, [
     // Breakdown by payment method
     const methodBreakdown = {};
     payments.forEach(p => {
-      const method = p.method || 'OTHER';
+      const method = p.payment_method || 'OTHER';
       if (!methodBreakdown[method]) {
         methodBreakdown[method] = { count: 0, total_mga: 0 };
       }
