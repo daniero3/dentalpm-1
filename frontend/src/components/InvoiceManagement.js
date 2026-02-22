@@ -112,9 +112,13 @@ const InvoiceManagement = () => {
     fetchPricingSchedules();
   }, []);
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = async (status = null) => {
     try {
-      const response = await axios.get(`${API}/invoices`);
+      const params = {};
+      if (status && status !== 'ALL') {
+        params.status = status;
+      }
+      const response = await axios.get(`${API}/invoices`, { params });
       setInvoices(response.data.invoices || []);
     } catch (error) {
       toast.error('Erreur lors du chargement des factures');
