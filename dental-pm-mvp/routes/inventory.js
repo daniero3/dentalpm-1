@@ -228,7 +228,7 @@ router.post('/products', requireClinicId, [
 
 // Update product - with clinic check
 router.put('/products/:id', requireClinicId, [
-  requireRole('ADMIN', 'DENTIST'),
+  requireRole('SUPER_ADMIN', 'ADMIN', 'DENTIST'),
   param('id').isUUID().withMessage('ID produit invalide'),
   body('name').optional().isLength({ min: 1, max: 100 }).trim(),
   body('unit_cost_mga').optional().isFloat({ min: 0 }),
