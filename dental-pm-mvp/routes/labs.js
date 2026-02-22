@@ -403,7 +403,12 @@ router.post('/orders', requireClinicId, [
       }
     });
 
+    // Generate order number
+    const count = await LabOrder.count({ where: { clinic_id: req.clinic_id } });
+    const orderNumber = `LAB-${String(count + 1).padStart(6, '0')}`;
+
     const order = await LabOrder.create({
+      order_number: orderNumber,
       clinic_id: req.clinic_id,
       patient_id: req.body.patient_id,
       dentist_id: req.user.id,
