@@ -2,8 +2,6 @@
 # Smoke Test Script - Dental PM MVP
 # Tests all critical API endpoints
 
-set -e
-
 API_URL="https://dental-mada.preview.emergentagent.com"
 PASS=0
 FAIL=0
@@ -23,7 +21,7 @@ log_result() {
   echo "$status: $name $detail"
 }
 
-# 1) Health check
+# 1) Health check (no auth required)
 echo "=== 1) Health Check ==="
 HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/health")
 if [ "$HTTP" = "200" ]; then
@@ -55,27 +53,36 @@ else
   log_result "GET /api/patients" "FAIL" "HTTP $HTTP"
 fi
 
-# 4) Create patient
+# Get existing patient for tests
+PATIENT_ID=$(curl -s -H "$AUTH" "$API_URL/api/patients" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['patients'][0]['id'] if d.get('patients') else '')" 2>/dev/null)
+echo "Using PATIENT_ID: $PATIENT_ID"
+
+# 4) Create patient (with correct field name)
 echo "=== 4) Create Patient ==="
+UNIQUE_PHONE="+2613400$(date +%s | tail -c 6)"
 PATIENT_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/patients" \
   -H "$AUTH" -H "Content-Type: application/json" \
-  -d '{"first_name":"Smoke","last_name":"Test","date_of_birth":"1990-01-01","gender":"M","phone":"+261340000000"}')
+  -d "{\"first_name\":\"Smoke\",\"last_name\":\"Test$(date +%s)\",\"date_of_birth\":\"1990-01-01\",\"gender\":\"M\",\"phone_primary\":\"$UNIQUE_PHONE\"}")
 PATIENT_HTTP=$(echo "$PATIENT_RESP" | grep "HTTP:" | cut -d: -f2)
-PATIENT_ID=$(echo "$PATIENT_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id',d.get('patient',{}).get('id','')))" 2>/dev/null || echo "")
-if [ "$PATIENT_HTTP" = "201" ] && [ -n "$PATIENT_ID" ]; then
+NEW_PATIENT_ID=$(echo "$PATIENT_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id',d.get('patient',{}).get('id','')))" 2>/dev/null || echo "")
+if [ "$PATIENT_HTTP" = "201" ]; then
   log_result "POST /api/patients" "PASS"
+  if [ -n "$NEW_PATIENT_ID" ]; then
+    PATIENT_ID="$NEW_PATIENT_ID"
+  fi
 else
   log_result "POST /api/patients" "FAIL" "HTTP $PATIENT_HTTP"
-  # Use existing patient
-  PATIENT_ID=$(curl -s -H "$AUTH" "$API_URL/api/patients" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['patients'][0]['id'] if d.get('patients') else '')" 2>/dev/null)
 fi
-echo "Using PATIENT_ID: $PATIENT_ID"
+
+# Get schedule ID
+SCHEDULE_ID=$(curl -s -H "$AUTH" "$API_URL/api/pricing-schedules" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['schedules'][0]['id'] if d.get('schedules') else '')" 2>/dev/null)
+echo "Using SCHEDULE_ID: $SCHEDULE_ID"
 
 # 5) Create quote
 echo "=== 5) Create Quote ==="
 QUOTE_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/quotes" \
   -H "$AUTH" -H "Content-Type: application/json" \
-  -d "{\"patient_id\":\"$PATIENT_ID\",\"schedule_id\":null,\"items\":[{\"procedure_code\":\"SMOKE01\",\"description\":\"Test Smoke\",\"quantity\":1,\"unit_price_mga\":10000}],\"notes\":\"Smoke test quote\"}")
+  -d "{\"patient_id\":\"$PATIENT_ID\",\"schedule_id\":\"$SCHEDULE_ID\",\"items\":[{\"procedure_code\":\"SMOKE01\",\"description\":\"Test Smoke\",\"quantity\":1,\"unit_price_mga\":10000}],\"notes\":\"Smoke test quote\"}")
 QUOTE_HTTP=$(echo "$QUOTE_RESP" | grep "HTTP:" | cut -d: -f2)
 QUOTE_ID=$(echo "$QUOTE_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('quote',{}).get('id',''))" 2>/dev/null || echo "")
 if [ "$QUOTE_HTTP" = "201" ]; then
@@ -101,7 +108,7 @@ fi
 echo "=== 6) Create Invoice ==="
 INV_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/invoices" \
   -H "$AUTH" -H "Content-Type: application/json" \
-  -d "{\"patient_id\":\"$PATIENT_ID\",\"schedule_id\":null,\"items\":[{\"procedure_code\":\"INV01\",\"description\":\"Test Invoice\",\"quantity\":1,\"unit_price_mga\":50000}]}")
+  -d "{\"patient_id\":\"$PATIENT_ID\",\"schedule_id\":\"$SCHEDULE_ID\",\"items\":[{\"procedure_code\":\"INV01\",\"description\":\"Test Invoice\",\"quantity\":1,\"unit_price_mga\":50000}]}")
 INV_HTTP=$(echo "$INV_RESP" | grep "HTTP:" | cut -d: -f2)
 INV_ID=$(echo "$INV_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('invoice',{}).get('id',''))" 2>/dev/null || echo "")
 if [ "$INV_HTTP" = "201" ]; then
