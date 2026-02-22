@@ -437,6 +437,12 @@ const PatientManagement = () => {
                         Ordonnances
                       </Button>
                     </Link>
+                    <Link to={`/patients/${patient.id}/lab-orders`}>
+                      <Button variant="outline" size="sm">
+                        <FlaskConical className="h-4 w-4 mr-2" />
+                        Labo
+                      </Button>
+                    </Link>
                     <Link to={`/patients/${patient.id}/chart`}>
                       <Button variant="outline" size="sm">
                         <Activity className="h-4 w-4 mr-2" />
