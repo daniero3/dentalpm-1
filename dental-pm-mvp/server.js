@@ -108,16 +108,6 @@ app.use('/api/reports', requireAuth, reportsRoutes);
 // Licensing status endpoint
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    service: 'Dental Practice Management API - Madagascar',
-    version: '1.0.0'
-  });
-});
-
 // OpenAPI JSON endpoint
 app.get('/api/openapi.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
