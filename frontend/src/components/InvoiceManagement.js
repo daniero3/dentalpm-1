@@ -995,9 +995,13 @@ const InvoiceManagement = () => {
               {/* Actions */}
               <div className="flex justify-between pt-4 border-t">
                 <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedInvoice.id)} data-testid="download-pdf-btn">
+                    <Download className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
                   <Button variant="outline" onClick={() => handleDownload(selectedInvoice.id)}>
                     <Download className="h-4 w-4 mr-2" />
-                    Télécharger
+                    HTML
                   </Button>
                   <Button variant="outline" onClick={() => handleShare(selectedInvoice)}>
                     <Share2 className="h-4 w-4 mr-2" />
