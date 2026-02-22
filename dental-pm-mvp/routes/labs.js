@@ -336,4 +336,313 @@ router.post('/', requireClinicId, [
   }
 });
 
+// =============================================================================
+// LAB ORDERS - EXTENDED API
+// =============================================================================
+
+// Get single lab order
+router.get('/orders/:id', requireClinicId, [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const order = await LabOrder.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id },
+      include: [
+        { model: Lab, as: 'lab' },
+        { model: Patient, as: 'patient' },
+        { model: User, as: 'dentist', attributes: ['id', 'full_name', 'username'] },
+        { model: LabOrderItem, as: 'items' }
+      ]
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Commande non trouvée' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error('Get order error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Create lab order (simplified)
+router.post('/orders', requireClinicId, [
+  body('patient_id').isUUID(),
+  body('work_type').isIn(['CROWN', 'BRIDGE', 'PARTIAL_DENTURE', 'COMPLETE_DENTURE', 'IMPLANT_CROWN', 'ORTHODONTIC_APPLIANCE', 'NIGHT_GUARD', 'VENEER', 'INLAY_ONLAY', 'OTHER']),
+  body('due_date').isDate(),
+  body('lab_name').optional().isString(),
+  body('teeth_fdi').optional().isString(),
+  body('material').optional().isString(),
+  body('shade').optional().isString(),
+  body('lab_cost_mga').optional().isFloat({ min: 0 }),
+  body('notes').optional().isString()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    }
+
+    const patient = await Patient.findOne({
+      where: { id: req.body.patient_id, clinic_id: req.clinic_id }
+    });
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient non trouvé' });
+    }
+
+    // Find or create a default lab
+    let [defaultLab] = await Lab.findOrCreate({
+      where: { clinic_id: req.clinic_id, name: req.body.lab_name || 'Laboratoire par défaut' },
+      defaults: {
+        clinic_id: req.clinic_id,
+        name: req.body.lab_name || 'Laboratoire par défaut',
+        phone: '+261 00 00 000 00',
+        address: 'Adresse non spécifiée',
+        city: 'Antananarivo'
+      }
+    });
+
+    const order = await LabOrder.create({
+      clinic_id: req.clinic_id,
+      patient_id: req.body.patient_id,
+      dentist_id: req.user.id,
+      lab_id: defaultLab.id,
+      work_type: req.body.work_type,
+      due_date: req.body.due_date,
+      shade: req.body.shade || null,
+      total_mga: req.body.lab_cost_mga || 0,
+      notes: req.body.notes || null,
+      status: 'CREATED'
+    });
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'CREATE',
+      resource_type: 'lab_orders',
+      resource_id: order.id,
+      new_values: req.body,
+      ip_address: req.ip,
+      description: `Commande labo créée: ${order.order_number}`
+    });
+
+    res.status(201).json({
+      message: 'Commande créée',
+      order: {
+        id: order.id,
+        order_number: order.order_number,
+        work_type: order.work_type,
+        status: order.status,
+        due_date: order.due_date
+      }
+    });
+  } catch (error) {
+    console.error('Create order error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// Update lab order
+router.put('/orders/:id', requireClinicId, [
+  param('id').isUUID(),
+  body('work_type').optional().isIn(['CROWN', 'BRIDGE', 'PARTIAL_DENTURE', 'COMPLETE_DENTURE', 'IMPLANT_CROWN', 'ORTHODONTIC_APPLIANCE', 'NIGHT_GUARD', 'VENEER', 'INLAY_ONLAY', 'OTHER']),
+  body('due_date').optional().isDate(),
+  body('shade').optional().isString(),
+  body('notes').optional().isString()
+], async (req, res) => {
+  try {
+    const order = await LabOrder.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Commande non trouvée' });
+    }
+
+    if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
+      return res.status(409).json({ error: 'Commande non modifiable' });
+    }
+
+    await order.update(req.body);
+
+    res.json({ message: 'Commande mise à jour', order });
+  } catch (error) {
+    console.error('Update order error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Change lab order status
+router.post('/orders/:id/status', requireClinicId, [
+  param('id').isUUID(),
+  body('status').isIn(['CREATED', 'SENT', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED']),
+  body('reason').optional().isString()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    }
+
+    const order = await LabOrder.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Commande non trouvée' });
+    }
+
+    const { status, reason } = req.body;
+    const updates = { status };
+
+    if (status === 'SENT') updates.sent_at = new Date();
+    if (status === 'DELIVERED') updates.delivered_at = new Date();
+    if (status === 'CANCELLED') {
+      updates.cancelled_at = new Date();
+      updates.cancelled_reason = reason || null;
+    }
+
+    await order.update(updates);
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'UPDATE',
+      resource_type: 'lab_orders',
+      resource_id: order.id,
+      new_values: { status, reason },
+      ip_address: req.ip,
+      description: `Statut commande ${order.order_number}: ${status}`
+    });
+
+    res.json({
+      message: 'Statut mis à jour',
+      order: {
+        id: order.id,
+        order_number: order.order_number,
+        status: order.status
+      }
+    });
+  } catch (error) {
+    console.error('Status change error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Get lab orders for a patient
+router.get('/patient/:patientId/orders', requireClinicId, [
+  param('patientId').isUUID()
+], async (req, res) => {
+  try {
+    const patient = await Patient.findOne({
+      where: { id: req.params.patientId, clinic_id: req.clinic_id }
+    });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient non trouvé' });
+    }
+
+    const orders = await LabOrder.findAll({
+      where: { patient_id: req.params.patientId, clinic_id: req.clinic_id },
+      include: [
+        { model: Lab, as: 'lab', attributes: ['id', 'name'] },
+        { model: User, as: 'dentist', attributes: ['id', 'full_name'] }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      patient_id: req.params.patientId,
+      count: orders.length,
+      orders: orders.map(o => ({
+        id: o.id,
+        order_number: o.order_number,
+        work_type: o.work_type,
+        status: o.status,
+        due_date: o.due_date,
+        total_mga: o.total_mga,
+        lab: o.lab,
+        dentist: o.dentist,
+        created_at: o.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get patient orders error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Print lab order (HTML)
+router.get('/orders/:id/print', requireClinicId, [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const order = await LabOrder.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id },
+      include: [
+        { model: Lab, as: 'lab' },
+        { model: Patient, as: 'patient' },
+        { model: User, as: 'dentist' }
+      ]
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Commande non trouvée' });
+    }
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Commande Labo ${order.order_number}</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+    .info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+    .box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+    .label { font-weight: bold; color: #666; }
+    .value { margin-top: 5px; }
+    .status { display: inline-block; padding: 5px 10px; border-radius: 3px; background: #e0e0e0; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <h1>COMMANDE LABORATOIRE</h1>
+  <p><strong>N°:</strong> ${order.order_number} | <strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('fr-FR')}</p>
+  
+  <div class="info">
+    <div class="box">
+      <div class="label">Patient</div>
+      <div class="value">${order.patient.first_name} ${order.patient.last_name}</div>
+    </div>
+    <div class="box">
+      <div class="label">Laboratoire</div>
+      <div class="value">${order.lab?.name || 'Non spécifié'}</div>
+    </div>
+  </div>
+  
+  <div class="box">
+    <div class="label">Type de travail</div>
+    <div class="value">${order.work_type}</div>
+    ${order.shade ? `<p><strong>Teinte:</strong> ${order.shade}</p>` : ''}
+    ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
+  </div>
+  
+  <p><strong>Date limite:</strong> ${new Date(order.due_date).toLocaleDateString('fr-FR')}</p>
+  <p><strong>Statut:</strong> <span class="status">${order.status}</span></p>
+  <p><strong>Montant:</strong> ${Number(order.total_mga).toLocaleString()} MGA</p>
+  
+  <hr style="margin-top: 40px;">
+  <p><strong>Praticien:</strong> ${order.dentist?.full_name || 'N/A'}</p>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('Print order error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
