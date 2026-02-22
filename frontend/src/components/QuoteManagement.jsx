@@ -613,6 +613,10 @@ const QuoteManagement = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedQuote.id)} data-testid="detail-pdf-btn">
+                    <Download className="h-4 w-4 mr-2" />
+                    PDF
+                  </Button>
                   <Button variant="outline" onClick={() => handlePrint(selectedQuote.id)}>
                     <Printer className="h-4 w-4 mr-2" />
                     Imprimer
