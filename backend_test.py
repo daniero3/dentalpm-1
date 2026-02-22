@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 class DentalPracticeAPITester:
-    def __init__(self, base_url="https://dental-mada.preview.emergentagent.com"):
+    def __init__(self, base_url="https://clinic-mgmt-mvp.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.headers = {'Content-Type': 'application/json'}

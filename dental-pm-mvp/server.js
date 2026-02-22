@@ -43,8 +43,8 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',
     'https://localhost:3000',
-    'https://dental-mada.preview.emergentagent.com',
-    'https://dental-mada.preview.emergentagent.com',
+    'https://clinic-mgmt-mvp.preview.emergentagent.com',
+    'https://clinic-mgmt-mvp.preview.emergentagent.com',
     'https://*.emergentagent.com',
     process.env.FRONTEND_URL || 'http://localhost:3000'
   ],
@@ -120,7 +120,7 @@ app.get('/api/openapi.json', (req, res) => {
     },
     "servers": [
       {
-        "url": "https://dental-mada.preview.emergentagent.com/api",
+        "url": "https://clinic-mgmt-mvp.preview.emergentagent.com/api",
         "description": "Preview Environment"
       }
     ],

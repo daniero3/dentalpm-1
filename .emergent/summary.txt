@@ -1,79 +1,63 @@
 <analysis>**original_problem_statement:**
-The user is developing a multi-tenant Dental Practice Management SaaS platform for the Madagascar market. The core of the application is a dual-tariff pricing system, payment and quote management, and robust role-based access control.
+The user is developing a multi-tenant Dental Practice Management SaaS platform for the Madagascar market. The application is a feature-rich MVP that has successfully passed a full Release Candidate smoke test, validating all core modules from patient management to financial reporting.
 
-Initial requirements focused on establishing two pricing schedules:
-1.  **SYNDICAL**: A global, read-only tariff for insured patients, managed exclusively by a .
-2.  **CABINET**: A customizable tariff for each clinic, managed by the  for self-paying patients.
+Following the successful RC1 validation, the user has shifted to a perfectionnement (refinement) phase organized into short, focused sprints. Each sprint targets a single module with a maximum of three specific improvements.
 
-Subsequent features have been added:
--   **P7 Payments**: An end-to-end system for recording payments (Cash, Cheque, Card, Mobile Money) against invoices, including a UI modal to view payment history and status (UNPAID/PARTIAL/PAID).
--   **P7 Quotes**: A complete quote management system, allowing clinics to create, send, and convert quotes into invoices. Quotes have their own lifecycle and numbering scheme (DEV-YYYY-XXXX).
--   **P6.2 Cabinet Finalization**: Full CRUD functionality for  to manage their  tariff, including CSV import/export and a one-click import for a MAEVA template.
--   **P8 PDF Generation**: The current task is to create premium, printable PDF documents for both invoices and quotes.
+The current sprint focuses on the **Facturation (Billing)** module with three priorities:
+1.  **Clinic Logo**: Upload and display a unique clinic logo on all invoice and quote PDFs.
+2.  **Payment QR Code**: Generate and embed a QR code on invoice PDFs containing payment details (invoice number, amount, etc.).
+3.  **Status Filters**: Implement status filters (UNPAID / PARTIAL / PAID) on the main invoice list UI.
 
-The user enforces a strict anti-credit policy, demanding direct execution of tasks with  proofs and minimal agent-initiated planning or questioning.
+The user maintains a strict anti-gaspillage policy, demanding direct execution of the scoped tasks with proofs and no tangential work or refactoring.
 
-**User's preferred language**: French. The next agent **MUST** respond in **French** and follow the user's direct-execution style.
+**User's preferred language**: French. The next agent **MUST** respond in **French** and adhere to the user's direct, execution-focused communication style.
 
 **what currently exists?**
--   **Backend (Node.js/Express/Sequelize)**: A multi-tenant application with JWT authentication, RBAC, and middleware for tenancy (). It includes robust modules for:
-    -   **Pricing**: Manages global  and per-clinic  schedules. Supports CSV import/export and template seeding.
-    -   **Invoicing**: Full lifecycle for invoices ().
-    -   **Quoting**: Full lifecycle for quotes () including conversion to invoices.
-    -   **Payments**: Records payments against invoices, calculates balances, and prevents overpayment.
-    -   **Print Views**: Endpoints (, ) generate basic HTML views for documents.
--   **Frontend (React/Shadcn)**: Functional UI for managing patients, pricing settings, invoices, and quotes.
--   **PDF Generation**: The  library has been installed as a dependency to generate PDFs on the backend. A utility file at  has been created with  logic.
+The application is a stable, feature-complete MVP. All major modules have been implemented and validated through a comprehensive  script.
+-   **Backend (Node.js/Express/Sequelize)**: A robust multi-tenant API with JWT authentication and RBAC. It includes full-featured modules for Patients, Pricing, Invoices, Quotes, Payments, Patient Documents (file uploads), Prescriptions, Odontogram (dental chart), Inventory, Lab Orders, and Financial Reports. All core API endpoints are functional.
+-   **Frontend (React/Shadcn)**: A functional UI for all implemented backend modules. Each module has its own management page, and patient records are integrated with tabs for documents, prescriptions, lab orders, and the odontogram.
+-   **Dependencies**: The  library is used for PDF generation. The  library was just installed to support the current task.
 
 **Last working item**:
--   Last item agent was working: Implementing **P8 - PDF Premium**. The agent was tasked with creating endpoints  and  to generate professional PDF documents.
--   After encountering environment limitations with  (Chrome not found) and  (install failed), the agent pivoted to using the  library. It successfully installed , created a utility file () containing the  generation logic, and updated the  route to use this new utility. The implementation for quotes and testing has not been completed.
+-   Last item agent was working: The agent began work on the **Sprint Facturation (Billing Sprint)**. The immediate focus was on requirements #1 (Logo) and #3 (QR Code) which both involve modifying the PDF generation logic. The agent successfully installed the  npm package and was about to start modifying the  utility file. The status filter requirement has not been started.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? manual testing by curl
+-   Which testing method agent to use? manual testing by curl and screenshot tool
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: **Finalize and Prove PDF Generation (P8)** (Priority: P0)
+-   There are no outstanding bugs or issues. The current work is a feature enhancement task.
 
 **Issues Detail**:
--   **Issue 1: Finalize and Prove PDF Generation (P8)**
-    -   **Attempted fixes**: The agent attempted to use  but it failed due to a missing Chrome dependency in the environment. An attempt to install  also failed. The current approach is using . The agent has implemented the logic for invoice PDFs but has not completed the implementation for quote PDFs or tested the functionality.
-    -   **Next debug checklist**:
-        1.  **Update Quotes Route**: Modify  to add the  endpoint, calling the  utility from  (similar to the implementation in ).
-        2.  **Restart Backend**: backend: stopped
-backend: started.
-        3.  **Execute Proofs**: Run the user-specified  commands to test both invoice and quote PDF generation, ensuring they return , , and a file of a reasonable size.
-            -   
-            -   
-            -   
-            -   
-        4.  **Debug if Needed**: If  commands fail, debug the implementation in , checking the data fetching and PDF document construction logic.
-        5.  **Frontend**: Once the backend endpoints are confirmed working, add Download PDF buttons to  and .
-    -   **Why fix this issue and what will be achieved with the fix?**: This will complete the P8 requirement, allowing users to download professional, shareable PDF versions of their invoices and quotes directly from the application.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue**: None
+-   N/A
 
 **In progress Task List**:
--   **Task 1: Complete P8 PDF Generation** (Priority: P0)
-    -   **Where to resume**: Resume at  to implement the PDF generation endpoint.
-    -   **What will be achieved with this?**: Both invoices and quotes will have a Download PDF feature, generating a premium document format.
+-   **Task 1: Complete Sprint Facturation (Billing Sprint)** (Priority: P0)
+    -   **Where to resume**:
+        1.  **PDFs**: Modify . The  and  functions need to be updated to fetch the clinic's  and render the image. The invoice PDF function also needs to generate and render a QR code using the  library.
+        2.  **UI Filters**: Modify  to add UI elements (buttons, dropdown) for filtering invoices by payment status (, , ).
+        3.  **Backend Filters**: Modify the  endpoint in  to accept a  query parameter to filter the results.
+    -   **What will be achieved with this?**: The billing module will be enhanced with professional PDFs (logo, QR code) and an improved user experience for managing invoices (status filters).
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
--   **Future Tasks**:
-    -   Integrate a real payment processor (e.g., Stripe, or local Madagascar options).
-    -   Build out comprehensive user training materials and documentation.
+-   **Future Sprints (Backlog)**: The user will define subsequent sprints. Potential candidates from previous discussions include:
+    -   Integrating a real payment processor.
+    -   Adding a calendar/appointment scheduling module.
+    -   Building out user training materials and documentation.
 
 **Completed work in this session**
--   **P6 Backend Finalization**: Finalized the dual-tariff logic by making the  schedule a single global entity () and enforcing RBAC to prevent clinic admins from modifying it. This involved a complex database migration to alter table constraints.
--   **P7 Payments**: Implemented backend routes and frontend UI for recording multiple payments (Cash, Mobile Money, etc.) against an invoice, calculating the balance, and displaying payment history.
--   **P7 Quotes**: Introduced a Quote document type distinct from Invoices. Built the full backend lifecycle (create, update status, convert to invoice) and a corresponding frontend management page ().
--   **P6.2 Cabinet Finalization**: Completed the UI for  to manage their  tariff, including CSV import/export and a one-click import feature for a predefined MAEVA template.
+-   **P8 - PDF Premium**: Completed the implementation of PDF generation for invoices and quotes using , including a robust frontend download handler.
+-   **P9 - Patient Documents (Backend)**: Implemented the entire backend API for uploading, managing, and deleting patient-related files.
+-   **P9.1 - Patient Documents (UI)**: Built the frontend UI for the patient documents feature.
+-   **P10 - Prescriptions**: Implemented the full backend API and a minimal frontend UI for managing medical prescriptions.
+-   **P11 - Odontogram**: Implemented the backend API and a visual frontend UI for a dental chart.
+-   **P12 - Inventory**: Extended the existing inventory module with new API endpoints and built a complete frontend management UI.
+-   **P13 - Lab Orders**: Extended the existing lab module with new API endpoints and built a complete frontend management UI.
+-   **P14 - Financial Reports**: Implemented a new backend endpoint and a frontend dashboard for financial reporting.
+-   **P15 - Release Candidate**: Created and successfully executed a comprehensive  script covering 17 critical API workflows, achieving 100% pass rate and validating the application's stability.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -88,67 +72,190 @@ backend: started.
 -   **Backend**: Node.js, Express.js, Sequelize (ORM), JWT.
 -   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios.
 -   **Database**: SQLite.
--   **Architecture**: Multi-Tenant SaaS, REST API.
--   **File Handling**:  for uploads,  for CSV processing,  for PDF generation.
+-   **PDF Generation**:  for server-side generation,  for embedding QR codes.
+-   **Testing**: A comprehensive  script for end-to-end API validation.
 
 **key DB schema**
+-   : Added  field (was already present, now being used).
+-   : 
 -   : 
 -   : 
 -   : 
 -   : 
 
 **changes in tech stack**
--    was added as a backend dependency for PDF generation.
+-   : Added as a backend npm dependency for the current task.
 
 **All files of reference**
--   : **Primary file for next actions.** Contains the new  logic for creating PDFs.
--   : Contains the  endpoint for invoices. Needs verification.
--   : **Needs to be updated** with its own  endpoint.
--   : Will need a Download PDF button.
--   : Will need a Download PDF button.
+-   **/app/dental-pm-mvp/utils/pdfGenerator.js**: **Needs modification** for logo and QR code.
+-   **/app/frontend/src/components/InvoiceManagement.js**: **Needs modification** for status filters.
+-   **/app/dental-pm-mvp/routes/invoices.js**: **Needs modification** to handle status filter query.
+-   **/app/dental-pm-mvp/smoke_test.sh**: The comprehensive test script created in P15.
+-   All new components and routes created during the session (listed in Architecture).
 
 **Critical Info for New Agent**
--   **Execute, Don't Ask**: The user has a strict anti-credit policy. Read the request, execute tasks directly, and provide  proofs. Do not propose alternative plans.
--   **PDF Generation Pivot**: The environment does not support browser-based PDF generation (). The solution is to use the pure-JS  library. The implementation is in progress and untested.
--   **Database State**: The database schema and data are now consistent with the business logic (global SYNDICAL, per-clinic CABINET).
+-   **User's Style is Law**: The user's anti-gaspillage (no waste) and sprint-based approach is non-negotiable. Execute the 3 defined tasks for the billing sprint, provide proofs, and STOP. Do not add any extra features or perform any refactoring.
+-   **The App is Stable**: The application passed a 17-point smoke test. You are building on a known-good foundation. Do not question existing logic unless it directly blocks the current task.
+-   **Proofs are Mandatory**: The user expects  proofs for backend changes and screenshot proofs for UI changes to validate completion.
 
 **documents and test reports created in this job**
--   
--   
--    (updated after each major task completion)
+-   === 1) Health Check ===
+PASS: /api/health 
+=== 2) Login ===
+PASS: POST /api/auth/login 
+=== 3) Patients List ===
+PASS: GET /api/patients 
+Using PATIENT_ID: 426b9ada-75bd-4698-a092-dc8809d6b365
+=== 4) Create Patient ===
+PASS: POST /api/patients 
+Using SCHEDULE_ID: e38e468b-b6b3-4f2a-a4a2-e3b9d5fd766b
+=== 5) Create Quote ===
+PASS: POST /api/quotes 
+=== 5b) Convert Quote ===
+PASS: POST /api/quotes/:id/convert 
+=== 6) Create Invoice ===
+PASS: POST /api/invoices 
+Using INV_ID: be29eab0-3704-40be-8665-46075d62a5f5
+=== 7) Add Payment ===
+PASS: POST /api/invoices/:id/payments 
+=== 8) Invoice PDF ===
+PASS: GET /api/invoices/:id/pdf 
+=== 9) Upload Document ===
+PASS: POST /api/documents/upload 
+=== 10) Prescription Flow ===
+PASS: POST /api/patients/:id/prescriptions 
+PASS: POST /api/prescriptions/:id/issue 
+PASS: GET /api/prescriptions/:id/pdf 
+=== 11) Odontogram ===
+PASS: PUT /api/patients/:id/odontogram 
+=== 12) Inventory Alerts ===
+PASS: GET /api/inventory/alerts 
+=== 13) Lab Order ===
+PASS: POST /api/labs/orders 
+=== 14) Reports Finance ===
+PASS: GET /api/reports/finance 
+
+============================================
+        SMOKE TEST RESULTS
+============================================
+
+✅ /api/health
+✅ POST /api/auth/login
+✅ GET /api/patients
+✅ POST /api/patients
+✅ POST /api/quotes
+✅ POST /api/quotes/:id/convert
+✅ POST /api/invoices
+✅ POST /api/invoices/:id/payments
+✅ GET /api/invoices/:id/pdf
+✅ POST /api/documents/upload
+✅ POST /api/patients/:id/prescriptions
+✅ POST /api/prescriptions/:id/issue
+✅ GET /api/prescriptions/:id/pdf
+✅ PUT /api/patients/:id/odontogram
+✅ GET /api/inventory/alerts
+✅ POST /api/labs/orders
+✅ GET /api/reports/finance
+
+============================================
+TOTAL: 17 PASS / 0 FAIL
+============================================
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Validated completion of Quotes (P7) and instructed agent to stop.
-2.  **Agent**: Finished task and updated PRD.
-3.  **User**: Provided detailed requirements for **P6.2 - Finalize CABINET Tariffs**, including CSV import/export, a MAEVA template, and frontend CRUD.
-4.  **Agent**: Began implementation, created the MAEVA template data, updated backend routes, and started modifying the frontend. The build failed and the pod restarted due to memory limits.
-5.  **Agent**: Resumed after restart, successfully built the frontend, and confirmed all  proofs for the P6.2 backend work were complete.
-6.  **Agent**: Finished task and updated PRD.
-7.  **User**: Provided detailed requirements for **P8 - PDF Premium**, specifying the use of Playwright (or a fallback) to generate high-quality PDFs for invoices and quotes.
-8.  **Agent**: Began implementation. Found Puppeteer (Playwright equivalent) unusable. Pivoted to , installed it, and created a  utility.
-9.  **User**: Interrupted the agent with a focused request to finalize and prove the PDF generation with  using a specific list of  commands.
-10. **Agent**: Acknowledged the request and is ready to resume the PDF implementation.
+1.  **User (P14)**: Requested the Financial Reports MVP.
+2.  **Agent (P14)**: Implemented and delivered P14.
+3.  **User (P15)**: Requested the Release Candidate smoke test.
+4.  **Agent (P15)**: Encountered test failures.
+5.  **Agent (P15)**: Debugged and fixed the issues ( script and  route order).
+6.  **Agent (P15)**: Successfully ran the smoke test (17/17 PASS) and delivered the results.
+7.  **User**: Validated RC1 and announced the shift to perfectionnement sprints, starting with Billing.
+8.  **Agent**: Asked for clarification on the 3 priorities for the Billing sprint.
+9.  **User**: Confirmed the 3 priorities: 1) Clinic logo on PDFs, 2) QR code on invoice PDFs, 3) Status filters on the invoice list. Provided strict scope.
+10. **Agent**: Acknowledged the request and started implementation (installing ).
 
 **Project Health Check:**
--   **Broken**: PDF generation is currently non-functional and mid-implementation.
--   **Mocked**: The payment system does not integrate with a live payment gateway.
+-   **Broken**: None.
+-   **Mocked**: Payment system does not integrate with a live payment gateway. QR code generation is for static text, not a live payment link.
 
 **3rd Party Integrations**
 -   : For file uploads.
--   : For parsing CSV files on the backend.
+-   : For parsing CSV files.
 -   : For server-side PDF generation.
+-   : (new) For generating QR codes in PDFs.
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created: None
+-   Test files created:
+    -   === 1) Health Check ===
+PASS: /api/health 
+=== 2) Login ===
+PASS: POST /api/auth/login 
+=== 3) Patients List ===
+PASS: GET /api/patients 
+Using PATIENT_ID: 426b9ada-75bd-4698-a092-dc8809d6b365
+=== 4) Create Patient ===
+PASS: POST /api/patients 
+Using SCHEDULE_ID: e38e468b-b6b3-4f2a-a4a2-e3b9d5fd766b
+=== 5) Create Quote ===
+PASS: POST /api/quotes 
+=== 5b) Convert Quote ===
+PASS: POST /api/quotes/:id/convert 
+=== 6) Create Invoice ===
+PASS: POST /api/invoices 
+Using INV_ID: d7e02ece-1741-49bc-9b63-37ce9d04744d
+=== 7) Add Payment ===
+PASS: POST /api/invoices/:id/payments 
+=== 8) Invoice PDF ===
+PASS: GET /api/invoices/:id/pdf 
+=== 9) Upload Document ===
+PASS: POST /api/documents/upload 
+=== 10) Prescription Flow ===
+PASS: POST /api/patients/:id/prescriptions 
+PASS: POST /api/prescriptions/:id/issue 
+PASS: GET /api/prescriptions/:id/pdf 
+=== 11) Odontogram ===
+PASS: PUT /api/patients/:id/odontogram 
+=== 12) Inventory Alerts ===
+PASS: GET /api/inventory/alerts 
+=== 13) Lab Order ===
+PASS: POST /api/labs/orders 
+=== 14) Reports Finance ===
+PASS: GET /api/reports/finance 
+
+============================================
+        SMOKE TEST RESULTS
+============================================
+
+✅ /api/health
+✅ POST /api/auth/login
+✅ GET /api/patients
+✅ POST /api/patients
+✅ POST /api/quotes
+✅ POST /api/quotes/:id/convert
+✅ POST /api/invoices
+✅ POST /api/invoices/:id/payments
+✅ GET /api/invoices/:id/pdf
+✅ POST /api/documents/upload
+✅ POST /api/patients/:id/prescriptions
+✅ POST /api/prescriptions/:id/issue
+✅ GET /api/prescriptions/:id/pdf
+✅ PUT /api/patients/:id/odontogram
+✅ GET /api/inventory/alerts
+✅ POST /api/labs/orders
+✅ GET /api/reports/finance
+
+============================================
+TOTAL: 17 PASS / 0 FAIL
+============================================
 -   Known regressions: None
 
 **Credentials to test flow:**
 -   **Super Admin**:
     -   Username: 
     -   Password: 
--   **Clinic Admin**: A test user like  (password ) was created in the session. It belongs to clinic .
+-   **Clinic Admin / Dentist**:
+    -   A user like  (password ) exists for a specific clinic. This user is required for testing tenant-specific features.
 
 **What agent forgot to execute**
--   The agent correctly pivoted to  but has only partially implemented the feature. The  route still needs to be updated, and the entire feature needs to be tested via  as requested by the user.</analysis>
+-   The agent has been following user instructions meticulously and has not forgotten any requested tasks.</analysis>
