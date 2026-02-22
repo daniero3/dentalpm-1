@@ -235,5 +235,9 @@ module.exports = {
   PrescriptionLog,
   // Odontogram models
   ToothStatus,
-  ToothHistory
+  ToothHistory,
+  // Messaging models
+  MessageTemplate,
+  MessageQueue,
+  MessageLog
 };
