@@ -19,6 +19,7 @@ import QuoteManagement from "./components/QuoteManagement";
 import PatientDocuments from "./components/PatientDocuments";
 import PatientPrescriptions from "./components/PatientPrescriptions";
 import PatientOdontogram from "./components/PatientOdontogram";
+import InventoryManagement from "./components/InventoryManagement";
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
 
