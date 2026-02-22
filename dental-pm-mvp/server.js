@@ -93,6 +93,7 @@ app.use('/api/procedure-fees', requireAuth, pricingRoutes);  // For PUT /api/pro
 app.use('/api/documents', requireAuth, documentRoutes);
 app.use('/api', requireAuth, prescriptionRoutes);
 app.use('/api', requireAuth, odontogramRoutes);
+app.use('/api/reports', requireAuth, reportsRoutes);
 
 // Licensing status endpoint
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
