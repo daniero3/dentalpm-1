@@ -423,6 +423,12 @@ const PatientManagement = () => {
                         Documents
                       </Button>
                     </Link>
+                    <Link to={`/patients/${patient.id}/prescriptions`}>
+                      <Button variant="outline" size="sm">
+                        <ClipboardList className="h-4 w-4 mr-2" />
+                        Ordonnances
+                      </Button>
+                    </Link>
                     <Link to={`/patients/${patient.id}/chart`}>
                       <Button variant="outline" size="sm">
                         <Activity className="h-4 w-4 mr-2" />
