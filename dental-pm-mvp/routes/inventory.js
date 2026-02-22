@@ -454,6 +454,59 @@ router.get('/movements', requireClinicId, [
 });
 
 // Get low stock alerts - with clinic filtering
+router.get('/alerts', requireClinicId, async (req, res) => {
+  try {
+    let whereClause = {
+      is_active: true,
+      [Op.and]: sequelize.where(
+        sequelize.col('current_qty'),
+        Op.lte,
+        sequelize.col('min_qty')
+      )
+    };
+    
+    // Apply clinic filtering
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+    
+    const lowStockProducts = await Product.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: Supplier,
+          as: 'supplier',
+          attributes: ['id', 'name', 'phone', 'email']
+        }
+      ],
+      order: [['current_qty', 'ASC'], ['name', 'ASC']]
+    });
+
+    const alertsWithMetrics = lowStockProducts.map(product => ({
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
+      category: product.category,
+      current_qty: product.current_qty,
+      min_qty: product.min_qty,
+      shortage: product.min_qty - product.current_qty,
+      urgency_level: product.current_qty === 0 ? 'CRITICAL' : 
+                    product.current_qty < (product.min_qty / 2) ? 'HIGH' : 'MEDIUM',
+      supplier: product.supplier
+    }));
+
+    res.json({
+      alerts: alertsWithMetrics,
+      total_alerts: alertsWithMetrics.length,
+      critical_alerts: alertsWithMetrics.filter(p => p.urgency_level === 'CRITICAL').length
+    });
+  } catch (error) {
+    console.error('Get alerts error:', error);
+    res.status(500).json({ error: 'Erreur récupération alertes' });
+  }
+});
+
+// Get low stock alerts - legacy endpoint
 router.get('/low-stock', requireClinicId, async (req, res) => {
   try {
     let whereClause = {
