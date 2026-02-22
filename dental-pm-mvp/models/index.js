@@ -166,6 +166,13 @@ function defineAssociations() {
   Patient.hasMany(Prescription, { foreignKey: 'patient_id', as: 'prescriptions' });
   PrescriptionLog.belongsTo(Prescription, { foreignKey: 'prescription_id', as: 'prescription' });
   PrescriptionLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+  // Odontogram associations
+  ToothStatus.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  ToothStatus.belongsTo(User, { foreignKey: 'updated_by', as: 'updatedBy' });
+  Patient.hasMany(ToothStatus, { foreignKey: 'patient_id', as: 'toothStatuses' });
+  ToothHistory.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  ToothHistory.belongsTo(User, { foreignKey: 'performed_by', as: 'performedBy' });
 }
 
 // Initialize associations
