@@ -273,6 +273,15 @@ function App() {
                     </LicensingGuard>
                   </ProtectedRoute>
                 } />
+                <Route path="/patients/:patientId/odontogram" element={
+                  <ProtectedRoute>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <PatientOdontogram />
+                      </MainLayout>
+                    </LicensingGuard>
+                  </ProtectedRoute>
+                } />
                 <Route path="/invoices" element={
                   <ProtectedRoute>
                     <LicensingGuard>
