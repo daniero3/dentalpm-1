@@ -87,6 +87,7 @@ app.use('/api/admin', requireAuth, adminRoutes);
 app.use('/api/legal', legalRoutes);  // Public access for legal pages
 app.use('/api/pricing-schedules', requireAuth, pricingRoutes);
 app.use('/api/procedure-fees', requireAuth, pricingRoutes);  // For PUT /api/procedure-fees/:id
+app.use('/api/documents', requireAuth, documentRoutes);
 
 // Licensing status endpoint
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
