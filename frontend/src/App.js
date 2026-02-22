@@ -418,6 +418,15 @@ function App() {
                     </LicensingGuard>
                   </ProtectedRoute>
                 } />
+                <Route path="/reports" element={
+                  <ProtectedRoute>
+                    <LicensingGuard>
+                      <MainLayout>
+                        <ReportsManagement />
+                      </MainLayout>
+                    </LicensingGuard>
+                  </ProtectedRoute>
+                } />
                 {/* Legal Pages - Public Access */}
                 <Route path="/legal" element={<LegalPages />} />
                 <Route path="/legal/cgu" element={<LegalPages />} />
