@@ -154,6 +154,14 @@ function defineAssociations() {
   Document.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
   Document.belongsTo(User, { foreignKey: 'uploaded_by_user_id', as: 'uploadedBy' });
   Patient.hasMany(Document, { foreignKey: 'patient_id', as: 'documents' });
+
+  // Prescription associations
+  Prescription.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  Prescription.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  Prescription.belongsTo(User, { foreignKey: 'prescriber_id', as: 'prescriber' });
+  Patient.hasMany(Prescription, { foreignKey: 'patient_id', as: 'prescriptions' });
+  PrescriptionLog.belongsTo(Prescription, { foreignKey: 'prescription_id', as: 'prescription' });
+  PrescriptionLog.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 }
 
 // Initialize associations
