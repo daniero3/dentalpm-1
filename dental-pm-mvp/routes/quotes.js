@@ -613,7 +613,7 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
  */
 router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
-    const { generatePDF, generateQuoteHTML } = require('../utils/pdfGenerator');
+    const { generateQuotePDF } = require('../utils/pdfGenerator');
     
     const quote = await Invoice.findOne({
       where: { 
@@ -637,11 +637,8 @@ router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res)
     // Get clinic info
     const clinic = await Clinic.findByPk(quote.clinic_id);
 
-    // Generate premium HTML
-    const html = generateQuoteHTML(quote, clinic);
-    
-    // Generate PDF
-    const pdfBuffer = await generatePDF(html);
+    // Generate PDF using PDFKit
+    const pdfBuffer = await generateQuotePDF(quote, clinic);
     
     // Send PDF
     res.setHeader('Content-Type', 'application/pdf');
