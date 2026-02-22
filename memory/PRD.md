@@ -35,6 +35,14 @@ Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tar
 - **QR Code Facture**: QR code generated with payment info (invoice number, amount, contact) displayed on invoices with balance > 0
 - **Filtres Statut UI**: Added status filter buttons (Toutes / Impayées / Partielles / Payées) on invoice list with backend support via `?status=PAID|PARTIAL|DRAFT`
 
+### P18 - Mailing/SMS MVP ✅ (2026-02-22)
+- **Tables**: MessageTemplate, MessageQueue, MessageLog
+- **Auto-rappel RDV**: Création automatique rappel T-24h à chaque nouveau RDV
+- **Job anniversaire**: POST /api/messaging/run-birthday (crée messages du jour)
+- **Dispatch simulé**: POST /api/messaging/run-dispatch (simule envoi -> SENT + log)
+- **UI Mailing**: Templates + Queue + Logs + boutons action
+- **Note**: Pas d'intégration opérateur réelle (simulation uniquement)
+
 ## Tech Stack
 - Backend: Node.js, Express, Sequelize, SQLite
 - Frontend: React, Shadcn UI, Tailwind CSS
