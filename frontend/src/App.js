@@ -17,6 +17,7 @@ import DentalChart from "./components/DentalChart";
 import InvoiceManagement from "./components/InvoiceManagement";
 import QuoteManagement from "./components/QuoteManagement";
 import PatientDocuments from "./components/PatientDocuments";
+import PatientPrescriptions from "./components/PatientPrescriptions";
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
 
