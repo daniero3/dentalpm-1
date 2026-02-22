@@ -781,8 +781,8 @@ const InvoiceManagement = () => {
         </Dialog>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
+      {/* Search and Filters */}
+      <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
@@ -790,7 +790,50 @@ const InvoiceManagement = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
+            data-testid="invoice-search"
           />
+        </div>
+        
+        {/* Status Filters */}
+        <div className="flex items-center gap-2" data-testid="status-filters">
+          <Button
+            variant={statusFilter === 'ALL' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleStatusFilterChange('ALL')}
+            data-testid="filter-all"
+          >
+            Toutes
+          </Button>
+          <Button
+            variant={statusFilter === 'DRAFT' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleStatusFilterChange('DRAFT')}
+            className={statusFilter === 'DRAFT' ? 'bg-red-600 hover:bg-red-700' : 'border-red-300 text-red-600 hover:bg-red-50'}
+            data-testid="filter-unpaid"
+          >
+            <AlertCircle className="h-4 w-4 mr-1" />
+            Impayées
+          </Button>
+          <Button
+            variant={statusFilter === 'PARTIAL' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleStatusFilterChange('PARTIAL')}
+            className={statusFilter === 'PARTIAL' ? 'bg-amber-600 hover:bg-amber-700' : 'border-amber-300 text-amber-600 hover:bg-amber-50'}
+            data-testid="filter-partial"
+          >
+            <Clock className="h-4 w-4 mr-1" />
+            Partielles
+          </Button>
+          <Button
+            variant={statusFilter === 'PAID' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleStatusFilterChange('PAID')}
+            className={statusFilter === 'PAID' ? 'bg-green-600 hover:bg-green-700' : 'border-green-300 text-green-600 hover:bg-green-50'}
+            data-testid="filter-paid"
+          >
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Payées
+          </Button>
         </div>
       </div>
 
