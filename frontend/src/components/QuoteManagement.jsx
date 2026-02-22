@@ -519,6 +519,10 @@ const QuoteManagement = () => {
                         <Eye className="h-4 w-4 mr-2" />
                         Voir
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(quote.id)} data-testid={`pdf-${quote.invoice_number}`}>
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleShare(quote)}>
                         <Share2 className="h-4 w-4 mr-2" />
                         Partager
