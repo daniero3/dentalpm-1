@@ -416,6 +416,12 @@ const PatientManagement = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
+                    <Link to={`/patients/${patient.id}/documents`}>
+                      <Button variant="outline" size="sm">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Documents
+                      </Button>
+                    </Link>
                     <Link to={`/patients/${patient.id}/chart`}>
                       <Button variant="outline" size="sm">
                         <Activity className="h-4 w-4 mr-2" />
