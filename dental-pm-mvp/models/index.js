@@ -44,6 +44,11 @@ const PrescriptionLog = require('./PrescriptionLog');
 const ToothStatus = require('./ToothStatus');
 const ToothHistory = require('./ToothHistory');
 
+// Messaging models
+const MessageTemplate = require('./MessageTemplate');
+const MessageQueue = require('./MessageQueue');
+const MessageLog = require('./MessageLog');
+
 // Define associations
 function defineAssociations() {
   // Clinic relationships
