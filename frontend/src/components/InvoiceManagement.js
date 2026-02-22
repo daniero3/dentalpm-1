@@ -338,6 +338,13 @@ const InvoiceManagement = () => {
     setProcedureSearch('');
   };
 
+  // Handle status filter change
+  const handleStatusFilterChange = (status) => {
+    setStatusFilter(status);
+    setLoading(true);
+    fetchInvoices(status);
+  };
+
   // Filter procedures by search
   const filteredProcedures = procedureFees.filter(fee =>
     fee.procedure_code.toLowerCase().includes(procedureSearch.toLowerCase()) ||
