@@ -627,7 +627,7 @@ const QuoteManagement = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedQuote.id)} data-testid="detail-pdf-btn">
+                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedQuote.id, selectedQuote.invoice_number)} data-testid="detail-pdf-btn">
                     <Download className="h-4 w-4 mr-2" />
                     PDF
                   </Button>
