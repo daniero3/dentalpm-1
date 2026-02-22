@@ -36,6 +36,10 @@ const ProcedureFee = require('./ProcedureFee');
 // Document model
 const Document = require('./Document');
 
+// Prescription models
+const Prescription = require('./Prescription');
+const PrescriptionLog = require('./PrescriptionLog');
+
 // Define associations
 function defineAssociations() {
   // Clinic relationships
