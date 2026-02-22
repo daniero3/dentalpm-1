@@ -418,6 +418,12 @@ const PatientManagement = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
+                    <Link to={`/patients/${patient.id}/odontogram`}>
+                      <Button variant="outline" size="sm">
+                        <Grid3X3 className="h-4 w-4 mr-2" />
+                        Odontogramme
+                      </Button>
+                    </Link>
                     <Link to={`/patients/${patient.id}/documents`}>
                       <Button variant="outline" size="sm">
                         <FileText className="h-4 w-4 mr-2" />
