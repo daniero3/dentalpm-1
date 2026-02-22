@@ -199,5 +199,8 @@ module.exports = {
   PricingSchedule,
   ProcedureFee,
   // Document model
-  Document
+  Document,
+  // Prescription models
+  Prescription,
+  PrescriptionLog
 };
