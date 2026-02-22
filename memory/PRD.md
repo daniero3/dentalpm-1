@@ -1,85 +1,48 @@
-# Dental Practice Management SaaS - Madagascar
+# Dental Practice Management - Madagascar
 
-## Original Problem Statement
-Multi-tenant Dental Practice Management platform for Madagascar market with:
-- Patient management, Appointment scheduling
-- Invoicing with dual-tariff pricing (SYNDICAL global / CABINET local)
-- Subscription-based licensing, Local proof-of-payment billing
-- Quotes (Devis) with conversion to invoices
+## Problem Statement
+Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tariff pricing (SYNDICAL/CABINET), RBAC, invoicing, quotes, and payments.
 
-## Core Architecture
-- **Backend**: Node.js, Express, Sequelize ORM, SQLite (dev)
-- **Frontend**: React, Shadcn UI, Tailwind CSS
-- **Auth**: JWT with RBAC (SUPER_ADMIN, CLINIC_ADMIN, DENTIST, ASSISTANT, ACCOUNTANT)
-
-## Implemented Features
+## Completed Features
 
 ### P6 - Dual Tariff System ✅
-- Global SYNDICAL schedule (clinic_id: NULL) - SUPER_ADMIN only
-- CABINET schedules per clinic - CLINIC_ADMIN editable
-- CSV import/export with detailed report
-- Invoice creation with schedule_id
+- SYNDICAL: Global read-only tariff (clinic_id: NULL), SUPER_ADMIN only
+- CABINET: Per-clinic customizable tariff for self-paying patients
 
-### P6.2 - CABINET Tarification Complete ✅
-- Template MAEVA 2026 (48 actes) - import 1-click
-- Toggle actif/inactif pour actes
-- Export CSV, Import CSV avec replace
-- SYNDICAL read-only pour clinic_admin
-- Autocomplete basé sur schedule sélectionné
+### P6.2 - Cabinet Finalization ✅
+- Full CRUD for clinic_admin CABINET tariff
+- CSV import/export
+- MAEVA template one-click import
 
-### P7 - Payments System ✅
-- Payment model: CASH, CHEQUE, CARD, MVOLA, ORANGE_MONEY, AIRTEL_MONEY, BANK_TRANSFER
-- POST /api/invoices/:id/payments (with overpayment protection)
-- GET /api/invoices/:id/payments (list + stats)
-- DELETE /api/invoices/payments/:id (cancel)
-- GET /api/invoices/:id/print (HTML printable)
-- UI: Payment modal, history, share/print buttons
+### P7 - Payments ✅
+- Multi-payment recording (Cash, Cheque, Card, Mobile Money)
+- Payment history modal
+- Status: UNPAID/PARTIAL/PAID
 
-### P7 - Quotes (Devis) System ✅
-- Document type: QUOTE vs INVOICE
-- Numbering: DEV-YYYY-XXXX / FACT-YYYY-XXXX
-- Statuses: DRAFT, SENT, ACCEPTED, REJECTED, EXPIRED, CONVERTED
-- Validity period (days)
-- POST /api/quotes/:id/convert -> creates invoice
-- GET /api/quotes/:id/print (HTML with watermark)
-- UI: QuoteManagement.jsx with full CRUD
+### P7 - Quotes ✅
+- Quote lifecycle (DRAFT → SENT → ACCEPTED → CONVERTED)
+- Numbering: DEV-YYYY-XXXX
+- Convert to invoice functionality
 
-## API Endpoints
+### P8 - PDF Generation ✅ (2026-02-22)
+- pdfkit-based PDF generation (no browser dependency)
+- GET /api/invoices/:id/pdf - Premium invoice PDF
+- GET /api/quotes/:id/pdf - Premium quote PDF
+- Frontend "PDF" download buttons on both Invoice and Quote management
 
-### Pricing
-- GET /api/pricing-schedules
-- GET /api/pricing-schedules/:id/fees
-- POST /api/pricing-schedules/:id/fees
-- PUT /api/procedure-fees/:id
-- POST /api/pricing-schedules/:id/import-fees
-- GET /api/pricing-schedules/:id/export-fees
-- POST /api/pricing-schedules/:id/import-template-maeva
+## Tech Stack
+- Backend: Node.js, Express, Sequelize, SQLite
+- Frontend: React, Shadcn UI, Tailwind CSS
+- PDF: pdfkit (pure JS)
 
-### Invoices & Payments
-- GET/POST /api/invoices
-- GET /api/invoices/:id
-- PATCH /api/invoices/:id/status
-- GET/POST /api/invoices/:id/payments
-- DELETE /api/invoices/payments/:paymentId
-- GET /api/invoices/:id/print
-
-### Quotes
-- GET/POST /api/quotes
-- GET/PUT/DELETE /api/quotes/:id
-- PATCH /api/quotes/:id/status
-- POST /api/quotes/:id/convert
-- GET /api/quotes/:id/print
+## Key Files
+- `/app/dental-pm-mvp/utils/pdfGenerator.js` - PDF generation utilities
+- `/app/dental-pm-mvp/routes/invoices.js` - Invoice routes + PDF
+- `/app/dental-pm-mvp/routes/quotes.js` - Quote routes + PDF
 
 ## Credentials
-- **SUPER_ADMIN**: admin / admin123
-- **CLINIC_ADMIN (Clinic 1)**: clinic_admin_test / testpass123
-- **CLINIC_ADMIN (Clinic 2)**: clinic2_admin_test / testpass123
+- Super Admin: admin / admin123
 
-## Backlog
-- [ ] PDF generation for invoices/quotes
-- [ ] Payment processor integration (Stripe/local)
-- [ ] Patient consent forms (PDF)
-- [ ] User training materials
-
-## Last Updated
-2026-01-19 - P6.2 CABINET Tarification completed
+## Future Tasks
+- Real payment processor integration (Stripe/local Madagascar)
+- User documentation
