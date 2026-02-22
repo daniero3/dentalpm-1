@@ -279,6 +279,89 @@ router.put('/products/:id', requireClinicId, [
   }
 });
 
+// Record stock movement (IN/OUT/ADJUST) for specific product
+router.post('/products/:id/movements', requireClinicId, [
+  param('id').isUUID().withMessage('ID produit invalide'),
+  body('type').isIn(['IN', 'OUT', 'ADJUST']).withMessage('Type invalide'),
+  body('quantity').isInt({ min: 1 }).withMessage('Quantité invalide'),
+  body('reason').isLength({ min: 1, max: 255 }).withMessage('Motif requis').trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    }
+
+    const product = await Product.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Produit non trouvé' });
+    }
+
+    const { type, quantity, reason, reference } = req.body;
+    const currentQty = product.current_qty;
+    let newQty;
+
+    switch (type) {
+      case 'IN':
+        newQty = currentQty + Math.abs(quantity);
+        break;
+      case 'OUT':
+        newQty = currentQty - Math.abs(quantity);
+        if (newQty < 0) {
+          return res.status(400).json({ error: 'Stock insuffisant' });
+        }
+        break;
+      case 'ADJUST':
+        newQty = Math.abs(quantity);
+        break;
+    }
+
+    const movement = await StockMovement.create({
+      product_id: product.id,
+      clinic_id: req.clinic_id,
+      type,
+      quantity: type === 'ADJUST' ? (newQty - currentQty) : (type === 'IN' ? Math.abs(quantity) : -Math.abs(quantity)),
+      reason,
+      reference: reference || null,
+      user_id: req.user.id,
+      previous_qty: currentQty,
+      new_qty: newQty
+    });
+
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'CREATE',
+      resource_type: 'stock_movements',
+      resource_id: movement.id,
+      new_values: { product_id: product.id, type, quantity, reason },
+      ip_address: req.ip,
+      description: `Mouvement ${type}: ${product.name} (${movement.quantity})`
+    });
+
+    res.status(201).json({
+      message: 'Mouvement enregistré',
+      movement: {
+        id: movement.id,
+        type: movement.type,
+        quantity: movement.quantity,
+        previous_qty: currentQty,
+        new_qty: newQty
+      },
+      product: {
+        id: product.id,
+        name: product.name,
+        current_qty: newQty
+      }
+    });
+  } catch (error) {
+    console.error('Product movement error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Record stock movement (IN/OUT/ADJUST) - with clinic check
 router.post('/movements', requireClinicId, [
   requireRole('ADMIN', 'DENTIST', 'ASSISTANT'),
