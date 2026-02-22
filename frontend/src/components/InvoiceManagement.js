@@ -46,6 +46,7 @@ const InvoiceManagement = () => {
   const [procedureFees, setProcedureFees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [procedureSearch, setProcedureSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
