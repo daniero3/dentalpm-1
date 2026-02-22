@@ -7,6 +7,14 @@ const { auditLogger } = require('../middleware/auditLogger');
 const { requireValidSubscription } = require('../middleware/licensing');
 const { Op } = require('sequelize');
 
+// Import messaging helper for appointment reminders
+let messagingRouter = null;
+try {
+  messagingRouter = require('./messaging');
+} catch (e) {
+  console.log('Messaging module not loaded yet');
+}
+
 const router = express.Router();
 
 // All routes require authentication
