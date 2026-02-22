@@ -287,6 +287,13 @@ router.post('/', requireClinicId, [
       message: 'Rendez-vous créé avec succès',
       appointment: completeAppointment
     });
+
+    // Create SMS reminder T-24h (async, don't block response)
+    if (messagingRouter?.createAppointmentReminder) {
+      messagingRouter.createAppointmentReminder(appointment, req.clinic_id).catch(e => {
+        console.error('Failed to create appointment reminder:', e);
+      });
+    }
   } catch (error) {
     console.error('Create appointment error:', error);
     res.status(500).json({
