@@ -241,21 +241,35 @@ const InvoiceManagement = () => {
   };
 
   // Download invoice PDF
-  const handleDownloadPDF = (invoiceId) => {
-    const token = localStorage.getItem('token');
-    fetch(`${API}/invoices/${invoiceId}/pdf`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.blob())
-    .then(blob => {
+  const handleDownloadPDF = async (invoiceId, invoiceNumber) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/invoices/${invoiceId}/pdf`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        toast.error(`Erreur PDF: ${response.status} - ${errorText}`);
+        return;
+      }
+      
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
-      a.download = `facture-${invoiceId}.pdf`;
+      a.download = `${invoiceNumber || 'facture'}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    })
-    .catch(() => toast.error('Erreur téléchargement PDF'));
+      toast.success('PDF téléchargé');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast.error('Erreur téléchargement PDF');
+    }
   };
 
   // Download invoice (legacy HTML)
