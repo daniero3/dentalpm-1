@@ -185,5 +185,7 @@ module.exports = {
   PaymentRequest,
   // Pricing models
   PricingSchedule,
-  ProcedureFee
+  ProcedureFee,
+  // Document model
+  Document
 };
