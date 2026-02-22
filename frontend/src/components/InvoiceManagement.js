@@ -240,7 +240,25 @@ const InvoiceManagement = () => {
     }
   };
 
-  // Download invoice
+  // Download invoice PDF
+  const handleDownloadPDF = (invoiceId) => {
+    const token = localStorage.getItem('token');
+    fetch(`${API}/invoices/${invoiceId}/pdf`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-${invoiceId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(() => toast.error('Erreur téléchargement PDF'));
+  };
+
+  // Download invoice (legacy HTML)
   const handleDownload = (invoiceId) => {
     window.open(`${API}/invoices/${invoiceId}/print`, '_blank');
   };
