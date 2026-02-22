@@ -144,6 +144,12 @@ function defineAssociations() {
   // Invoice to PricingSchedule
   Invoice.belongsTo(PricingSchedule, { foreignKey: 'schedule_id', as: 'pricingSchedule' });
   PricingSchedule.hasMany(Invoice, { foreignKey: 'schedule_id', as: 'invoices' });
+
+  // Document associations
+  Document.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  Document.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  Document.belongsTo(User, { foreignKey: 'uploaded_by_user_id', as: 'uploadedBy' });
+  Patient.hasMany(Document, { foreignKey: 'patient_id', as: 'documents' });
 }
 
 // Initialize associations
