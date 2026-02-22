@@ -433,4 +433,49 @@ router.get('/:id/dental-chart', requireClinicId, [
   }
 });
 
+// Get patient lab orders
+router.get('/:id/lab-orders', requireClinicId, [
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const { LabOrder, Lab } = require('../models');
+    
+    const patient = await Patient.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient non trouvé' });
+    }
+
+    const orders = await LabOrder.findAll({
+      where: { patient_id: req.params.id, clinic_id: req.clinic_id },
+      include: [
+        { model: Lab, as: 'lab', attributes: ['id', 'name'] },
+        { model: User, as: 'dentist', attributes: ['id', 'full_name'] }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      patient_id: req.params.id,
+      count: orders.length,
+      orders: orders.map(o => ({
+        id: o.id,
+        order_number: o.order_number,
+        work_type: o.work_type,
+        status: o.status,
+        due_date: o.due_date,
+        total_mga: o.total_mga,
+        lab: o.lab,
+        dentist: o.dentist,
+        created_at: o.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get patient lab orders error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
