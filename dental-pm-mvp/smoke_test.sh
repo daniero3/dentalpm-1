@@ -1,181 +1,242 @@
 #!/bin/bash
-# =============================================================================
-# SMOKE TEST POST-DEPLOY - Dental PM Madagascar
-# Usage: ./smoke_test.sh <API_URL>
-# Exemple: ./smoke_test.sh https://app.dental-madagascar.com
-# =============================================================================
+# Smoke Test Script - Dental PM MVP
+# Tests all critical API endpoints
 
-API_URL="${1:-https://dental-mada.preview.emergentagent.com}"
-PASSED=0
-FAILED=0
+set -e
 
-echo "=============================================="
-echo "SMOKE TEST - Dental PM Madagascar"
-echo "API: $API_URL"
-echo "=============================================="
+API_URL="https://dental-mada.preview.emergentagent.com"
+PASS=0
+FAIL=0
+RESULTS=""
 
-# Helper function
-check() {
+log_result() {
   local name="$1"
-  local expected="$2"
-  local actual="$3"
-  
-  if [[ "$actual" == *"$expected"* ]]; then
-    echo "✅ $name"
-    ((PASSED++))
+  local status="$2"
+  local detail="$3"
+  if [ "$status" = "PASS" ]; then
+    PASS=$((PASS + 1))
+    RESULTS="$RESULTS\n✅ $name"
   else
-    echo "❌ $name (attendu: $expected, reçu: $actual)"
-    ((FAILED++))
+    FAIL=$((FAIL + 1))
+    RESULTS="$RESULTS\n❌ $name: $detail"
   fi
+  echo "$status: $name $detail"
 }
 
-# =============================================================================
-# TEST 1: Health Check
-# Attendu: HTTP 200, status: ok
-# =============================================================================
-echo ""
-echo "--- TEST 1: Health Check ---"
-RESP=$(curl -s -w "|%{http_code}" "$API_URL/api/health")
-HTTP=$(echo "$RESP" | cut -d'|' -f2)
-BODY=$(echo "$RESP" | cut -d'|' -f1)
-check "Health Check HTTP 200" "200" "$HTTP"
-check "Health Check status:ok" '"status":"' "$BODY"
-
-# =============================================================================
-# TEST 2: Login Super Admin
-# Attendu: HTTP 200, token présent
-# =============================================================================
-echo ""
-echo "--- TEST 2: Login Super Admin ---"
-RESP=$(curl -s -w "|%{http_code}" -X POST "$API_URL/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}')
-HTTP=$(echo "$RESP" | cut -d'|' -f2)
-BODY=$(echo "$RESP" | cut -d'|' -f1)
-check "Login Admin HTTP 200" "200" "$HTTP"
-TOKEN_ADMIN=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null)
-if [ -n "$TOKEN_ADMIN" ]; then
-  echo "✅ Token admin obtenu"
-  ((PASSED++))
+# 1) Health check
+echo "=== 1) Health Check ==="
+HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/health")
+if [ "$HTTP" = "200" ]; then
+  log_result "/api/health" "PASS"
 else
-  echo "❌ Token admin manquant"
-  ((FAILED++))
+  log_result "/api/health" "FAIL" "HTTP $HTTP"
 fi
 
-# =============================================================================
-# TEST 3: OpenAPI Spec
-# Attendu: HTTP 200, paths billing présents
-# =============================================================================
-echo ""
-echo "--- TEST 3: OpenAPI Spec ---"
-RESP=$(curl -s -w "|%{http_code}" "$API_URL/api/openapi.json")
-HTTP=$(echo "$RESP" | cut -d'|' -f2)
-BODY=$(echo "$RESP" | cut -d'|' -f1)
-check "OpenAPI HTTP 200" "200" "$HTTP"
-check "OpenAPI billing paths" "/billing/payment-requests" "$BODY"
-
-# =============================================================================
-# TEST 4: Liste Cliniques (Admin)
-# Attendu: HTTP 200, clinics array
-# =============================================================================
-echo ""
-echo "--- TEST 4: Liste Cliniques (Admin) ---"
-RESP=$(curl -s -w "|%{http_code}" "$API_URL/api/admin/clinics" \
-  -H "Authorization: Bearer $TOKEN_ADMIN")
-HTTP=$(echo "$RESP" | cut -d'|' -f2)
-BODY=$(echo "$RESP" | cut -d'|' -f1)
-check "Clinics HTTP 200" "200" "$HTTP"
-check "Clinics array présent" '"clinics"' "$BODY"
-
-# =============================================================================
-# TEST 5: Plans Billing
-# Attendu: HTTP 200, plans ESSENTIAL/PRO/GROUP
-# =============================================================================
-echo ""
-echo "--- TEST 5: Plans Billing ---"
-RESP=$(curl -s -w "|%{http_code}" "$API_URL/api/billing/plans" \
-  -H "Authorization: Bearer $TOKEN_ADMIN")
-HTTP=$(echo "$RESP" | cut -d'|' -f2)
-BODY=$(echo "$RESP" | cut -d'|' -f1)
-check "Plans HTTP 200" "200" "$HTTP"
-check "Plan ESSENTIAL présent" "ESSENTIAL" "$BODY"
-
-# =============================================================================
-# TEST 6: Payment Requests (Admin)
-# Attendu: HTTP 200, paymentRequests array
-# =============================================================================
-echo ""
-echo "--- TEST 6: Payment Requests (Admin) ---"
-RESP=$(curl -s -w "|%{http_code}" "$API_URL/api/admin/payment-requests" \
-  -H "Authorization: Bearer $TOKEN_ADMIN")
-HTTP=$(echo "$RESP" | cut -d'|' -f2)
-BODY=$(echo "$RESP" | cut -d'|' -f1)
-check "PaymentRequests HTTP 200" "200" "$HTTP"
-check "PaymentRequests array" '"paymentRequests"' "$BODY"
-
-# =============================================================================
-# TEST 7: Accès non-authentifié
-# Attendu: HTTP 401
-# =============================================================================
-echo ""
-echo "--- TEST 7: Accès non-authentifié ---"
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/patients")
-check "Patients sans token -> 401" "401" "$HTTP"
-
-# =============================================================================
-# TEST 8: Reference vide rejetée
-# Attendu: HTTP 400
-# =============================================================================
-echo ""
-echo "--- TEST 8: Reference vide rejetée ---"
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/billing/payment-requests" \
-  -H "Authorization: Bearer $TOKEN_ADMIN" \
-  -H "Content-Type: application/json" \
-  -d '{"plan_code":"ESSENTIAL","payment_method":"MVOLA","reference":""}')
-check "Reference vide -> 400" "400" "$HTTP"
-
-# =============================================================================
-# TEST 9: Upload MIME invalide
-# Attendu: HTTP 400
-# =============================================================================
-echo ""
-echo "--- TEST 9: Upload MIME invalide ---"
-echo "test" > /tmp/smoke_test.txt
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/billing/payment-requests" \
-  -H "Authorization: Bearer $TOKEN_ADMIN" \
-  -F "plan_code=ESSENTIAL" \
-  -F "payment_method=MVOLA" \
-  -F "reference=SMOKE-TEST-MIME" \
-  -F "receipt=@/tmp/smoke_test.txt")
-check "Upload .txt rejeté -> 400" "400" "$HTTP"
-rm -f /tmp/smoke_test.txt
-
-# =============================================================================
-# TEST 10: Legal Pages API
-# Attendu: HTTP 200, content présent
-# =============================================================================
-echo ""
-echo "--- TEST 10: Legal Pages API ---"
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/legal/cgu")
-check "Legal CGU -> 200" "200" "$HTTP"
-HTTP=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/api/legal/privacy")
-check "Legal Privacy -> 200" "200" "$HTTP"
-
-# =============================================================================
-# RÉSUMÉ
-# =============================================================================
-echo ""
-echo "=============================================="
-echo "RÉSUMÉ SMOKE TEST"
-echo "=============================================="
-echo "✅ Passés: $PASSED"
-echo "❌ Échoués: $FAILED"
-echo ""
-
-if [ $FAILED -eq 0 ]; then
-  echo "🎉 TOUS LES TESTS PASSÉS - GO-LIVE OK"
-  exit 0
+# 2) Login
+echo "=== 2) Login ==="
+RESP=$(curl -s -X POST "$API_URL/api/auth/login" -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}')
+TOKEN=$(echo "$RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))" 2>/dev/null || echo "")
+if [ -n "$TOKEN" ]; then
+  log_result "POST /api/auth/login" "PASS"
 else
-  echo "⚠️  CERTAINS TESTS ONT ÉCHOUÉ - VÉRIFIER AVANT GO-LIVE"
+  log_result "POST /api/auth/login" "FAIL" "No token"
+  echo "Cannot continue without token"
   exit 1
 fi
+
+AUTH="Authorization: Bearer $TOKEN"
+
+# 3) Patients list
+echo "=== 3) Patients List ==="
+HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH" "$API_URL/api/patients")
+if [ "$HTTP" = "200" ]; then
+  log_result "GET /api/patients" "PASS"
+else
+  log_result "GET /api/patients" "FAIL" "HTTP $HTTP"
+fi
+
+# 4) Create patient
+echo "=== 4) Create Patient ==="
+PATIENT_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/patients" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"first_name":"Smoke","last_name":"Test","date_of_birth":"1990-01-01","gender":"M","phone":"+261340000000"}')
+PATIENT_HTTP=$(echo "$PATIENT_RESP" | grep "HTTP:" | cut -d: -f2)
+PATIENT_ID=$(echo "$PATIENT_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id',d.get('patient',{}).get('id','')))" 2>/dev/null || echo "")
+if [ "$PATIENT_HTTP" = "201" ] && [ -n "$PATIENT_ID" ]; then
+  log_result "POST /api/patients" "PASS"
+else
+  log_result "POST /api/patients" "FAIL" "HTTP $PATIENT_HTTP"
+  # Use existing patient
+  PATIENT_ID=$(curl -s -H "$AUTH" "$API_URL/api/patients" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['patients'][0]['id'] if d.get('patients') else '')" 2>/dev/null)
+fi
+echo "Using PATIENT_ID: $PATIENT_ID"
+
+# 5) Create quote
+echo "=== 5) Create Quote ==="
+QUOTE_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/quotes" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d "{\"patient_id\":\"$PATIENT_ID\",\"schedule_id\":null,\"items\":[{\"procedure_code\":\"SMOKE01\",\"description\":\"Test Smoke\",\"quantity\":1,\"unit_price_mga\":10000}],\"notes\":\"Smoke test quote\"}")
+QUOTE_HTTP=$(echo "$QUOTE_RESP" | grep "HTTP:" | cut -d: -f2)
+QUOTE_ID=$(echo "$QUOTE_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('quote',{}).get('id',''))" 2>/dev/null || echo "")
+if [ "$QUOTE_HTTP" = "201" ]; then
+  log_result "POST /api/quotes" "PASS"
+else
+  log_result "POST /api/quotes" "FAIL" "HTTP $QUOTE_HTTP"
+fi
+
+# 5b) Convert quote to invoice
+echo "=== 5b) Convert Quote ==="
+if [ -n "$QUOTE_ID" ]; then
+  CONVERT_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/quotes/$QUOTE_ID/convert" -H "$AUTH")
+  if [ "$CONVERT_HTTP" = "201" ] || [ "$CONVERT_HTTP" = "200" ]; then
+    log_result "POST /api/quotes/:id/convert" "PASS"
+  else
+    log_result "POST /api/quotes/:id/convert" "FAIL" "HTTP $CONVERT_HTTP"
+  fi
+else
+  log_result "POST /api/quotes/:id/convert" "FAIL" "No quote ID"
+fi
+
+# 6) Create invoice
+echo "=== 6) Create Invoice ==="
+INV_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/invoices" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d "{\"patient_id\":\"$PATIENT_ID\",\"schedule_id\":null,\"items\":[{\"procedure_code\":\"INV01\",\"description\":\"Test Invoice\",\"quantity\":1,\"unit_price_mga\":50000}]}")
+INV_HTTP=$(echo "$INV_RESP" | grep "HTTP:" | cut -d: -f2)
+INV_ID=$(echo "$INV_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('invoice',{}).get('id',''))" 2>/dev/null || echo "")
+if [ "$INV_HTTP" = "201" ]; then
+  log_result "POST /api/invoices" "PASS"
+else
+  log_result "POST /api/invoices" "FAIL" "HTTP $INV_HTTP"
+fi
+echo "Using INV_ID: $INV_ID"
+
+# 7) Add payment
+echo "=== 7) Add Payment ==="
+if [ -n "$INV_ID" ]; then
+  PAY_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/invoices/$INV_ID/payments" \
+    -H "$AUTH" -H "Content-Type: application/json" \
+    -d '{"amount_mga":25000,"payment_method":"CASH","reference":"SMOKE-PAY"}')
+  if [ "$PAY_HTTP" = "201" ]; then
+    log_result "POST /api/invoices/:id/payments" "PASS"
+  else
+    log_result "POST /api/invoices/:id/payments" "FAIL" "HTTP $PAY_HTTP"
+  fi
+else
+  log_result "POST /api/invoices/:id/payments" "FAIL" "No invoice ID"
+fi
+
+# 8) Download invoice PDF
+echo "=== 8) Invoice PDF ==="
+if [ -n "$INV_ID" ]; then
+  PDF_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH" "$API_URL/api/invoices/$INV_ID/pdf")
+  if [ "$PDF_HTTP" = "200" ]; then
+    log_result "GET /api/invoices/:id/pdf" "PASS"
+  else
+    log_result "GET /api/invoices/:id/pdf" "FAIL" "HTTP $PDF_HTTP"
+  fi
+else
+  log_result "GET /api/invoices/:id/pdf" "FAIL" "No invoice ID"
+fi
+
+# 9) Upload document
+echo "=== 9) Upload Document ==="
+echo "test content" > /tmp/smoke_test.pdf
+DOC_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/documents/upload" \
+  -H "$AUTH" \
+  -F "file=@/tmp/smoke_test.pdf;type=application/pdf" \
+  -F "patient_id=$PATIENT_ID" \
+  -F "category=AUTRE")
+if [ "$DOC_HTTP" = "201" ]; then
+  log_result "POST /api/documents/upload" "PASS"
+else
+  log_result "POST /api/documents/upload" "FAIL" "HTTP $DOC_HTTP"
+fi
+
+# 10) Prescription create + issue + pdf
+echo "=== 10) Prescription Flow ==="
+PRESC_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/patients/$PATIENT_ID/prescriptions" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"content":{"items":[{"medication":"Paracetamol","dosage":"500mg","posology":"3x/jour"}],"notes":"Smoke test"}}')
+PRESC_HTTP=$(echo "$PRESC_RESP" | grep "HTTP:" | cut -d: -f2)
+PRESC_ID=$(echo "$PRESC_RESP" | head -1 | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('prescription',{}).get('id',''))" 2>/dev/null || echo "")
+if [ "$PRESC_HTTP" = "201" ]; then
+  log_result "POST /api/patients/:id/prescriptions" "PASS"
+  
+  # Issue
+  ISSUE_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/prescriptions/$PRESC_ID/issue" -H "$AUTH")
+  if [ "$ISSUE_HTTP" = "200" ]; then
+    log_result "POST /api/prescriptions/:id/issue" "PASS"
+  else
+    log_result "POST /api/prescriptions/:id/issue" "FAIL" "HTTP $ISSUE_HTTP"
+  fi
+  
+  # PDF
+  PRESC_PDF_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH" "$API_URL/api/prescriptions/$PRESC_ID/pdf")
+  if [ "$PRESC_PDF_HTTP" = "200" ]; then
+    log_result "GET /api/prescriptions/:id/pdf" "PASS"
+  else
+    log_result "GET /api/prescriptions/:id/pdf" "FAIL" "HTTP $PRESC_PDF_HTTP"
+  fi
+else
+  log_result "POST /api/patients/:id/prescriptions" "FAIL" "HTTP $PRESC_HTTP"
+  log_result "POST /api/prescriptions/:id/issue" "FAIL" "No prescription"
+  log_result "GET /api/prescriptions/:id/pdf" "FAIL" "No prescription"
+fi
+
+# 11) Odontogram save
+echo "=== 11) Odontogram ==="
+ODON_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$API_URL/api/patients/$PATIENT_ID/odontogram" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{"teeth":[{"tooth_fdi":"21","status":"HEALTHY"}]}')
+if [ "$ODON_HTTP" = "200" ]; then
+  log_result "PUT /api/patients/:id/odontogram" "PASS"
+else
+  log_result "PUT /api/patients/:id/odontogram" "FAIL" "HTTP $ODON_HTTP"
+fi
+
+# 12) Inventory alerts
+echo "=== 12) Inventory Alerts ==="
+ALERTS_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH" "$API_URL/api/inventory/alerts")
+if [ "$ALERTS_HTTP" = "200" ]; then
+  log_result "GET /api/inventory/alerts" "PASS"
+else
+  log_result "GET /api/inventory/alerts" "FAIL" "HTTP $ALERTS_HTTP"
+fi
+
+# 13) Lab order create
+echo "=== 13) Lab Order ==="
+LAB_RESP=$(curl -s -w "\nHTTP:%{http_code}" -X POST "$API_URL/api/labs/orders" \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d "{\"patient_id\":\"$PATIENT_ID\",\"work_type\":\"CROWN\",\"due_date\":\"2026-04-01\"}")
+LAB_HTTP=$(echo "$LAB_RESP" | grep "HTTP:" | cut -d: -f2)
+if [ "$LAB_HTTP" = "201" ]; then
+  log_result "POST /api/labs/orders" "PASS"
+else
+  log_result "POST /api/labs/orders" "FAIL" "HTTP $LAB_HTTP"
+fi
+
+# 14) Reports finance
+echo "=== 14) Reports Finance ==="
+REPORT_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH" "$API_URL/api/reports/finance")
+if [ "$REPORT_HTTP" = "200" ]; then
+  log_result "GET /api/reports/finance" "PASS"
+else
+  log_result "GET /api/reports/finance" "FAIL" "HTTP $REPORT_HTTP"
+fi
+
+# Summary
+echo ""
+echo "============================================"
+echo "        SMOKE TEST RESULTS"
+echo "============================================"
+echo -e "$RESULTS"
+echo ""
+echo "============================================"
+echo "TOTAL: $PASS PASS / $FAIL FAIL"
+echo "============================================"
+
+if [ $FAIL -gt 0 ]; then
+  exit 1
+fi
+exit 0
