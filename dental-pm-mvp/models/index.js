@@ -213,5 +213,8 @@ module.exports = {
   Document,
   // Prescription models
   Prescription,
-  PrescriptionLog
+  PrescriptionLog,
+  // Odontogram models
+  ToothStatus,
+  ToothHistory
 };
