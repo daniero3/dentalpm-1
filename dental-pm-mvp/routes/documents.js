@@ -6,8 +6,12 @@ const { v4: uuidv4 } = require('uuid');
 const { param, body, validationResult } = require('express-validator');
 const { Document, Patient, User, AuditLog } = require('../models');
 const { requireClinicId } = require('../middleware/clinic');
+const { requireValidSubscription } = require('../middleware/licensing');
 
 const router = express.Router();
+
+// Apply subscription check to all routes
+router.use(requireValidSubscription);
 
 // Constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
