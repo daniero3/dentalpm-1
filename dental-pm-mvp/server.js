@@ -22,6 +22,7 @@ const billingRoutes = require('./routes/billing');
 const adminRoutes = require('./routes/admin');
 const legalRoutes = require('./routes/legal');
 const pricingRoutes = require('./routes/pricing');
+const documentRoutes = require('./routes/documents');
 const { getSubscriptionStatus } = require('./middleware/licensing');
 const { authenticateToken: requireAuth } = require('./middleware/auth');
 
