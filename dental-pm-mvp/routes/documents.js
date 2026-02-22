@@ -173,7 +173,7 @@ router.get('/patient/:patientId', requireClinicId, [
       },
       attributes: ['id', 'category', 'original_filename', 'mime_type', 'file_size', 'description', 'created_at'],
       include: [
-        { model: User, as: 'uploadedBy', attributes: ['id', 'first_name', 'last_name'] }
+        { model: User, as: 'uploadedBy', attributes: ['id', 'full_name', 'username'] }
       ],
       order: [['created_at', 'DESC']]
     });
