@@ -1,92 +1,79 @@
 <analysis>**original_problem_statement:**
-The user is developing a multi-tenant Dental Practice Management SaaS platform for the Madagascar market. The project has progressed through multiple stabilization phases, including bug fixes, security hardening, and the implementation of a local proof-of-payment billing system.
+The user is developing a multi-tenant Dental Practice Management SaaS platform for the Madagascar market. The core of the application is a dual-tariff pricing system, payment and quote management, and robust role-based access control.
 
-The most recent work focuses on implementing a dual-tariff pricing system:
-1.  **SYNDICAL**: A global, official tariff schedule for insured patients, managed only by a SUPER_ADMIN.
-2.  **CABINET**: A customizable tariff schedule for each individual clinic for self-paying patients.
+Initial requirements focused on establishing two pricing schedules:
+1.  **SYNDICAL**: A global, read-only tariff for insured patients, managed exclusively by a .
+2.  **CABINET**: A customizable tariff for each clinic, managed by the  for self-paying patients.
 
-The user has provided a CSV file with the official SYNDICAL 2026 tariffs to be imported. The backend models (, ), APIs, and CSV import logic have been implemented. The invoice creation process has been updated to require a , which snapshots the price at the time of invoicing.
+Subsequent features have been added:
+-   **P7 Payments**: An end-to-end system for recording payments (Cash, Cheque, Card, Mobile Money) against invoices, including a UI modal to view payment history and status (UNPAID/PARTIAL/PAID).
+-   **P7 Quotes**: A complete quote management system, allowing clinics to create, send, and convert quotes into invoices. Quotes have their own lifecycle and numbering scheme (DEV-YYYY-XXXX).
+-   **P6.2 Cabinet Finalization**: Full CRUD functionality for  to manage their  tariff, including CSV import/export and a one-click import for a MAEVA template.
+-   **P8 PDF Generation**: The current task is to create premium, printable PDF documents for both invoices and quotes.
 
-The current, immediate task is to finalize this implementation by:
-1.  Enforcing the business rule that the  schedule is global () and can only be modified/imported by a .
-2.  Ensuring clinic admins can only manage their own  schedule.
-3.  Improving the CSV import endpoint to provide a detailed report (inserted, updated, ignored, deactivated records).
-4.  Validating the frontend UI to ensure the new pricing logic works correctly in the invoice creation form.
-
-The user operates under a strict anti-credit policy, demanding direct execution of tasks with  proofs and minimal agent-initiated planning or questioning.
+The user enforces a strict anti-credit policy, demanding direct execution of tasks with  proofs and minimal agent-initiated planning or questioning.
 
 **User's preferred language**: French. The next agent **MUST** respond in **French** and follow the user's direct-execution style.
 
 **what currently exists?**
--   **Backend (Node.js/Express/Sequelize)**: A multi-tenant application with JWT authentication, RBAC, and middleware for tenancy () and subscription status ().
-    -   A new pricing module exists with  and  models. The  model now includes a .
-    -   API routes under  allow for managing schedules and fees.
-    -   An endpoint  exists to import fees from a CSV file, with logic to handle  and  operations. This endpoint has just been modified to include more detailed reporting and role-based access control.
-    -   Legal and operational documents (, , , etc.) are served via a  endpoint.
--   **Frontend (React/Shadcn)**:
-    -   A  handles 403 errors via a global axios interceptor.
-    -    has been modified to include a dropdown to select the pricing schedule (/) and an autocomplete field for adding procedures to an invoice.
-    -   A new, stubbed-out page  exists for editing tariffs.
-    -   Legal pages are rendered under  via the  component.
+-   **Backend (Node.js/Express/Sequelize)**: A multi-tenant application with JWT authentication, RBAC, and middleware for tenancy (). It includes robust modules for:
+    -   **Pricing**: Manages global  and per-clinic  schedules. Supports CSV import/export and template seeding.
+    -   **Invoicing**: Full lifecycle for invoices ().
+    -   **Quoting**: Full lifecycle for quotes () including conversion to invoices.
+    -   **Payments**: Records payments against invoices, calculates balances, and prevents overpayment.
+    -   **Print Views**: Endpoints (, ) generate basic HTML views for documents.
+-   **Frontend (React/Shadcn)**: Functional UI for managing patients, pricing settings, invoices, and quotes.
+-   **PDF Generation**: The  library has been installed as a dependency to generate PDFs on the backend. A utility file at  has been created with  logic.
 
 **Last working item**:
--   Last item agent was working: The agent was implementing the user's request to make the  pricing schedule a global, -only entity. This involved modifying the backend logic in  to:
-    1.  Fetch the global  schedule (where  is null) alongside clinic-specific schedules.
-    2.  Add RBAC checks to prevent clinic admins from editing the  schedule.
-    3.  Enhance the CSV import response to include detailed statistics (, , etc.).
-    4.  Update seeding logic to create the global  schedule correctly.
+-   Last item agent was working: Implementing **P8 - PDF Premium**. The agent was tasked with creating endpoints  and  to generate professional PDF documents.
+-   After encountering environment limitations with  (Chrome not found) and  (install failed), the agent pivoted to using the  library. It successfully installed , created a utility file () containing the  generation logic, and updated the  route to use this new utility. The implementation for quotes and testing has not been completed.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
 -   Which testing method agent to use? manual testing by curl
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: **Finalize SYNDICAL Global Logic & UI Validation** (Priority: P0)
+-   Issue 1: **Finalize and Prove PDF Generation (P8)** (Priority: P0)
 
 **Issues Detail**:
--   **Issue 1: Finalize SYNDICAL Global Logic & UI Validation**
-    -   **Attempted fixes**: The agent modified  to add the required logic for global SYNDICAL schedules and improved reporting. However, the database state has not been cleaned/migrated, and the new logic has not been tested.
+-   **Issue 1: Finalize and Prove PDF Generation (P8)**
+    -   **Attempted fixes**: The agent attempted to use  but it failed due to a missing Chrome dependency in the environment. An attempt to install  also failed. The current approach is using . The agent has implemented the logic for invoice PDFs but has not completed the implementation for quote PDFs or tested the functionality.
     -   **Next debug checklist**:
-        1.  **DB State**: The database contains old, clinic-specific SYNDICAL schedules. These must be deleted. Use a script or direct DB command to run . Then, restart the server to trigger the updated seeding logic which should create one global SYNDICAL schedule with  as .
-        2.  **Backend Proof (RBAC)**:
-            -   As , attempt to  a fee or  an import to the global  schedule ID. Prove it returns .
-            -   As ,  the  to the global  schedule ID. Prove it returns  with the detailed report (, , , , etc.).
-        3.  **Backend Proof (Invoice)**: Create a patient with . Create an invoice for this patient via the API and confirm the  automatically defaults to the active global  schedule's ID.
-        4.  **Frontend Validation**:
-            -   In , test the procedure autocomplete to ensure it fetches and displays acts from the newly imported SYNDICAL schedule (e.g., SC40 @ 140,000 MGA).
-            -   Create and save an invoice via the UI and verify the price is correctly snapshotted.
-            -   In , verify that for a , the SYNDICAL schedule is read-only while the CABINET schedule is editable.
-    -   **Why fix this issue and what will be achieved with the fix?** To correctly implement the core business logic of a centrally-managed official tariff (SYNDICAL) vs. a locally-managed clinic tariff (CABINET), ensuring data integrity and enforcing business rules.
+        1.  **Update Quotes Route**: Modify  to add the  endpoint, calling the  utility from  (similar to the implementation in ).
+        2.  **Restart Backend**: backend: stopped
+backend: started.
+        3.  **Execute Proofs**: Run the user-specified  commands to test both invoice and quote PDF generation, ensuring they return , , and a file of a reasonable size.
+            -   
+            -   
+            -   
+            -   
+        4.  **Debug if Needed**: If  commands fail, debug the implementation in , checking the data fetching and PDF document construction logic.
+        5.  **Frontend**: Once the backend endpoints are confirmed working, add Download PDF buttons to  and .
+    -   **Why fix this issue and what will be achieved with the fix?**: This will complete the P8 requirement, allowing users to download professional, shareable PDF versions of their invoices and quotes directly from the application.
     -   **Status**: IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1: Complete P6 Pricing Implementation** (Priority: P0)
-    -   **Where to resume**: Resume at . The code has been modified. The immediate next step is to fix the database state by deleting old schedules, restart the server, and run the backend  proofs for RBAC and invoice creation. After the backend is confirmed working, proceed to test and fix the frontend UI.
-    -   **What will be achieved with this?** The pricing feature will be functionally complete on the backend and validated on the frontend, fulfilling the user's P6 request.
+-   **Task 1: Complete P8 PDF Generation** (Priority: P0)
+    -   **Where to resume**: Resume at  to implement the PDF generation endpoint.
+    -   **What will be achieved with this?**: Both invoices and quotes will have a Download PDF feature, generating a premium document format.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks**:
-    -   **P6-2 Frontend — Settings Tarifs (P1)**: Fully implement the  page. It currently exists as a stub but needs functionality for clinic admins to add/edit/disable procedures in their  tariff schedule.
 -   **Future Tasks**:
-    -   Integrate a real payment processor (e.g., Stripe).
-    -   Build out a comprehensive UI for the billing/payment management pages.
-    -   Implement native PDF generation for patient consent forms.
-    -   Complete user training materials and documentation.
+    -   Integrate a real payment processor (e.g., Stripe, or local Madagascar options).
+    -   Build out comprehensive user training materials and documentation.
 
 **Completed work in this session**
--   **P3.5 + P4 Hardening & Docs**: Implemented idempotency, upload validation, subscription checks, and documentation for the billing system.
--   **Go-Live Prep**: Created , a  script, , and .
--   **Subscription Expired UI**: Created a dedicated frontend page and global error handling for expired subscriptions.
--   **Legal Pack**: Implemented backend and frontend components to serve legal documents (CGU, Privacy Policy, etc.).
--   **P6 Pricing Backend**: Created models (, ), APIs (), and CSV import logic for the dual-tariff system.
--   **P6 Pricing Frontend (Initial)**: Updated the invoice creation form to select a pricing schedule and created a stub for the pricing settings page.
--   **SYNDICAL 2026 Import**: Implemented logic to parse and import the user-provided , including  and  functionality.
+-   **P6 Backend Finalization**: Finalized the dual-tariff logic by making the  schedule a single global entity () and enforcing RBAC to prevent clinic admins from modifying it. This involved a complex database migration to alter table constraints.
+-   **P7 Payments**: Implemented backend routes and frontend UI for recording multiple payments (Cash, Mobile Money, etc.) against an invoice, calculating the balance, and displaying payment history.
+-   **P7 Quotes**: Introduced a Quote document type distinct from Invoices. Built the full backend lifecycle (create, update status, convert to invoice) and a corresponding frontend management page ().
+-   **P6.2 Cabinet Finalization**: Completed the UI for  to manage their  tariff, including CSV import/export and a one-click import feature for a predefined MAEVA template.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -98,180 +85,70 @@ The user operates under a strict anti-credit policy, demanding direct execution 
 
 
 **Key Technical Concepts**
--   **Backend**: Node.js, Express.js, Sequelize (ORM), JWT,  for file uploads,  for CSV processing.
--   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios, .
+-   **Backend**: Node.js, Express.js, Sequelize (ORM), JWT.
+-   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios.
 -   **Database**: SQLite.
--   **Architecture**: Multi-Tenant SaaS, REST API. Global (null ) vs. Tenant-Specific data models.
+-   **Architecture**: Multi-Tenant SaaS, REST API.
+-   **File Handling**:  for uploads,  for CSV processing,  for PDF generation.
 
 **key DB schema**
 -   : 
 -   : 
--   :  (Updated, NOT NULL)
--   :  (Updated)
+-   : 
+-   : 
 
 **changes in tech stack**
--    was added as a backend dependency.
--    was added as a frontend dependency.
+-    was added as a backend dependency for PDF generation.
 
 **All files of reference**
--   : **Primary file for next actions.** Contains the core logic for pricing, import, and RBAC.
--   : Defines the SYNDICAL/CABINET schedule model.
--   : Defines the patient model with the new .
--   : Frontend component for creating invoices, needs UI validation.
--   : Stubbed frontend component for managing tariffs, needs implementation.
--   : Contains routing and the global axios interceptor.
+-   : **Primary file for next actions.** Contains the new  logic for creating PDFs.
+-   : Contains the  endpoint for invoices. Needs verification.
+-   : **Needs to be updated** with its own  endpoint.
+-   : Will need a Download PDF button.
+-   : Will need a Download PDF button.
 
 **Critical Info for New Agent**
 -   **Execute, Don't Ask**: The user has a strict anti-credit policy. Read the request, execute tasks directly, and provide  proofs. Do not propose alternative plans.
--   **SYNDICAL is Global**: The  pricing schedule is a special case. It must be unique, have a  of , and only be editable by a . All other clinics use this single global schedule for their insured patients.
--   **CABINET is Local**: Each clinic has its own  pricing schedule that they can manage themselves.
--   **DB State is Dirty**: The previous agent created clinic-specific  schedules. These must be deleted before the new global logic can work correctly.
+-   **PDF Generation Pivot**: The environment does not support browser-based PDF generation (). The solution is to use the pure-JS  library. The implementation is in progress and untested.
+-   **Database State**: The database schema and data are now consistent with the business logic (global SYNDICAL, per-clinic CABINET).
 
 **documents and test reports created in this job**
 -   
--   ==============================================
-SMOKE TEST - Dental PM Madagascar
-API: https://dental-pay-stable.preview.emergentagent.com
-==============================================
-
---- TEST 1: Health Check ---
-✅ Health Check HTTP 200
-✅ Health Check status:ok
-
---- TEST 2: Login Super Admin ---
-✅ Login Admin HTTP 200
-✅ Token admin obtenu
-
---- TEST 3: OpenAPI Spec ---
-✅ OpenAPI HTTP 200
-✅ OpenAPI billing paths
-
---- TEST 4: Liste Cliniques (Admin) ---
-✅ Clinics HTTP 200
-✅ Clinics array présent
-
---- TEST 5: Plans Billing ---
-✅ Plans HTTP 200
-✅ Plan ESSENTIAL présent
-
---- TEST 6: Payment Requests (Admin) ---
-✅ PaymentRequests HTTP 200
-✅ PaymentRequests array
-
---- TEST 7: Accès non-authentifié ---
-✅ Patients sans token -> 401
-
---- TEST 8: Reference vide rejetée ---
-✅ Reference vide -> 400
-
---- TEST 9: Upload MIME invalide ---
-✅ Upload .txt rejeté -> 400
-
---- TEST 10: Legal Pages API ---
-✅ Legal CGU -> 200
-✅ Legal Privacy -> 200
-
-==============================================
-RÉSUMÉ SMOKE TEST
-==============================================
-✅ Passés: 17
-❌ Échoués: 0
-
-🎉 TOUS LES TESTS PASSÉS - GO-LIVE OK
 -   
--   
--   
--    (contains , , etc.)
--   
--    (updated throughout the session)
+-    (updated after each major task completion)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Instructed agent to create Go-Live Pack (runbook, backup policy, legal pages, patient consent template).
-2.  **Agent**: Created all requested documentation and backend/frontend pages for legal content.
-3.  **User**: Acknowledged completion and initiated new task: add SYNDICAL vs. CABINET pricing, backend only.
-4.  **Agent**: Implemented the backend models, APIs, and invoice logic for the dual-tariff system and provided curl proofs.
-5.  **User**: Acknowledged backend completion. Initiated P6: implement frontend for pricing selection, a settings page for tariffs, and replace placeholder seed data with a real CSV import for the SYNDICAL 2026 tariff. Provided PDF files containing tariff data.
-6.  **Agent**: Extracted data, updated models, implemented the real CSV seed logic, and created stubs for the frontend pricing components.
-7.  **User**: Initiated next task: import a specific CSV file and implement the import endpoint with  functionality.
-8.  **Agent**: Implemented and tested the CSV import endpoint with  logic and provided curl proofs.
-9.  **User**: Final request (current task):
-    -   Finalize UI validation for the invoice form.
-    -   Improve the import report with ignored/deactivated counts.
-    -   Make  a global, -only schedule.
-    -   Ensure  can't edit  but can edit their own  schedule.
-    -   Prove the changes with  and stop.
+1.  **User**: Validated completion of Quotes (P7) and instructed agent to stop.
+2.  **Agent**: Finished task and updated PRD.
+3.  **User**: Provided detailed requirements for **P6.2 - Finalize CABINET Tariffs**, including CSV import/export, a MAEVA template, and frontend CRUD.
+4.  **Agent**: Began implementation, created the MAEVA template data, updated backend routes, and started modifying the frontend. The build failed and the pod restarted due to memory limits.
+5.  **Agent**: Resumed after restart, successfully built the frontend, and confirmed all  proofs for the P6.2 backend work were complete.
+6.  **Agent**: Finished task and updated PRD.
+7.  **User**: Provided detailed requirements for **P8 - PDF Premium**, specifying the use of Playwright (or a fallback) to generate high-quality PDFs for invoices and quotes.
+8.  **Agent**: Began implementation. Found Puppeteer (Playwright equivalent) unusable. Pivoted to , installed it, and created a  utility.
+9.  **User**: Interrupted the agent with a focused request to finalize and prove the PDF generation with  using a specific list of  commands.
+10. **Agent**: Acknowledged the request and is ready to resume the PDF implementation.
 
 **Project Health Check:**
--   **Broken**: The frontend UI for pricing (, ) is incomplete and its functionality is unverified. The screenshot tool failed to run, suggesting potential issues with UI test selectors.
--   **Mocked**: The payment system remains a local, manual proof-of-payment workflow, not integrated with a live payment gateway.
+-   **Broken**: PDF generation is currently non-functional and mid-implementation.
+-   **Mocked**: The payment system does not integrate with a live payment gateway.
 
 **3rd Party Integrations**
 -   : For file uploads.
 -   : For parsing CSV files on the backend.
+-   : For server-side PDF generation.
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created:
-    -   ==============================================
-SMOKE TEST - Dental PM Madagascar
-API: https://dentist-tariffs.preview.emergentagent.com
-==============================================
-
---- TEST 1: Health Check ---
-✅ Health Check HTTP 200
-✅ Health Check status:ok
-
---- TEST 2: Login Super Admin ---
-✅ Login Admin HTTP 200
-✅ Token admin obtenu
-
---- TEST 3: OpenAPI Spec ---
-✅ OpenAPI HTTP 200
-✅ OpenAPI billing paths
-
---- TEST 4: Liste Cliniques (Admin) ---
-✅ Clinics HTTP 200
-✅ Clinics array présent
-
---- TEST 5: Plans Billing ---
-✅ Plans HTTP 200
-✅ Plan ESSENTIAL présent
-
---- TEST 6: Payment Requests (Admin) ---
-✅ PaymentRequests HTTP 200
-✅ PaymentRequests array
-
---- TEST 7: Accès non-authentifié ---
-✅ Patients sans token -> 401
-
---- TEST 8: Reference vide rejetée ---
-✅ Reference vide -> 400
-
---- TEST 9: Upload MIME invalide ---
-✅ Upload .txt rejeté -> 400
-
---- TEST 10: Legal Pages API ---
-✅ Legal CGU -> 200
-✅ Legal Privacy -> 200
-
-==============================================
-RÉSUMÉ SMOKE TEST
-==============================================
-✅ Passés: 17
-❌ Échoués: 0
-
-🎉 TOUS LES TESTS PASSÉS - GO-LIVE OK
--   Known regressions: None.
+-   Test files created: None
+-   Known regressions: None
 
 **Credentials to test flow:**
 -   **Super Admin**:
     -   Username: 
     -   Password: 
--   **Clinic Admin**:
-    -   Username:  (or the one created in the session)
-    -   Password: 
+-   **Clinic Admin**: A test user like  (password ) was created in the session. It belongs to clinic .
 
 **What agent forgot to execute**
--   The agent did not successfully run the UI validation tests (screenshots) for the pricing feature as requested in task P6. The frontend part of the latest request remains un-started.
--   The agent did not fully clean up the database state after changing the logic for  schedules from clinic-specific to global. This will cause conflicts until resolved.</analysis>
+-   The agent correctly pivoted to  but has only partially implemented the feature. The  route still needs to be updated, and the entire feature needs to be tested via  as requested by the user.</analysis>
