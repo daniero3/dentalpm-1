@@ -201,12 +201,14 @@ router.post('/', requireClinicId, [
 
 // Update supplier - with clinic check
 router.put('/:id', requireClinicId, [
-  requireRole('ADMIN', 'ACCOUNTANT'),
   param('id').isUUID().withMessage('ID fournisseur invalide'),
   body('name').optional().isLength({ min: 1, max: 100 }).trim(),
-  body('phone').optional().matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/),
+  body('type').optional().isIn(['DENTAL', 'PHARMA', 'EQUIPMENT', 'GENERAL']),
+  body('phone').optional().isString(),
   body('email').optional().isEmail().normalizeEmail(),
-  body('address').optional().isLength({ min: 10, max: 500 }).trim()
+  body('city').optional().isString(),
+  body('address').optional().isString(),
+  body('notes').optional().isString()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -217,7 +219,9 @@ router.put('/:id', requireClinicId, [
       });
     }
 
-    const supplier = await Supplier.findByPk(req.params.id);
+    const supplier = await Supplier.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
     if (!supplier) {
       return res.status(404).json({
         error: 'Fournisseur non trouvé'
@@ -248,6 +252,55 @@ router.put('/:id', requireClinicId, [
     console.error('Update supplier error:', error);
     res.status(500).json({
       error: 'Erreur lors de la mise à jour du fournisseur'
+    });
+  }
+});
+
+// Disable supplier (soft delete)
+router.patch('/:id/disable', requireClinicId, [
+  param('id').isUUID().withMessage('ID fournisseur invalide')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Données invalides',
+        details: errors.array()
+      });
+    }
+
+    const supplier = await Supplier.findOne({
+      where: { id: req.params.id, clinic_id: req.clinic_id }
+    });
+    if (!supplier) {
+      return res.status(404).json({
+        error: 'Fournisseur non trouvé'
+      });
+    }
+
+    await supplier.update({ is_active: false });
+
+    // Log supplier disable
+    await AuditLog.create({
+      user_id: req.user.id,
+      action: 'UPDATE',
+      resource_type: 'suppliers',
+      resource_id: supplier.id,
+      old_values: { is_active: true },
+      new_values: { is_active: false },
+      ip_address: req.ip,
+      user_agent: req.get('User-Agent'),
+      description: `Fournisseur désactivé: ${supplier.name}`
+    });
+
+    res.json({
+      message: 'Fournisseur désactivé',
+      supplier: { ...supplier.toJSON(), is_active: false }
+    });
+  } catch (error) {
+    console.error('Disable supplier error:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la désactivation du fournisseur'
     });
   }
 });
