@@ -114,6 +114,7 @@ app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 // OpenAPI JSON endpoint
 app.get('/api/openapi.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  const serverUrl = process.env.OPENAPI_SERVER_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
   const openApiSpec = {
     "openapi": "3.0.0",
     "info": {
@@ -123,8 +124,8 @@ app.get('/api/openapi.json', (req, res) => {
     },
     "servers": [
       {
-        "url": "https://saas-theme-upgrade.preview.emergentagent.com/api",
-        "description": "Preview Environment"
+        "url": `${serverUrl}/api`,
+        "description": "API Server"
       }
     ],
     "components": {
