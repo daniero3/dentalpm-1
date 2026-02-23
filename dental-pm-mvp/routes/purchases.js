@@ -373,7 +373,7 @@ router.post('/:id/receive', requireClinicId, [
       return res.status(400).json({ error: `Impossible de réceptionner: statut actuel = ${order.status}` });
     }
 
-    // Process each item: create stock movement + update product qty
+    // Process each item: create stock movement (hook will update product qty)
     const stockMovements = [];
     for (const item of order.items) {
       // Get current product quantity
@@ -381,7 +381,7 @@ router.post('/:id/receive', requireClinicId, [
       const previousQty = product ? parseInt(product.current_qty || 0) : 0;
       const newQty = previousQty + item.qty;
 
-      // Create IN stock movement
+      // Create IN stock movement - afterCreate hook will update product.current_qty
       const movement = await StockMovement.create({
         product_id: item.product_id,
         type: 'IN',
@@ -395,12 +395,6 @@ router.post('/:id/receive', requireClinicId, [
         clinic_id: req.clinic_id
       }, { transaction: t });
       stockMovements.push(movement);
-
-      // Update product current_qty
-      await Product.update(
-        { current_qty: newQty },
-        { where: { id: item.product_id }, transaction: t }
-      );
     }
 
     // Update order status
