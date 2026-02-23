@@ -50,6 +50,12 @@ Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tar
 - **UI /suppliers**: Liste, recherche, filtre type, add/edit/disable
 - **Multi-tenant + subscription guard + audit log**
 
+### P19 - Achats->Inventaire MVP ✅ (2026-02-22)
+- **Models**: PurchaseOrder (clinic_id, supplier_id, number PO-YYYY-XXXX, status DRAFT|RECEIVED|CANCELLED, total_mga), PurchaseOrderItem (product_id, qty, unit_price_mga, line_total)
+- **API**: POST /api/purchases (create DRAFT), PUT/:id, POST/:id/receive (RECEIVED + StockMovement IN + update qty), GET /api/purchases, GET/:id/print (HTML)
+- **UI /purchases**: Liste, stats, nouveau bon, sélection fournisseur/produits, bouton Réceptionner
+- **Multi-tenant + subscription guard + audit log**
+
 ## Tech Stack
 - Backend: Node.js, Express, Sequelize, SQLite
 - Frontend: React, Shadcn UI, Tailwind CSS
