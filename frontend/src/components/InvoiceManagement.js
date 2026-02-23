@@ -1004,17 +1004,17 @@ const InvoiceManagement = () => {
 
               {/* Add Payment Form */}
               {invoicePaymentStats.balance_mga > 0 && (
-                <Card>
+                <Card className="border border-gray-100 rounded-xl">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4 text-[#0F7E8A]" />
                       Ajouter un paiement
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSubmitPayment} className="grid grid-cols-4 gap-4">
                       <div>
-                        <Label>Montant (MGA)</Label>
+                        <Label className="text-sm">Montant (MGA)</Label>
                         <Input
                           type="number"
                           min="1"
@@ -1022,13 +1022,14 @@ const InvoiceManagement = () => {
                           value={paymentData.amount_mga}
                           onChange={(e) => setPaymentData({...paymentData, amount_mga: e.target.value})}
                           placeholder={`Max: ${formatCurrency(invoicePaymentStats.balance_mga)}`}
+                          className="h-10 rounded-lg"
                           data-testid="payment-amount"
                         />
                       </div>
                       <div>
-                        <Label>Méthode</Label>
+                        <Label className="text-sm">Méthode</Label>
                         <Select value={paymentData.payment_method} onValueChange={(v) => setPaymentData({...paymentData, payment_method: v})}>
-                          <SelectTrigger data-testid="payment-method">
+                          <SelectTrigger className="h-10 rounded-lg" data-testid="payment-method">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -1039,16 +1040,17 @@ const InvoiceManagement = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label>Référence</Label>
+                        <Label className="text-sm">Référence</Label>
                         <Input
                           value={paymentData.reference_number}
                           onChange={(e) => setPaymentData({...paymentData, reference_number: e.target.value})}
                           placeholder="N° transaction/chèque"
+                          className="h-10 rounded-lg"
                           data-testid="payment-reference"
                         />
                       </div>
                       <div className="flex items-end">
-                        <Button type="submit" disabled={!paymentData.amount_mga} data-testid="submit-payment">
+                        <Button type="submit" disabled={!paymentData.amount_mga} className="bg-[#0F7E8A] hover:bg-[#0a6872] rounded-lg" data-testid="submit-payment">
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Enregistrer
                         </Button>
