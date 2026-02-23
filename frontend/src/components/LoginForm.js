@@ -44,144 +44,88 @@ const LoginForm = () => {
     setLoading(false);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.6,
-        ease: "easeOut",
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4 }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-      <motion.div 
-        className="w-full max-w-lg"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Header */}
-        <motion.div className="text-center mb-8" variants={itemVariants}>
-          <motion.div 
-            className="flex justify-center mb-6"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="relative">
-              <div className="bg-card p-4 rounded-2xl shadow-lg border border-border">
-                <Stethoscope className="h-10 w-10 text-primary" />
-              </div>
-              {/* Pulse animation */}
-              <motion.div
-                className="absolute inset-0 bg-primary/20 rounded-2xl"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 0.2, 0.5]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
+    <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+      {/* Main content */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <motion.div 
+          className="w-full max-w-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0F7E8A] mb-4 shadow-lg">
+              <Stethoscope className="h-8 w-8 text-white" />
             </div>
-          </motion.div>
-          <motion.h1 
-            className="text-4xl font-bold text-foreground mb-2"
-            variants={itemVariants}
-          >
-            Dental Practice
-          </motion.h1>
-          <motion.p 
-            className="text-muted-foreground text-lg"
-            variants={itemVariants}
-          >
-            Système de gestion - Madagascar
-          </motion.p>
-        </motion.div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              DentalPM
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Gestion de cabinet dentaire
+            </p>
+          </div>
 
-        {/* Login Card */}
-        <motion.div variants={itemVariants}>
-          <Card className="shadow-2xl border-0 bg-card/80 backdrop-blur-sm">
-            <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-semibold text-foreground">
-                Bienvenue
+          {/* Login Card */}
+          <Card className="shadow-xl border border-gray-100 bg-white rounded-xl">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl font-semibold text-gray-900">
+                Connexion
               </CardTitle>
-              <CardDescription className="text-base">
-                Connectez-vous ou créez un compte pour accéder au système
+              <CardDescription>
+                Accédez à votre espace de gestion
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login" className="text-sm font-medium">
+                <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-100 p-1 rounded-lg">
+                  <TabsTrigger 
+                    value="login" 
+                    className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
                     Connexion
                   </TabsTrigger>
-                  <TabsTrigger value="register" className="text-sm font-medium">
+                  <TabsTrigger 
+                    value="register" 
+                    className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium"
+                  >
                     Inscription
                   </TabsTrigger>
                 </TabsList>
                 
                 {/* Login Tab */}
-                <TabsContent value="login" className="space-y-6">
-                  <motion.form 
-                    onSubmit={handleLogin} 
-                    className="space-y-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <motion.div 
-                      className="space-y-2"
-                      whileFocus={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <Label htmlFor="username" className="text-sm font-medium">
+                <TabsContent value="login" className="space-y-5">
+                  <form onSubmit={handleLogin} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="username" className="text-sm font-medium text-gray-700">
                         Nom d'utilisateur
                       </Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="username"
                           type="text"
                           placeholder="admin"
-                          className="pl-10 h-11 bg-background/50 border-border focus:border-primary transition-colors"
+                          className="pl-10 h-11 bg-white border-gray-200 rounded-lg focus:border-[#0F7E8A] focus:ring-[#0F7E8A]"
                           value={loginData.username}
                           onChange={(e) => setLoginData({...loginData, username: e.target.value})}
                           required
                         />
                       </div>
-                    </motion.div>
+                    </div>
                     
-                    <motion.div 
-                      className="space-y-2"
-                      whileFocus={{ scale: 1.02 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <Label htmlFor="password" className="text-sm font-medium">
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                         Mot de passe
                       </Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
                           id="password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="admin123"
-                          className="pl-10 pr-10 h-11 bg-background/50 border-border focus:border-primary transition-colors"
+                          placeholder="••••••••"
+                          className="pl-10 pr-10 h-11 bg-white border-gray-200 rounded-lg focus:border-[#0F7E8A] focus:ring-[#0F7E8A]"
                           value={loginData.password}
                           onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                           required
@@ -189,59 +133,41 @@ const LoginForm = () => {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                     
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-[#0F7E8A] hover:bg-[#0a6872] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all" 
+                      disabled={loading}
                     >
-                      <Button 
-                        type="submit" 
-                        className="w-full h-11 text-base font-medium medical-gradient shadow-lg hover:shadow-xl transition-all duration-200" 
-                        disabled={loading}
-                      >
-                        {loading ? (
-                          <div className="flex items-center">
-                            <motion.div 
-                              className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            />
-                            Connexion en cours...
-                          </div>
-                        ) : (
-                          'Se connecter'
-                        )}
-                      </Button>
-                    </motion.div>
-                  </motion.form>
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Connexion...
+                        </div>
+                      ) : (
+                        'Se connecter'
+                      )}
+                    </Button>
+                  </form>
                 </TabsContent>
                 
                 {/* Register Tab */}
-                <TabsContent value="register" className="space-y-6">
-                  <motion.form 
-                    onSubmit={handleRegister} 
-                    className="space-y-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
+                <TabsContent value="register" className="space-y-4">
+                  <form onSubmit={handleRegister} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="reg-full-name" className="text-sm font-medium">
-                        Nom complet
-                      </Label>
+                      <Label className="text-sm font-medium text-gray-700">Nom complet</Label>
                       <div className="relative">
-                        <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                          id="reg-full-name"
                           type="text"
-                          placeholder="Dr. Jean Dupont"
-                          className="pl-10 h-11 bg-background/50 border-border focus:border-primary transition-colors"
+                          placeholder="Dr. Jean Rakoto"
+                          className="pl-10 h-11 bg-white border-gray-200 rounded-lg"
                           value={registerData.full_name}
                           onChange={(e) => setRegisterData({...registerData, full_name: e.target.value})}
                           required
@@ -250,16 +176,13 @@ const LoginForm = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="reg-username" className="text-sm font-medium">
-                        Nom d'utilisateur
-                      </Label>
+                      <Label className="text-sm font-medium text-gray-700">Identifiant</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                          id="reg-username"
                           type="text"
-                          placeholder="jdupont"
-                          className="pl-10 h-11 bg-background/50 border-border focus:border-primary transition-colors"
+                          placeholder="jrakoto"
+                          className="pl-10 h-11 bg-white border-gray-200 rounded-lg"
                           value={registerData.username}
                           onChange={(e) => setRegisterData({...registerData, username: e.target.value})}
                           required
@@ -268,16 +191,13 @@ const LoginForm = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="reg-email" className="text-sm font-medium">
-                        Email
-                      </Label>
+                      <Label className="text-sm font-medium text-gray-700">Email</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                          id="reg-email"
                           type="email"
-                          placeholder="jean.dupont@cabinet.mg"
-                          className="pl-10 h-11 bg-background/50 border-border focus:border-primary transition-colors"
+                          placeholder="jean@cabinet.mg"
+                          className="pl-10 h-11 bg-white border-gray-200 rounded-lg"
                           value={registerData.email}
                           onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
                           required
@@ -286,11 +206,9 @@ const LoginForm = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="reg-role" className="text-sm font-medium">
-                        Rôle
-                      </Label>
+                      <Label className="text-sm font-medium text-gray-700">Rôle</Label>
                       <Select value={registerData.role} onValueChange={(value) => setRegisterData({...registerData, role: value})}>
-                        <SelectTrigger className="h-11 bg-background/50 border-border">
+                        <SelectTrigger className="h-11 bg-white border-gray-200 rounded-lg">
                           <SelectValue placeholder="Sélectionnez votre rôle" />
                         </SelectTrigger>
                         <SelectContent>
@@ -302,16 +220,13 @@ const LoginForm = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="reg-password" className="text-sm font-medium">
-                        Mot de passe
-                      </Label>
+                      <Label className="text-sm font-medium text-gray-700">Mot de passe</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                          id="reg-password"
                           type="password"
-                          placeholder="Mot de passe sécurisé"
-                          className="pl-10 h-11 bg-background/50 border-border focus:border-primary transition-colors"
+                          placeholder="••••••••"
+                          className="pl-10 h-11 bg-white border-gray-200 rounded-lg"
                           value={registerData.password}
                           onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
                           required
@@ -319,49 +234,25 @@ const LoginForm = () => {
                       </div>
                     </div>
                     
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <Button 
+                      type="submit" 
+                      className="w-full h-11 bg-[#0F7E8A] hover:bg-[#0a6872] text-white font-medium rounded-lg shadow-md" 
+                      disabled={loading}
                     >
-                      <Button 
-                        type="submit" 
-                        className="w-full h-11 text-base font-medium medical-gradient shadow-lg hover:shadow-xl transition-all duration-200" 
-                        disabled={loading}
-                      >
-                        {loading ? (
-                          <div className="flex items-center">
-                            <motion.div 
-                              className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            />
-                            Inscription en cours...
-                          </div>
-                        ) : (
-                          'S\'inscrire'
-                        )}
-                      </Button>
-                    </motion.div>
-                  </motion.form>
+                      {loading ? 'Inscription...' : 'S\'inscrire'}
+                    </Button>
+                  </form>
                 </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
         </motion.div>
-        
-        {/* Footer */}
-        <motion.div 
-          className="text-center mt-8 space-y-2"
-          variants={itemVariants}
-        >
-          <p className="text-sm text-muted-foreground">
-            Système de gestion dentaire pour Madagascar
-          </p>
-          <p className="text-xs text-muted-foreground/70">
-            Version 1.0 - Conforme aux réglementations locales
-          </p>
-        </motion.div>
-      </motion.div>
+      </div>
+      
+      {/* Footer */}
+      <footer className="py-4 text-center text-sm text-gray-500">
+        © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
+      </footer>
     </div>
   );
 };
