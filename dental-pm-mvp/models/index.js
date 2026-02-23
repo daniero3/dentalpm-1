@@ -256,5 +256,8 @@ module.exports = {
   // Messaging models
   MessageTemplate,
   MessageQueue,
-  MessageLog
+  MessageLog,
+  // Purchase Order models
+  PurchaseOrder,
+  PurchaseOrderItem
 };
