@@ -373,15 +373,16 @@ router.post('/:id/receive', requireClinicId, [
       return res.status(400).json({ error: `Impossible de réceptionner: statut actuel = ${order.status}` });
     }
 
-    // Process each item: create stock movement (hook will update product qty)
+    // Process each item: create stock movement (manually update product qty after commit)
     const stockMovements = [];
+    const productUpdates = [];
     for (const item of order.items) {
       // Get current product quantity
       const product = await Product.findByPk(item.product_id, { transaction: t });
       const previousQty = product ? parseInt(product.current_qty || 0) : 0;
       const newQty = previousQty + item.qty;
 
-      // Create IN stock movement - afterCreate hook will update product.current_qty
+      // Create IN stock movement
       const movement = await StockMovement.create({
         product_id: item.product_id,
         type: 'IN',
@@ -393,8 +394,9 @@ router.post('/:id/receive', requireClinicId, [
         previous_qty: previousQty,
         new_qty: newQty,
         clinic_id: req.clinic_id
-      }, { transaction: t });
+      }, { transaction: t, hooks: false }); // Disable hooks to prevent conflict
       stockMovements.push(movement);
+      productUpdates.push({ product_id: item.product_id, newQty });
     }
 
     // Update order status
@@ -405,6 +407,11 @@ router.post('/:id/receive', requireClinicId, [
     }, { transaction: t });
 
     await t.commit();
+
+    // Update product quantities after commit (outside transaction)
+    for (const pu of productUpdates) {
+      await Product.update({ current_qty: pu.newQty }, { where: { id: pu.product_id } });
+    }
 
     // Audit log
     await AuditLog.create({
