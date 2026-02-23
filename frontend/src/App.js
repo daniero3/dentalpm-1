@@ -40,6 +40,8 @@ import PricingSettings from "./components/PricingSettings";
 import MessagingManagement from "./components/MessagingManagement";
 import SupplierManagement from "./components/SupplierManagement";
 import PurchaseManagement from "./components/PurchaseManagement";
+import OnboardingWizard from "./components/OnboardingWizard";
+import BillingRenew from "./components/BillingRenew";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
