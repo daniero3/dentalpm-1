@@ -1,63 +1,73 @@
 <analysis>**original_problem_statement:**
-The user is developing a multi-tenant Dental Practice Management SaaS platform for the Madagascar market. The application is a feature-rich MVP that has successfully passed a full Release Candidate smoke test, validating all core modules from patient management to financial reporting.
+The user requested a Design Sprint to give the application a more premium medical SaaS look and feel without adding new features or performing major refactors.
 
-Following the successful RC1 validation, the user has shifted to a perfectionnement (refinement) phase organized into short, focused sprints. Each sprint targets a single module with a maximum of three specific improvements.
-
-The current sprint focuses on the **Facturation (Billing)** module with three priorities:
-1.  **Clinic Logo**: Upload and display a unique clinic logo on all invoice and quote PDFs.
-2.  **Payment QR Code**: Generate and embed a QR code on invoice PDFs containing payment details (invoice number, amount, etc.).
-3.  **Status Filters**: Implement status filters (UNPAID / PARTIAL / PAID) on the main invoice list UI.
-
-The user maintains a strict anti-gaspillage policy, demanding direct execution of the scoped tasks with proofs and no tangential work or refactoring.
+**PRODUCT REQUIREMENTS (Design Sprint):**
+1.  **Global Theme**:
+    *   Background: , white cards, light borders.
+    *   Colors: Primary teal , accent .
+    *   Typography:  font, clear hierarchy.
+    *   Styling:  border-radius, light shadows, consistent spacing.
+    *   Standardize UI elements (buttons, inputs, tables).
+2.  **Layout**:
+    *   Modernize the sidebar and top bar.
+    *   Structure pages using cards with aligned titles and actions.
+3.  **Scoped Application**: Apply the new design **only** to three specific pages:
+    *   Login page
+    *   Patients list page
+    *   Invoices list page
+4.  **Footer**:
+    *   Add a global footer: © Daniero Global LLC — DentalPM Madagascar.
+    *   This footer should appear in the main layout and on the Login page.
+    *   The agent should ignore any Made with Emergent badges injected by the preview environment.
+5.  **Deliverables**:
+    *   A list of all modified files.
+    *   Three screenshots showing the redesigned Login, Patients, and Invoices pages.
 
 **User's preferred language**: French. The next agent **MUST** respond in **French** and adhere to the user's direct, execution-focused communication style.
 
 **what currently exists?**
-The application is a stable, feature-complete MVP. All major modules have been implemented and validated through a comprehensive  script.
--   **Backend (Node.js/Express/Sequelize)**: A robust multi-tenant API with JWT authentication and RBAC. It includes full-featured modules for Patients, Pricing, Invoices, Quotes, Payments, Patient Documents (file uploads), Prescriptions, Odontogram (dental chart), Inventory, Lab Orders, and Financial Reports. All core API endpoints are functional.
--   **Frontend (React/Shadcn)**: A functional UI for all implemented backend modules. Each module has its own management page, and patient records are integrated with tabs for documents, prescriptions, lab orders, and the odontogram.
--   **Dependencies**: The  library is used for PDF generation. The  library was just installed to support the current task.
+The application is a stable, feature-rich MVP for Dental Practice Management. It has a Node.js/Express backend, a React/Shadcn UI frontend, and uses SQLite for the database. Core modules like patient management, billing, inventory, reporting, and a new messaging system are fully functional. The project has successfully completed several sprints, including Facturation, Mailing/SMS, Fournisseurs, Achats, and Sales-ready, adding significant functionality.
 
 **Last working item**:
--   Last item agent was working: The agent began work on the **Sprint Facturation (Billing Sprint)**. The immediate focus was on requirements #1 (Logo) and #3 (QR Code) which both involve modifying the PDF generation logic. The agent successfully installed the  npm package and was about to start modifying the  utility file. The status filter requirement has not been started.
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? manual testing by curl and screenshot tool
--   User Testing Done: N
+-   **Last item agent was working**: The agent began the **Design Sprint**. It successfully updated the global theme variables in  and started redesigning the core components. It was in the middle of applying the new premium styles to the Patient Management page ().
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: screenshot tool
+-   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   There are no outstanding bugs or issues. The current work is a feature enhancement task.
+-   There are no outstanding bugs or issues. The current work is a UI enhancement task.
 
 **Issues Detail**:
 -   N/A
 
 **In progress Task List**:
--   **Task 1: Complete Sprint Facturation (Billing Sprint)** (Priority: P0)
+-   **Task 1: Complete Design Sprint (UI Premium)** (Priority: P0)
     -   **Where to resume**:
-        1.  **PDFs**: Modify . The  and  functions need to be updated to fetch the clinic's  and render the image. The invoice PDF function also needs to generate and render a QR code using the  library.
-        2.  **UI Filters**: Modify  to add UI elements (buttons, dropdown) for filtering invoices by payment status (, , ).
-        3.  **Backend Filters**: Modify the  endpoint in  to accept a  query parameter to filter the results.
-    -   **What will be achieved with this?**: The billing module will be enhanced with professional PDFs (logo, QR code) and an improved user experience for managing invoices (status filters).
+        1.  Finalize the redesign of the Patients list page: .
+        2.  Redesign the Invoices list page to match the new premium theme: .
+        3.  Modernize the main application layout, specifically the sidebar () and top bar (within  or ).
+        4.  Add the required footer: © Daniero Global LLC — DentalPM Madagascar to the  and .
+        5.  Once all changes are complete, capture the three required screenshots (Login, Patients, Invoices) to prove completion.
+    -   **What will be achieved with this?**: The application's key pages will have a more professional and modern premium medical SaaS aesthetic, improving the user experience.
     -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
+    -   **Should Test frontend/backend/both after fix?** frontend
     -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
--   **Future Sprints (Backlog)**: The user will define subsequent sprints. Potential candidates from previous discussions include:
-    -   Integrating a real payment processor.
-    -   Adding a calendar/appointment scheduling module.
-    -   Building out user training materials and documentation.
+-   **Upcoming Tasks**:
+    -   P??: A final end-to-end testing sprint before release.
+-   **Future Tasks**:
+    -   P??: Integration with a real payment processor (Stripe or a local Madagascar Mobile Money API).
+    -   P??: Advanced calendar and appointment scheduling features.
 
 **Completed work in this session**
--   **P8 - PDF Premium**: Completed the implementation of PDF generation for invoices and quotes using , including a robust frontend download handler.
--   **P9 - Patient Documents (Backend)**: Implemented the entire backend API for uploading, managing, and deleting patient-related files.
--   **P9.1 - Patient Documents (UI)**: Built the frontend UI for the patient documents feature.
--   **P10 - Prescriptions**: Implemented the full backend API and a minimal frontend UI for managing medical prescriptions.
--   **P11 - Odontogram**: Implemented the backend API and a visual frontend UI for a dental chart.
--   **P12 - Inventory**: Extended the existing inventory module with new API endpoints and built a complete frontend management UI.
--   **P13 - Lab Orders**: Extended the existing lab module with new API endpoints and built a complete frontend management UI.
--   **P14 - Financial Reports**: Implemented a new backend endpoint and a frontend dashboard for financial reporting.
--   **P15 - Release Candidate**: Created and successfully executed a comprehensive  script covering 17 critical API workflows, achieving 100% pass rate and validating the application's stability.
+-   **Mini-sprint Sales-ready**: Implemented an onboarding wizard, trial period logic (7 days), and a  page for subscription payments.
+-   **P20 - DOC MIN**: Created a basic  file covering core features and troubleshooting.
+-   **P19 - Achats->Inventaire MVP**: Implemented purchase order creation and automated stock reception, which updates inventory levels.
+-   **P16 - Fournisseurs MVP**: Implemented full CRUD functionality for suppliers, including auto-seeding of initial data for new clinics.
+-   **P18 - Mailing/SMS MVP**: Implemented a messaging system to queue and simulate sending appointment reminders and birthday wishes.
+-   **Sprint Facturation**: Enhanced invoice/quote PDFs with a clinic logo and a payment QR code, and added status filters to the invoice list UI.
 
 **Earlier issues found/mentioned but not fixed**
 -   None.
@@ -72,11 +82,12 @@ The application is a stable, feature-complete MVP. All major modules have been i
 -   **Backend**: Node.js, Express.js, Sequelize (ORM), JWT.
 -   **Frontend**: React, Shadcn UI, Tailwind CSS, Axios.
 -   **Database**: SQLite.
--   **PDF Generation**:  for server-side generation,  for embedding QR codes.
--   **Testing**: A comprehensive  script for end-to-end API validation.
+-   **PDF Generation**: , .
+-   **Multi-Tenancy**: All data is scoped by .
 
 **key DB schema**
--   : Added  field (was already present, now being used).
+-   : Added  (JSON),  (BOOLEAN),  (INTEGER).
+-   : Added , .
 -   : 
 -   : 
 -   : 
@@ -84,178 +95,68 @@ The application is a stable, feature-complete MVP. All major modules have been i
 -   : 
 
 **changes in tech stack**
--   : Added as a backend npm dependency for the current task.
+-   None in this session.
 
 **All files of reference**
--   **/app/dental-pm-mvp/utils/pdfGenerator.js**: **Needs modification** for logo and QR code.
--   **/app/frontend/src/components/InvoiceManagement.js**: **Needs modification** for status filters.
--   **/app/dental-pm-mvp/routes/invoices.js**: **Needs modification** to handle status filter query.
--   **/app/dental-pm-mvp/smoke_test.sh**: The comprehensive test script created in P15.
--   All new components and routes created during the session (listed in Architecture).
+-   **/app/frontend/src/index.css**: **Modified** for the new global theme.
+-   **/app/frontend/src/components/LoginForm.js**: **Modified** for the new design.
+-   **/app/frontend/src/components/PatientManagement.js**: **Partially Modified**, needs to be completed.
+-   **/app/frontend/src/components/InvoiceManagement.js**: **Needs modification** for the new design.
+-   **/app/frontend/src/App.js**: **Needs modification** for layout updates (MainLayout, footer).
+-   **/app/frontend/src/components/ModernSidebar.jsx**: **Needs modification** for layout updates.
+
+**Areas that need refactoring**:
+-   None. User has a strict no refactoring policy.
+
+**key api endpoints**
+-   : Manage templates, queue, and dispatch jobs.
+-   : Full CRUD for suppliers.
+-   : Create purchase orders and process stock receptions.
+-   : Handle the multi-step clinic setup wizard.
+-   : Get subscription status and create payment requests.
 
 **Critical Info for New Agent**
--   **User's Style is Law**: The user's anti-gaspillage (no waste) and sprint-based approach is non-negotiable. Execute the 3 defined tasks for the billing sprint, provide proofs, and STOP. Do not add any extra features or perform any refactoring.
--   **The App is Stable**: The application passed a 17-point smoke test. You are building on a known-good foundation. Do not question existing logic unless it directly blocks the current task.
--   **Proofs are Mandatory**: The user expects  proofs for backend changes and screenshot proofs for UI changes to validate completion.
+-   **User's Style is Law**: The user's anti-gaspillage (no waste) and sprint-based approach is non-negotiable. Execute the defined tasks for the design sprint, provide the three screenshots, and STOP. Do not add any extra features or perform any refactoring.
+-   **Scope is Strict**: The design changes apply *only* to the Login, Patients, and Invoices pages. Do not redesign other parts of the application.
+-   **Footer**: The © Daniero Global LLC footer is mandatory. Ignore any platform-injected watermarks.
 
 **documents and test reports created in this job**
--   === 1) Health Check ===
-PASS: /api/health 
-=== 2) Login ===
-PASS: POST /api/auth/login 
-=== 3) Patients List ===
-PASS: GET /api/patients 
-Using PATIENT_ID: 426b9ada-75bd-4698-a092-dc8809d6b365
-=== 4) Create Patient ===
-PASS: POST /api/patients 
-Using SCHEDULE_ID: e38e468b-b6b3-4f2a-a4a2-e3b9d5fd766b
-=== 5) Create Quote ===
-PASS: POST /api/quotes 
-=== 5b) Convert Quote ===
-PASS: POST /api/quotes/:id/convert 
-=== 6) Create Invoice ===
-PASS: POST /api/invoices 
-Using INV_ID: be29eab0-3704-40be-8665-46075d62a5f5
-=== 7) Add Payment ===
-PASS: POST /api/invoices/:id/payments 
-=== 8) Invoice PDF ===
-PASS: GET /api/invoices/:id/pdf 
-=== 9) Upload Document ===
-PASS: POST /api/documents/upload 
-=== 10) Prescription Flow ===
-PASS: POST /api/patients/:id/prescriptions 
-PASS: POST /api/prescriptions/:id/issue 
-PASS: GET /api/prescriptions/:id/pdf 
-=== 11) Odontogram ===
-PASS: PUT /api/patients/:id/odontogram 
-=== 12) Inventory Alerts ===
-PASS: GET /api/inventory/alerts 
-=== 13) Lab Order ===
-PASS: POST /api/labs/orders 
-=== 14) Reports Finance ===
-PASS: GET /api/reports/finance 
-
-============================================
-        SMOKE TEST RESULTS
-============================================
-
-✅ /api/health
-✅ POST /api/auth/login
-✅ GET /api/patients
-✅ POST /api/patients
-✅ POST /api/quotes
-✅ POST /api/quotes/:id/convert
-✅ POST /api/invoices
-✅ POST /api/invoices/:id/payments
-✅ GET /api/invoices/:id/pdf
-✅ POST /api/documents/upload
-✅ POST /api/patients/:id/prescriptions
-✅ POST /api/prescriptions/:id/issue
-✅ GET /api/prescriptions/:id/pdf
-✅ PUT /api/patients/:id/odontogram
-✅ GET /api/inventory/alerts
-✅ POST /api/labs/orders
-✅ GET /api/reports/finance
-
-============================================
-TOTAL: 17 PASS / 0 FAIL
-============================================
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (P14)**: Requested the Financial Reports MVP.
-2.  **Agent (P14)**: Implemented and delivered P14.
-3.  **User (P15)**: Requested the Release Candidate smoke test.
-4.  **Agent (P15)**: Encountered test failures.
-5.  **Agent (P15)**: Debugged and fixed the issues ( script and  route order).
-6.  **Agent (P15)**: Successfully ran the smoke test (17/17 PASS) and delivered the results.
-7.  **User**: Validated RC1 and announced the shift to perfectionnement sprints, starting with Billing.
-8.  **Agent**: Asked for clarification on the 3 priorities for the Billing sprint.
-9.  **User**: Confirmed the 3 priorities: 1) Clinic logo on PDFs, 2) QR code on invoice PDFs, 3) Status filters on the invoice list. Provided strict scope.
-10. **Agent**: Acknowledged the request and started implementation (installing ).
+1.  **User**: Requested the Design Sprint with specific requirements for theme, layout, and scope (3 pages).
+2.  **Agent**: Acknowledged the request and started implementation.
+3.  **Agent**: Viewed , , and .
+4.  **User**: Re-pasted the exact same Design Sprint request (likely a mistaken double-send).
+5.  **Agent**: Acknowledged again and proceeded.
+6.  **Agent**: Viewed  and  again.
+7.  **Agent**: Successfully applied the new global theme to .
+8.  **Agent**: Added the footer to the Main Layout.
+9.  **Agent**: Attempted to view a non-existent , then correctly found and viewed .
+10. **Agent**: Successfully overwrote  with the new premium design and began applying the same to .
 
 **Project Health Check:**
 -   **Broken**: None.
--   **Mocked**: Payment system does not integrate with a live payment gateway. QR code generation is for static text, not a live payment link.
+-   **Mocked**: Payment system (uses a  model but no live gateway), SMS/Email sending (simulates sending, does not connect to a real provider).
 
 **3rd Party Integrations**
 -   : For file uploads.
--   : For parsing CSV files.
+-   : For parsing CSV files (used in pricing import).
 -   : For server-side PDF generation.
--   : (new) For generating QR codes in PDFs.
+-   : For generating QR codes in PDFs.
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
--   Test files created:
-    -   === 1) Health Check ===
-PASS: /api/health 
-=== 2) Login ===
-PASS: POST /api/auth/login 
-=== 3) Patients List ===
-PASS: GET /api/patients 
-Using PATIENT_ID: 426b9ada-75bd-4698-a092-dc8809d6b365
-=== 4) Create Patient ===
-PASS: POST /api/patients 
-Using SCHEDULE_ID: e38e468b-b6b3-4f2a-a4a2-e3b9d5fd766b
-=== 5) Create Quote ===
-PASS: POST /api/quotes 
-=== 5b) Convert Quote ===
-PASS: POST /api/quotes/:id/convert 
-=== 6) Create Invoice ===
-PASS: POST /api/invoices 
-Using INV_ID: d7e02ece-1741-49bc-9b63-37ce9d04744d
-=== 7) Add Payment ===
-PASS: POST /api/invoices/:id/payments 
-=== 8) Invoice PDF ===
-PASS: GET /api/invoices/:id/pdf 
-=== 9) Upload Document ===
-PASS: POST /api/documents/upload 
-=== 10) Prescription Flow ===
-PASS: POST /api/patients/:id/prescriptions 
-PASS: POST /api/prescriptions/:id/issue 
-PASS: GET /api/prescriptions/:id/pdf 
-=== 11) Odontogram ===
-PASS: PUT /api/patients/:id/odontogram 
-=== 12) Inventory Alerts ===
-PASS: GET /api/inventory/alerts 
-=== 13) Lab Order ===
-PASS: POST /api/labs/orders 
-=== 14) Reports Finance ===
-PASS: GET /api/reports/finance 
-
-============================================
-        SMOKE TEST RESULTS
-============================================
-
-✅ /api/health
-✅ POST /api/auth/login
-✅ GET /api/patients
-✅ POST /api/patients
-✅ POST /api/quotes
-✅ POST /api/quotes/:id/convert
-✅ POST /api/invoices
-✅ POST /api/invoices/:id/payments
-✅ GET /api/invoices/:id/pdf
-✅ POST /api/documents/upload
-✅ POST /api/patients/:id/prescriptions
-✅ POST /api/prescriptions/:id/issue
-✅ GET /api/prescriptions/:id/pdf
-✅ PUT /api/patients/:id/odontogram
-✅ GET /api/inventory/alerts
-✅ POST /api/labs/orders
-✅ GET /api/reports/finance
-
-============================================
-TOTAL: 17 PASS / 0 FAIL
-============================================
--   Known regressions: None
+-   Test files created: None in this session.
+-   Known regressions: None.
 
 **Credentials to test flow:**
 -   **Super Admin**:
     -   Username: 
     -   Password: 
 -   **Clinic Admin / Dentist**:
-    -   A user like  (password ) exists for a specific clinic. This user is required for testing tenant-specific features.
+    -   A user like  (password ) exists for testing tenant-specific features.
 
 **What agent forgot to execute**
--   The agent has been following user instructions meticulously and has not forgotten any requested tasks.</analysis>
+-   Nothing. The agent is in the middle of the requested Design Sprint task and is proceeding as expected.</analysis>

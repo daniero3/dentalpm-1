@@ -2,7 +2,7 @@
 # Smoke Test Script - Dental PM MVP
 # Tests all critical API endpoints
 
-API_URL="https://clinic-mgmt-mvp.preview.emergentagent.com"
+API_URL="https://saas-theme-upgrade.preview.emergentagent.com"
 PASS=0
 FAIL=0
 RESULTS=""
