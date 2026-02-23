@@ -14,13 +14,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
-  Stethoscope,
   Crown,
   Building2,
   CreditCard,
   LayoutDashboard,
   BarChart3
 } from "lucide-react"
+import { ToothIcon } from "./icons/ToothIcon"
 import { Link, useLocation } from "react-router-dom"
 import { Button } from "./ui/button"
 import { cn } from "../lib/utils"
@@ -101,9 +101,13 @@ export function ModernSidebar() {
               className="h-8 w-8 rounded-lg object-cover"
             />
           ) : (
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Stethoscope className="h-4 w-4 text-white" />
-            </div>
+            <motion.div 
+              className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#0F7E8A] to-[#0a6872] flex items-center justify-center shadow-md"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <ToothIcon className="h-4 w-4" color="white" />
+            </motion.div>
           )}
           
           <AnimatePresence>
