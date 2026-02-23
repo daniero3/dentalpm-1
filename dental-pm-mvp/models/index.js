@@ -49,6 +49,10 @@ const MessageTemplate = require('./MessageTemplate');
 const MessageQueue = require('./MessageQueue');
 const MessageLog = require('./MessageLog');
 
+// Purchase Order models
+const PurchaseOrder = require('./PurchaseOrder');
+const PurchaseOrderItem = require('./PurchaseOrderItem');
+
 // Define associations
 function defineAssociations() {
   // Clinic relationships
