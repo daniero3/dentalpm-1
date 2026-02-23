@@ -39,6 +39,7 @@ import LegalPages from "./components/LegalPages";
 import PricingSettings from "./components/PricingSettings";
 import MessagingManagement from "./components/MessagingManagement";
 import SupplierManagement from "./components/SupplierManagement";
+import PurchaseManagement from "./components/PurchaseManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
