@@ -33,6 +33,7 @@ const navigation = [
   { name: "Factures", href: "/invoices", icon: FileText },
   { name: "Rapports", href: "/reports", icon: BarChart3 },
   { name: "Inventaire", href: "/inventory", icon: Package },
+  { name: "Achats", href: "/purchases", icon: ShoppingCart },
   { name: "Fournisseurs", href: "/suppliers", icon: Truck },
   { name: "Laboratoire", href: "/lab", icon: FlaskConical },
   { name: "Mailing", href: "/mailing", icon: Mail },
