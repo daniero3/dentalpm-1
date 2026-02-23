@@ -1,86 +1,53 @@
-# Dental Practice Management - Madagascar
+# DentalPM Madagascar - Product Requirements Document
 
-## Problem Statement
-Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tariff pricing (SYNDICAL/CABINET), RBAC, invoicing, quotes, and payments.
+## Original Problem Statement
+Application SaaS de gestion de cabinet dentaire pour Madagascar (DentalPM).
 
-## Completed Features
-
-### P6 - Dual Tariff System ✅
-- SYNDICAL: Global read-only tariff (clinic_id: NULL), SUPER_ADMIN only
-- CABINET: Per-clinic customizable tariff for self-paying patients
-
-### P6.2 - Cabinet Finalization ✅
-- Full CRUD for clinic_admin CABINET tariff
-- CSV import/export
-- MAEVA template one-click import
-
-### P7 - Payments ✅
-- Multi-payment recording (Cash, Cheque, Card, Mobile Money)
-- Payment history modal
-- Status: UNPAID/PARTIAL/PAID
-
-### P7 - Quotes ✅
-- Quote lifecycle (DRAFT → SENT → ACCEPTED → CONVERTED)
-- Numbering: DEV-YYYY-XXXX
-- Convert to invoice functionality
-
-### P8 - PDF Generation ✅ (2026-02-22)
-- pdfkit-based PDF generation (no browser dependency)
-- GET /api/invoices/:id/pdf - Premium invoice PDF
-- GET /api/quotes/:id/pdf - Premium quote PDF
-- Frontend "PDF" download buttons on both Invoice and Quote management
-
-### Sprint Facturation ✅ (2026-02-22)
-- **Logo Clinique PDF**: Clinic logo_url displayed on invoice & quote PDFs (fallback to initials if absent)
-- **QR Code Facture**: QR code generated with payment info (invoice number, amount, contact) displayed on invoices with balance > 0
-- **Filtres Statut UI**: Added status filter buttons (Toutes / Impayées / Partielles / Payées) on invoice list with backend support via `?status=PAID|PARTIAL|DRAFT`
-
-### P18 - Mailing/SMS MVP ✅ (2026-02-22)
-- **Tables**: MessageTemplate, MessageQueue, MessageLog
-- **Auto-rappel RDV**: Création automatique rappel T-24h à chaque nouveau RDV
-- **Job anniversaire**: POST /api/messaging/run-birthday (crée messages du jour)
-- **Dispatch simulé**: POST /api/messaging/run-dispatch (simule envoi -> SENT + log)
-- **UI Mailing**: Templates + Queue + Logs + boutons action
-- **Note**: Pas d'intégration opérateur réelle (simulation uniquement)
-
-### P16 - Fournisseurs MVP ✅ (2026-02-22)
-- **Model Supplier**: clinic_id, name, type, city, phone, email, is_active, notes
-- **API**: GET/POST /api/suppliers, PUT/:id, PATCH/:id/disable
-- **Auto-seed**: 5 fournisseurs par défaut (ADERIS PHARM, HARATO MEDICARE, MAEXI TRADING, E-MEDICAL & DENTAL, DENTAL PRO MADAGASCAR)
-- **UI /suppliers**: Liste, recherche, filtre type, add/edit/disable
-- **Multi-tenant + subscription guard + audit log**
-
-### P19 - Achats->Inventaire MVP ✅ (2026-02-22)
-- **Models**: PurchaseOrder (clinic_id, supplier_id, number PO-YYYY-XXXX, status DRAFT|RECEIVED|CANCELLED, total_mga), PurchaseOrderItem (product_id, qty, unit_price_mga, line_total)
-- **API**: POST /api/purchases (create DRAFT), PUT/:id, POST/:id/receive (RECEIVED + StockMovement IN + update qty), GET /api/purchases, GET/:id/print (HTML)
-- **UI /purchases**: Liste, stats, nouveau bon, sélection fournisseur/produits, bouton Réceptionner
-- **Multi-tenant + subscription guard + audit log**
-
-### P20 - Documentation Utilisateur ✅ (2026-02-22)
-- **USER_GUIDE.md**: Guide utilisateur complet (~200 lignes)
-- Sections: Login/Rôles, Patients, RDV, Devis→Facture, Tarifs, Achats→Inventaire, Documents/Ordonnances/Odontogramme, Labo, Rapports, Mailing, Dépannage
+## Core Features (Implemented)
+- **Patient Management**: CRUD patients, odontogramme, historique médical
+- **Billing**: Factures, devis, paiements partiels, grilles tarifaires (SYNDICAL/CABINET)
+- **Inventory**: Gestion stock, alertes seuil, mouvements
+- **Appointments**: Calendrier rendez-vous, rappels
+- **Suppliers**: Gestion fournisseurs, bons de commande
+- **Messaging**: Rappels SMS/Email (simulé), templates
+- **Reports**: Tableau de bord, statistiques
+- **Multi-tenancy**: Isolation par clinic_id
+- **SaaS**: Onboarding, trial 7 jours, renouvellement
 
 ## Tech Stack
-- Backend: Node.js, Express, Sequelize, SQLite
-- Frontend: React, Shadcn UI, Tailwind CSS
-- PDF: pdfkit (pure JS), qrcode (QR generation)
-- Messaging: MessageTemplate, MessageQueue, MessageLog tables (simulation only)
+- **Backend**: Node.js, Express.js, Sequelize, SQLite
+- **Frontend**: React, Tailwind CSS, Shadcn UI
+- **Auth**: JWT
+- **PDF**: pdfkit, qrcode
 
-## Key Files
-- `/app/dental-pm-mvp/utils/pdfGenerator.js` - PDF generation with logo & QR code
-- `/app/dental-pm-mvp/routes/invoices.js` - Invoice routes + PDF + status filter
-- `/app/dental-pm-mvp/routes/quotes.js` - Quote routes + PDF
-- `/app/dental-pm-mvp/routes/messaging.js` - Mailing/SMS API routes
-- `/app/dental-pm-mvp/models/MessageTemplate.js` - Template model
-- `/app/dental-pm-mvp/models/MessageQueue.js` - Queue model
-- `/app/dental-pm-mvp/models/MessageLog.js` - Log model
-- `/app/frontend/src/components/InvoiceManagement.js` - Invoice UI with status filters
-- `/app/frontend/src/components/MessagingManagement.jsx` - Mailing/SMS UI
+## Design Sprint Completed (Dec 2025)
 
-## Credentials
+### Theme Global Appliqué
+- Background: #F7F8FA
+- Primary: Teal #0F7E8A
+- Accent: #2563EB
+- Cards: blanches avec border-radius 12px, light shadows
+- Typography: Inter font
+
+### Pages Redessinées
+1. **LoginForm.js** - Design premium avec footer
+2. **PatientManagement.js** - Cards, table, boutons premium
+3. **InvoiceManagement.js** - Liste + filtres statut premium
+
+### Footer Ajouté
+"© Daniero Global LLC — DentalPM Madagascar"
+- Dans MainLayout (toutes pages internes)
+- Sur page Login
+
+## Credentials Test
 - Super Admin: admin / admin123
+- Clinic Admin: clinic_admin_test / testpass123
+
+## What's Mocked
+- Payment gateway (PaymentRequest model only)
+- SMS/Email sending (simulated)
 
 ## Future Tasks
-- Real payment processor integration (Stripe/local Madagascar)
-- User documentation
-- Calendar/appointment scheduling module
+- P??: Integration paiement réel (Stripe ou Mobile Money Madagascar)
+- P??: Calendrier avancé avec synchronisation
+- P??: Tests end-to-end complets
