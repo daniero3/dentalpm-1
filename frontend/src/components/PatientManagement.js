@@ -353,9 +353,10 @@ const PatientManagement = () => {
                   {selectedPatient ? 'Mettre à jour' : 'Créer'}
                 </Button>
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardContent>
       </Card>
 
