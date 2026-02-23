@@ -155,29 +155,31 @@ export function ModernSidebar() {
           return (
             <motion.div
               key={item.name}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.03, duration: 0.2 }}
             >
               <Link
                 to={item.href}
                 className={cn(
-                  "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                  "hover:bg-accent hover:text-accent-foreground",
+                  "group relative flex items-center rounded-lg px-3 py-2 text-sm font-medium",
+                  "transition-all duration-200 ease-out",
+                  "hover:bg-[#0F7E8A]/10",
                   "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-[#0F7E8A] text-white shadow-md"
+                    : "text-gray-600 hover:text-[#0F7E8A]"
                 )}
               >
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   className="flex items-center"
+                  whileHover={{ x: 2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   <Icon className={cn(
-                    "h-4 w-4 flex-shrink-0 transition-colors",
-                    isActive ? "text-primary-foreground" : ""
+                    "h-4 w-4 flex-shrink-0 transition-colors duration-200",
+                    isActive ? "text-white" : "text-gray-500 group-hover:text-[#0F7E8A]"
                   )} />
                   
                   <AnimatePresence>
