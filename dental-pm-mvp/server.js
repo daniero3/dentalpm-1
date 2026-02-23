@@ -27,6 +27,7 @@ const prescriptionRoutes = require('./routes/prescriptions');
 const odontogramRoutes = require('./routes/odontogram');
 const reportsRoutes = require('./routes/reports');
 const messagingRoutes = require('./routes/messaging');
+const purchasesRoutes = require('./routes/purchases');
 const { getSubscriptionStatus } = require('./middleware/licensing');
 const { authenticateToken: requireAuth } = require('./middleware/auth');
 
