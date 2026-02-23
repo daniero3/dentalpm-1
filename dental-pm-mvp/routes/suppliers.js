@@ -4,6 +4,7 @@ const { Supplier, Product, StockMovement, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { requireClinicId } = require('../middleware/clinic');
 const { requireValidSubscription } = require('../middleware/licensing');
+const { auditLogger } = require('../middleware/auditLogger');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -14,12 +15,17 @@ router.use(authenticateToken);
 // All routes require valid subscription
 router.use(requireValidSubscription);
 
-// Get all suppliers - with clinic filtering
+// Audit logging
+router.use(auditLogger('suppliers'));
+
+// Get all suppliers - with clinic filtering + auto-seed
 router.get('/', requireClinicId, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('search').optional().isString(),
-  query('city').optional().isString()
+  query('type').optional().isString(),
+  query('city').optional().isString(),
+  query('active').optional().isIn(['true', 'false', 'all'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -30,38 +36,33 @@ router.get('/', requireClinicId, [
       });
     }
 
-    const { page = 1, limit = 20, search, city } = req.query;
+    // Auto-seed if no suppliers exist for this clinic
+    await Supplier.seedForClinic(req.clinic_id);
+
+    const { page = 1, limit = 50, search, type, city, active = 'true' } = req.query;
     const offset = (page - 1) * limit;
     
-    let whereClause = { is_active: true };
+    let whereClause = { clinic_id: req.clinic_id };
     
-    // Apply clinic filtering
-    if (req.clinic_id) {
-      whereClause.clinic_id = req.clinic_id;
+    // Filter by active status
+    if (active !== 'all') {
+      whereClause.is_active = active === 'true';
     }
     
+    if (type) whereClause.type = type;
     if (city) whereClause.city = city;
     
     if (search) {
       whereClause[Op.or] = [
-        { name: { [Op.iLike]: `%${search}%` } },
-        { contact_person: { [Op.iLike]: `%${search}%` } },
+        { name: { [Op.like]: `%${search}%` } },
+        { contact_person: { [Op.like]: `%${search}%` } },
         { phone: { [Op.like]: `%${search}%` } },
-        { email: { [Op.iLike]: `%${search}%` } }
+        { email: { [Op.like]: `%${search}%` } }
       ];
     }
 
     const { count, rows: suppliers } = await Supplier.findAndCountAll({
       where: whereClause,
-      include: [
-        {
-          model: Product,
-          as: 'products',
-          attributes: ['id'],
-          where: { is_active: true },
-          required: false
-        }
-      ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['name', 'ASC']]
@@ -70,7 +71,6 @@ router.get('/', requireClinicId, [
     // Add computed fields
     const suppliersWithMetrics = suppliers.map(supplier => ({
       ...supplier.toJSON(),
-      products_count: supplier.products?.length || 0,
       performance_score: supplier.getPerformanceScore()
     }));
 
