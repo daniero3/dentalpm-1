@@ -38,6 +38,7 @@ import PaymentValidationPage from "./components/PaymentValidationPage";
 import LegalPages from "./components/LegalPages";
 import PricingSettings from "./components/PricingSettings";
 import MessagingManagement from "./components/MessagingManagement";
+import SupplierManagement from "./components/SupplierManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
