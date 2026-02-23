@@ -41,16 +41,13 @@ app.set('trust proxy', 1);
 // Security middleware
 app.use(helmet());
 
-// CORS configuration - permissive for preview environments
+// CORS configuration - uses FRONTEND_URL from environment
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? [process.env.FRONTEND_URL]
+  : ['http://localhost:3000'];
+
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://localhost:3000',
-    'https://saas-theme-upgrade.preview.emergentagent.com',
-    'https://saas-theme-upgrade.preview.emergentagent.com',
-    'https://*.emergentagent.com',
-    process.env.FRONTEND_URL || 'http://localhost:3000'
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
