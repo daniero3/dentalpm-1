@@ -472,13 +472,15 @@ const InvoiceManagement = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="space-y-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-300 h-20 rounded-lg"></div>
-            ))}
+          <div className="h-8 bg-gray-200 rounded-lg w-1/4 mb-6"></div>
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-gray-100 h-20 rounded-lg"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -486,26 +488,34 @@ const InvoiceManagement = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Receipt className="h-8 w-8 mr-3 text-blue-600" />
-            Gestion des Factures
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {invoices.length} factures enregistrées
-          </p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle Facture
-            </Button>
-          </DialogTrigger>
+    <div className="space-y-6">
+      {/* Page Header Card */}
+      <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#0F7E8A]/10 rounded-xl">
+                <Receipt className="h-7 w-7 text-[#0F7E8A]" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Factures</h1>
+                <p className="text-gray-500 text-sm mt-0.5">
+                  {invoices.length} facture{invoices.length > 1 ? 's' : ''} enregistrée{invoices.length > 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  onClick={resetForm} 
+                  className="bg-[#0F7E8A] hover:bg-[#0a6872] text-white rounded-lg shadow-md"
+                  data-testid="new-invoice-btn"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvelle Facture
+                </Button>
+              </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nouvelle Facture</DialogTitle>
