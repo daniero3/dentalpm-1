@@ -43,6 +43,13 @@ Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tar
 - **UI Mailing**: Templates + Queue + Logs + boutons action
 - **Note**: Pas d'intégration opérateur réelle (simulation uniquement)
 
+### P16 - Fournisseurs MVP ✅ (2026-02-22)
+- **Model Supplier**: clinic_id, name, type, city, phone, email, is_active, notes
+- **API**: GET/POST /api/suppliers, PUT/:id, PATCH/:id/disable
+- **Auto-seed**: 5 fournisseurs par défaut (ADERIS PHARM, HARATO MEDICARE, MAEXI TRADING, E-MEDICAL & DENTAL, DENTAL PRO MADAGASCAR)
+- **UI /suppliers**: Liste, recherche, filtre type, add/edit/disable
+- **Multi-tenant + subscription guard + audit log**
+
 ## Tech Stack
 - Backend: Node.js, Express, Sequelize, SQLite
 - Frontend: React, Shadcn UI, Tailwind CSS
