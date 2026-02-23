@@ -473,15 +473,49 @@ const InvoiceManagement = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded-lg w-1/4 mb-6"></div>
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-100 h-20 rounded-lg"></div>
+        {/* Header Skeleton */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gray-200 rounded-xl animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-6 w-28 bg-gray-200 rounded-lg animate-pulse" />
+                <div className="h-4 w-36 bg-gray-100 rounded animate-pulse" style={{ animationDelay: '0.1s' }} />
+              </div>
+            </div>
+            <div className="h-10 w-40 bg-gray-200 rounded-lg animate-pulse" />
+          </div>
+        </div>
+        {/* Search + Filters Skeleton */}
+        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between gap-4">
+            <div className="h-11 w-80 bg-gray-100 rounded-lg animate-pulse" />
+            <div className="flex gap-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-9 w-24 bg-gray-100 rounded-lg animate-pulse" style={{ animationDelay: `${0.05 * i}s` }} />
               ))}
             </div>
           </div>
+        </div>
+        {/* List Skeleton */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="p-5 flex items-center justify-between" style={{ animationDelay: `${0.1 * i}s` }}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-4 w-56 bg-gray-100 rounded animate-pulse" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-16 bg-gray-100 rounded-full animate-pulse" />
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="w-8 h-8 bg-gray-100 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
