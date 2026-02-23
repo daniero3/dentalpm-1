@@ -208,3 +208,9 @@
     transform: scale(1);
   }
 }
+
+
+/* Hide Emergent badge - injected by platform, not app code */
+#emergent-badge {
+  display: none !important;
+}
