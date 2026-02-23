@@ -516,9 +516,9 @@ const InvoiceManagement = () => {
                   Nouvelle Facture
                 </Button>
               </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl">
             <DialogHeader>
-              <DialogTitle>Nouvelle Facture</DialogTitle>
+              <DialogTitle className="text-xl">Nouvelle Facture</DialogTitle>
               <DialogDescription>
                 Créez une nouvelle facture pour un patient
               </DialogDescription>
