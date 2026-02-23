@@ -440,6 +440,22 @@ function App() {
                 <Route path="/legal/cgu" element={<LegalPages />} />
                 <Route path="/legal/privacy" element={<LegalPages />} />
                 <Route path="/legal/mentions" element={<LegalPages />} />
+                
+                {/* Onboarding */}
+                <Route path="/onboarding" element={
+                  <ProtectedRoute>
+                    <OnboardingWizard />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Billing Renew */}
+                <Route path="/billing/renew" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <BillingRenew />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
               </Routes>
             </AnimatePresence>
           </BrowserRouter>
