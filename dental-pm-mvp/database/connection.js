@@ -1,32 +1,53 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Try PostgreSQL first, fallback to SQLite for development
+// Database connection configuration
+// Priority: DATABASE_URL (production) > DB_HOST config > SQLite (local dev)
 let sequelize;
 
-if (process.env.DB_HOST && process.env.NODE_ENV !== 'sqlite') {
-  // PostgreSQL connection configuration
-  sequelize = new Sequelize({
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    database: process.env.DB_NAME || 'dental_pm_madagascar',
-    username: process.env.DB_USER || 'dental_admin',
-    password: process.env.DB_PASSWORD || 'dental_pass_2024',
+if (process.env.DATABASE_URL) {
+  // Production: Use DATABASE_URL (Postgres connection string)
+  console.log('🔄 Using DATABASE_URL for PostgreSQL connection');
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    
-    // Connection pool configuration
+    dialectOptions: {
+      ssl: process.env.DB_SSL === 'true' ? {
+        require: true,
+        rejectUnauthorized: false
+      } : false
+    },
     pool: {
       max: 10,
       min: 0,
       acquire: 30000,
       idle: 10000
     },
-    
-    // Timezone configuration for Madagascar
-    timezone: '+03:00', // Indian/Antananarivo
-    
-    // Additional options
+    timezone: '+03:00',
+    define: {
+      timestamps: true,
+      underscored: true,
+      freezeTableName: true
+    }
+  });
+} else if (process.env.DB_HOST && process.env.NODE_ENV !== 'sqlite') {
+  // PostgreSQL connection via individual env vars
+  console.log('🔄 Using DB_HOST for PostgreSQL connection');
+  sequelize = new Sequelize({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT) || 5432,
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    dialect: 'postgres',
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    },
+    timezone: '+03:00',
     define: {
       timestamps: true,
       underscored: true,
@@ -34,14 +55,12 @@ if (process.env.DB_HOST && process.env.NODE_ENV !== 'sqlite') {
     }
   });
 } else {
-  // SQLite fallback for development/testing
-  console.log('🔄 Using SQLite database for development');
+  // SQLite fallback for local development only
+  console.log('🔄 Using SQLite database for local development');
   sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: './database/dental_pm_madagascar.sqlite',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    
-    // Additional options
     define: {
       timestamps: true,
       underscored: true,
