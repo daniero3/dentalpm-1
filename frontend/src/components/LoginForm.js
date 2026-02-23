@@ -8,7 +8,8 @@ import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Stethoscope, User, Mail, Lock, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { ToothIcon } from './icons/ToothIcon';
 
 const LoginForm = () => {
   const { user, login, register } = useAuth();
@@ -50,25 +51,39 @@ const LoginForm = () => {
       <div className="flex-1 flex items-center justify-center p-4">
         <motion.div 
           className="w-full max-w-md"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0F7E8A] mb-4 shadow-lg">
-              <Stethoscope className="h-8 w-8 text-white" />
-            </div>
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <motion.div 
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0F7E8A] mb-4 shadow-lg"
+              whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(15, 126, 138, 0.3)" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <ToothIcon className="h-8 w-8" color="white" />
+            </motion.div>
             <h1 className="text-2xl font-bold text-gray-900">
               DentalPM
             </h1>
             <p className="text-gray-500 mt-1">
               Gestion de cabinet dentaire
             </p>
-          </div>
+          </motion.div>
 
           {/* Login Card */}
-          <Card className="shadow-xl border border-gray-100 bg-white rounded-xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+          <Card className="shadow-xl border border-gray-100 bg-white rounded-xl hover:shadow-2xl transition-shadow duration-300">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-xl font-semibold text-gray-900">
                 Connexion
@@ -246,6 +261,7 @@ const LoginForm = () => {
               </Tabs>
             </CardContent>
           </Card>
+          </motion.div>
         </motion.div>
       </div>
       
