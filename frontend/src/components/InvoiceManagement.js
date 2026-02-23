@@ -967,19 +967,19 @@ const InvoiceManagement = () => {
             <div className="space-y-6">
               {/* Payment Summary */}
               <div className="grid grid-cols-4 gap-4">
-                <Card className="bg-gray-50">
+                <Card className="bg-gray-50 border-0 rounded-xl">
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-gray-500">Total</p>
-                    <p className="text-xl font-bold">{formatCurrency(invoicePaymentStats.total_mga)}</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(invoicePaymentStats.total_mga)}</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-green-50">
+                <Card className="bg-green-50 border-0 rounded-xl">
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-green-600">Payé</p>
                     <p className="text-xl font-bold text-green-700">{formatCurrency(invoicePaymentStats.paid_total_mga)}</p>
                   </CardContent>
                 </Card>
-                <Card className={invoicePaymentStats.balance_mga > 0 ? "bg-amber-50" : "bg-green-50"}>
+                <Card className={`border-0 rounded-xl ${invoicePaymentStats.balance_mga > 0 ? "bg-amber-50" : "bg-green-50"}`}>
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-amber-600">Reste</p>
                     <p className={`text-xl font-bold ${invoicePaymentStats.balance_mga > 0 ? 'text-amber-700' : 'text-green-700'}`}>
@@ -987,7 +987,7 @@ const InvoiceManagement = () => {
                     </p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-0 rounded-xl">
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-gray-500">Statut</p>
                     <Badge className={
