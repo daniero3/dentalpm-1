@@ -376,6 +376,11 @@ router.post('/:id/receive', requireClinicId, [
     // Process each item: create stock movement + update product qty
     const stockMovements = [];
     for (const item of order.items) {
+      // Get current product quantity
+      const product = await Product.findByPk(item.product_id, { transaction: t });
+      const previousQty = product ? parseInt(product.current_qty || 0) : 0;
+      const newQty = previousQty + item.qty;
+
       // Create IN stock movement
       const movement = await StockMovement.create({
         product_id: item.product_id,
@@ -384,16 +389,18 @@ router.post('/:id/receive', requireClinicId, [
         unit_cost_mga: item.unit_price_mga,
         reason: `Réception commande ${order.number}`,
         reference: order.number,
-        performed_by: req.user.id
+        user_id: req.user.id,
+        previous_qty: previousQty,
+        new_qty: newQty,
+        clinic_id: req.clinic_id
       }, { transaction: t });
       stockMovements.push(movement);
 
       // Update product current_qty
-      await Product.increment('current_qty', {
-        by: item.qty,
-        where: { id: item.product_id },
-        transaction: t
-      });
+      await Product.update(
+        { current_qty: newQty },
+        { where: { id: item.product_id }, transaction: t }
+      );
     }
 
     // Update order status
