@@ -209,20 +209,23 @@ const ProtectedRoute = ({ children }) => {
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-[#F7F8FA] overflow-hidden">
       <ModernSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <ModernTopbar />
         <motion.main 
-          className="flex-1 overflow-auto p-4 bg-background"
+          className="flex-1 overflow-auto p-6 bg-[#F7F8FA]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto pb-16">
             {children}
           </div>
         </motion.main>
+        <footer className="bg-white border-t border-gray-200 py-3 px-6 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
+        </footer>
       </div>
     </div>
   );
