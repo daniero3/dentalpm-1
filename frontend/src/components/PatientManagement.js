@@ -356,120 +356,130 @@ const PatientManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Rechercher un patient..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
+      {/* Search Card */}
+      <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Rechercher un patient par nom ou téléphone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-11 bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
+              data-testid="search-patient"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Patients List */}
-      <div className="grid gap-4">
-        {filteredPatients.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Users className="h-12 w-12 text-gray-300 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">
-                {searchTerm ? 'Aucun patient trouvé' : 'Aucun patient enregistré'}
+      <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
+        <CardContent className="p-0">
+          {filteredPatients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="p-4 bg-gray-100 rounded-full mb-4">
+                <Users className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-1">
+                {searchTerm ? 'Aucun patient trouvé' : 'Aucun patient'}
               </h3>
-              <p className="text-gray-500 text-center">
+              <p className="text-gray-500 text-sm">
                 {searchTerm 
-                  ? 'Essayez avec d\'autres termes de recherche'
-                  : 'Commencez par ajouter votre premier patient'
+                  ? 'Essayez avec d\'autres termes'
+                  : 'Commencez par ajouter un patient'
                 }
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredPatients.map((patient) => (
-            <Card key={patient.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-blue-100 p-3 rounded-full">
-                      <User className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {patient.first_name} {patient.last_name}
-                      </h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-                        <span className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {calculateAge(patient.date_of_birth)} ans
-                        </span>
-                        <span className="flex items-center">
-                          <Phone className="h-4 w-4 mr-1" />
-                          {patient.phone}
-                        </span>
-                        {patient.email && (
-                          <span className="flex items-center">
-                            <Mail className="h-4 w-4 mr-1" />
-                            {patient.email}
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {filteredPatients.map((patient) => (
+                <div 
+                  key={patient.id} 
+                  className="p-5 hover:bg-gray-50 transition-colors"
+                  data-testid={`patient-${patient.id}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-[#0F7E8A]/10 rounded-xl flex items-center justify-center">
+                        <User className="h-6 w-6 text-[#0F7E8A]" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {patient.first_name} {patient.last_name}
+                        </h3>
+                        <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {calculateAge(patient.date_of_birth)} ans
                           </span>
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3.5 w-3.5" />
+                            {patient.phone}
+                          </span>
+                          {patient.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3.5 w-3.5" />
+                              {patient.email}
+                            </span>
+                          )}
+                        </div>
+                        {patient.allergies && (
+                          <div className="flex items-center mt-2">
+                            <Badge className="bg-red-100 text-red-700 text-xs font-medium">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              Allergies: {patient.allergies}
+                            </Badge>
+                          </div>
                         )}
                       </div>
-                      {patient.allergies && (
-                        <div className="flex items-center mt-2">
-                          <AlertTriangle className="h-4 w-4 text-red-500 mr-1" />
-                          <Badge variant="destructive" className="text-xs">
-                            Allergies: {patient.allergies}
-                          </Badge>
-                        </div>
-                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Link to={`/patients/${patient.id}/odontogram`}>
+                        <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50 rounded-lg">
+                          <Grid3X3 className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to={`/patients/${patient.id}/documents`}>
+                        <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50 rounded-lg">
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to={`/patients/${patient.id}/prescriptions`}>
+                        <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50 rounded-lg">
+                          <ClipboardList className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to={`/patients/${patient.id}/lab-orders`}>
+                        <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50 rounded-lg">
+                          <FlaskConical className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to={`/patients/${patient.id}/chart`}>
+                        <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50 rounded-lg">
+                          <Activity className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEdit(patient)}
+                        className="border-gray-200 hover:bg-gray-50 rounded-lg"
+                        data-testid={`edit-${patient.id}`}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Link to={`/patients/${patient.id}/odontogram`}>
-                      <Button variant="outline" size="sm">
-                        <Grid3X3 className="h-4 w-4 mr-2" />
-                        Odontogramme
-                      </Button>
-                    </Link>
-                    <Link to={`/patients/${patient.id}/documents`}>
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Documents
-                      </Button>
-                    </Link>
-                    <Link to={`/patients/${patient.id}/prescriptions`}>
-                      <Button variant="outline" size="sm">
-                        <ClipboardList className="h-4 w-4 mr-2" />
-                        Ordonnances
-                      </Button>
-                    </Link>
-                    <Link to={`/patients/${patient.id}/lab-orders`}>
-                      <Button variant="outline" size="sm">
-                        <FlaskConical className="h-4 w-4 mr-2" />
-                        Labo
-                      </Button>
-                    </Link>
-                    <Link to={`/patients/${patient.id}/chart`}>
-                      <Button variant="outline" size="sm">
-                        <Activity className="h-4 w-4 mr-2" />
-                        Fiche dentaire
-                      </Button>
-                    </Link>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(patient)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Modifier
-                    </Button>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
