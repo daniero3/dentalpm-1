@@ -382,10 +382,7 @@ function App() {
                   <ProtectedRoute>
                     <LicensingGuard>
                       <MainLayout>
-                        <div className="text-center py-12">
-                          <h1 className="text-2xl font-bold text-foreground">Fournisseurs</h1>
-                          <p className="text-muted-foreground mt-2">Module en développement</p>
-                        </div>
+                        <SupplierManagement />
                       </MainLayout>
                     </LicensingGuard>
                   </ProtectedRoute>
