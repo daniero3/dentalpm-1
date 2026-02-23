@@ -952,10 +952,10 @@ const InvoiceManagement = () => {
       
       {/* Payment Modal */}
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Receipt className="h-5 w-5" />
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Receipt className="h-5 w-5 text-[#0F7E8A]" />
               Facture {selectedInvoice?.invoice_number}
             </DialogTitle>
             <DialogDescription>
