@@ -196,6 +196,19 @@ function defineAssociations() {
   MessageLog.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
   Clinic.hasMany(MessageLog, { foreignKey: 'clinic_id', as: 'messageLogs' });
   Patient.hasMany(MessageLog, { foreignKey: 'patient_id', as: 'messageLogs' });
+
+  // Purchase Order associations
+  PurchaseOrder.belongsTo(Clinic, { foreignKey: 'clinic_id', as: 'clinic' });
+  PurchaseOrder.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
+  PurchaseOrder.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+  PurchaseOrder.belongsTo(User, { foreignKey: 'received_by', as: 'receivedBy' });
+  PurchaseOrder.hasMany(PurchaseOrderItem, { foreignKey: 'purchase_order_id', as: 'items' });
+  
+  PurchaseOrderItem.belongsTo(PurchaseOrder, { foreignKey: 'purchase_order_id', as: 'purchaseOrder' });
+  PurchaseOrderItem.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+  
+  Clinic.hasMany(PurchaseOrder, { foreignKey: 'clinic_id', as: 'purchaseOrders' });
+  Supplier.hasMany(PurchaseOrder, { foreignKey: 'supplier_id', as: 'purchaseOrders' });
 }
 
 // Initialize associations
