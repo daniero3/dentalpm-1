@@ -56,6 +56,10 @@ Multi-tenant Dental Practice Management SaaS for Madagascar market with dual-tar
 - **UI /purchases**: Liste, stats, nouveau bon, sélection fournisseur/produits, bouton Réceptionner
 - **Multi-tenant + subscription guard + audit log**
 
+### P20 - Documentation Utilisateur ✅ (2026-02-22)
+- **USER_GUIDE.md**: Guide utilisateur complet (~200 lignes)
+- Sections: Login/Rôles, Patients, RDV, Devis→Facture, Tarifs, Achats→Inventaire, Documents/Ordonnances/Odontogramme, Labo, Rapports, Mailing, Dépannage
+
 ## Tech Stack
 - Backend: Node.js, Express, Sequelize, SQLite
 - Frontend: React, Shadcn UI, Tailwind CSS
