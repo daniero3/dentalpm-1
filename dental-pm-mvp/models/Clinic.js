@@ -114,6 +114,25 @@ const Clinic = sequelize.define('Clinic', {
     comment: 'Current subscription plan'
   },
   
+  // Mobile Money config
+  mobile_money_merchant: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+    comment: 'Mobile Money merchant name for payments'
+  },
+  mobile_money_number: {
+    type: DataTypes.STRING(30),
+    allowNull: true,
+    comment: 'Mobile Money number for receiving payments'
+  },
+  
+  // Onboarding
+  onboarding_completed: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  
   // Limits based on plan
   max_users: {
     type: DataTypes.INTEGER,
