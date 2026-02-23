@@ -141,13 +141,13 @@ router.get('/:id', requireClinicId, [
 
 // Create new supplier - with automatic clinic_id assignment
 router.post('/', requireClinicId, [
-  requireRole('ADMIN', 'ACCOUNTANT'),
   body('name').isLength({ min: 1, max: 100 }).withMessage('Nom requis (max 100 caractères)').trim(),
-  body('phone').matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/).withMessage('Numéro de téléphone malgache invalide'),
+  body('type').optional().isIn(['DENTAL', 'PHARMA', 'EQUIPMENT', 'GENERAL']).withMessage('Type invalide'),
+  body('phone').optional().isString(),
   body('email').optional().isEmail().withMessage('Email invalide').normalizeEmail(),
-  body('address').isLength({ min: 10, max: 500 }).withMessage('Adresse requise (10-500 caractères)').trim(),
-  body('nif_number').optional().isLength({ max: 20 }).withMessage('Numéro NIF invalide'),
-  body('stat_number').optional().isLength({ max: 20 }).withMessage('Numéro STAT invalide')
+  body('city').optional().isString(),
+  body('address').optional().isString(),
+  body('notes').optional().isString()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -158,9 +158,9 @@ router.post('/', requireClinicId, [
       });
     }
 
-    // Check if supplier with same name already exists
+    // Check if supplier with same name already exists in this clinic
     const existingSupplier = await Supplier.findOne({
-      where: { name: req.body.name }
+      where: { name: req.body.name, clinic_id: req.clinic_id }
     });
 
     if (existingSupplier) {
@@ -171,7 +171,8 @@ router.post('/', requireClinicId, [
 
     const supplier = await Supplier.create({
       ...req.body,
-      clinic_id: req.clinic_id // Automatic clinic assignment
+      clinic_id: req.clinic_id,
+      is_active: true
     });
 
     // Log supplier creation
