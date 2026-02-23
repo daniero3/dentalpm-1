@@ -1061,7 +1061,7 @@ const InvoiceManagement = () => {
               )}
 
               {/* Payment History */}
-              <Card>
+              <Card className="border border-gray-100 rounded-xl">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">Historique des paiements</CardTitle>
                 </CardHeader>
@@ -1075,9 +1075,11 @@ const InvoiceManagement = () => {
                         return (
                           <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-3">
-                              <MethodIcon className="h-5 w-5 text-gray-500" />
+                              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                                <MethodIcon className="h-5 w-5 text-gray-500" />
+                              </div>
                               <div>
-                                <p className="font-medium">{paymentMethods[payment.payment_method]?.name || payment.payment_method}</p>
+                                <p className="font-medium text-gray-900">{paymentMethods[payment.payment_method]?.name || payment.payment_method}</p>
                                 <p className="text-sm text-gray-500">
                                   {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
                                   {payment.reference_number && ` • Réf: ${payment.reference_number}`}
@@ -1094,26 +1096,26 @@ const InvoiceManagement = () => {
               </Card>
 
               {/* Actions */}
-              <div className="flex justify-between pt-4 border-t">
+              <div className="flex justify-between pt-4 border-t border-gray-100">
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedInvoice.id, selectedInvoice.invoice_number)} data-testid="download-pdf-btn">
+                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedInvoice.id, selectedInvoice.invoice_number)} className="border-gray-200 rounded-lg" data-testid="download-pdf-btn">
                     <Download className="h-4 w-4 mr-2" />
                     PDF
                   </Button>
-                  <Button variant="outline" onClick={() => handleDownload(selectedInvoice.id)}>
+                  <Button variant="outline" onClick={() => handleDownload(selectedInvoice.id)} className="border-gray-200 rounded-lg">
                     <Download className="h-4 w-4 mr-2" />
                     HTML
                   </Button>
-                  <Button variant="outline" onClick={() => handleShare(selectedInvoice)}>
+                  <Button variant="outline" onClick={() => handleShare(selectedInvoice)} className="border-gray-200 rounded-lg">
                     <Share2 className="h-4 w-4 mr-2" />
                     Partager
                   </Button>
-                  <Button variant="outline" onClick={() => handlePrint(selectedInvoice.id)}>
+                  <Button variant="outline" onClick={() => handlePrint(selectedInvoice.id)} className="border-gray-200 rounded-lg">
                     <Printer className="h-4 w-4 mr-2" />
                     Imprimer
                   </Button>
                 </div>
-                <Button variant="ghost" onClick={() => setIsPaymentModalOpen(false)}>
+                <Button variant="ghost" onClick={() => setIsPaymentModalOpen(false)} className="rounded-lg">
                   Fermer
                 </Button>
               </div>
