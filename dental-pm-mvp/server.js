@@ -107,6 +107,7 @@ app.use('/api', requireAuth, prescriptionRoutes);
 app.use('/api', requireAuth, odontogramRoutes);
 app.use('/api/reports', requireAuth, reportsRoutes);
 app.use('/api/messaging', requireAuth, messagingRoutes);
+app.use('/api/purchases', requireAuth, purchasesRoutes);
 
 // Licensing status endpoint
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
