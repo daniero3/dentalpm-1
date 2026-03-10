@@ -29,12 +29,15 @@ async function seedSimple() {
         email VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         full_name VARCHAR(100) NOT NULL,
+        clinic_id UUID NULL,
         role VARCHAR(50) NOT NULL DEFAULT 'DENTIST',
         phone VARCHAR(20),
         specialization VARCHAR(100),
         nif_number VARCHAR(50),
         stat_number VARCHAR(50),
         is_active BOOLEAN DEFAULT true,
+        last_login_at TIMESTAMP NULL,
+        profile_image_url VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT NOW() NOT NULL,
         updated_at TIMESTAMP DEFAULT NOW() NOT NULL
       );
