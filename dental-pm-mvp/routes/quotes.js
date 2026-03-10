@@ -9,13 +9,12 @@ const router = express.Router();
 // Helper: Generate quote number
 async function generateQuoteNumber(clinicId) {
   const year = new Date().getFullYear();
-  const count = await Invoice.count({
-    where: {
-      clinic_id: clinicId,
-      document_type: 'QUOTE',
-      invoice_number: { [Op.like]: `DEV-${year}-%` }
-    }
-  });
+  const whereClause = {
+    document_type: 'QUOTE',
+    invoice_number: { [Op.like]: `DEV-${year}-%` }
+  };
+  if (clinicId) whereClause.clinic_id = clinicId;
+  const count = await Invoice.count({ where: whereClause });
   return `DEV-${year}-${String(count + 1).padStart(4, '0')}`;
 }
 
@@ -30,7 +29,8 @@ router.get('/', requireClinicId, async (req, res) => {
   try {
     const { status, patient_id, page = 1, limit = 50 } = req.query;
     
-    const whereClause = { clinic_id: req.clinic_id, document_type: 'QUOTE' };
+    const whereClause = { document_type: 'QUOTE' };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
     if (status) whereClause.status = status;
     if (patient_id) whereClause.patient_id = patient_id;
 
@@ -81,19 +81,21 @@ router.post('/', requireClinicId, [
     const { patient_id, schedule_id, items, discount_percentage = 0, validity_days = 30, notes } = req.body;
 
     // Verify patient
-    const patient = await Patient.findOne({ where: { id: patient_id, clinic_id: req.clinic_id } });
+    const patientWhere = { id: patient_id };
+    if (req.clinic_id) patientWhere.clinic_id = req.clinic_id;
+    const patient = await Patient.findOne({ where: patientWhere });
     if (!patient) {
       return res.status(404).json({ error: 'Patient non trouvé' });
     }
 
     // Verify schedule (clinic or global SYNDICAL)
-    const schedule = await PricingSchedule.findOne({
-      where: {
-        id: schedule_id,
-        is_active: true,
-        [Op.or]: [{ clinic_id: req.clinic_id }, { clinic_id: null, type: 'SYNDICAL' }]
-      }
-    });
+    const scheduleWhere = {
+      id: schedule_id,
+      is_active: true,
+      [Op.or]: [{ clinic_id: null, type: 'SYNDICAL' }]
+    };
+    if (req.clinic_id) scheduleWhere[Op.or].push({ clinic_id: req.clinic_id });
+    const schedule = await PricingSchedule.findOne({ where: scheduleWhere });
     if (!schedule) {
       return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
     }
@@ -107,12 +109,11 @@ router.post('/', requireClinicId, [
     const quoteNumber = await generateQuoteNumber(req.clinic_id);
 
     // Create quote
-    const quote = await Invoice.create({
+    const quoteData = {
       document_type: 'QUOTE',
       invoice_number: quoteNumber,
       patient_id,
       schedule_id,
-      clinic_id: req.clinic_id,
       invoice_date: new Date(),
       subtotal_mga: subtotal,
       discount_percentage,
@@ -122,7 +123,10 @@ router.post('/', requireClinicId, [
       notes,
       status: 'DRAFT',
       created_by_user_id: req.user.id
-    });
+    };
+    if (req.clinic_id) quoteData.clinic_id = req.clinic_id;
+
+    const quote = await Invoice.create(quoteData);
 
     // Create items
     await Promise.all(items.map(item => InvoiceItem.create({
@@ -167,8 +171,11 @@ router.post('/', requireClinicId, [
  */
 router.get('/:id', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
+    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
     const quote = await Invoice.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, document_type: 'QUOTE' },
+      where: whereClause,
       include: [
         { model: Patient, as: 'patient' },
         { model: InvoiceItem, as: 'items' }
@@ -207,9 +214,10 @@ router.put('/:id', requireClinicId, [
   body('notes').optional().isString()
 ], async (req, res) => {
   try {
-    const quote = await Invoice.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, document_type: 'QUOTE' }
-    });
+    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
+    const quote = await Invoice.findOne({ where: whereClause });
 
     if (!quote) {
       return res.status(404).json({ error: 'Devis non trouvé' });
@@ -221,7 +229,6 @@ router.put('/:id', requireClinicId, [
 
     const { items, discount_percentage, validity_days, notes } = req.body;
 
-    // Update items if provided
     if (items && items.length > 0) {
       await InvoiceItem.destroy({ where: { invoice_id: quote.id } });
       await Promise.all(items.map(item => InvoiceItem.create({
@@ -246,7 +253,6 @@ router.put('/:id', requireClinicId, [
       });
     }
 
-    // Update other fields
     const updates = {};
     if (discount_percentage !== undefined) updates.discount_percentage = discount_percentage;
     if (validity_days !== undefined) updates.validity_days = validity_days;
@@ -276,9 +282,10 @@ router.patch('/:id/status', requireClinicId, [
   body('status').isIn(['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CANCELLED'])
 ], async (req, res) => {
   try {
-    const quote = await Invoice.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, document_type: 'QUOTE' }
-    });
+    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
+    const quote = await Invoice.findOne({ where: whereClause });
 
     if (!quote) {
       return res.status(404).json({ error: 'Devis non trouvé' });
@@ -307,8 +314,11 @@ router.patch('/:id/status', requireClinicId, [
  */
 router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
+    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
     const quote = await Invoice.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, document_type: 'QUOTE' },
+      where: whereClause,
       include: [{ model: InvoiceItem, as: 'items' }]
     });
 
@@ -343,12 +353,11 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
     const invoiceNumber = `FACT-${year}-${String(nextNum).padStart(4, '0')}`;
 
     // Create invoice from quote
-    const invoice = await Invoice.create({
+    const invoiceData = {
       document_type: 'INVOICE',
       invoice_number: invoiceNumber,
       patient_id: quote.patient_id,
       schedule_id: quote.schedule_id,
-      clinic_id: req.clinic_id,
       invoice_date: new Date(),
       due_date: quote.due_date,
       subtotal_mga: quote.subtotal_mga,
@@ -365,7 +374,10 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
       clinic_stat: quote.clinic_stat,
       status: 'DRAFT',
       created_by_user_id: req.user.id
-    });
+    };
+    if (req.clinic_id) invoiceData.clinic_id = req.clinic_id;
+
+    const invoice = await Invoice.create(invoiceData);
 
     // Copy items
     await Promise.all(quote.items.map(item => InvoiceItem.create({
@@ -421,9 +433,10 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
  */
 router.delete('/:id', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
-    const quote = await Invoice.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, document_type: 'QUOTE' }
-    });
+    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
+    const quote = await Invoice.findOne({ where: whereClause });
 
     if (!quote) {
       return res.status(404).json({ error: 'Devis non trouvé' });
@@ -461,15 +474,13 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       return res.status(404).json({ error: 'Devis non trouvé' });
     }
 
-    // Check clinic access
-    if (quote.clinic_id !== req.clinic_id && req.user.role !== 'SUPER_ADMIN') {
+    if (quote.clinic_id && quote.clinic_id !== req.clinic_id && req.user.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ error: 'Non autorisé' });
     }
 
-    const clinic = await Clinic.findByPk(quote.clinic_id);
+    const clinic = quote.clinic_id ? await Clinic.findByPk(quote.clinic_id) : null;
     const formatDate = (date) => date ? new Date(date).toLocaleDateString('fr-FR') : '-';
 
-    // Calculate expiry
     const expiryDate = new Date(quote.invoice_date);
     expiryDate.setDate(expiryDate.getDate() + (quote.validity_days || 30));
     const isExpired = new Date() > expiryDate && !['ACCEPTED', 'CONVERTED'].includes(quote.status);
@@ -526,10 +537,9 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
 </head>
 <body>
   <div class="watermark">DEVIS</div>
-  
   <div class="header">
     <div class="clinic-info">
-      <h1>${clinic?.name || 'Cabinet Dentaire'}</h1>
+      <h1>${clinic?.name || 'Cabinet Dentaire Madagascar'}</h1>
       <p>${clinic?.address || ''}</p>
       <p>${clinic?.phone || ''}</p>
       ${clinic?.email ? `<p>${clinic.email}</p>` : ''}
@@ -544,7 +554,6 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       </p>
     </div>
   </div>
-
   <div class="parties">
     <div class="party">
       <h3>Patient</h3>
@@ -552,7 +561,6 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       <p>${quote.patient?.phone_primary || ''}</p>
     </div>
   </div>
-
   <table>
     <thead>
       <tr>
@@ -573,7 +581,6 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       `).join('')}
     </tbody>
   </table>
-
   <div class="totals">
     <table>
       <tr><td>Sous-total</td><td class="amount">${formatCurrency(quote.subtotal_mga)}</td></tr>
@@ -581,23 +588,18 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       <tr class="total-row"><td>Total</td><td class="amount">${formatCurrency(quote.total_mga)}</td></tr>
     </table>
   </div>
-
   <div class="validity">
     <p><strong>Validité:</strong> Ce devis est valable ${quote.validity_days || 30} jours à compter de sa date d'émission${isExpired ? ' (EXPIRÉ)' : ''}.</p>
     <p>Les prix sont exprimés en Ariary malgache (MGA).</p>
   </div>
-
   ${quote.notes ? `<p style="margin-top: 20px; color: #666;"><em>Notes: ${quote.notes}</em></p>` : ''}
-
   <div class="footer">
     <p>Ce document est un devis et ne constitue pas une facture.</p>
     <p>Merci de votre confiance</p>
   </div>
-
   <script>if (window.opener) { window.print(); }</script>
 </body>
-</html>
-    `;
+</html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
@@ -609,21 +611,17 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
 
 /**
  * @route GET /api/quotes/:id/pdf
- * @desc Generate and download PDF of quote (Premium)
+ * @desc Generate and download PDF of quote
  */
 router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
     const { generateQuotePDF } = require('../utils/pdfGenerator');
     
+    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
+    if (req.clinic_id && req.user.role !== 'SUPER_ADMIN') whereClause.clinic_id = req.clinic_id;
+
     const quote = await Invoice.findOne({
-      where: { 
-        id: req.params.id, 
-        document_type: 'QUOTE',
-        [Op.or]: [
-          { clinic_id: req.clinic_id },
-          ...(req.user.role === 'SUPER_ADMIN' ? [{}] : [])
-        ]
-      },
+      where: whereClause,
       include: [
         { model: Patient, as: 'patient' },
         { model: InvoiceItem, as: 'items' }
@@ -634,13 +632,9 @@ router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res)
       return res.status(404).json({ error: 'Devis non trouvé' });
     }
 
-    // Get clinic info
-    const clinic = await Clinic.findByPk(quote.clinic_id);
-
-    // Generate PDF using PDFKit
+    const clinic = quote.clinic_id ? await Clinic.findByPk(quote.clinic_id) : null;
     const pdfBuffer = await generateQuotePDF(quote, clinic);
     
-    // Send PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${quote.invoice_number}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length);
