@@ -16,9 +16,12 @@ async function seedSimple() {
   try {
     console.log('🌱 Seed simple démarrage...');
 
+    await sequelize.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    console.log('✅ Extension UUID activée');
+
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
@@ -41,13 +44,13 @@ async function seedSimple() {
     const accountantHash = await bcrypt.hash('accountant123', 10);
 
     await sequelize.query(`
-      INSERT INTO users (username, email, password_hash, full_name, role, phone)
+      INSERT INTO users (id, username, email, password_hash, full_name, role, phone)
       VALUES 
-        ('admin', 'admin@dentalpm.mg', '${adminHash}', 'Administrateur', 'SUPER_ADMIN', '+261 32 12 000 01'),
-        ('dr_rakoto', 'rakoto@dentalpm.mg', '${dentistHash}', 'Dr. Jean Rakoto', 'DENTIST', '+261 33 12 000 02'),
-        ('dr_rasoanaivo', 'rasoanaivo@dentalpm.mg', '${dentistHash}', 'Dr. Marie Rasoanaivo', 'DENTIST', '+261 34 12 000 03'),
-        ('secretary', 'secretaire@dentalpm.mg', '${secretaryHash}', 'Noro Randriamampionona', 'ASSISTANT', '+261 32 12 000 04'),
-        ('accountant', 'comptable@dentalpm.mg', '${accountantHash}', 'Hery Andriamanana', 'ACCOUNTANT', '+261 33 12 000 05')
+        (uuid_generate_v4(), 'admin', 'admin@dentalpm.mg', '${adminHash}', 'Administrateur', 'SUPER_ADMIN', '+261 32 12 000 01'),
+        (uuid_generate_v4(), 'dr_rakoto', 'rakoto@dentalpm.mg', '${dentistHash}', 'Dr. Jean Rakoto', 'DENTIST', '+261 33 12 000 02'),
+        (uuid_generate_v4(), 'dr_rasoanaivo', 'rasoanaivo@dentalpm.mg', '${dentistHash}', 'Dr. Marie Rasoanaivo', 'DENTIST', '+261 34 12 000 03'),
+        (uuid_generate_v4(), 'secretary', 'secretaire@dentalpm.mg', '${secretaryHash}', 'Noro Randriamampionona', 'ASSISTANT', '+261 32 12 000 04'),
+        (uuid_generate_v4(), 'accountant', 'comptable@dentalpm.mg', '${accountantHash}', 'Hery Andriamanana', 'ACCOUNTANT', '+261 33 12 000 05')
       ON CONFLICT (username) DO NOTHING;
     `);
     console.log('✅ Utilisateurs créés');
