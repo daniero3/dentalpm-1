@@ -111,10 +111,9 @@ const Patient = sequelize.define('patients', {
     allowNull: true
   },
   payer_type: {
-    type: DataTypes.ENUM('INSURED', 'SELF_PAY'),
+    type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: 'SELF_PAY',
-    comment: 'Type de paiement: INSURED (assuré) ou SELF_PAY (non assuré)'
+    defaultValue: 'SELF_PAY'
   },
   occupation: {
     type: DataTypes.STRING(100),
@@ -122,7 +121,7 @@ const Patient = sequelize.define('patients', {
     comment: 'Profession'
   },
   preferred_language: {
-    type: DataTypes.ENUM('FRENCH', 'MALAGASY', 'ENGLISH'),
+    type: DataTypes.STRING(20),
     allowNull: false,
     defaultValue: 'FRENCH'
   },
