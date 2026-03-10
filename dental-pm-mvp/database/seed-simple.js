@@ -41,10 +41,10 @@ async function seedSimple() {
     `);
     console.log('✅ Table users créée');
 
-    const adminHash = await bcrypt.hash('admin123', 10);
-    const dentistHash = await bcrypt.hash('dentist123', 10);
-    const secretaryHash = await bcrypt.hash('secretary123', 10);
-    const accountantHash = await bcrypt.hash('accountant123', 10);
+    const adminHash = await bcrypt.hash('admin123', 12);
+    const dentistHash = await bcrypt.hash('dentist123', 12);
+    const secretaryHash = await bcrypt.hash('secretary123', 12);
+    const accountantHash = await bcrypt.hash('accountant123', 12);
 
     await sequelize.query(`
       INSERT INTO users (id, username, email, password_hash, full_name, role, phone)
