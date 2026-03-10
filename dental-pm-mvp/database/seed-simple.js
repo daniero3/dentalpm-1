@@ -16,7 +16,6 @@ async function seedSimple() {
   try {
     console.log('🌱 Seed simple démarrage...');
 
-    // Créer la table users si elle n'existe pas
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -36,13 +35,11 @@ async function seedSimple() {
     `);
     console.log('✅ Table users prête');
 
-    // Hasher les mots de passe
     const adminHash = await bcrypt.hash('admin123', 10);
     const dentistHash = await bcrypt.hash('dentist123', 10);
     const secretaryHash = await bcrypt.hash('secretary123', 10);
     const accountantHash = await bcrypt.hash('accountant123', 10);
 
-    // Insérer les utilisateurs
     await sequelize.query(`
       INSERT INTO users (username, email, password_hash, full_name, role, phone)
       VALUES 
@@ -55,7 +52,7 @@ async function seedSimple() {
     `);
     console.log('✅ Utilisateurs créés');
 
-    console.log('\n🎉 Seed terminé avec succès!');
+    console.log('🎉 Seed terminé avec succès!');
     console.log('👨‍💼 admin / admin123');
     console.log('🦷 dr_rakoto / dentist123');
     console.log('👩‍💼 secretary / secretary123');
@@ -72,12 +69,3 @@ async function seedSimple() {
 seedSimple()
   .then(() => process.exit(0))
   .catch(() => process.exit(1));
-```
-
----
-
-## Ensuite sur Railway
-
-Changez le **Start Command** vers :
-```
-node database/seed-simple.js && node server.js
