@@ -9,8 +9,7 @@ const Patient = sequelize.define('patients', {
   },
   patient_number: {
     type: DataTypes.STRING(20),
-    allowNull: false,
-    unique: true,
+    allowNull: true,
     comment: 'Auto-generated patient number: PAT-000001'
   },
   first_name: {
@@ -34,7 +33,7 @@ const Patient = sequelize.define('patients', {
     allowNull: false,
     validate: {
       isDate: true,
-      isBefore: new Date().toISOString().split('T')[0] // Cannot be in the future
+      isBefore: new Date().toISOString().split('T')[0]
     }
   },
   gender: {
@@ -47,7 +46,6 @@ const Patient = sequelize.define('patients', {
   phone_primary: {
     type: DataTypes.STRING(20),
     allowNull: false
-    // Removed strict regex validation - handled in route
   },
   phone_secondary: {
     type: DataTypes.STRING(20),
@@ -75,12 +73,12 @@ const Patient = sequelize.define('patients', {
   },
   emergency_contact_name: {
     type: DataTypes.STRING(100),
-    allowNull: true, // Made optional
+    allowNull: true,
     defaultValue: null
   },
   emergency_contact_phone: {
     type: DataTypes.STRING(20),
-    allowNull: true, // Made optional
+    allowNull: true,
     defaultValue: null
   },
   emergency_contact_relationship: {
@@ -166,7 +164,7 @@ const Patient = sequelize.define('patients', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: true, // Required for multi-tenancy
+    allowNull: true,
     references: {
       model: 'clinics',
       key: 'id'
@@ -185,7 +183,6 @@ const Patient = sequelize.define('patients', {
   ]
 });
 
-// Instance methods
 Patient.prototype.getFullName = function() {
   return `${this.first_name} ${this.last_name}`;
 };
@@ -195,18 +192,14 @@ Patient.prototype.getAge = function() {
   const birthDate = new Date(this.date_of_birth);
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-  
   return age;
 };
 
-// Hooks for auto-generating patient number
 Patient.beforeCreate(async (patient) => {
   if (!patient.patient_number) {
-    // Use timestamp-based approach to avoid circular dependency
     const timestamp = Date.now().toString();
     const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     patient.patient_number = `PAT-${timestamp.slice(-6)}${randomSuffix}`;
