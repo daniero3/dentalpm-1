@@ -166,7 +166,7 @@ const Patient = sequelize.define('patients', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false, // Required for multi-tenancy
+    allowNull: true, // Required for multi-tenancy
     references: {
       model: 'clinics',
       key: 'id'
