@@ -1,15 +1,10 @@
-const { User } = require('../models');
-
 const requireClinicId = async (req, res, next) => {
   try {
     const { user } = req;
     
-    // Super admin can operate on their own clinic if assigned, otherwise bypass
+    // Super admin bypass complet — pas de filtrage par clinic_id
     if (user.role === 'SUPER_ADMIN') {
-      // Still attach clinic_id if available for data creation
-      if (user.clinic_id) {
-        req.clinic_id = user.clinic_id;
-      }
+      req.clinic_id = user.clinic_id || null;
       return next();
     }
     
@@ -22,7 +17,6 @@ const requireClinicId = async (req, res, next) => {
       });
     }
     
-    // Attach clinic_id to request for filtering
     req.clinic_id = user.clinic_id;
     next();
     
