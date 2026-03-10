@@ -19,8 +19,11 @@ async function seedSimple() {
     await sequelize.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
     console.log('✅ Extension UUID activée');
 
+    await sequelize.query(`DROP TABLE IF EXISTS users CASCADE;`);
+    console.log('✅ Ancienne table supprimée');
+
     await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE users (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         username VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
@@ -32,11 +35,11 @@ async function seedSimple() {
         nif_number VARCHAR(50),
         stat_number VARCHAR(50),
         is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL
       );
     `);
-    console.log('✅ Table users prête');
+    console.log('✅ Table users créée');
 
     const adminHash = await bcrypt.hash('admin123', 10);
     const dentistHash = await bcrypt.hash('dentist123', 10);
@@ -50,8 +53,7 @@ async function seedSimple() {
         (uuid_generate_v4(), 'dr_rakoto', 'rakoto@dentalpm.mg', '${dentistHash}', 'Dr. Jean Rakoto', 'DENTIST', '+261 33 12 000 02'),
         (uuid_generate_v4(), 'dr_rasoanaivo', 'rasoanaivo@dentalpm.mg', '${dentistHash}', 'Dr. Marie Rasoanaivo', 'DENTIST', '+261 34 12 000 03'),
         (uuid_generate_v4(), 'secretary', 'secretaire@dentalpm.mg', '${secretaryHash}', 'Noro Randriamampionona', 'ASSISTANT', '+261 32 12 000 04'),
-        (uuid_generate_v4(), 'accountant', 'comptable@dentalpm.mg', '${accountantHash}', 'Hery Andriamanana', 'ACCOUNTANT', '+261 33 12 000 05')
-      ON CONFLICT (username) DO NOTHING;
+        (uuid_generate_v4(), 'accountant', 'comptable@dentalpm.mg', '${accountantHash}', 'Hery Andriamanana', 'ACCOUNTANT', '+261 33 12 000 05');
     `);
     console.log('✅ Utilisateurs créés');
 
