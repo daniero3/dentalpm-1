@@ -9,31 +9,29 @@ const Patient = sequelize.define('patients', {
   },
   patient_number: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    comment: 'Auto-generated patient number: PAT-000001'
+    allowNull: true
   },
   first_name: {
     type: DataTypes.STRING(50),
     allowNull: false,
-    validate: {
-      len: [1, 50],
-      notEmpty: true
-    }
+    validate: { len: [1, 50], notEmpty: true }
   },
   last_name: {
     type: DataTypes.STRING(50),
     allowNull: false,
-    validate: {
-      len: [1, 50],
-      notEmpty: true
-    }
+    validate: { len: [1, 50], notEmpty: true }
   },
   date_of_birth: {
     type: DataTypes.DATEONLY,
     allowNull: false,
     validate: {
       isDate: true,
-      isBefore: new Date().toISOString().split('T')[0]
+      isBefore(value) {
+        const today = new Date().toISOString().split('T')[0];
+        if (value >= today) {
+          throw new Error('La date de naissance doit être dans le passé');
+        }
+      }
     }
   },
   gender: {
@@ -55,7 +53,14 @@ const Patient = sequelize.define('patients', {
     type: DataTypes.STRING(100),
     allowNull: true,
     validate: {
-      isEmail: true
+      isEmailOrEmpty(value) {
+        if (value && value.trim() !== '') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            throw new Error('Email invalide');
+          }
+        }
+      }
     }
   },
   address: {
@@ -83,28 +88,23 @@ const Patient = sequelize.define('patients', {
   },
   emergency_contact_relationship: {
     type: DataTypes.STRING(50),
-    allowNull: true,
-    comment: 'Époux/épouse, Parent, Enfant, Ami, etc.'
+    allowNull: true
   },
   medical_history: {
     type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Antécédents médicaux'
+    allowNull: true
   },
   allergies: {
     type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Allergies connues'
+    allowNull: true
   },
   current_medications: {
     type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Médicaments actuels'
+    allowNull: true
   },
   insurance_provider: {
     type: DataTypes.STRING(100),
-    allowNull: true,
-    comment: 'Assurance maladie (si applicable)'
+    allowNull: true
   },
   insurance_number: {
     type: DataTypes.STRING(50),
@@ -117,8 +117,7 @@ const Patient = sequelize.define('patients', {
   },
   occupation: {
     type: DataTypes.STRING(100),
-    allowNull: true,
-    comment: 'Profession'
+    allowNull: true
   },
   preferred_language: {
     type: DataTypes.STRING(20),
@@ -128,20 +127,17 @@ const Patient = sequelize.define('patients', {
   consent_treatment: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false,
-    comment: 'Consentement pour les traitements'
+    defaultValue: false
   },
   consent_data_processing: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false,
-    comment: 'Consentement pour le traitement des données'
+    defaultValue: false
   },
   consent_sms_reminders: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: true,
-    comment: 'Consentement pour les rappels SMS'
+    defaultValue: true
   },
   is_active: {
     type: DataTypes.BOOLEAN,
@@ -150,25 +146,17 @@ const Patient = sequelize.define('patients', {
   },
   notes: {
     type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Notes additionnelles'
+    allowNull: true
   },
   created_by_user_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    references: { model: 'users', key: 'id' }
   },
   clinic_id: {
     type: DataTypes.UUID,
     allowNull: true,
-    references: {
-      model: 'clinics',
-      key: 'id'
-    },
-    comment: 'Clinic this patient belongs to (for multi-tenancy)'
+    references: { model: 'clinics', key: 'id' }
   }
 }, {
   indexes: [
