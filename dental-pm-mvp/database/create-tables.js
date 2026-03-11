@@ -93,8 +93,9 @@ async function createAllTables() {
     console.log('✅ Table patients');
 
     // 4. PROCEDURES
+    await sequelize.query(`DROP TABLE IF EXISTS procedures CASCADE;`);
     await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS procedures (
+      CREATE TABLE procedures (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         code VARCHAR(20) UNIQUE NOT NULL,
         name VARCHAR(100) NOT NULL,
@@ -702,26 +703,26 @@ async function createAllTables() {
     // ===== SEED PROCEDURES =====
     console.log('🦷 Création des procédures...');
     await sequelize.query(`
-      INSERT INTO procedures (id, code, name, category, default_price_mga, duration_minutes, requires_anesthesia)
+      INSERT INTO procedures (id, code, name, category, default_price_mga, duration_minutes, requires_anesthesia, created_at, updated_at)
       VALUES
-        (uuid_generate_v4(), 'CONS-001', 'Consultation initiale', 'CONSULTATION', 25000, 30, false),
-        (uuid_generate_v4(), 'CONS-002', 'Consultation de controle', 'CONSULTATION', 20000, 20, false),
-        (uuid_generate_v4(), 'CONS-003', 'Consultation urgence', 'EMERGENCY', 40000, 30, false),
-        (uuid_generate_v4(), 'PREV-001', 'Detartrage', 'PREVENTION', 35000, 45, false),
-        (uuid_generate_v4(), 'PREV-002', 'Polissage', 'PREVENTION', 15000, 20, false),
-        (uuid_generate_v4(), 'REST-001', 'Obturation composite', 'RESTORATION', 75000, 60, true),
-        (uuid_generate_v4(), 'REST-002', 'Obturation amalgame', 'RESTORATION', 50000, 45, true),
-        (uuid_generate_v4(), 'REST-003', 'Couronne ceramique', 'RESTORATION', 250000, 90, false),
-        (uuid_generate_v4(), 'ENDO-001', 'Traitement canalaire mono', 'ENDODONTICS', 150000, 90, true),
-        (uuid_generate_v4(), 'ENDO-002', 'Traitement canalaire multi', 'ENDODONTICS', 200000, 120, true),
-        (uuid_generate_v4(), 'CHIR-001', 'Extraction simple', 'ORAL_SURGERY', 30000, 30, true),
-        (uuid_generate_v4(), 'CHIR-002', 'Extraction complexe', 'ORAL_SURGERY', 60000, 60, true),
-        (uuid_generate_v4(), 'CHIR-003', 'Extraction dent de sagesse', 'ORAL_SURGERY', 80000, 90, true),
-        (uuid_generate_v4(), 'PARO-001', 'Surfacage radiculaire', 'PERIODONTICS', 45000, 45, true),
-        (uuid_generate_v4(), 'PROT-001', 'Prothese partielle amovible', 'PROSTHETICS', 300000, 60, false),
-        (uuid_generate_v4(), 'PROT-002', 'Prothese complete', 'PROSTHETICS', 500000, 90, false),
-        (uuid_generate_v4(), 'ORTH-001', 'Pose appareil dentaire', 'ORTHODONTICS', 800000, 120, false),
-        (uuid_generate_v4(), 'ORTH-002', 'Controle orthodontique', 'ORTHODONTICS', 30000, 30, false)
+        (uuid_generate_v4(), 'CONS-001', 'Consultation initiale', 'CONSULTATION', 25000, 30, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'CONS-002', 'Consultation de controle', 'CONSULTATION', 20000, 20, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'CONS-003', 'Consultation urgence', 'EMERGENCY', 40000, 30, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'PREV-001', 'Detartrage', 'PREVENTION', 35000, 45, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'PREV-002', 'Polissage', 'PREVENTION', 15000, 20, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'REST-001', 'Obturation composite', 'RESTORATION', 75000, 60, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'REST-002', 'Obturation amalgame', 'RESTORATION', 50000, 45, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'REST-003', 'Couronne ceramique', 'RESTORATION', 250000, 90, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'ENDO-001', 'Traitement canalaire mono', 'ENDODONTICS', 150000, 90, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'ENDO-002', 'Traitement canalaire multi', 'ENDODONTICS', 200000, 120, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'CHIR-001', 'Extraction simple', 'ORAL_SURGERY', 30000, 30, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'CHIR-002', 'Extraction complexe', 'ORAL_SURGERY', 60000, 60, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'CHIR-003', 'Extraction dent de sagesse', 'ORAL_SURGERY', 80000, 90, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'PARO-001', 'Surfacage radiculaire', 'PERIODONTICS', 45000, 45, true, NOW(), NOW()),
+        (uuid_generate_v4(), 'PROT-001', 'Prothese partielle amovible', 'PROSTHETICS', 300000, 60, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'PROT-002', 'Prothese complete', 'PROSTHETICS', 500000, 90, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'ORTH-001', 'Pose appareil dentaire', 'ORTHODONTICS', 800000, 120, false, NOW(), NOW()),
+        (uuid_generate_v4(), 'ORTH-002', 'Controle orthodontique', 'ORTHODONTICS', 30000, 30, false, NOW(), NOW())
       ON CONFLICT (code) DO NOTHING;
     `);
     console.log('✅ Procédures créées');
