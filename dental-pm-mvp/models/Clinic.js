@@ -10,37 +10,25 @@ const Clinic = sequelize.define('Clinic', {
   name: {
     type: DataTypes.STRING(100),
     allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [2, 100]
-    }
+    validate: { notEmpty: true, len: [2, 100] }
   },
   business_name: {
     type: DataTypes.STRING(150),
-    allowNull: true,
-    comment: 'Official business/legal name'
+    allowNull: true
   },
   email: {
     type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
-    validate: {
-      isEmail: true
-    }
+    validate: { isEmail: true }
   },
   phone: {
     type: DataTypes.STRING(20),
-    allowNull: false,
-    validate: {
-      matches: /^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/
-    }
+    allowNull: false
   },
   address: {
     type: DataTypes.TEXT,
-    allowNull: false,
-    validate: {
-      len: [10, 500]
-    }
+    allowNull: false
   },
   city: {
     type: DataTypes.STRING(50),
@@ -54,106 +42,71 @@ const Clinic = sequelize.define('Clinic', {
   country: {
     type: DataTypes.STRING(2),
     allowNull: false,
-    defaultValue: 'MG',
-    comment: 'ISO country code'
+    defaultValue: 'MG'
   },
-  
-  // Madagascar tax information
   nif_number: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    unique: true,
-    comment: 'Numéro d\'Identification Fiscale'
+    allowNull: true
   },
   stat_number: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    unique: true,
-    comment: 'Numéro statistique'
+    allowNull: true
   },
-  
-  // Branding
   logo_url: {
     type: DataTypes.STRING(255),
-    allowNull: true,
-    validate: {
-      isUrl: true
-    }
+    allowNull: true
   },
   brand_color_primary: {
     type: DataTypes.STRING(7),
     allowNull: true,
-    defaultValue: '#0EA5E9',
-    validate: {
-      is: /^#[0-9A-F]{6}$/i
-    }
+    defaultValue: '#0EA5E9'
   },
   brand_color_secondary: {
     type: DataTypes.STRING(7),
     allowNull: true,
-    defaultValue: '#10B981',
-    validate: {
-      is: /^#[0-9A-F]{6}$/i
-    }
+    defaultValue: '#10B981'
   },
-  
-  // Subscription info
   subscription_status: {
-    type: DataTypes.ENUM('TRIAL', 'ACTIVE', 'EXPIRED', 'CANCELLED', 'SUSPENDED'),
+    type: DataTypes.STRING(20),
     allowNull: false,
     defaultValue: 'TRIAL'
   },
   trial_ends_at: {
     type: DataTypes.DATE,
-    allowNull: true,
-    comment: 'When the trial period ends'
+    allowNull: true
   },
   current_plan: {
-    type: DataTypes.ENUM('ESSENTIAL', 'PRO', 'GROUP'),
-    allowNull: true,
-    comment: 'Current subscription plan'
+    type: DataTypes.STRING(20),
+    allowNull: true
   },
-  
-  // Mobile Money config
   mobile_money_merchant: {
     type: DataTypes.STRING(100),
-    allowNull: true,
-    comment: 'Mobile Money merchant name for payments'
+    allowNull: true
   },
   mobile_money_number: {
     type: DataTypes.STRING(30),
-    allowNull: true,
-    comment: 'Mobile Money number for receiving payments'
+    allowNull: true
   },
-  
-  // Onboarding
   onboarding_completed: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
   },
-  
-  // Limits based on plan
   max_users: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 3,
-    comment: 'Maximum number of users allowed'
+    defaultValue: 3
   },
   max_patients: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 100,
-    comment: 'Maximum number of patients allowed'
+    defaultValue: 100
   },
   max_storage_mb: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 1000,
-    comment: 'Maximum storage in MB'
+    defaultValue: 1000
   },
-  
-  // Status
   is_active: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -162,32 +115,21 @@ const Clinic = sequelize.define('Clinic', {
   is_verified: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false,
-    comment: 'Email verification status'
+    defaultValue: false
   },
-  
-  // Metadata
   settings: {
     type: DataTypes.JSON,
     allowNull: true,
-    defaultValue: {},
-    comment: 'Clinic-specific settings and preferences'
+    defaultValue: {}
   },
-  
-  // Tracking
   created_by_user_id: {
     type: DataTypes.UUID,
-    allowNull: true,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    allowNull: true
   },
   last_activity_at: {
     type: DataTypes.DATE,
     allowNull: true
   },
-  
   created_at: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -206,25 +148,19 @@ const Clinic = sequelize.define('Clinic', {
   indexes: [
     { fields: ['email'] },
     { fields: ['subscription_status'] },
-    { fields: ['current_plan'] },
     { fields: ['is_active'] },
-    { fields: ['city'] },
-    { fields: ['nif_number'], unique: true, where: { nif_number: { [require('sequelize').Op.ne]: null } } },
-    { fields: ['stat_number'], unique: true, where: { stat_number: { [require('sequelize').Op.ne]: null } } }
+    { fields: ['city'] }
   ]
 });
 
-// Instance methods
 Clinic.prototype.isTrialExpired = function() {
-  if (this.subscription_status !== 'TRIAL' || !this.trial_ends_at) {
-    return false;
-  }
+  if (this.subscription_status !== 'TRIAL' || !this.trial_ends_at) return false;
   return new Date() > new Date(this.trial_ends_at);
 };
 
 Clinic.prototype.isSubscriptionActive = function() {
-  return ['TRIAL', 'ACTIVE'].includes(this.subscription_status) && 
-         (this.subscription_status !== 'TRIAL' || !this.isTrialExpired());
+  return ['TRIAL', 'ACTIVE'].includes(this.subscription_status) &&
+    (this.subscription_status !== 'TRIAL' || !this.isTrialExpired());
 };
 
 Clinic.prototype.canAddUsers = function(currentUserCount) {
@@ -236,19 +172,12 @@ Clinic.prototype.canAddPatients = function(currentPatientCount) {
 };
 
 Clinic.prototype.getRemainingTrialDays = function() {
-  if (this.subscription_status !== 'TRIAL' || !this.trial_ends_at) {
-    return 0;
-  }
-  const now = new Date();
-  const trialEnd = new Date(this.trial_ends_at);
-  const diffTime = trialEnd - now;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return Math.max(0, diffDays);
+  if (this.subscription_status !== 'TRIAL' || !this.trial_ends_at) return 0;
+  const diffTime = new Date(this.trial_ends_at) - new Date();
+  return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 };
 
-// Hooks
 Clinic.beforeCreate(async (clinic) => {
-  // Set trial end date (14 days from now)
   if (clinic.subscription_status === 'TRIAL') {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 14);
