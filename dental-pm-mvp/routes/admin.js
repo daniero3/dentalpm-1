@@ -16,7 +16,6 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    // Get comprehensive stats
     const [
       totalClinics,
       totalSubscriptions,
@@ -27,42 +26,20 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
       yearlyRevenue,
       totalUsers
     ] = await Promise.all([
-      // Total clinics
       Clinic.count(),
-      
-      // Total subscriptions
       Subscription.count(),
-      
-      // Active subscriptions
       Subscription.count({ where: { status: 'ACTIVE' } }),
-      
-      // Trial subscriptions
       Subscription.count({ where: { status: 'TRIAL' } }),
-      
-      // Expired subscriptions
       Subscription.count({ where: { status: { [Op.in]: ['EXPIRED', 'TRIAL_EXPIRED'] } } }),
-      
-      // Monthly revenue
-      SubscriptionInvoice.sum('total_mga', {
-        where: {
-          status: 'PAID',
-          paid_at: { [Op.gte]: startOfMonth }
-        }
+      SubscriptionInvoice.sum('amount_mga', {
+        where: { status: 'PAID', paid_at: { [Op.gte]: startOfMonth } }
       }) || 0,
-      
-      // Yearly revenue
-      SubscriptionInvoice.sum('total_mga', {
-        where: {
-          status: 'PAID',
-          paid_at: { [Op.gte]: startOfYear }
-        }
+      SubscriptionInvoice.sum('amount_mga', {
+        where: { status: 'PAID', paid_at: { [Op.gte]: startOfYear } }
       }) || 0,
-      
-      // Total users across all clinics
       User.count({ where: { role: { [Op.ne]: 'SUPER_ADMIN' } } })
     ]);
 
-    // Get simple recent data
     const recentClinics = await Clinic.findAll({
       limit: 5,
       order: [['created_at', 'DESC']]
@@ -85,24 +62,10 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
 
     res.json({
       stats: {
-        clinics: {
-          total: totalClinics,
-          active: activeSubscriptions, // Using active subscriptions as proxy for active clinics
-          growth_rate: 0 // TODO: Calculate month-over-month growth
-        },
-        subscriptions: {
-          total: totalSubscriptions,
-          active: activeSubscriptions,
-          trial: trialSubscriptions,
-          expired: expiredSubscriptions
-        },
-        revenue: {
-          monthly_mga: monthlyRevenue,
-          yearly_mga: yearlyRevenue
-        },
-        users: {
-          total: totalUsers
-        }
+        clinics: { total: totalClinics, active: activeSubscriptions, growth_rate: 0 },
+        subscriptions: { total: totalSubscriptions, active: activeSubscriptions, trial: trialSubscriptions, expired: expiredSubscriptions },
+        revenue: { monthly_mga: monthlyRevenue || 0, yearly_mga: yearlyRevenue || 0 },
+        users: { total: totalUsers }
       },
       recent_clinics: recentClinics,
       subscriptions_by_plan: subscriptionsByPlan,
@@ -111,9 +74,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
 
   } catch (error) {
     console.error('Admin dashboard error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération des données du tableau de bord'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération des données du tableau de bord' });
   }
 });
 
@@ -131,22 +92,19 @@ router.get('/clinics', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Paramètres invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Paramètres invalides', details: errors.array() });
     }
 
-    const { page = 1, limit = 20, search, status } = req.query;
+    const { page = 1, limit = 20, search } = req.query;
     const offset = (page - 1) * limit;
 
     let whereClause = {};
     if (search) {
       whereClause = {
         [Op.or]: [
-          { name: { [Op.like]: `%${search}%` } },
-          { city: { [Op.like]: `%${search}%` } },
-          { contact_email: { [Op.like]: `%${search}%` } }
+          { name: { [Op.iLike]: `%${search}%` } },
+          { city: { [Op.iLike]: `%${search}%` } },
+          { email: { [Op.iLike]: `%${search}%` } }
         ]
       };
     }
@@ -154,13 +112,6 @@ router.get('/clinics', [
     const { count, rows: clinics } = await Clinic.findAndCountAll({
       where: whereClause,
       include: [
-        {
-          model: Subscription,
-          as: 'subscriptions',
-          attributes: ['id', 'plan', 'status', 'end_date', 'price_mga'],
-          order: [['created_at', 'DESC']],
-          limit: 1
-        },
         {
           model: User,
           as: 'users',
@@ -174,19 +125,27 @@ router.get('/clinics', [
       order: [['created_at', 'DESC']]
     });
 
-    // Add user count and latest subscription info
-    const enrichedClinics = clinics.map(clinic => {
+    // Fetch latest subscription separately for each clinic
+    const enrichedClinics = await Promise.all(clinics.map(async (clinic) => {
       const clinicData = clinic.toJSON();
       clinicData.user_count = clinicData.users ? clinicData.users.length : 0;
-      clinicData.latest_subscription = clinicData.subscriptions && clinicData.subscriptions.length > 0 
-        ? clinicData.subscriptions[0] 
-        : null;
-      
       delete clinicData.users;
-      delete clinicData.subscriptions;
-      
+
+      try {
+        const latestSub = await Subscription.findOne({
+          where: { clinic_id: clinic.id },
+          attributes: ['id', 'plan', 'status', 'end_date', 'monthly_price_mga'],
+          order: [['created_at', 'DESC']]
+        });
+        clinicData.latest_subscription = latestSub ? latestSub.toJSON() : null;
+        clinicData.subscription_status = latestSub ? latestSub.status : null;
+      } catch (e) {
+        clinicData.latest_subscription = null;
+        clinicData.subscription_status = null;
+      }
+
       return clinicData;
-    });
+    }));
 
     res.json({
       clinics: enrichedClinics,
@@ -200,9 +159,7 @@ router.get('/clinics', [
 
   } catch (error) {
     console.error('Get clinics error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération des cliniques'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération des cliniques' });
   }
 });
 
@@ -214,61 +171,55 @@ router.get('/clinics', [
 router.post('/clinics', [
   requireRole('SUPER_ADMIN'),
   body('name').isLength({ min: 2, max: 100 }).withMessage('Nom requis (2-100 caractères)'),
-  body('address').isLength({ min: 5, max: 255 }).withMessage('Adresse requise'),
+  body('address').isLength({ min: 5, max: 255 }).withMessage('Adresse requise (min 5 caractères)'),
   body('city').isLength({ min: 2, max: 50 }).withMessage('Ville requise'),
   body('postal_code').optional().isLength({ max: 10 }),
+  body('phone').optional().isLength({ max: 20 }),
   body('email').isEmail().withMessage('Email valide requis'),
-  body('nif_number').optional().isLength({ min: 5, max: 20 }),
-  body('stat_number').optional().isLength({ min: 5, max: 20 }),
+  body('nif_number').optional({ nullable: true, checkFalsy: true }).isLength({ min: 5, max: 20 }),
+  body('stat_number').optional({ nullable: true, checkFalsy: true }).isLength({ min: 5, max: 20 }),
   body('admin_user').isObject().withMessage('Informations administrateur requises'),
-  body('admin_user.username').isLength({ min: 3, max: 50 }),
-  body('admin_user.email').isEmail(),
-  body('admin_user.password').isLength({ min: 6 }),
-  body('admin_user.first_name').isLength({ min: 2, max: 50 }),
-  body('admin_user.last_name').isLength({ min: 2, max: 50 })
+  body('admin_user.username').isLength({ min: 3, max: 50 }).withMessage('Username requis (min 3 caractères)'),
+  body('admin_user.email').isEmail().withMessage('Email admin valide requis'),
+  body('admin_user.password').isLength({ min: 6 }).withMessage('Mot de passe requis (min 6 caractères)'),
+  body('admin_user.first_name').isLength({ min: 2, max: 50 }).withMessage('Prénom requis (min 2 caractères)'),
+  body('admin_user.last_name').isLength({ min: 2, max: 50 }).withMessage('Nom requis (min 2 caractères)')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
-        error: 'Données invalides',
+        error: errors.array()[0].msg,
         details: errors.array()
       });
     }
 
     const { admin_user, ...clinicData } = req.body;
 
-    // Check if clinic name already exists
-    const existingClinic = await Clinic.findOne({
-      where: { name: clinicData.name }
-    });
+    // Supprimer les champs vides optionnels
+    if (!clinicData.nif_number) delete clinicData.nif_number;
+    if (!clinicData.stat_number) delete clinicData.stat_number;
+    if (!clinicData.phone) delete clinicData.phone;
+    if (!clinicData.postal_code) delete clinicData.postal_code;
 
+    const existingClinic = await Clinic.findOne({ where: { name: clinicData.name } });
     if (existingClinic) {
-      return res.status(400).json({
-        error: 'Une clinique avec ce nom existe déjà'
-      });
+      return res.status(400).json({ error: 'Une clinique avec ce nom existe déjà' });
     }
 
-    // Check if admin email already exists
     const existingUser = await User.findOne({
-      where: { email: admin_user.email }
+      where: { [Op.or]: [{ email: admin_user.email }, { username: admin_user.username }] }
     });
-
     if (existingUser) {
-      return res.status(400).json({
-        error: 'Un utilisateur avec cet email existe déjà'
-      });
+      return res.status(400).json({ error: 'Un utilisateur avec cet email ou username existe déjà' });
     }
 
-    // Create clinic
-    const clinic = await Clinic.create({
-      ...clinicData,
-      is_active: true
-    });
+    // Créer la clinique
+    const clinic = await Clinic.create({ ...clinicData, is_active: true });
 
-    // Create admin user for the clinic
-    const bcrypt = require('bcrypt');
-    const hashedPassword = await bcrypt.hash(admin_user.password, 10);
+    // Créer l'utilisateur admin
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(admin_user.password, 12);
 
     const adminUser = await User.create({
       username: admin_user.username,
@@ -280,7 +231,7 @@ router.post('/clinics', [
       is_active: true
     });
 
-    // Start trial subscription automatically
+    // Créer abonnement d'essai 14 jours
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 14);
 
@@ -307,8 +258,7 @@ router.post('/clinics', [
           id: adminUser.id,
           username: adminUser.username,
           email: adminUser.email,
-          first_name: adminUser.first_name,
-          last_name: adminUser.last_name
+          full_name: adminUser.full_name
         },
         trial_subscription: trialSubscription
       }
@@ -316,9 +266,7 @@ router.post('/clinics', [
 
   } catch (error) {
     console.error('Create clinic error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la création de la clinique'
-    });
+    res.status(500).json({ error: 'Erreur lors de la création de la clinique: ' + error.message });
   }
 });
 
@@ -336,10 +284,7 @@ router.put('/clinics/:id', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
     const { id } = req.params;
@@ -351,23 +296,54 @@ router.put('/clinics/:id', [
     }
 
     await clinic.update(updates);
-
-    res.json({
-      message: 'Clinique mise à jour avec succès',
-      clinic
-    });
+    res.json({ message: 'Clinique mise à jour avec succès', clinic });
 
   } catch (error) {
     console.error('Update clinic error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la mise à jour de la clinique'
-    });
+    res.status(500).json({ error: 'Erreur lors de la mise à jour de la clinique' });
+  }
+});
+
+/**
+ * @route DELETE /api/admin/clinics/:id
+ * @desc Deactivate clinic
+ * @access Super Admin
+ */
+router.delete('/clinics/:id', [
+  requireRole('SUPER_ADMIN'),
+  param('id').isUUID().withMessage('ID clinique invalide')
+], async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const clinic = await Clinic.findByPk(id);
+    if (!clinic) {
+      return res.status(404).json({ error: 'Clinique introuvable' });
+    }
+
+    await clinic.update({ is_active: false });
+
+    await Subscription.update(
+      { status: 'CANCELLED', cancelled_at: new Date() },
+      { where: { clinic_id: id, status: { [Op.in]: ['ACTIVE', 'TRIAL'] } } }
+    );
+
+    await User.update(
+      { is_active: false },
+      { where: { clinic_id: id } }
+    );
+
+    res.json({ message: 'Clinique désactivée avec succès' });
+
+  } catch (error) {
+    console.error('Deactivate clinic error:', error);
+    res.status(500).json({ error: 'Erreur lors de la désactivation de la clinique' });
   }
 });
 
 /**
  * @route GET /api/admin/users
- * @desc Get all users (Super Admin)
+ * @desc Get all users
  * @access Super Admin
  */
 router.get('/users', [
@@ -408,70 +384,16 @@ router.get('/users', [
 
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération des utilisateurs'
-    });
-  }
-});
-
-/**
- * @route DELETE /api/admin/clinics/:id
- * @desc Deactivate clinic
- * @access Super Admin
- */
-router.delete('/clinics/:id', [
-  requireRole('SUPER_ADMIN'),
-  param('id').isUUID().withMessage('ID clinique invalide')
-], async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const clinic = await Clinic.findByPk(id);
-    if (!clinic) {
-      return res.status(404).json({ error: 'Clinique introuvable' });
-    }
-
-    // Deactivate instead of deleting
-    await clinic.update({ is_active: false });
-
-    // Cancel active subscriptions
-    await Subscription.update(
-      { status: 'CANCELLED', cancelled_at: new Date() },
-      { where: { clinic_id: id, status: { [Op.in]: ['ACTIVE', 'TRIAL'] } } }
-    );
-
-    // Deactivate users
-    await User.update(
-      { is_active: false },
-      { where: { clinic_id: id } }
-    );
-
-    res.json({
-      message: 'Clinique désactivée avec succès'
-    });
-
-  } catch (error) {
-    console.error('Deactivate clinic error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la désactivation de la clinique'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs' });
   }
 });
 
 // =============================================================================
-// PAYMENT REQUESTS VALIDATION (Super Admin)
+// PAYMENT REQUESTS
 // =============================================================================
-
-// Plan pricing (MGA) - 30 days
-const PLAN_PRICING = {
-  ESSENTIAL: 150000,
-  PRO: 300000,
-  GROUP: 500000
-};
 
 /**
  * @route GET /api/admin/payment-requests
- * @desc Get all payment requests (filterable by status)
  * @access Super Admin
  */
 router.get('/payment-requests', [
@@ -499,12 +421,7 @@ router.get('/payment-requests', [
 
     res.json({
       paymentRequests: requests,
-      pagination: {
-        total: count,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(count / limit)
-      }
+      pagination: { total: count, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(count / limit) }
     });
   } catch (error) {
     console.error('Get payment requests error:', error);
@@ -514,7 +431,6 @@ router.get('/payment-requests', [
 
 /**
  * @route PATCH /api/admin/payment-requests/:id/verify
- * @desc Verify payment request and activate subscription
  * @access Super Admin
  */
 router.patch('/payment-requests/:id/verify', [
@@ -535,18 +451,11 @@ router.patch('/payment-requests/:id/verify', [
       include: [{ model: Clinic, as: 'clinic' }]
     });
 
-    if (!paymentRequest) {
-      return res.status(404).json({ error: 'Demande introuvable' });
-    }
-
+    if (!paymentRequest) return res.status(404).json({ error: 'Demande introuvable' });
     if (paymentRequest.status !== 'PENDING') {
-      return res.status(409).json({ 
-        error: 'Conflit', 
-        message: `Cette demande a déjà été traitée (statut: ${paymentRequest.status})` 
-      });
+      return res.status(409).json({ error: `Cette demande a déjà été traitée (statut: ${paymentRequest.status})` });
     }
 
-    // Update payment request
     await paymentRequest.update({
       status: 'VERIFIED',
       verified_by_user_id: req.user.id,
@@ -554,31 +463,24 @@ router.patch('/payment-requests/:id/verify', [
       note_admin: note_admin || null
     });
 
-    // Calculate subscription dates (30 days)
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + 30);
-
-    // Find or create subscription for clinic
-    let subscription = await Subscription.findOne({
-      where: { clinic_id: paymentRequest.clinic_id }
-    });
 
     const planFeatures = {
       ESSENTIAL: { max_practitioners: 1, features: ['patients', 'appointments', 'invoicing'] },
       PRO: { max_practitioners: 3, features: ['patients', 'appointments', 'invoicing', 'reports', 'support'] },
       GROUP: { max_practitioners: 999, features: ['patients', 'appointments', 'invoicing', 'reports', 'support', 'multi_site'] }
     };
-
     const plan = planFeatures[paymentRequest.plan_code] || planFeatures.ESSENTIAL;
 
+    let subscription = await Subscription.findOne({ where: { clinic_id: paymentRequest.clinic_id } });
+
     if (subscription) {
-      // Update existing subscription
       await subscription.update({
         plan: paymentRequest.plan_code,
         status: 'ACTIVE',
         billing_cycle: 'MONTHLY',
-        price_mga: paymentRequest.amount_mga,
         monthly_price_mga: paymentRequest.amount_mga,
         start_date: startDate,
         end_date: endDate,
@@ -587,13 +489,11 @@ router.patch('/payment-requests/:id/verify', [
         features: plan.features
       });
     } else {
-      // Create new subscription
       subscription = await Subscription.create({
         clinic_id: paymentRequest.clinic_id,
         plan: paymentRequest.plan_code,
         status: 'ACTIVE',
         billing_cycle: 'MONTHLY',
-        price_mga: paymentRequest.amount_mga,
         monthly_price_mga: paymentRequest.amount_mga,
         annual_price_mga: paymentRequest.amount_mga * 10,
         start_date: startDate,
@@ -606,20 +506,8 @@ router.patch('/payment-requests/:id/verify', [
 
     res.json({
       message: 'Paiement vérifié et abonnement activé',
-      paymentRequest: {
-        id: paymentRequest.id,
-        status: 'VERIFIED',
-        verified_at: paymentRequest.verified_at,
-        note_admin: paymentRequest.note_admin
-      },
-      subscription: {
-        id: subscription.id,
-        clinic_id: subscription.clinic_id,
-        plan: subscription.plan,
-        status: subscription.status,
-        start_date: subscription.start_date,
-        end_date: subscription.end_date
-      }
+      paymentRequest: { id: paymentRequest.id, status: 'VERIFIED', verified_at: paymentRequest.verified_at },
+      subscription: { id: subscription.id, plan: subscription.plan, status: subscription.status, end_date: subscription.end_date }
     });
   } catch (error) {
     console.error('Verify payment request error:', error);
@@ -629,7 +517,6 @@ router.patch('/payment-requests/:id/verify', [
 
 /**
  * @route PATCH /api/admin/payment-requests/:id/reject
- * @desc Reject payment request
  * @access Super Admin
  */
 router.patch('/payment-requests/:id/reject', [
@@ -647,16 +534,9 @@ router.patch('/payment-requests/:id/reject', [
     const { note_admin } = req.body;
 
     const paymentRequest = await PaymentRequest.findByPk(id);
-
-    if (!paymentRequest) {
-      return res.status(404).json({ error: 'Demande introuvable' });
-    }
-
+    if (!paymentRequest) return res.status(404).json({ error: 'Demande introuvable' });
     if (paymentRequest.status !== 'PENDING') {
-      return res.status(409).json({ 
-        error: 'Conflit', 
-        message: `Cette demande a déjà été traitée (statut: ${paymentRequest.status})` 
-      });
+      return res.status(409).json({ error: `Cette demande a déjà été traitée (statut: ${paymentRequest.status})` });
     }
 
     await paymentRequest.update({
@@ -668,11 +548,7 @@ router.patch('/payment-requests/:id/reject', [
 
     res.json({
       message: 'Demande de paiement rejetée',
-      paymentRequest: {
-        id: paymentRequest.id,
-        status: 'REJECTED',
-        note_admin: paymentRequest.note_admin
-      }
+      paymentRequest: { id: paymentRequest.id, status: 'REJECTED', note_admin: paymentRequest.note_admin }
     });
   } catch (error) {
     console.error('Reject payment request error:', error);
