@@ -8,24 +8,19 @@ const Invoice = sequelize.define('invoices', {
     primaryKey: true
   },
   document_type: {
-    type: DataTypes.ENUM('INVOICE', 'QUOTE'),
+    type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: 'INVOICE',
-    comment: 'INVOICE = Facture, QUOTE = Devis'
+    defaultValue: 'INVOICE'
   },
   invoice_number: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true,
-    comment: 'FACT-YYYY-XXXX pour factures, DEV-YYYY-XXXX pour devis'
+    unique: true
   },
   patient_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'patients',
-      key: 'id'
-    }
+    references: { model: 'patients', key: 'id' }
   },
   invoice_date: {
     type: DataTypes.DATEONLY,
@@ -34,23 +29,18 @@ const Invoice = sequelize.define('invoices', {
   },
   due_date: {
     type: DataTypes.DATEONLY,
-    allowNull: true,
-    comment: 'Date d\'échéance de paiement'
+    allowNull: true
   },
   subtotal_mga: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
-    defaultValue: 0.00,
-    comment: 'Sous-total en Ariary malgache'
+    defaultValue: 0.00
   },
   discount_percentage: {
     type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
     defaultValue: 0.00,
-    validate: {
-      min: 0,
-      max: 100
-    }
+    validate: { min: 0, max: 100 }
   },
   discount_amount_mga: {
     type: DataTypes.DECIMAL(12, 2),
@@ -58,15 +48,13 @@ const Invoice = sequelize.define('invoices', {
     defaultValue: 0.00
   },
   discount_type: {
-    type: DataTypes.ENUM('SYNDICAL', 'HUMANITARIAN', 'LONG_TERM', 'CUSTOM'),
-    allowNull: true,
-    comment: 'Type de remise appliquée'
+    type: DataTypes.STRING(20),
+    allowNull: true
   },
   tax_percentage: {
     type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
-    defaultValue: 0.00,
-    comment: 'TVA si applicable'
+    defaultValue: 0.00
   },
   tax_amount_mga: {
     type: DataTypes.DECIMAL(12, 2),
@@ -76,64 +64,51 @@ const Invoice = sequelize.define('invoices', {
   total_mga: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
-    defaultValue: 0.00,
-    comment: 'Montant total en Ariary malgache'
+    defaultValue: 0.00
   },
   status: {
-    type: DataTypes.ENUM('DRAFT', 'SENT', 'PAID', 'PARTIAL', 'OVERDUE', 'CANCELLED', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CONVERTED'),
+    type: DataTypes.STRING(20),
     allowNull: false,
     defaultValue: 'DRAFT'
   },
   converted_to_invoice_id: {
     type: DataTypes.UUID,
-    allowNull: true,
-    comment: 'ID de la facture créée à partir de ce devis'
+    allowNull: true
   },
   validity_days: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    defaultValue: 30,
-    comment: 'Durée de validité du devis en jours'
+    defaultValue: 30
   },
   payment_terms: {
     type: DataTypes.STRING(100),
     allowNull: true,
-    defaultValue: 'Payable à réception',
-    comment: 'Conditions de paiement'
+    defaultValue: 'Payable à réception'
   },
   notes: {
     type: DataTypes.TEXT,
-    allowNull: true,
-    comment: 'Notes ou instructions spéciales'
+    allowNull: true
   },
-  // Madagascar-specific fields
   nif_number: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    comment: 'Numéro d\'Identification Fiscale du patient'
+    allowNull: true
   },
   stat_number: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    comment: 'Numéro STAT du patient'
+    allowNull: true
   },
   clinic_nif: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    comment: 'NIF de la clinique'
+    allowNull: true
   },
   clinic_stat: {
     type: DataTypes.STRING(20),
-    allowNull: true,
-    comment: 'STAT de la clinique'
+    allowNull: true
   },
   created_by_user_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    references: { model: 'users', key: 'id' }
   },
   sent_at: {
     type: DataTypes.DATE,
@@ -145,21 +120,13 @@ const Invoice = sequelize.define('invoices', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false, // Required for multi-tenancy
-    references: {
-      model: 'clinics',
-      key: 'id'
-    },
-    comment: 'Clinic this invoice belongs to (for multi-tenancy)'
+    allowNull: true, // ✅ CORRIGÉ: nullable pour SUPER_ADMIN sans clinique
+    references: { model: 'clinics', key: 'id' }
   },
   schedule_id: {
     type: DataTypes.UUID,
-    allowNull: true, // Nullable for existing invoices, required for new ones
-    references: {
-      model: 'pricing_schedules',
-      key: 'id'
-    },
-    comment: 'Grille tarifaire utilisée (SYNDICAL ou CABINET)'
+    allowNull: true,
+    references: { model: 'pricing_schedules', key: 'id' }
   }
 }, {
   indexes: [
@@ -171,53 +138,38 @@ const Invoice = sequelize.define('invoices', {
     { fields: ['total_mga'] },
     { fields: ['clinic_id'] },
     { fields: ['schedule_id'] },
-    { fields: ['document_type'] },
-    { fields: ['clinic_id', 'document_type'] }
+    { fields: ['document_type'] }
   ]
 });
 
-// Instance methods
 Invoice.prototype.calculateTotals = function() {
-  // This will be called after invoice items are loaded
   const subtotal = this.subtotal_mga || 0;
   const discountAmount = (subtotal * this.discount_percentage) / 100;
   const afterDiscount = subtotal - discountAmount;
   const taxAmount = (afterDiscount * this.tax_percentage) / 100;
   const total = afterDiscount + taxAmount;
-  
   this.discount_amount_mga = discountAmount;
   this.tax_amount_mga = taxAmount;
   this.total_mga = total;
-  
-  return {
-    subtotal: subtotal,
-    discountAmount: discountAmount,
-    taxAmount: taxAmount,
-    total: total
-  };
+  return { subtotal, discountAmount, taxAmount, total };
 };
 
 Invoice.prototype.getStatusLabel = function() {
-  const statusLabels = {
-    'DRAFT': 'Brouillon',
-    'SENT': 'Envoyée',
-    'PAID': 'Payée',
-    'PARTIAL': 'Partiellement payée',
-    'OVERDUE': 'En retard',
-    'CANCELLED': 'Annulée'
+  const labels = {
+    DRAFT: 'Brouillon', SENT: 'Envoyée', PAID: 'Payée',
+    PARTIAL: 'Partiellement payée', OVERDUE: 'En retard', CANCELLED: 'Annulée'
   };
-  return statusLabels[this.status] || this.status;
+  return labels[this.status] || this.status;
 };
 
-// Hooks for auto-generating invoice number
 Invoice.beforeCreate(async (invoice) => {
   if (!invoice.invoice_number) {
     try {
       const count = await Invoice.count();
-      invoice.invoice_number = `FACT-${String(count + 1).padStart(6, '0')}`;
+      const year = new Date().getFullYear();
+      invoice.invoice_number = `FACT-${year}-${String(count + 1).padStart(4, '0')}`;
     } catch (error) {
-      // If count fails (e.g., table doesn't exist yet), use timestamp
-      invoice.invoice_number = `FACT-${Date.now().toString().slice(-6)}`;
+      invoice.invoice_number = `FACT-${Date.now().toString().slice(-8)}`;
     }
   }
 });
