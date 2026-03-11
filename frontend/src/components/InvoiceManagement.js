@@ -11,100 +11,91 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { 
-  Receipt, 
-  Plus, 
-  Search, 
-  Eye, 
-  Printer,
-  DollarSign,
-  Calendar,
-  User,
-  CreditCard,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Minus,
-  AlertTriangle,
-  Shield,
-  Wallet,
-  Share2,
-  Download,
-  Copy,
-  X,
-  Banknote,
-  Smartphone
+  Receipt, Plus, Search, Eye, Printer, DollarSign, Calendar, User,
+  CreditCard, AlertCircle, CheckCircle, Clock, Minus, AlertTriangle,
+  Shield, Wallet, Share2, Download, X, Banknote, Smartphone
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat('fr-MG', {
+    style: 'currency', currency: 'MGA',
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(amount || 0);
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  try { return new Date(dateStr).toLocaleDateString('fr-FR'); }
+  catch { return '-'; }
+};
+
+// Map API status → display info
+const STATUS_MAP = {
+  DRAFT:   { name: 'Brouillon', color: 'bg-gray-100 text-gray-700',   icon: Clock },
+  PENDING: { name: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  PARTIAL: { name: 'Partiel',   color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
+  PAID:    { name: 'Payé',      color: 'bg-green-100 text-green-800',   icon: CheckCircle },
+  OVERDUE: { name: 'En retard', color: 'bg-red-100 text-red-800',       icon: AlertCircle },
+  CANCELLED:{ name: 'Annulé',  color: 'bg-gray-100 text-gray-500',     icon: X },
+};
+
+const getStatusInfo = (invoice) => {
+  // Try payment_status first, then status
+  const key = invoice.payment_status || invoice.status || 'DRAFT';
+  return STATUS_MAP[key] || { name: key, color: 'bg-gray-100 text-gray-700', icon: Clock };
+};
+
+const PAYMENT_METHODS = {
+  CASH:         { name: 'Espèces',         icon: Banknote },
+  BANK_TRANSFER:{ name: 'Virement',        icon: CreditCard },
+  CHEQUE:       { name: 'Chèque',          icon: Receipt },
+  MVOLA:        { name: 'Mvola',           icon: Smartphone },
+  ORANGE_MONEY: { name: 'Orange Money',    icon: Smartphone },
+  AIRTEL_MONEY: { name: 'Airtel Money',    icon: Smartphone },
+  CARD:         { name: 'Carte bancaire',  icon: CreditCard },
+};
+
+const DISCOUNT_PRESETS = [
+  { name: 'Syndical (-15%)',          percentage: 15 },
+  { name: 'Humanitaire (-20%)',       percentage: 20 },
+  { name: 'Long terme (-10%)',        percentage: 10 },
+];
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 const InvoiceManagement = () => {
   const { user } = useAuth();
-  const [invoices, setInvoices] = useState([]);
-  const [patients, setPatients] = useState([]);
+
+  const [invoices, setInvoices]               = useState([]);
+  const [patients, setPatients]               = useState([]);
   const [pricingSchedules, setPricingSchedules] = useState([]);
-  const [procedureFees, setProcedureFees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [procedureFees, setProcedureFees]     = useState([]);
+  const [loading, setLoading]                 = useState(true);
+  const [searchTerm, setSearchTerm]           = useState('');
+  const [statusFilter, setStatusFilter]       = useState('ALL');
   const [procedureSearch, setProcedureSearch] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen]       = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [formData, setFormData] = useState({
-    patient_id: '',
-    schedule_id: '',
-    items: [{
-      description: '',
-      procedure_code: '',
-      quantity: 1,
-      unit_price_mga: '',
-      total_mga: 0,
-      tooth_number: ''
-    }],
-    discount_percentage: 0,
-    notes: '',
-    payment_method: ''
-  });
   const [scheduleOverride, setScheduleOverride] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  
-  // Payment modal state
+
+  const [formData, setFormData] = useState({
+    patient_id: '', schedule_id: '',
+    items: [{ description: '', procedure_code: '', quantity: 1, unit_price_mga: '', tooth_number: '' }],
+    discount_percentage: 0, notes: '', payment_method: ''
+  });
+
+  // Payment modal
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [invoicePayments, setInvoicePayments] = useState([]);
-  const [paymentData, setPaymentData] = useState({
-    amount_mga: '',
-    payment_method: 'CASH',
-    reference_number: ''
-  });
-  const [invoicePaymentStats, setInvoicePaymentStats] = useState({
-    total_mga: 0,
-    paid_total_mga: 0,
-    balance_mga: 0,
-    payment_status: 'UNPAID'
-  });
+  const [invoicePayments, setInvoicePayments]         = useState([]);
+  const [paymentData, setPaymentData] = useState({ amount_mga: '', payment_method: 'CASH', reference_number: '' });
+  const [paymentStats, setPaymentStats] = useState({ total_mga: 0, paid_total_mga: 0, balance_mga: 0, payment_status: 'UNPAID' });
 
-  const paymentMethods = {
-    CASH: { name: 'Espèces', icon: Banknote },
-    BANK_TRANSFER: { name: 'Virement bancaire', icon: CreditCard },
-    CHEQUE: { name: 'Chèque', icon: Receipt },
-    MVOLA: { name: 'Mvola', icon: Smartphone },
-    ORANGE_MONEY: { name: 'Orange Money', icon: Smartphone },
-    AIRTEL_MONEY: { name: 'Airtel Money', icon: Smartphone },
-    CARD: { name: 'Carte bancaire', icon: CreditCard }
-  };
-
-  const paymentStatuses = {
-    pending: { name: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-    paid: { name: 'Payé', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-    partial: { name: 'Partiel', color: 'bg-orange-100 text-orange-800', icon: AlertCircle },
-    overdue: { name: 'En retard', color: 'bg-red-100 text-red-800', icon: AlertCircle }
-  };
-
-  const discountPresets = {
-    syndical: { name: 'Syndical (-15%)', percentage: 15 },
-    humanitarian: { name: 'Humanitaire/Rural (-20%)', percentage: 20 },
-    long_term: { name: 'Engagement long terme (-10%)', percentage: 10 }
-  };
+  // ── Data fetching ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     fetchInvoices();
@@ -114,14 +105,17 @@ const InvoiceManagement = () => {
 
   const fetchInvoices = async (status = null) => {
     try {
+      setLoading(true);
       const params = {};
-      if (status && status !== 'ALL') {
-        params.status = status;
-      }
-      const response = await axios.get(`${API}/invoices`, { params });
-      setInvoices(response.data.invoices || []);
-    } catch (error) {
+      if (status && status !== 'ALL') params.status = status;
+      const res = await axios.get(`${API}/invoices`, { params });
+      // Safely extract array
+      const list = Array.isArray(res.data) ? res.data : (res.data?.invoices || []);
+      setInvoices(list);
+    } catch (err) {
+      console.error('fetchInvoices error:', err);
       toast.error('Erreur lors du chargement des factures');
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -129,802 +123,450 @@ const InvoiceManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(`${API}/patients`);
-      setPatients(response.data.patients || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des patients');
-    }
+      const res = await axios.get(`${API}/patients`);
+      setPatients(Array.isArray(res.data) ? res.data : (res.data?.patients || []));
+    } catch (err) { console.error('fetchPatients:', err); }
   };
 
   const fetchPricingSchedules = async () => {
     try {
-      const response = await axios.get(`${API}/pricing-schedules`);
-      setPricingSchedules(response.data.schedules || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des grilles tarifaires');
-    }
+      const res = await axios.get(`${API}/pricing-schedules`);
+      setPricingSchedules(Array.isArray(res.data) ? res.data : (res.data?.schedules || []));
+    } catch (err) { console.error('fetchPricingSchedules:', err); }
   };
 
   const fetchProcedureFees = async (scheduleId) => {
     try {
-      const response = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`);
-      setProcedureFees(response.data.fees || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des actes');
-    }
+      const res = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`);
+      setProcedureFees(Array.isArray(res.data) ? res.data : (res.data?.fees || []));
+    } catch (err) { console.error('fetchProcedureFees:', err); }
   };
 
-  // Fetch payments for an invoice
   const fetchInvoicePayments = async (invoiceId) => {
     try {
-      const response = await axios.get(`${API}/invoices/${invoiceId}/payments`);
-      setInvoicePayments(response.data.payments || []);
-      setInvoicePaymentStats({
-        total_mga: response.data.total_mga,
-        paid_total_mga: response.data.paid_total_mga,
-        balance_mga: response.data.balance_mga,
-        payment_status: response.data.payment_status
+      const res = await axios.get(`${API}/invoices/${invoiceId}/payments`);
+      setInvoicePayments(Array.isArray(res.data?.payments) ? res.data.payments : []);
+      setPaymentStats({
+        total_mga:       res.data?.total_mga       || 0,
+        paid_total_mga:  res.data?.paid_total_mga  || 0,
+        balance_mga:     res.data?.balance_mga     || 0,
+        payment_status:  res.data?.payment_status  || 'UNPAID',
       });
-    } catch (error) {
-      console.error('Erreur lors du chargement des paiements');
+    } catch (err) {
+      console.error('fetchInvoicePayments:', err);
+      setInvoicePayments([]);
     }
   };
 
-  // Open invoice detail/payment modal
+  // ── Actions ─────────────────────────────────────────────────────────────────
+
   const openPaymentModal = async (invoice) => {
     setSelectedInvoice(invoice);
-    await fetchInvoicePayments(invoice.id);
     setPaymentData({ amount_mga: '', payment_method: 'CASH', reference_number: '' });
+    await fetchInvoicePayments(invoice.id);
     setIsPaymentModalOpen(true);
   };
 
-  // Submit payment
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
     if (!selectedInvoice || !paymentData.amount_mga) return;
-    
     try {
-      const response = await axios.post(`${API}/invoices/${selectedInvoice.id}/payments`, {
+      await axios.post(`${API}/invoices/${selectedInvoice.id}/payments`, {
         amount_mga: parseFloat(paymentData.amount_mga),
         payment_method: paymentData.payment_method,
-        reference_number: paymentData.reference_number || null
+        reference_number: paymentData.reference_number || null,
       });
-      
       toast.success('Paiement enregistré');
       setPaymentData({ amount_mga: '', payment_method: 'CASH', reference_number: '' });
       await fetchInvoicePayments(selectedInvoice.id);
-      fetchInvoices(); // Refresh invoice list
-    } catch (error) {
-      if (error.response?.data?.error === 'OVERPAYMENT_NOT_ALLOWED') {
-        toast.error(`Montant maximum: ${formatCurrency(error.response.data.balance_mga)}`);
-      } else {
-        toast.error(error.response?.data?.message || 'Erreur lors du paiement');
-      }
-    }
-  };
-
-  // Print invoice
-  const handlePrint = (invoiceId) => {
-    const printUrl = `${API}/invoices/${invoiceId}/print`;
-    const printWindow = window.open(printUrl, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => printWindow.print();
-    }
-  };
-
-  // Share invoice
-  const handleShare = async (invoice) => {
-    const shareUrl = `${API}/invoices/${invoice.id}/print`;
-    const shareData = {
-      title: `Facture ${invoice.invoice_number}`,
-      text: `Facture ${invoice.invoice_number} - ${formatCurrency(invoice.total_mga)}`,
-      url: shareUrl
-    };
-    
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        toast.success('Partagé!');
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          handleCopyLink(shareUrl);
-        }
-      }
-    } else {
-      handleCopyLink(shareUrl);
-    }
-  };
-
-  // Copy link
-  const handleCopyLink = async (url) => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success('Lien copié!');
+      fetchInvoices(statusFilter !== 'ALL' ? statusFilter : null);
     } catch (err) {
-      toast.error('Impossible de copier le lien');
+      toast.error(err.response?.data?.error || 'Erreur lors du paiement');
     }
   };
 
-  // Download invoice PDF
-  const handleDownloadPDF = async (invoiceId, invoiceNumber) => {
+  const handlePrint   = (id)  => { window.open(`${API}/invoices/${id}/print`, '_blank'); };
+  const handleDownload = (id) => { window.open(`${API}/invoices/${id}/print`, '_blank'); };
+
+  const handleDownloadPDF = async (id, number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/invoices/${invoiceId}/pdf`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API}/invoices/${id}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        toast.error(`Erreur PDF: ${response.status} - ${errorText}`);
-        return;
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `${invoiceNumber || 'facture'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      if (!res.ok) { toast.error(`Erreur PDF: ${res.status}`); return; }
+      const blob = await res.blob();
+      const url  = window.URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `${number || 'facture'}.pdf`;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); window.URL.revokeObjectURL(url);
       toast.success('PDF téléchargé');
-    } catch (error) {
-      console.error('PDF download error:', error);
-      toast.error('Erreur téléchargement PDF');
+    } catch (err) { toast.error('Erreur téléchargement PDF'); }
+  };
+
+  const handleShare = async (invoice) => {
+    const url = `${API}/invoices/${invoice.id}/print`;
+    if (navigator.share) {
+      try { await navigator.share({ title: `Facture ${invoice.invoice_number}`, url }); return; }
+      catch {}
     }
+    try { await navigator.clipboard.writeText(url); toast.success('Lien copié!'); }
+    catch  { toast.error('Impossible de copier'); }
   };
 
-  // Download invoice (legacy HTML)
-  const handleDownload = (invoiceId) => {
-    window.open(`${API}/invoices/${invoiceId}/print`, '_blank');
-  };
+  // ── Form helpers ────────────────────────────────────────────────────────────
 
-  // When schedule changes, load fees
   const handleScheduleChange = (scheduleId) => {
-    setFormData({ ...formData, schedule_id: scheduleId });
-    if (scheduleId) {
-      fetchProcedureFees(scheduleId);
-    } else {
-      setProcedureFees([]);
-    }
+    setFormData(f => ({ ...f, schedule_id: scheduleId }));
+    if (scheduleId) fetchProcedureFees(scheduleId);
+    else setProcedureFees([]);
   };
 
-  // When patient changes, auto-select schedule based on payer_type
   const handlePatientChange = (patientId) => {
     const patient = patients.find(p => p.id === patientId);
     setSelectedPatient(patient);
-    setFormData({ ...formData, patient_id: patientId });
+    setFormData(f => ({ ...f, patient_id: patientId }));
     setScheduleOverride(false);
-    
     if (patient && pricingSchedules.length > 0) {
-      const defaultType = patient.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
-      const defaultSchedule = pricingSchedules.find(s => s.type === defaultType);
-      if (defaultSchedule) {
-        handleScheduleChange(defaultSchedule.id);
-      }
+      const type = patient.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
+      const sched = pricingSchedules.find(s => s.type === type);
+      if (sched) handleScheduleChange(sched.id);
     }
   };
 
-  // When schedule is manually changed (override)
   const handleManualScheduleChange = (scheduleId) => {
-    const newSchedule = pricingSchedules.find(s => s.id === scheduleId);
-    const expectedType = selectedPatient?.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
-    
-    if (newSchedule && newSchedule.type !== expectedType) {
-      setScheduleOverride(true);
-    } else {
-      setScheduleOverride(false);
-    }
+    const sched = pricingSchedules.find(s => s.id === scheduleId);
+    const expected = selectedPatient?.payer_type === 'INSURED' ? 'SYNDICAL' : 'CABINET';
+    setScheduleOverride(!!sched && sched.type !== expected);
     handleScheduleChange(scheduleId);
   };
 
-  // Add procedure from fees list
   const addProcedureFromFee = (fee) => {
-    const newItem = {
-      description: fee.label,
-      procedure_code: fee.procedure_code,
-      quantity: 1,
-      unit_price_mga: fee.price_mga,
-      total_mga: fee.price_mga,
-      tooth_number: ''
-    };
-    setFormData({
-      ...formData,
-      items: [...formData.items.filter(i => i.description !== ''), newItem]
-    });
+    setFormData(f => ({
+      ...f,
+      items: [
+        ...f.items.filter(i => i.description !== ''),
+        { description: fee.label, procedure_code: fee.procedure_code,
+          quantity: 1, unit_price_mga: fee.price_mga, tooth_number: '' }
+      ]
+    }));
     setProcedureSearch('');
   };
 
-  // Handle status filter change
-  const handleStatusFilterChange = (status) => {
-    setStatusFilter(status);
-    setLoading(true);
-    fetchInvoices(status);
-  };
-
-  // Filter procedures by search
-  const filteredProcedures = procedureFees.filter(fee =>
-    fee.procedure_code.toLowerCase().includes(procedureSearch.toLowerCase()) ||
-    fee.label.toLowerCase().includes(procedureSearch.toLowerCase()) ||
-    fee.category.toLowerCase().includes(procedureSearch.toLowerCase())
-  ).slice(0, 10);
-
-  const calculateItemTotal = (item) => {
-    return item.quantity * (parseFloat(item.unit_price_mga) || 0);
-  };
-
-  const calculateSubtotal = () => {
-    return formData.items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
-  };
-
-  const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    const discountAmount = (subtotal * formData.discount_percentage) / 100;
-    return subtotal - discountAmount;
-  };
-
-  const addItem = () => {
-    setFormData({
-      ...formData,
-      items: [...formData.items, {
-        description: '',
-        procedure_code: '',
-        quantity: 1,
-        unit_price_mga: '',
-        total_mga: 0,
-        tooth_number: ''
-      }]
+  const addItem    = () => setFormData(f => ({ ...f, items: [...f.items, { description: '', procedure_code: '', quantity: 1, unit_price_mga: '', tooth_number: '' }] }));
+  const removeItem = (idx) => setFormData(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
+  const updateItem = (idx, field, value) => {
+    setFormData(f => {
+      const items = [...f.items];
+      items[idx] = { ...items[idx], [field]: value };
+      return { ...f, items };
     });
   };
 
-  const removeItem = (index) => {
-    const newItems = formData.items.filter((_, i) => i !== index);
-    setFormData({ ...formData, items: newItems });
-  };
+  const calcItemTotal  = (item) => (item.quantity || 0) * (parseFloat(item.unit_price_mga) || 0);
+  const calcSubtotal   = () => formData.items.reduce((s, i) => s + calcItemTotal(i), 0);
+  const calcTotal      = () => { const sub = calcSubtotal(); return sub - (sub * formData.discount_percentage) / 100; };
 
-  const updateItem = (index, field, value) => {
-    const newItems = [...formData.items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    if (field === 'quantity' || field === 'unit_price_mga') {
-      newItems[index].total_mga = calculateItemTotal(newItems[index]);
-    }
-    setFormData({ ...formData, items: newItems });
+  const resetForm = () => {
+    setFormData({ patient_id: '', schedule_id: '', items: [{ description: '', procedure_code: '', quantity: 1, unit_price_mga: '', tooth_number: '' }], discount_percentage: 0, notes: '', payment_method: '' });
+    setProcedureFees([]); setProcedureSearch(''); setSelectedPatient(null); setScheduleOverride(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.schedule_id) {
-      toast.error('Veuillez sélectionner une grille tarifaire');
-      return;
-    }
-    
+    if (!formData.schedule_id) { toast.error('Veuillez sélectionner une grille tarifaire'); return; }
     try {
-      const invoiceData = {
+      await axios.post(`${API}/invoices`, {
         patient_id: formData.patient_id,
         schedule_id: formData.schedule_id,
         date_issued: new Date().toISOString().split('T')[0],
-        items: formData.items.filter(i => i.description).map(item => ({
-          description: item.description,
-          procedure_code: item.procedure_code,
-          quantity: parseInt(item.quantity),
-          unit_price_mga: parseFloat(item.unit_price_mga),
-          tooth_number: item.tooth_number || null
+        items: formData.items.filter(i => i.description).map(i => ({
+          description: i.description, procedure_code: i.procedure_code,
+          quantity: parseInt(i.quantity), unit_price_mga: parseFloat(i.unit_price_mga),
+          tooth_number: i.tooth_number || null,
         })),
         discount_percentage: formData.discount_percentage,
         payment_method: formData.payment_method || null,
-        notes: formData.notes
-      };
-
-      await axios.post(`${API}/invoices`, invoiceData);
+        notes: formData.notes,
+      });
       toast.success('Facture créée avec succès');
       await fetchInvoices();
       resetForm();
       setIsDialogOpen(false);
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la création de la facture');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erreur lors de la création');
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      patient_id: '',
-      schedule_id: '',
-      items: [{
-        description: '',
-        procedure_code: '',
-        quantity: 1,
-        unit_price_mga: '',
-        total_mga: 0,
-        tooth_number: ''
-      }],
-      discount_percentage: 0,
-      notes: '',
-      payment_method: ''
-    });
-    setProcedureFees([]);
-    setProcedureSearch('');
-    setSelectedPatient(null);
-    setScheduleOverride(false);
+  // ── Derived data ────────────────────────────────────────────────────────────
+
+  const getPatientName = (id) => {
+    const p = patients.find(p => p.id === id);
+    return p ? `${p.first_name || ''} ${p.last_name || ''}`.trim() : 'Patient inconnu';
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-MG', {
-      style: 'currency',
-      currency: 'MGA',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const filteredProcedures = procedureFees.filter(f =>
+    (f.procedure_code || '').toLowerCase().includes(procedureSearch.toLowerCase()) ||
+    (f.label || '').toLowerCase().includes(procedureSearch.toLowerCase()) ||
+    (f.category || '').toLowerCase().includes(procedureSearch.toLowerCase())
+  ).slice(0, 10);
 
-  const getPatientName = (patientId) => {
-    const patient = patients.find(p => p.id === patientId);
-    return patient ? `${patient.first_name} ${patient.last_name}` : 'Patient inconnu';
-  };
-
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getPatientName(invoice.patient_id).toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredInvoices = invoices.filter(inv =>
+    (inv.invoice_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getPatientName(inv.patient_id).toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        {/* Header Skeleton */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gray-200 rounded-xl animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-6 w-28 bg-gray-200 rounded-lg animate-pulse" />
-                <div className="h-4 w-36 bg-gray-100 rounded animate-pulse" style={{ animationDelay: '0.1s' }} />
-              </div>
-            </div>
-            <div className="h-10 w-40 bg-gray-200 rounded-lg animate-pulse" />
-          </div>
-        </div>
-        {/* Search + Filters Skeleton */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between gap-4">
-            <div className="h-11 w-80 bg-gray-100 rounded-lg animate-pulse" />
-            <div className="flex gap-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-9 w-24 bg-gray-100 rounded-lg animate-pulse" style={{ animationDelay: `${0.05 * i}s` }} />
-              ))}
-            </div>
-          </div>
-        </div>
-        {/* List Skeleton */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-100">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-5 flex items-center justify-between" style={{ animationDelay: `${0.1 * i}s` }}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse" />
-                <div className="space-y-2">
-                  <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-4 w-56 bg-gray-100 rounded animate-pulse" />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="h-6 w-16 bg-gray-100 rounded-full animate-pulse" />
-                {[1, 2, 3].map((j) => (
-                  <div key={j} className="w-8 h-8 bg-gray-100 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="space-y-4 p-6">
+        {[1,2,3,4].map(i => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header Card */}
+      {/* Header */}
       <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-[#0F7E8A]/10 rounded-xl">
-                <Receipt className="h-7 w-7 text-[#0F7E8A]" />
+              <div className="p-3 bg-teal-50 rounded-xl">
+                <Receipt className="h-7 w-7 text-teal-600" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Factures</h1>
-                <p className="text-gray-500 text-sm mt-0.5">
-                  {invoices.length} facture{invoices.length > 1 ? 's' : ''} enregistrée{invoices.length > 1 ? 's' : ''}
-                </p>
+                <p className="text-gray-500 text-sm">{invoices.length} facture{invoices.length !== 1 ? 's' : ''}</p>
               </div>
             </div>
-            
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  onClick={resetForm} 
-                  className="bg-[#0F7E8A] hover:bg-[#0a6872] text-white rounded-lg shadow-md"
-                  data-testid="new-invoice-btn"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle Facture
+                <Button onClick={resetForm} className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg shadow-md">
+                  <Plus className="h-4 w-4 mr-2" />Nouvelle Facture
                 </Button>
               </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl">Nouvelle Facture</DialogTitle>
-              <DialogDescription>
-                Créez une nouvelle facture pour un patient
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Patient Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="patient_id">Patient *</Label>
-                <Select value={formData.patient_id} onValueChange={handlePatientChange}>
-                  <SelectTrigger data-testid="patient-select">
-                    <SelectValue placeholder="Sélectionnez un patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map((patient) => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        <div className="flex items-center gap-2">
-                          {patient.first_name} {patient.last_name}
-                          {patient.payer_type === 'INSURED' ? (
-                            <Badge variant="default" className="bg-blue-600"><Shield className="h-3 w-3 mr-1" />Assuré</Badge>
-                          ) : (
-                            <Badge variant="outline"><Wallet className="h-3 w-3 mr-1" />Non assuré</Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedPatient && (
-                  <div className={`text-sm p-2 rounded ${selectedPatient.payer_type === 'INSURED' ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-700'}`}>
-                    {selectedPatient.payer_type === 'INSURED' ? (
-                      <span className="flex items-center gap-1"><Shield className="h-4 w-4" /> Patient assuré → Grille SYNDICAL recommandée</span>
-                    ) : (
-                      <span className="flex items-center gap-1"><Wallet className="h-4 w-4" /> Patient non assuré → Grille CABINET recommandée</span>
+
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl">
+                <DialogHeader>
+                  <DialogTitle>Nouvelle Facture</DialogTitle>
+                  <DialogDescription>Créez une nouvelle facture pour un patient</DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Patient */}
+                  <div>
+                    <Label>Patient *</Label>
+                    <Select value={formData.patient_id} onValueChange={handlePatientChange}>
+                      <SelectTrigger><SelectValue placeholder="Sélectionnez un patient" /></SelectTrigger>
+                      <SelectContent>
+                        {patients.map(p => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.first_name} {p.last_name}
+                            {p.payer_type === 'INSURED' ? ' (Assuré)' : ' (Non assuré)'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Schedule */}
+                  <div>
+                    <Label>Grille Tarifaire *</Label>
+                    <Select value={formData.schedule_id} onValueChange={handleManualScheduleChange}>
+                      <SelectTrigger><SelectValue placeholder="Sélectionnez une tarification" /></SelectTrigger>
+                      <SelectContent>
+                        {pricingSchedules.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name} ({s.type})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {scheduleOverride && (
+                      <p className="text-amber-700 text-sm mt-1 flex items-center gap-1">
+                        <AlertTriangle className="h-4 w-4" />Grille différente de celle recommandée
+                      </p>
                     )}
                   </div>
-                )}
-              </div>
 
-              {/* Pricing Schedule Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="schedule_id">Grille Tarifaire *</Label>
-                <Select value={formData.schedule_id} onValueChange={handleManualScheduleChange}>
-                  <SelectTrigger data-testid="schedule-select">
-                    <SelectValue placeholder="Sélectionnez une tarification" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pricingSchedules.map((schedule) => (
-                      <SelectItem key={schedule.id} value={schedule.id}>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={schedule.type === 'SYNDICAL' ? 'default' : 'secondary'}>
-                            {schedule.type}
-                          </Badge>
-                          {schedule.name}
+                  {/* Procedure search */}
+                  {formData.schedule_id && (
+                    <div>
+                      <Label>Ajouter un acte</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input placeholder="Rechercher un acte..." value={procedureSearch}
+                          onChange={e => setProcedureSearch(e.target.value)} className="pl-10" />
+                      </div>
+                      {procedureSearch && filteredProcedures.length > 0 && (
+                        <div className="border rounded-lg max-h-48 overflow-y-auto bg-white shadow-lg mt-1">
+                          {filteredProcedures.map(fee => (
+                            <button key={fee.id} type="button" onClick={() => addProcedureFromFee(fee)}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 flex justify-between items-center border-b last:border-0 text-sm">
+                              <span><span className="font-mono text-blue-600">{fee.procedure_code}</span> — {fee.label}</span>
+                              <span className="font-semibold">{formatCurrency(fee.price_mga)}</span>
+                            </button>
+                          ))}
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {scheduleOverride && (
-                  <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded text-amber-800 text-sm">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span>Attention: Vous utilisez une grille différente de celle recommandée pour ce type de patient.</span>
-                  </div>
-                )}
-                <p className="text-sm text-gray-500">
-                  {formData.schedule_id && pricingSchedules.find(s => s.id === formData.schedule_id)?.type === 'SYNDICAL' 
-                    ? 'Tarifs conventionnés (assurés)' 
-                    : 'Tarifs libres du cabinet'}
-                </p>
-              </div>
-
-              {/* Procedure Search & Add */}
-              {formData.schedule_id && (
-                <div className="space-y-2">
-                  <Label>Ajouter un acte</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Rechercher un acte (code, libellé)..."
-                      value={procedureSearch}
-                      onChange={(e) => setProcedureSearch(e.target.value)}
-                      className="pl-10"
-                      data-testid="procedure-search"
-                    />
-                  </div>
-                  {procedureSearch && filteredProcedures.length > 0 && (
-                    <div className="border rounded-lg max-h-48 overflow-y-auto bg-white shadow-lg">
-                      {filteredProcedures.map((fee) => (
-                        <button
-                          key={fee.id}
-                          type="button"
-                          onClick={() => addProcedureFromFee(fee)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 flex justify-between items-center border-b last:border-0"
-                          data-testid={`procedure-${fee.procedure_code}`}
-                        >
-                          <div>
-                            <span className="font-mono text-sm text-blue-600">{fee.procedure_code}</span>
-                            <span className="ml-2">{fee.label}</span>
-                            <Badge variant="outline" className="ml-2 text-xs">{fee.category}</Badge>
-                          </div>
-                          <span className="font-semibold">{formatCurrency(fee.price_mga)}</span>
-                        </button>
-                      ))}
+                      )}
                     </div>
                   )}
-                </div>
-              )}
 
-              {/* Items */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-lg font-semibold">Articles / Services</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un article
-                  </Button>
-                </div>
-                
-                <div className="space-y-3">
-                  {formData.items.map((item, index) => (
-                    <Card key={index} className="p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                        <div className="md:col-span-2">
-                          <Label htmlFor={`description-${index}`}>Description</Label>
-                          <Input
-                            id={`description-${index}`}
-                            value={item.description}
-                            onChange={(e) => updateItem(index, 'description', e.target.value)}
-                            placeholder="Ex: Consultation, Obturation..."
-                            required
-                          />
+                  {/* Items */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-semibold">Articles</Label>
+                      <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                        <Plus className="h-4 w-4 mr-1" />Ajouter
+                      </Button>
+                    </div>
+                    {formData.items.map((item, idx) => (
+                      <div key={idx} className="grid grid-cols-5 gap-3 mb-3 p-3 bg-gray-50 rounded-lg items-end">
+                        <div className="col-span-2">
+                          <Label className="text-xs">Description *</Label>
+                          <Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Consultation..." required />
                         </div>
                         <div>
-                          <Label htmlFor={`quantity-${index}`}>Quantité</Label>
-                          <Input
-                            id={`quantity-${index}`}
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                            required
-                          />
+                          <Label className="text-xs">Qté</Label>
+                          <Input type="number" min="1" value={item.quantity}
+                            onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)} required />
                         </div>
                         <div>
-                          <Label htmlFor={`unit_price-${index}`}>Prix unitaire (MGA)</Label>
-                          <Input
-                            id={`unit_price-${index}`}
-                            type="number"
-                            value={item.unit_price_mga}
-                            onChange={(e) => updateItem(index, 'unit_price_mga', e.target.value)}
-                            placeholder="50000"
-                            required
-                          />
+                          <Label className="text-xs">Prix (MGA) *</Label>
+                          <Input type="number" value={item.unit_price_mga}
+                            onChange={e => updateItem(idx, 'unit_price_mga', e.target.value)} placeholder="50000" required />
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-end gap-2">
                           <div className="flex-1">
-                            <Label>Total</Label>
-                            <div className="text-lg font-semibold">
-                              {formatCurrency(calculateItemTotal(item))}
-                            </div>
+                            <Label className="text-xs">Total</Label>
+                            <div className="font-semibold text-sm">{formatCurrency(calcItemTotal(item))}</div>
                           </div>
                           {formData.items.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeItem(index)}
-                            >
+                            <Button type="button" variant="outline" size="sm" onClick={() => removeItem(idx)}>
                               <Minus className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Discount */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="discount">Remise (%)</Label>
-                  <Input
-                    id="discount"
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={formData.discount_percentage}
-                    onChange={(e) => setFormData({...formData, discount_percentage: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Remises prédéfinies</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(discountPresets).map(([key, preset]) => (
-                      <Button
-                        key={key}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setFormData({...formData, discount_percentage: preset.percentage})}
-                      >
-                        {preset.name}
-                      </Button>
                     ))}
                   </div>
-                </div>
-              </div>
 
-              {/* Payment Method */}
-              <div className="space-y-2">
-                <Label htmlFor="payment_method">Mode de paiement (optionnel)</Label>
-                <Select value={formData.payment_method} onValueChange={(value) => setFormData({...formData, payment_method: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez le mode de paiement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(paymentMethods).map(([key, name]) => (
-                      <SelectItem key={key} value={key}>{name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  placeholder="Notes additionnelles..."
-                  rows={3}
-                />
-              </div>
-
-              {/* Total Summary */}
-              <Card className="bg-gray-50">
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Sous-total:</span>
-                      <span className="font-semibold">{formatCurrency(calculateSubtotal())}</span>
+                  {/* Discount */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Remise (%)</Label>
+                      <Input type="number" min="0" max="100" value={formData.discount_percentage}
+                        onChange={e => setFormData(f => ({ ...f, discount_percentage: parseFloat(e.target.value) || 0 }))} />
                     </div>
+                    <div>
+                      <Label>Remises prédéfinies</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {DISCOUNT_PRESETS.map(p => (
+                          <Button key={p.name} type="button" variant="outline" size="sm"
+                            onClick={() => setFormData(f => ({ ...f, discount_percentage: p.percentage }))}>
+                            {p.name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment method */}
+                  <div>
+                    <Label>Mode de paiement (optionnel)</Label>
+                    <Select value={formData.payment_method} onValueChange={v => setFormData(f => ({ ...f, payment_method: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <Label>Notes</Label>
+                    <Textarea value={formData.notes} onChange={e => setFormData(f => ({ ...f, notes: e.target.value }))} rows={2} />
+                  </div>
+
+                  {/* Summary */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-1">
+                    <div className="flex justify-between text-sm"><span>Sous-total</span><span>{formatCurrency(calcSubtotal())}</span></div>
                     {formData.discount_percentage > 0 && (
-                      <div className="flex justify-between text-red-600">
-                        <span>Remise ({formData.discount_percentage}%):</span>
-                        <span>-{formatCurrency((calculateSubtotal() * formData.discount_percentage) / 100)}</span>
+                      <div className="flex justify-between text-sm text-red-600">
+                        <span>Remise ({formData.discount_percentage}%)</span>
+                        <span>-{formatCurrency(calcSubtotal() * formData.discount_percentage / 100)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-lg font-bold border-t pt-2">
-                      <span>Total:</span>
-                      <span>{formatCurrency(calculateTotal())}</span>
+                    <div className="flex justify-between font-bold text-base border-t pt-2">
+                      <span>Total</span><span>{formatCurrency(calcTotal())}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-lg">
-                  Annuler
-                </Button>
-                <Button type="submit" disabled={!formData.patient_id || formData.items.some(item => !item.description || !item.unit_price_mga)} className="bg-[#0F7E8A] hover:bg-[#0a6872] rounded-lg">
-                  Créer la facture
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Annuler</Button>
+                    <Button type="submit"
+                      disabled={!formData.patient_id || formData.items.some(i => !i.description || !i.unit_price_mga)}
+                      className="bg-teal-600 hover:bg-teal-700 text-white">
+                      Créer la facture
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
 
-      {/* Search and Filters Card */}
+      {/* Search + Filters */}
       <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Rechercher une facture..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-11 bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
-                data-testid="invoice-search"
-              />
+              <Input placeholder="Rechercher..." value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
             </div>
-            
-            {/* Status Filters */}
-            <div className="flex items-center gap-2" data-testid="status-filters">
-              <Button
-                variant={statusFilter === 'ALL' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleStatusFilterChange('ALL')}
-                className={statusFilter === 'ALL' ? 'bg-[#0F7E8A] hover:bg-[#0a6872] rounded-lg' : 'border-gray-200 rounded-lg'}
-                data-testid="filter-all"
-              >
-                Toutes
-              </Button>
-              <Button
-                variant={statusFilter === 'DRAFT' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleStatusFilterChange('DRAFT')}
-                className={statusFilter === 'DRAFT' ? 'bg-red-600 hover:bg-red-700 rounded-lg' : 'border-gray-200 text-red-600 hover:bg-red-50 rounded-lg'}
-                data-testid="filter-unpaid"
-              >
-                <AlertCircle className="h-4 w-4 mr-1" />
-                Impayées
-              </Button>
-              <Button
-                variant={statusFilter === 'PARTIAL' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleStatusFilterChange('PARTIAL')}
-                className={statusFilter === 'PARTIAL' ? 'bg-amber-600 hover:bg-amber-700 rounded-lg' : 'border-gray-200 text-amber-600 hover:bg-amber-50 rounded-lg'}
-                data-testid="filter-partial"
-              >
-                <Clock className="h-4 w-4 mr-1" />
-                Partielles
-              </Button>
-              <Button
-                variant={statusFilter === 'PAID' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleStatusFilterChange('PAID')}
-                className={statusFilter === 'PAID' ? 'bg-green-600 hover:bg-green-700 rounded-lg' : 'border-gray-200 text-green-600 hover:bg-green-50 rounded-lg'}
-                data-testid="filter-paid"
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Payées
-              </Button>
+            <div className="flex gap-2 flex-wrap">
+              {['ALL','DRAFT','PARTIAL','PAID'].map(s => (
+                <Button key={s} variant={statusFilter === s ? 'default' : 'outline'} size="sm"
+                  onClick={() => { setStatusFilter(s); fetchInvoices(s !== 'ALL' ? s : null); }}
+                  className={statusFilter === s ? 'bg-teal-600 hover:bg-teal-700 text-white' : ''}>
+                  {{ ALL:'Toutes', DRAFT:'Brouillon', PARTIAL:'Partiel', PAID:'Payées' }[s]}
+                </Button>
+              ))}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Invoices List */}
+      {/* List */}
       <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
         <CardContent className="p-0">
           {filteredInvoices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="p-4 bg-gray-100 rounded-full mb-4">
-                <Receipt className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-1">
-                {searchTerm ? 'Aucune facture trouvée' : 'Aucune facture créée'}
-              </h3>
-              <p className="text-gray-500 text-sm">
-                {searchTerm 
-                  ? 'Essayez avec d\'autres termes de recherche'
-                  : 'Commencez par créer votre première facture'
-                }
-              </p>
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <Receipt className="h-12 w-12 mb-3 opacity-30" />
+              <p className="text-lg font-medium">{searchTerm ? 'Aucun résultat' : 'Aucune facture'}</p>
+              <p className="text-sm">Créez votre première facture</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {filteredInvoices.map((invoice) => {
-                const StatusIcon = paymentStatuses[invoice.payment_status]?.icon || Clock;
+              {filteredInvoices.map(invoice => {
+                const statusInfo = getStatusInfo(invoice);
+                const StatusIcon = statusInfo.icon;
+                const invoiceDate = invoice.invoice_date || invoice.date_issued || invoice.created_at;
                 return (
-                  <div 
-                    key={invoice.id} 
-                    className="p-5 hover:bg-gray-50 transition-colors"
-                    data-testid={`invoice-${invoice.id}`}
-                  >
+                  <div key={invoice.id} className="p-5 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#0F7E8A]/10 rounded-xl flex items-center justify-center">
-                          <Receipt className="h-6 w-6 text-[#0F7E8A]" />
+                        <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center">
+                          <Receipt className="h-6 w-6 text-teal-600" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {invoice.invoice_number}
-                          </h3>
+                          <h3 className="font-semibold text-gray-900">{invoice.invoice_number || '-'}</h3>
                           <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                             <span className="flex items-center gap-1">
                               <User className="h-3.5 w-3.5" />
@@ -932,7 +574,7 @@ const InvoiceManagement = () => {
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {new Date(invoice.date_issued).toLocaleDateString('fr-FR')}
+                              {formatDate(invoiceDate)}
                             </span>
                             <span className="flex items-center gap-1 font-medium text-gray-700">
                               <DollarSign className="h-3.5 w-3.5" />
@@ -941,37 +583,18 @@ const InvoiceManagement = () => {
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <Badge className={paymentStatuses[invoice.payment_status]?.color || paymentStatuses.pending.color}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {paymentStatuses[invoice.payment_status]?.name || invoice.payment_status}
-                        </Badge>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openPaymentModal(invoice)} 
-                          className="border-gray-200 hover:bg-gray-50 rounded-lg"
-                          data-testid={`view-${invoice.invoice_number}`}
-                        >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 ${statusInfo.color}`}>
+                          <StatusIcon className="h-3 w-3" />
+                          {statusInfo.name}
+                        </span>
+                        <Button variant="outline" size="sm" onClick={() => openPaymentModal(invoice)} className="rounded-lg">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleShare(invoice)} 
-                          className="border-gray-200 hover:bg-gray-50 rounded-lg"
-                          data-testid={`share-${invoice.invoice_number}`}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => handleShare(invoice)} className="rounded-lg">
                           <Share2 className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handlePrint(invoice.id)} 
-                          className="border-gray-200 hover:bg-gray-50 rounded-lg"
-                          data-testid={`print-${invoice.invoice_number}`}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => handlePrint(invoice.id)} className="rounded-lg">
                           <Printer className="h-4 w-4" />
                         </Button>
                       </div>
@@ -983,175 +606,114 @@ const InvoiceManagement = () => {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Payment Modal */}
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Receipt className="h-5 w-5 text-[#0F7E8A]" />
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-teal-600" />
               Facture {selectedInvoice?.invoice_number}
             </DialogTitle>
-            <DialogDescription>
-              {getPatientName(selectedInvoice?.patient_id)}
-            </DialogDescription>
+            <DialogDescription>{getPatientName(selectedInvoice?.patient_id)}</DialogDescription>
           </DialogHeader>
-          
+
           {selectedInvoice && (
-            <div className="space-y-6">
-              {/* Payment Summary */}
-              <div className="grid grid-cols-4 gap-4">
-                <Card className="bg-gray-50 border-0 rounded-xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-gray-500">Total</p>
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(invoicePaymentStats.total_mga)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-50 border-0 rounded-xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-green-600">Payé</p>
-                    <p className="text-xl font-bold text-green-700">{formatCurrency(invoicePaymentStats.paid_total_mga)}</p>
-                  </CardContent>
-                </Card>
-                <Card className={`border-0 rounded-xl ${invoicePaymentStats.balance_mga > 0 ? "bg-amber-50" : "bg-green-50"}`}>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-amber-600">Reste</p>
-                    <p className={`text-xl font-bold ${invoicePaymentStats.balance_mga > 0 ? 'text-amber-700' : 'text-green-700'}`}>
-                      {formatCurrency(invoicePaymentStats.balance_mga)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 rounded-xl">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-gray-500">Statut</p>
-                    <Badge className={
-                      invoicePaymentStats.payment_status === 'PAID' ? 'bg-green-100 text-green-800' :
-                      invoicePaymentStats.payment_status === 'PARTIAL' ? 'bg-amber-100 text-amber-800' :
-                      'bg-red-100 text-red-800'
-                    }>
-                      {invoicePaymentStats.payment_status === 'PAID' ? 'Payé' :
-                       invoicePaymentStats.payment_status === 'PARTIAL' ? 'Partiel' : 'Impayé'}
-                    </Badge>
-                  </CardContent>
-                </Card>
+            <div className="space-y-5">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'Total',  value: paymentStats.total_mga,      cls: 'bg-gray-50' },
+                  { label: 'Payé',   value: paymentStats.paid_total_mga, cls: 'bg-green-50' },
+                  { label: 'Reste',  value: paymentStats.balance_mga,    cls: paymentStats.balance_mga > 0 ? 'bg-amber-50' : 'bg-green-50' },
+                ].map(({ label, value, cls }) => (
+                  <div key={label} className={`${cls} rounded-xl p-4 text-center`}>
+                    <p className="text-xs text-gray-500 mb-1">{label}</p>
+                    <p className="text-lg font-bold">{formatCurrency(value)}</p>
+                  </div>
+                ))}
               </div>
 
-              {/* Add Payment Form */}
-              {invoicePaymentStats.balance_mga > 0 && (
-                <Card className="border border-gray-100 rounded-xl">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Plus className="h-4 w-4 text-[#0F7E8A]" />
-                      Ajouter un paiement
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleSubmitPayment} className="grid grid-cols-4 gap-4">
-                      <div>
-                        <Label className="text-sm">Montant (MGA)</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          max={invoicePaymentStats.balance_mga}
-                          value={paymentData.amount_mga}
-                          onChange={(e) => setPaymentData({...paymentData, amount_mga: e.target.value})}
-                          placeholder={`Max: ${formatCurrency(invoicePaymentStats.balance_mga)}`}
-                          className="h-10 rounded-lg"
-                          data-testid="payment-amount"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm">Méthode</Label>
-                        <Select value={paymentData.payment_method} onValueChange={(v) => setPaymentData({...paymentData, payment_method: v})}>
-                          <SelectTrigger className="h-10 rounded-lg" data-testid="payment-method">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(paymentMethods).map(([key, { name }]) => (
-                              <SelectItem key={key} value={key}>{name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-sm">Référence</Label>
-                        <Input
-                          value={paymentData.reference_number}
-                          onChange={(e) => setPaymentData({...paymentData, reference_number: e.target.value})}
-                          placeholder="N° transaction/chèque"
-                          className="h-10 rounded-lg"
-                          data-testid="payment-reference"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <Button type="submit" disabled={!paymentData.amount_mga} className="bg-[#0F7E8A] hover:bg-[#0a6872] rounded-lg" data-testid="submit-payment">
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Enregistrer
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
+              {/* Add payment */}
+              {paymentStats.balance_mga > 0 && (
+                <div className="border rounded-xl p-4">
+                  <p className="font-semibold text-sm mb-3">Ajouter un paiement</p>
+                  <form onSubmit={handleSubmitPayment} className="grid grid-cols-4 gap-3">
+                    <div>
+                      <Label className="text-xs">Montant (MGA)</Label>
+                      <Input type="number" min="1" max={paymentStats.balance_mga}
+                        value={paymentData.amount_mga}
+                        onChange={e => setPaymentData(d => ({ ...d, amount_mga: e.target.value }))}
+                        placeholder={`Max ${formatCurrency(paymentStats.balance_mga)}`} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Méthode</Label>
+                      <Select value={paymentData.payment_method}
+                        onValueChange={v => setPaymentData(d => ({ ...d, payment_method: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Référence</Label>
+                      <Input value={paymentData.reference_number}
+                        onChange={e => setPaymentData(d => ({ ...d, reference_number: e.target.value }))}
+                        placeholder="N° transaction" />
+                    </div>
+                    <div className="flex items-end">
+                      <Button type="submit" disabled={!paymentData.amount_mga}
+                        className="bg-teal-600 hover:bg-teal-700 text-white w-full">
+                        <CheckCircle className="h-4 w-4 mr-1" />Enregistrer
+                      </Button>
+                    </div>
+                  </form>
+                </div>
               )}
 
-              {/* Payment History */}
-              <Card className="border border-gray-100 rounded-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Historique des paiements</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {invoicePayments.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Aucun paiement enregistré</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {invoicePayments.map((payment) => {
-                        const MethodIcon = paymentMethods[payment.payment_method]?.icon || CreditCard;
-                        return (
-                          <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                                <MethodIcon className="h-5 w-5 text-gray-500" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">{paymentMethods[payment.payment_method]?.name || payment.payment_method}</p>
-                                <p className="text-sm text-gray-500">
-                                  {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
-                                  {payment.reference_number && ` • Réf: ${payment.reference_number}`}
-                                </p>
-                              </div>
+              {/* History */}
+              <div className="border rounded-xl p-4">
+                <p className="font-semibold text-sm mb-3">Historique des paiements</p>
+                {invoicePayments.length === 0 ? (
+                  <p className="text-gray-400 text-center py-4 text-sm">Aucun paiement enregistré</p>
+                ) : (
+                  <div className="space-y-2">
+                    {invoicePayments.map(payment => {
+                      const MethodIcon = PAYMENT_METHODS[payment.payment_method]?.icon || CreditCard;
+                      return (
+                        <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <MethodIcon className="h-5 w-5 text-gray-500" />
+                            <div>
+                              <p className="text-sm font-medium">{PAYMENT_METHODS[payment.payment_method]?.name || payment.payment_method}</p>
+                              <p className="text-xs text-gray-500">{formatDate(payment.payment_date)}{payment.reference_number ? ` · ${payment.reference_number}` : ''}</p>
                             </div>
-                            <span className="font-bold text-green-600">+{formatCurrency(payment.amount_mga)}</span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                          <span className="font-bold text-green-600">+{formatCurrency(payment.amount_mga)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* Actions */}
-              <div className="flex justify-between pt-4 border-t border-gray-100">
+              <div className="flex justify-between pt-3 border-t">
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => handleDownloadPDF(selectedInvoice.id, selectedInvoice.invoice_number)} className="border-gray-200 rounded-lg" data-testid="download-pdf-btn">
-                    <Download className="h-4 w-4 mr-2" />
-                    PDF
+                  <Button variant="outline" size="sm" onClick={() => handleDownloadPDF(selectedInvoice.id, selectedInvoice.invoice_number)}>
+                    <Download className="h-4 w-4 mr-1" />PDF
                   </Button>
-                  <Button variant="outline" onClick={() => handleDownload(selectedInvoice.id)} className="border-gray-200 rounded-lg">
-                    <Download className="h-4 w-4 mr-2" />
-                    HTML
+                  <Button variant="outline" size="sm" onClick={() => handleShare(selectedInvoice)}>
+                    <Share2 className="h-4 w-4 mr-1" />Partager
                   </Button>
-                  <Button variant="outline" onClick={() => handleShare(selectedInvoice)} className="border-gray-200 rounded-lg">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Partager
-                  </Button>
-                  <Button variant="outline" onClick={() => handlePrint(selectedInvoice.id)} className="border-gray-200 rounded-lg">
-                    <Printer className="h-4 w-4 mr-2" />
-                    Imprimer
+                  <Button variant="outline" size="sm" onClick={() => handlePrint(selectedInvoice.id)}>
+                    <Printer className="h-4 w-4 mr-1" />Imprimer
                   </Button>
                 </div>
-                <Button variant="ghost" onClick={() => setIsPaymentModalOpen(false)} className="rounded-lg">
-                  Fermer
-                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setIsPaymentModalOpen(false)}>Fermer</Button>
               </div>
             </div>
           )}
