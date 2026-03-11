@@ -9,16 +9,11 @@ const { Op } = require('sequelize');
 
 const router = express.Router();
 
-// All routes require authentication
 router.use(authenticateToken);
-
-// All routes require valid subscription (licensing guard)
 router.use(requireValidSubscription);
-
-// Audit logging for write operations
 router.use(auditLogger('patients'));
 
-// List patients (avec filtrage clinic_id)
+// ── GET / — List patients ────────────────────────────────────────────────────
 router.get('/', requireClinicId, [
   query('search').optional().isLength({ min: 1 }),
   query('page').optional().isInt({ min: 1 }),
@@ -27,30 +22,22 @@ router.get('/', requireClinicId, [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Paramètres de recherche invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Paramètres invalides', details: errors.array() });
     }
 
     const { search, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    // Build where clause with clinic filtering
     let whereClause = {};
-    
-    // Super admin can see all patients, others filtered by clinic
-    if (req.clinic_id) {
-      whereClause.clinic_id = req.clinic_id;
-    }
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
 
     if (search) {
       whereClause[Op.or] = [
-        { patient_number: { [Op.like]: `%${search}%` } },
-        { first_name: { [Op.like]: `%${search}%` } },
-        { last_name: { [Op.like]: `%${search}%` } },
-        { phone_primary: { [Op.like]: `%${search}%` } },
-        { email: { [Op.like]: `%${search}%` } }
+        { patient_number: { [Op.iLike]: `%${search}%` } },
+        { first_name:     { [Op.iLike]: `%${search}%` } },
+        { last_name:      { [Op.iLike]: `%${search}%` } },
+        { phone_primary:  { [Op.iLike]: `%${search}%` } },
+        { email:          { [Op.iLike]: `%${search}%` } }
       ];
     }
 
@@ -62,7 +49,8 @@ router.get('/', requireClinicId, [
       include: [{
         model: User,
         as: 'createdBy',
-        attributes: { exclude: ['password_hash'] }
+        attributes: { exclude: ['password_hash'] },
+        required: false
       }]
     });
 
@@ -75,99 +63,65 @@ router.get('/', requireClinicId, [
         per_page: parseInt(limit)
       }
     });
-
   } catch (error) {
     console.error('List patients error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération des patients'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération des patients', message: error.message });
   }
 });
 
-// Get single patient - with clinic check
+// ── GET /:id — Single patient ────────────────────────────────────────────────
 router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
 
-    // Build where clause with clinic filtering
     let whereClause = { id: req.params.id };
-    if (req.clinic_id) {
-      whereClause.clinic_id = req.clinic_id;
-    }
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
 
     const patient = await Patient.findOne({
       where: whereClause,
       include: [
-        {
-          model: Appointment,
-          as: 'appointments',
-          limit: 5,
-          order: [['appointment_date', 'DESC']]
-        },
-        {
-          model: Treatment,
-          as: 'treatments',
-          limit: 10,
-          order: [['treatment_date', 'DESC']]
-        },
-        {
-          model: Invoice,
-          as: 'invoices',
-          limit: 5,
-          order: [['invoice_date', 'DESC']]
-        }
+        { model: Appointment, as: 'appointments', limit: 5, order: [['appointment_date', 'DESC']], required: false },
+        { model: Treatment,   as: 'treatments',   limit: 10, order: [['treatment_date', 'DESC']], required: false },
+        { model: Invoice,     as: 'invoices',     limit: 5,  order: [['invoice_date', 'DESC']],  required: false }
       ]
     });
 
-    if (!patient) {
-      return res.status(404).json({
-        error: 'Patient non trouvé'
-      });
-    }
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
-    // Log patient view
-    await AuditLog.create({
-      user_id: req.user.id,
-      action: 'VIEW',
-      resource_type: 'patients',
-      resource_id: patient.id,
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
-      description: `Consultation fiche patient: ${patient.getFullName()}`
-    });
+    try {
+      await AuditLog.create({
+        user_id: req.user.id,
+        action: 'VIEW',
+        resource_type: 'patients',
+        resource_id: patient.id,
+        ip_address: req.ip,
+        user_agent: req.get('User-Agent'),
+        description: `Consultation fiche patient: ${patient.first_name} ${patient.last_name}`
+      });
+    } catch (auditErr) { console.error('Audit log error:', auditErr); }
 
     res.json(patient);
   } catch (error) {
     console.error('Get patient error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération du patient'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération du patient', message: error.message });
   }
 });
 
-// Create patient (avec clinic_id automatique)
+// ── POST / — Create patient ──────────────────────────────────────────────────
 router.post('/', requireClinicId, [
   body('first_name').isLength({ min: 2, max: 50 }).withMessage('Prénom requis (2-50 caractères)'),
   body('last_name').isLength({ min: 2, max: 50 }).withMessage('Nom requis (2-50 caractères)'),
   body('date_of_birth').isISO8601().withMessage('Date de naissance invalide (format YYYY-MM-DD)'),
-  body('gender').notEmpty().withMessage('Genre requis (M/F/male/female/homme/femme)'),
-  body('phone_primary').matches(/^\+?261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$|^\d{10}$|^\+\d{10,15}$/).withMessage('Numéro de téléphone invalide'),
+  body('gender').notEmpty().withMessage('Genre requis'),
+  body('phone_primary').matches(/^\+?\d[\d\s\-]{7,15}$/).withMessage('Numéro de téléphone invalide'),
   body('email').optional({ nullable: true, checkFalsy: true }).isEmail().withMessage('Email invalide'),
-  body('address').optional({ nullable: true, checkFalsy: true }).isLength({ max: 255 }).withMessage('Adresse trop longue'),
-  body('city').optional({ nullable: true, checkFalsy: true }).isLength({ max: 50 }).withMessage('Ville trop longue'),
-  body('postal_code').optional({ nullable: true, checkFalsy: true }).isLength({ max: 10 }).withMessage('Code postal invalide'),
-  body('nif_number').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Numéro NIF invalide'),
-  body('stat_number').optional({ nullable: true, checkFalsy: true }).isLength({ max: 20 }).withMessage('Numéro STAT invalide'),
+  body('address').optional({ nullable: true, checkFalsy: true }).isLength({ max: 255 }),
+  body('city').optional({ nullable: true, checkFalsy: true }).isLength({ max: 50 }),
   body('emergency_contact_name').optional({ nullable: true, checkFalsy: true }).isLength({ max: 100 }),
-  body('emergency_contact_phone').optional({ nullable: true, checkFalsy: true }).matches(/^\+?261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$|^\d{10}$|^\+\d{10,15}$|^$/),
+  body('emergency_contact_phone').optional({ nullable: true, checkFalsy: true }),
   body('medical_history').optional({ nullable: true, checkFalsy: true }).isLength({ max: 1000 }),
   body('allergies').optional({ nullable: true, checkFalsy: true }).isLength({ max: 500 }),
   body('current_medications').optional({ nullable: true, checkFalsy: true }).isLength({ max: 500 })
@@ -175,240 +129,179 @@ router.post('/', requireClinicId, [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
-    // Normalize gender to M/F only
+    // Normalize gender
     let gender = (req.body.gender || '').toString().toLowerCase().trim();
-    if (['m', 'male', 'homme', 'masculin'].includes(gender)) {
-      gender = 'M';
-    } else if (['f', 'female', 'femme', 'féminin', 'feminin'].includes(gender)) {
-      gender = 'F';
-    } else {
-      return res.status(400).json({
-        error: 'Genre invalide',
-        message: 'Le genre doit être M, F, male, female, homme ou femme'
-      });
-    }
+    if (['m', 'male', 'homme', 'masculin'].includes(gender)) gender = 'M';
+    else if (['f', 'female', 'femme', 'féminin', 'feminin'].includes(gender)) gender = 'F';
+    else return res.status(400).json({ error: 'Genre invalide', message: 'Le genre doit être M ou F' });
 
-    // Check clinic_id is available
-    if (!req.clinic_id) {
-      return res.status(400).json({
-        error: 'clinic_id requis',
-        message: 'Utilisateur non assigné à une clinique'
-      });
-    }
+    // SUPER_ADMIN: clinic_id peut être null ou spécifié dans le body
+    const clinicId = req.clinic_id || req.body.clinic_id || null;
 
-    // Generate patient_number with DB counter (PAT-XXXXXX per clinic)
-    // SQLite compatible: INSERT OR UPDATE then SELECT
-    await sequelize.query(`
-      INSERT INTO counters (id, clinic_id, counter_type, current_value, created_at, updated_at)
-      VALUES (lower(hex(randomblob(16))), '${req.clinic_id}', 'patient', 1, datetime('now'), datetime('now'))
-      ON CONFLICT(clinic_id, counter_type) DO UPDATE SET 
-        current_value = current_value + 1,
-        updated_at = datetime('now')
-    `);
-    const [[counterRow]] = await sequelize.query(`
-      SELECT current_value FROM counters WHERE clinic_id = '${req.clinic_id}' AND counter_type = 'patient'
-    `);
-    const counterValue = counterRow?.current_value || 1;
-    const patient_number = `PAT-${String(counterValue).padStart(6, '0')}`;
+    // Generate patient number — PostgreSQL compatible
+    let patient_number = null;
+    try {
+      if (clinicId) {
+        // Upsert counter using PostgreSQL syntax
+        await sequelize.query(`
+          INSERT INTO counters (id, clinic_id, counter_type, current_value, created_at, updated_at)
+          VALUES (gen_random_uuid(), :clinic_id, 'patient', 1, NOW(), NOW())
+          ON CONFLICT (clinic_id, counter_type) DO UPDATE SET
+            current_value = counters.current_value + 1,
+            updated_at = NOW()
+        `, { replacements: { clinic_id: clinicId } });
+
+        const [[counterRow]] = await sequelize.query(
+          `SELECT current_value FROM counters WHERE clinic_id = :clinic_id AND counter_type = 'patient'`,
+          { replacements: { clinic_id: clinicId } }
+        );
+        const counterValue = counterRow?.current_value || 1;
+        patient_number = `PAT-${String(counterValue).padStart(6, '0')}`;
+      } else {
+        // SUPER_ADMIN sans clinique: numéro basé sur timestamp
+        patient_number = `PAT-${Date.now().toString().slice(-6)}`;
+      }
+    } catch (counterErr) {
+      console.error('Counter error (non-fatal):', counterErr);
+      patient_number = `PAT-${Date.now().toString().slice(-6)}`;
+    }
 
     const patientData = {
       ...req.body,
       patient_number,
       gender,
-      clinic_id: req.clinic_id,
+      clinic_id: clinicId,
       created_by_user_id: req.user.id,
-      // Set empty strings to null for optional fields
-      emergency_contact_name: req.body.emergency_contact_name || null,
-      emergency_contact_phone: req.body.emergency_contact_phone || null
+      emergency_contact_name:  req.body.emergency_contact_name  || null,
+      emergency_contact_phone: req.body.emergency_contact_phone || null,
+      payer_type: req.body.payer_type || 'CASH',
     };
+
+    // Remove fields that don't belong to Patient model
+    delete patientData.clinic_id_from_body;
 
     const patient = await Patient.create(patientData);
 
-    res.status(201).json({
-      message: 'Patient créé avec succès',
-      patient
-    });
+    res.status(201).json({ message: 'Patient créé avec succès', patient });
 
   } catch (error) {
     console.error('Create patient error:', error);
-    
-    // Return detailed error for debugging
     if (error.name === 'SequelizeValidationError') {
       return res.status(400).json({
         error: 'Erreur de validation',
         details: error.errors.map(e => ({ field: e.path, message: e.message }))
       });
     }
-    
-    res.status(500).json({
-      error: 'Erreur lors de la création du patient',
-      message: error.message
-    });
+    res.status(500).json({ error: 'Erreur lors de la création du patient', message: error.message });
   }
 });
 
-// Update patient - with clinic check
+// ── PUT /:id — Update patient ────────────────────────────────────────────────
 router.put('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide'),
   body('first_name').optional().isLength({ min: 1, max: 50 }).trim(),
   body('last_name').optional().isLength({ min: 1, max: 50 }).trim(),
-  body('phone_primary').optional().matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/),
-  body('email').optional().isEmail().normalizeEmail(),
-  body('address').optional().isLength({ min: 10, max: 500 }).trim()
+  body('phone_primary').optional().matches(/^\+?\d[\d\s\-]{7,15}$/),
+  body('email').optional({ nullable: true, checkFalsy: true }).isEmail()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
 
-    // Build where clause with clinic filtering
     let whereClause = { id: req.params.id };
-    if (req.clinic_id) {
-      whereClause.clinic_id = req.clinic_id;
-    }
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
 
     const patient = await Patient.findOne({ where: whereClause });
-    if (!patient) {
-      return res.status(404).json({
-        error: 'Patient non trouvé'
-      });
-    }
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
     const oldValues = patient.toJSON();
     await patient.update(req.body);
 
-    // Log patient update
-    await AuditLog.create({
-      user_id: req.user.id,
-      action: 'UPDATE',
-      resource_type: 'patients',
-      resource_id: patient.id,
-      old_values: oldValues,
-      new_values: req.body,
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
-      description: `Patient mis à jour: ${patient.getFullName()}`
-    });
+    try {
+      await AuditLog.create({
+        user_id: req.user.id,
+        action: 'UPDATE',
+        resource_type: 'patients',
+        resource_id: patient.id,
+        old_values: oldValues,
+        new_values: req.body,
+        ip_address: req.ip,
+        user_agent: req.get('User-Agent'),
+        description: `Patient mis à jour: ${patient.first_name} ${patient.last_name}`
+      });
+    } catch (auditErr) { console.error('Audit log error:', auditErr); }
 
-    res.json({
-      message: 'Patient mis à jour avec succès',
-      patient
-    });
+    res.json({ message: 'Patient mis à jour avec succès', patient });
   } catch (error) {
     console.error('Update patient error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la mise à jour du patient'
-    });
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du patient', message: error.message });
   }
 });
 
-// Soft delete patient - with clinic check
+// ── DELETE /:id — Soft delete ────────────────────────────────────────────────
 router.delete('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide'),
   requireRole('ADMIN', 'DENTIST')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
 
-    // Build where clause with clinic filtering
     let whereClause = { id: req.params.id };
-    if (req.clinic_id) {
-      whereClause.clinic_id = req.clinic_id;
-    }
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
 
     const patient = await Patient.findOne({ where: whereClause });
-    if (!patient) {
-      return res.status(404).json({
-        error: 'Patient non trouvé'
-      });
-    }
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
     await patient.update({ is_active: false });
 
-    // Log patient deletion
-    await AuditLog.create({
-      user_id: req.user.id,
-      action: 'DELETE',
-      resource_type: 'patients',
-      resource_id: patient.id,
-      old_values: patient.toJSON(),
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
-      description: `Patient désactivé: ${patient.getFullName()}`
-    });
+    try {
+      await AuditLog.create({
+        user_id: req.user.id,
+        action: 'DELETE',
+        resource_type: 'patients',
+        resource_id: patient.id,
+        old_values: patient.toJSON(),
+        ip_address: req.ip,
+        user_agent: req.get('User-Agent'),
+        description: `Patient désactivé: ${patient.first_name} ${patient.last_name}`
+      });
+    } catch (auditErr) { console.error('Audit log error:', auditErr); }
 
-    res.json({
-      message: 'Patient désactivé avec succès'
-    });
+    res.json({ message: 'Patient désactivé avec succès' });
   } catch (error) {
     console.error('Delete patient error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la suppression du patient'
-    });
+    res.status(500).json({ error: 'Erreur lors de la suppression du patient', message: error.message });
   }
 });
 
-// Get patient dental chart (basic teeth status) - with clinic check
+// ── GET /:id/dental-chart ────────────────────────────────────────────────────
 router.get('/:id/dental-chart', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
   try {
-    // Build where clause with clinic filtering
     let whereClause = { id: req.params.id };
-    if (req.clinic_id) {
-      whereClause.clinic_id = req.clinic_id;
-    }
-    
-    const patient = await Patient.findOne({ where: whereClause });
-    if (!patient) {
-      return res.status(404).json({
-        error: 'Patient non trouvé'
-      });
-    }
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
 
-    // Get treatments grouped by tooth
+    const patient = await Patient.findOne({ where: whereClause });
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+
     const treatments = await Treatment.findAll({
       where: { patient_id: req.params.id },
       order: [['treatment_date', 'DESC']]
     });
 
-    // Basic dental chart with 32 teeth
-    const dentalChart = {
-      patient_id: req.params.id,
-      last_updated: new Date(),
-      teeth: {}
-    };
-
-    // Initialize all 32 teeth
+    const dentalChart = { patient_id: req.params.id, last_updated: new Date(), teeth: {} };
     for (let i = 1; i <= 32; i++) {
-      dentalChart.teeth[i] = {
-        tooth_number: i,
-        status: 'HEALTHY',
-        treatments: [],
-        notes: ''
-      };
+      dentalChart.teeth[i] = { tooth_number: i, status: 'HEALTHY', treatments: [], notes: '' };
     }
 
-    // Populate with treatment data
     treatments.forEach(treatment => {
       if (treatment.tooth_numbers) {
-        const toothNums = treatment.getToothNumbersArray();
+        const toothNums = treatment.getToothNumbersArray ? treatment.getToothNumbersArray() : [];
         toothNums.forEach(toothNum => {
           const num = parseInt(toothNum);
           if (num >= 1 && num <= 32) {
@@ -427,32 +320,31 @@ router.get('/:id/dental-chart', requireClinicId, [
     res.json(dentalChart);
   } catch (error) {
     console.error('Get dental chart error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération de la fiche dentaire'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération de la fiche dentaire', message: error.message });
   }
 });
 
-// Get patient lab orders
+// ── GET /:id/lab-orders ──────────────────────────────────────────────────────
 router.get('/:id/lab-orders', requireClinicId, [
   param('id').isUUID()
 ], async (req, res) => {
   try {
     const { LabOrder, Lab } = require('../models');
-    
-    const patient = await Patient.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id }
-    });
 
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient non trouvé' });
-    }
+    let whereClause = { id: req.params.id };
+    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
+    const patient = await Patient.findOne({ where: whereClause });
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+
+    const ordersWhere = { patient_id: req.params.id };
+    if (req.clinic_id) ordersWhere.clinic_id = req.clinic_id;
 
     const orders = await LabOrder.findAll({
-      where: { patient_id: req.params.id, clinic_id: req.clinic_id },
+      where: ordersWhere,
       include: [
-        { model: Lab, as: 'lab', attributes: ['id', 'name'] },
-        { model: User, as: 'dentist', attributes: ['id', 'full_name'] }
+        { model: Lab,  as: 'lab',     attributes: ['id', 'name'], required: false },
+        { model: User, as: 'dentist', attributes: ['id', 'full_name'], required: false }
       ],
       order: [['created_at', 'DESC']]
     });
@@ -474,7 +366,7 @@ router.get('/:id/lab-orders', requireClinicId, [
     });
   } catch (error) {
     console.error('Get patient lab orders error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    res.status(500).json({ error: 'Erreur serveur', message: error.message });
   }
 });
 
