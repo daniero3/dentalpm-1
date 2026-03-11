@@ -6,72 +6,69 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Building2, 
   Users, 
   Plus,
   Search,
-  MoreHorizontal,
   Edit,
   Trash2,
   Mail,
   Phone,
   MapPin,
-  Crown,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
-const API = process.env.REACT_APP_BACKEND_URL || import.meta.env.VITE_REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL || '';
+
+const EMPTY_FORM = {
+  name: '',
+  address: '',
+  city: '',
+  postal_code: '',
+  phone: '',
+  email: '',
+  nif_number: '',
+  stat_number: '',
+  admin_user: {
+    username: '',
+    email: '',
+    password: '',
+    first_name: '',
+    last_name: ''
+  }
+};
 
 const SuperAdminClinics = () => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [formErrors, setFormErrors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    city: '',
-    postal_code: '',
-    phone: '',
-    email: '',
-    nif_number: '',
-    stat_number: '',
-    admin_user: {
-      username: '',
-      email: '',
-      password: '',
-      first_name: '',
-      last_name: ''
-    }
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   useEffect(() => {
     fetchClinics();
-  }, [currentPage, searchTerm]);
+  }, [currentPage]);
 
   const fetchClinics = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        page: currentPage,
-        limit: 10,
-        ...(searchTerm && { search: searchTerm })
-      });
-
+      const params = new URLSearchParams({ page: currentPage, limit: 10 });
       const response = await axios.get(`${API}/api/admin/clinics?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       setClinics(response.data.clinics || []);
       setTotalPages(response.data.pagination?.total_pages || 1);
     } catch (err) {
@@ -83,6 +80,26 @@ const SuperAdminClinics = () => {
   };
 
   const handleCreateClinic = async () => {
+    // Validation côté client avant envoi
+    const clientErrors = [];
+    if (!formData.name || formData.name.length < 2) clientErrors.push('Nom de la clinique requis (min 2 caractères)');
+    if (!formData.address || formData.address.length < 5) clientErrors.push('Adresse requise (min 5 caractères)');
+    if (!formData.city || formData.city.length < 2) clientErrors.push('Ville requise');
+    if (!formData.email) clientErrors.push('Email de la clinique requis');
+    if (!formData.admin_user.first_name || formData.admin_user.first_name.length < 2) clientErrors.push('Prénom administrateur requis (min 2 caractères)');
+    if (!formData.admin_user.last_name || formData.admin_user.last_name.length < 2) clientErrors.push('Nom administrateur requis (min 2 caractères)');
+    if (!formData.admin_user.username || formData.admin_user.username.length < 3) clientErrors.push("Nom d'utilisateur requis (min 3 caractères)");
+    if (!formData.admin_user.email) clientErrors.push('Email administrateur requis');
+    if (!formData.admin_user.password || formData.admin_user.password.length < 6) clientErrors.push('Mot de passe requis (min 6 caractères)');
+
+    if (clientErrors.length > 0) {
+      setFormErrors(clientErrors);
+      return;
+    }
+
+    setFormErrors([]);
+    setSubmitting(true);
+
     try {
       const token = localStorage.getItem('token');
       await axios.post(`${API}/api/admin/clinics`, formData, {
@@ -90,40 +107,21 @@ const SuperAdminClinics = () => {
       });
 
       setIsCreateDialogOpen(false);
-      setFormData({
-        name: '',
-        address: '',
-        city: '',
-        postal_code: '',
-        phone: '',
-        email: '',
-        nif_number: '',
-        stat_number: '',
-        admin_user: {
-          username: '',
-          email: '',
-          password: '',
-          first_name: '',
-          last_name: ''
-        }
-      });
+      setFormData(EMPTY_FORM);
+      setFormErrors([]);
       fetchClinics();
     } catch (err) {
-      setError('Erreur lors de la création de la clinique');
       console.error('Create clinic error:', err);
-    }
-  };
-
-  const handleUpdateClinic = async (clinicId, updates) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/clinics/${clinicId}`, updates, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchClinics();
-    } catch (err) {
-      setError('Erreur lors de la mise à jour de la clinique');
-      console.error('Update clinic error:', err);
+      // Afficher les erreurs détaillées du backend
+      if (err.response?.data?.details) {
+        setFormErrors(err.response.data.details.map(d => d.msg));
+      } else if (err.response?.data?.error) {
+        setFormErrors([err.response.data.error]);
+      } else {
+        setFormErrors(['Erreur lors de la création de la clinique']);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -137,9 +135,14 @@ const SuperAdminClinics = () => {
         fetchClinics();
       } catch (err) {
         setError('Erreur lors de la désactivation de la clinique');
-        console.error('Deactivate clinic error:', err);
       }
     }
+  };
+
+  const handleOpenDialog = () => {
+    setFormData(EMPTY_FORM);
+    setFormErrors([]);
+    setIsCreateDialogOpen(true);
   };
 
   const getStatusBadge = (status) => {
@@ -149,10 +152,8 @@ const SuperAdminClinics = () => {
       EXPIRED: { color: 'bg-red-100 text-red-800', icon: AlertCircle, text: 'Expiré' },
       CANCELLED: { color: 'bg-gray-100 text-gray-800', icon: AlertCircle, text: 'Annulé' }
     };
-
     const config = statusConfig[status] || statusConfig.EXPIRED;
     const Icon = config.icon;
-
     return (
       <Badge className={`${config.color} flex items-center gap-1`}>
         <Icon className="h-3 w-3" />
@@ -162,9 +163,9 @@ const SuperAdminClinics = () => {
   };
 
   const filteredClinics = clinics.filter(clinic =>
-    clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    clinic.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    clinic.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (clinic.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (clinic.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (clinic.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -184,25 +185,42 @@ const SuperAdminClinics = () => {
           <p className="text-gray-600 mt-1">Administrez toutes les cliniques du système</p>
         </div>
 
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+          if (!open) { setFormErrors([]); }
+          setIsCreateDialogOpen(open);
+        }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleOpenDialog}>
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle Clinique
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Créer une nouvelle clinique</DialogTitle>
               <DialogDescription>
                 Ajoutez une nouvelle clinique avec un utilisateur administrateur
               </DialogDescription>
             </DialogHeader>
+
+            {/* Erreurs de validation */}
+            {formErrors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <ul className="list-disc list-inside space-y-1">
+                    {formErrors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="space-y-4">
-              {/* Clinic Information */}
+              {/* Informations clinique */}
               <div className="space-y-4">
-                <h4 className="font-semibold">Informations de la clinique</h4>
+                <h4 className="font-semibold text-gray-800 border-b pb-2">Informations de la clinique</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">Nom de la clinique *</Label>
@@ -278,9 +296,9 @@ const SuperAdminClinics = () => {
                 </div>
               </div>
 
-              {/* Admin User Information */}
+              {/* Informations admin */}
               <div className="space-y-4">
-                <h4 className="font-semibold">Utilisateur administrateur</h4>
+                <h4 className="font-semibold text-gray-800 border-b pb-2">Utilisateur administrateur</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="admin_first_name">Prénom *</Label>
@@ -291,7 +309,7 @@ const SuperAdminClinics = () => {
                         ...formData, 
                         admin_user: {...formData.admin_user, first_name: e.target.value}
                       })}
-                      placeholder="Dr. Jean"
+                      placeholder="Jean"
                     />
                   </div>
                   <div>
@@ -337,7 +355,7 @@ const SuperAdminClinics = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="admin_password">Mot de passe *</Label>
+                  <Label htmlFor="admin_password">Mot de passe * (min 6 caractères)</Label>
                   <Input
                     id="admin_password"
                     type="password"
@@ -353,18 +371,29 @@ const SuperAdminClinics = () => {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => { setIsCreateDialogOpen(false); setFormErrors([]); }}
+                disabled={submitting}
+              >
                 Annuler
               </Button>
-              <Button onClick={handleCreateClinic}>
-                Créer la clinique
+              <Button onClick={handleCreateClinic} disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Création...
+                  </>
+                ) : (
+                  'Créer la clinique'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Error Alert */}
+      {/* Error Alert global */}
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -386,84 +415,92 @@ const SuperAdminClinics = () => {
       </div>
 
       {/* Clinics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredClinics.map((clinic, index) => (
-          <motion.div
-            key={clinic.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-start gap-3">
-                    <div className="bg-blue-100 p-2 rounded-full">
-                      <Building2 className="h-5 w-5 text-blue-600" />
+      {filteredClinics.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <p>Aucune clinique trouvée</p>
+          <p className="text-sm mt-1">Créez votre première clinique avec le bouton ci-dessus</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredClinics.map((clinic, index) => (
+            <motion.div
+              key={clinic.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{clinic.name}</CardTitle>
+                        <CardDescription className="flex items-center gap-1 mt-1">
+                          <MapPin className="h-3 w-3" />
+                          {clinic.city}
+                        </CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{clinic.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3" />
-                        {clinic.city}
-                      </CardDescription>
-                    </div>
+                    {getStatusBadge(clinic.subscription_status)}
                   </div>
-                  {getStatusBadge(clinic.subscription_status)}
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-3 w-3" />
-                    {clinic.email}
-                  </div>
-                  {clinic.phone && (
+                </CardHeader>
+                
+                <CardContent className="space-y-3">
+                  <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
-                      <Phone className="h-3 w-3" />
-                      {clinic.phone}
+                      <Mail className="h-3 w-3" />
+                      {clinic.email}
+                    </div>
+                    {clinic.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3 w-3" />
+                        {clinic.phone}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3 w-3" />
+                      {clinic.user_count || 0} utilisateur(s)
+                    </div>
+                  </div>
+
+                  {clinic.trial_ends_at && (
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="text-xs text-blue-600 font-medium">Essai gratuit</div>
+                      <div className="text-sm text-blue-800">
+                        Expire le {new Date(clinic.trial_ends_at).toLocaleDateString('fr-FR')}
+                      </div>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Users className="h-3 w-3" />
-                    {clinic.user_count || 0} utilisateur(s)
-                  </div>
-                </div>
 
-                {clinic.trial_ends_at && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <div className="text-xs text-blue-600 font-medium">Essai gratuit</div>
-                    <div className="text-sm text-blue-800">
-                      Expire le {new Date(clinic.trial_ends_at).toLocaleDateString('fr-FR')}
-                    </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setSelectedClinic(clinic)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Modifier
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeactivateClinic(clinic.id)}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setSelectedClinic(clinic)}
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Modifier
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeactivateClinic(clinic.id)}
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
