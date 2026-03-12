@@ -35,6 +35,12 @@ const MessagingManagement = () => {
 
   const placeholders = ['{patient_name}', '{date}', '{time}', '{clinic_name}'];
 
+  // Helper pour obtenir les headers avec token
+  const authHeaders = () => {
+    const token = localStorage.getItem('token');
+    return { headers: { Authorization: `Bearer ${token}` } };
+  };
+
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
@@ -45,30 +51,39 @@ const MessagingManagement = () => {
 
   const fetchTemplates = async () => {
     try {
-      const r = await axios.get(`${API}/messaging/templates`);
+      const r = await axios.get(`${API}/messaging/templates`, authHeaders());
       setTemplates(r.data.templates || []);
-    } catch (e) { console.error('templates:', e); }
+    } catch (e) {
+      console.error('templates:', e);
+      setTemplates([]);
+    }
   };
 
   const fetchQueue = async () => {
     try {
-      const r = await axios.get(`${API}/messaging/queue`);
+      const r = await axios.get(`${API}/messaging/queue`, authHeaders());
       setQueue(r.data.queue || []);
       setStats(r.data.stats || { QUEUED: 0, SENT: 0, FAILED: 0 });
-    } catch (e) { console.error('queue:', e); }
+    } catch (e) {
+      console.error('queue:', e);
+      setQueue([]);
+    }
   };
 
   const fetchLogs = async () => {
     try {
-      const r = await axios.get(`${API}/messaging/logs`);
+      const r = await axios.get(`${API}/messaging/logs`, authHeaders());
       setLogs(r.data.logs || []);
-    } catch (e) { console.error('logs:', e); }
+    } catch (e) {
+      console.error('logs:', e);
+      setLogs([]);
+    }
   };
 
   const handleCreateTemplate = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/messaging/templates`, newTemplate);
+      await axios.post(`${API}/messaging/templates`, newTemplate, authHeaders());
       toast.success('Template créé');
       setIsTemplateDialogOpen(false);
       setNewTemplate({ key: '', channel: 'SMS', text: '' });
@@ -80,18 +95,23 @@ const MessagingManagement = () => {
 
   const handleRunBirthday = async () => {
     try {
-      const r = await axios.post(`${API}/messaging/run-birthday`);
+      const r = await axios.post(`${API}/messaging/run-birthday`, {}, authHeaders());
       toast.success(`${r.data.messages_created} message(s) anniversaire créé(s)`);
       fetchQueue();
-    } catch (e) { toast.error('Erreur job anniversaire'); }
+    } catch (e) {
+      toast.error('Erreur job anniversaire');
+    }
   };
 
   const handleRunDispatch = async () => {
     try {
-      const r = await axios.post(`${API}/messaging/run-dispatch`);
+      const r = await axios.post(`${API}/messaging/run-dispatch`, {}, authHeaders());
       toast.success(`Dispatch: ${r.data.sent} envoyé(s), ${r.data.failed} échoué(s)`);
-      fetchQueue(); fetchLogs();
-    } catch (e) { toast.error('Erreur dispatch'); }
+      fetchQueue();
+      fetchLogs();
+    } catch (e) {
+      toast.error('Erreur dispatch');
+    }
   };
 
   const formatDate = (date) => new Date(date).toLocaleString('fr-FR', {
@@ -228,7 +248,6 @@ const MessagingManagement = () => {
               <form onSubmit={handleCreateTemplate} className="space-y-4">
                 <div>
                   <Label>Clé du template</Label>
-                  {/* select natif — évite bug Portal shadcn */}
                   <select
                     value={newTemplate.key}
                     onChange={e => setNewTemplate({...newTemplate, key: e.target.value})}
@@ -243,7 +262,6 @@ const MessagingManagement = () => {
                 </div>
                 <div>
                   <Label>Canal</Label>
-                  {/* select natif — évite bug Portal shadcn */}
                   <select
                     value={newTemplate.channel}
                     onChange={e => setNewTemplate({...newTemplate, channel: e.target.value})}
@@ -260,7 +278,8 @@ const MessagingManagement = () => {
                     value={newTemplate.text}
                     onChange={e => setNewTemplate({...newTemplate, text: e.target.value})}
                     placeholder="Bonjour {patient_name}, ..."
-                    rows={4} data-testid="template-text"
+                    rows={4}
+                    data-testid="template-text"
                   />
                   <p className="text-xs text-gray-500 mt-1">Variables: {placeholders.join(', ')}</p>
                 </div>
