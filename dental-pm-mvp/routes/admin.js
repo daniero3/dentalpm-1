@@ -262,3 +262,102 @@ router.get('/dashboard', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) =
 });
 
 module.exports = router;
+
+// ============================================================
+// PAYMENT REQUESTS (Validation paiements)
+// ============================================================
+
+// GET /api/admin/payment-requests?status=PENDING
+router.get('/payment-requests', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+  try {
+    const { status } = req.query;
+    const where = {};
+    if (status) where.status = status;
+
+    let requests = [];
+    try {
+      requests = await PaymentRequest.findAll({
+        where,
+        order: [['created_at', 'DESC']],
+        include: [
+          { model: Clinic, as: 'clinic', attributes: ['id', 'name', 'email'], required: false },
+          { model: User, as: 'submittedBy', attributes: ['id', 'full_name', 'email'], required: false }
+        ]
+      });
+    } catch (e) {
+      // Si les associations n'existent pas, fetch sans include
+      requests = await PaymentRequest.findAll({ where, order: [['created_at', 'DESC']] });
+    }
+
+    res.json({ paymentRequests: requests });
+  } catch (error) {
+    console.error('Get payment requests error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// PATCH /api/admin/payment-requests/:id/verify
+router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+  try {
+    const request = await PaymentRequest.findByPk(req.params.id);
+    if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
+    if (request.status !== 'PENDING') return res.status(400).json({ error: 'Demande déjà traitée' });
+
+    await request.update({
+      status: 'VERIFIED',
+      note_admin: req.body.note_admin || null,
+      verified_by: req.user.id,
+      verified_at: new Date()
+    });
+
+    // Activer l'abonnement de la clinique
+    if (request.clinic_id) {
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
+      await Clinic.update(
+        { subscription_status: 'ACTIVE' },
+        { where: { id: request.clinic_id } }
+      );
+      try {
+        await Subscription.create({
+          clinic_id: request.clinic_id,
+          plan: request.plan_code || 'ESSENTIAL',
+          status: 'ACTIVE',
+          start_date: new Date(),
+          end_date: endDate,
+          duration_months: 1,
+          monthly_price_mga: request.amount_mga || 0,
+          notes: `Paiement vérifié le ${new Date().toLocaleDateString('fr-FR')}`,
+          created_by_user_id: req.user.id
+        });
+      } catch (e) { console.log('Subscription creation skipped:', e.message); }
+    }
+
+    res.json({ message: 'Paiement vérifié, abonnement activé', request });
+  } catch (error) {
+    console.error('Verify payment error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// PATCH /api/admin/payment-requests/:id/reject
+router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+  try {
+    const request = await PaymentRequest.findByPk(req.params.id);
+    if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
+    if (request.status !== 'PENDING') return res.status(400).json({ error: 'Demande déjà traitée' });
+
+    await request.update({
+      status: 'REJECTED',
+      note_admin: req.body.note_admin || null,
+      verified_by: req.user.id,
+      verified_at: new Date()
+    });
+
+    res.json({ message: 'Demande rejetée', request });
+  } catch (error) {
+    console.error('Reject payment error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+module.exports = router;
