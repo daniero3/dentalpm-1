@@ -56,9 +56,9 @@ const PatientManagement = () => {
         await axios.post(`${API}/patients`, formData);
         toast.success('Patient créé avec succès');
       }
-      await fetchPatients();
       resetForm();
       setIsDialogOpen(false);
+      fetchPatients(); // fetch après fermeture dialog
     } catch (error) {
       const apiError = error.response?.data;
       if (apiError?.details && Array.isArray(apiError.details)) {
