@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 8001;
 app.set('trust proxy', 1);
 app.use(helmet());
 
-const allowedOrigins = process.env.FRONTEND_URL
+const allowedOrigins = process.env.FRONTEND_URL 
   ? [process.env.FRONTEND_URL]
   : ['http://localhost:3000'];
 
@@ -51,11 +51,10 @@ app.use(cors({
 }));
 
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   message: 'Trop de requêtes depuis cette adresse IP, réessayez plus tard.'
 });
-
 app.use(limiter);
 
 app.use(express.json({ limit: '10mb' }));
@@ -63,12 +62,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    service: 'Dental Practice Management API - Madagascar',
-    version: '1.0.0'
-  });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), service: 'Dental Practice Management API - Madagascar', version: '1.0.0' });
 });
 
 app.use('/api/auth', authRoutes);
@@ -101,33 +95,31 @@ app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Une erreur interne s\'est produite'
-      : err.message
+    error: process.env.NODE_ENV === 'production' ? 'Une erreur interne s\'est produite' : err.message
   });
 });
 
 app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route non trouvée',
-    path: req.originalUrl
-  });
+  res.status(404).json({ error: 'Route non trouvée', path: req.originalUrl });
 });
 
 // ── Migrations SQL au démarrage ───────────────────────────────────────────────
 async function runMigrations() {
   const migrations = [
-    // Rendre clinic_id nullable sur invoices (SUPER_ADMIN sans clinique)
-    `ALTER TABLE invoices ALTER COLUMN clinic_id DROP NOT NULL`,
-
-    // Rendre clinic_id nullable sur payments si nécessaire
-    `ALTER TABLE payments ALTER COLUMN clinic_id DROP NOT NULL`,
-
-    // Rendre clinic_id nullable sur patients
-    `ALTER TABLE patients ALTER COLUMN clinic_id DROP NOT NULL`,
-
-    // Rendre clinic_id nullable sur appointments
-    `ALTER TABLE appointments ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE invoices      ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE payments      ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE patients      ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE appointments  ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE treatments    ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE invoice_items ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE lab_orders    ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE prescriptions ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE documents     ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE inventory     ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE purchases     ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE suppliers     ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE products      ALTER COLUMN clinic_id DROP NOT NULL`,
+    `ALTER TABLE stock_movements ALTER COLUMN clinic_id DROP NOT NULL`,
   ];
 
   for (const sql of migrations) {
@@ -135,8 +127,8 @@ async function runMigrations() {
       await sequelize.query(sql);
       console.log(`✅ Migration OK: ${sql.substring(0, 60)}...`);
     } catch (err) {
-      // Ignore errors (ex: déjà appliquée, table absente, colonne déjà nullable)
-      console.log(`ℹ️ Migration skipped (already applied): ${sql.substring(0, 60)}...`);
+      // Ignore errors (column may already be nullable)
+      console.log(`ℹ️  Migration skipped (already applied): ${sql.substring(0, 60)}...`);
     }
   }
 }
@@ -146,6 +138,7 @@ async function startServer() {
     await sequelize.authenticate();
     console.log('✅ Connexion à PostgreSQL réussie');
 
+    // Run migrations to fix schema issues
     await runMigrations();
     console.log('✅ Migrations terminées');
 
@@ -162,14 +155,7 @@ async function startServer() {
   }
 }
 
-process.on('SIGTERM', async () => {
-  await sequelize.close();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  await sequelize.close();
-  process.exit(0);
-});
+process.on('SIGTERM', async () => { await sequelize.close(); process.exit(0); });
+process.on('SIGINT',  async () => { await sequelize.close(); process.exit(0); });
 
 startServer();
