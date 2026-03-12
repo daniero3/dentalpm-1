@@ -9,39 +9,39 @@ const ToothHistory = sequelize.define('ToothHistory', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   },
   patient_id: {
     type: DataTypes.UUID,
     allowNull: false
   },
   tooth_fdi: {
-    type: DataTypes.STRING(2),
+    type: DataTypes.STRING(10),
     allowNull: false
   },
   surface: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(20),
     allowNull: true
   },
   status: {
     type: DataTypes.STRING(30),
-    allowNull: false
+    allowNull: true,
+    defaultValue: 'HEALTHY'
   },
   note: {
-    type: DataTypes.STRING(500),
+    type: DataTypes.TEXT,
     allowNull: true
   },
   action: {
     type: DataTypes.STRING(50),
-    allowNull: false,
-    comment: 'CREATE, UPDATE, TREATMENT'
+    allowNull: true
   },
   performed_by: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   }
 }, {
-  tableName: 'tooth_history',
+  tableName: 'tooth_histories',
   timestamps: true,
   underscored: true,
   updatedAt: false
