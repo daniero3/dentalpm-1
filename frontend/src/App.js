@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Theme Provider
 import { ThemeProvider } from "./components/theme-provider";
@@ -46,7 +46,6 @@ import BillingRenew from "./components/BillingRenew";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Subscription error state (global)
 let setGlobalSubscriptionError = null;
 
 // Auth Context
@@ -65,10 +64,8 @@ const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [subscriptionError, setSubscriptionError] = useState(null);
 
-  // Setup axios interceptor for 403 errors
   useEffect(() => {
     setGlobalSubscriptionError = setSubscriptionError;
-    
     const interceptor = axios.interceptors.response.use(
       response => response,
       error => {
@@ -82,7 +79,6 @@ const AuthProvider = ({ children }) => {
         return Promise.reject(error);
       }
     );
-    
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
@@ -98,17 +94,11 @@ const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post(`${API}/auth/login`, {
-        username,
-        password
-      });
-      
+      const response = await axios.post(`${API}/auth/login`, { username, password });
       const { token, user: userData } = response.data;
-      
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
       setUser(userData);
       toast.success("Connexion réussie!");
       return { success: true };
@@ -127,9 +117,7 @@ const AuthProvider = ({ children }) => {
     toast.success("Déconnexion réussie");
   };
 
-  const clearSubscriptionError = () => {
-    setSubscriptionError(null);
-  };
+  const clearSubscriptionError = () => setSubscriptionError(null);
 
   const register = async (userData) => {
     try {
@@ -142,21 +130,12 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
-    user,
-    login,
-    logout,
-    register,
-    loading,
-    subscriptionError,
-    clearSubscriptionError
-  };
+  const value = { user, login, logout, register, loading, subscriptionError, clearSubscriptionError };
 
-  // Show subscription expired page if error
   if (subscriptionError) {
     return (
       <AuthContext.Provider value={value}>
-        <SubscriptionExpiredPage 
+        <SubscriptionExpiredPage
           errorData={subscriptionError}
           onRetry={clearSubscriptionError}
           onLogout={logout}
@@ -173,7 +152,7 @@ const AuthProvider = ({ children }) => {
 };
 
 const LoadingSpinner = () => (
-  <motion.div 
+  <motion.div
     className="min-h-screen flex items-center justify-center bg-background"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -185,7 +164,7 @@ const LoadingSpinner = () => (
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
       />
-      <motion.p 
+      <motion.p
         className="text-sm text-muted-foreground"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -199,11 +178,7 @@ const LoadingSpinner = () => (
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
+  if (loading) return <LoadingSpinner />;
   return user ? children : <Navigate to="/login" />;
 };
 
@@ -213,7 +188,7 @@ const MainLayout = ({ children }) => {
       <ModernSidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <ModernTopbar />
-        <motion.main 
+        <motion.main
           className="flex-1 overflow-auto p-6 bg-[#F7F8FA]"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -237,233 +212,88 @@ function App() {
       <AuthProvider>
         <div className="App font-sans antialiased">
           <BrowserRouter>
-            <AnimatePresence mode="wait">
-              <Routes>
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <Dashboard />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/patients" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PatientManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/patients/:patientId/chart" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <DentalChart />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/patients/:patientId/documents" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PatientDocuments />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/patients/:patientId/prescriptions" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PatientPrescriptions />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/patients/:patientId/odontogram" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PatientOdontogram />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/patients/:patientId/lab-orders" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PatientLabOrders />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/invoices" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <InvoiceManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                
-                <Route path="/quotes" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <QuoteManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                
-                {/* SaaS Routes */}
-                <Route path="/settings/billing" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <BillingSettings />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                
-                {/* Super Admin Routes */}
-                <Route path="/admin" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <SuperAdminDashboard />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/clinics" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <SuperAdminClinics />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/payments" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <PaymentValidationPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                
-                {/* Payment Request (Clinic) */}
-                <Route path="/payment" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <PaymentRequestPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                {/* Placeholder routes for new sections */}
-                <Route path="/appointments" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <AppointmentManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/inventory" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <InventoryManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/suppliers" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <SupplierManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/purchases" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PurchaseManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/lab" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <LabManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/mailing" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <MessagingManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <PricingSettings />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                <Route path="/reports" element={
-                  <ProtectedRoute>
-                    <LicensingGuard>
-                      <MainLayout>
-                        <ReportsManagement />
-                      </MainLayout>
-                    </LicensingGuard>
-                  </ProtectedRoute>
-                } />
-                {/* Legal Pages - Public Access */}
-                <Route path="/legal" element={<LegalPages />} />
-                <Route path="/legal/cgu" element={<LegalPages />} />
-                <Route path="/legal/privacy" element={<LegalPages />} />
-                <Route path="/legal/mentions" element={<LegalPages />} />
-                
-                {/* Onboarding */}
-                <Route path="/onboarding" element={
-                  <ProtectedRoute>
-                    <OnboardingWizard />
-                  </ProtectedRoute>
-                } />
-                
-                {/* Billing Renew */}
-                <Route path="/billing/renew" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <BillingRenew />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </AnimatePresence>
+            <Routes>
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/patients" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/patients/:patientId/chart" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><DentalChart /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/patients/:patientId/documents" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PatientDocuments /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/patients/:patientId/prescriptions" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PatientPrescriptions /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/patients/:patientId/odontogram" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PatientOdontogram /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/patients/:patientId/lab-orders" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PatientLabOrders /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/invoices" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><InvoiceManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/quotes" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><QuoteManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/appointments" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><AppointmentManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/inventory" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><InventoryManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/suppliers" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><SupplierManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/purchases" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PurchaseManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/lab" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><LabManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/mailing" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><MessagingManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/reports" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><ReportsManagement /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/settings/billing" element={
+                <ProtectedRoute><LicensingGuard><MainLayout><BillingSettings /></MainLayout></LicensingGuard></ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedRoute><MainLayout><SuperAdminDashboard /></MainLayout></ProtectedRoute>
+              } />
+              <Route path="/admin/clinics" element={
+                <ProtectedRoute><MainLayout><SuperAdminClinics /></MainLayout></ProtectedRoute>
+              } />
+              <Route path="/admin/payments" element={
+                <ProtectedRoute><MainLayout><PaymentValidationPage /></MainLayout></ProtectedRoute>
+              } />
+              <Route path="/payment" element={
+                <ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>
+              } />
+              <Route path="/legal" element={<LegalPages />} />
+              <Route path="/legal/cgu" element={<LegalPages />} />
+              <Route path="/legal/privacy" element={<LegalPages />} />
+              <Route path="/legal/mentions" element={<LegalPages />} />
+              <Route path="/onboarding" element={
+                <ProtectedRoute><OnboardingWizard /></ProtectedRoute>
+              } />
+              <Route path="/billing/renew" element={
+                <ProtectedRoute><MainLayout><BillingRenew /></MainLayout></ProtectedRoute>
+              } />
+            </Routes>
           </BrowserRouter>
-          <Toaster 
-            position="top-right" 
+          <Toaster
+            position="top-right"
             toastOptions={{
               duration: 4000,
               style: {
