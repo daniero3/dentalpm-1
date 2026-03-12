@@ -9,42 +9,36 @@ const ToothStatus = sequelize.define('ToothStatus', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   },
   patient_id: {
     type: DataTypes.UUID,
     allowNull: false
   },
   tooth_fdi: {
-    type: DataTypes.STRING(2),
-    allowNull: false,
-    comment: 'FDI notation: 11-18, 21-28, 31-38, 41-48'
+    type: DataTypes.STRING(10),
+    allowNull: false
   },
   surface: {
-    type: DataTypes.STRING(10),
-    allowNull: true,
-    comment: 'M, D, O, B, L, I or combinations'
+    type: DataTypes.STRING(20),
+    allowNull: true
   },
   status: {
-    type: DataTypes.ENUM('HEALTHY', 'CARIES', 'FILLED', 'CROWN', 'MISSING', 'IMPLANT', 'ROOT_CANAL', 'EXTRACTION_NEEDED', 'BRIDGE'),
+    type: DataTypes.STRING(30),
     defaultValue: 'HEALTHY'
   },
   note: {
-    type: DataTypes.STRING(500),
+    type: DataTypes.TEXT,
     allowNull: true
   },
   updated_by: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   }
 }, {
   tableName: 'tooth_statuses',
   timestamps: true,
-  underscored: true,
-  indexes: [
-    { fields: ['clinic_id', 'patient_id'] },
-    { fields: ['clinic_id', 'patient_id', 'tooth_fdi'], unique: true }
-  ]
+  underscored: true
 });
 
 module.exports = ToothStatus;
