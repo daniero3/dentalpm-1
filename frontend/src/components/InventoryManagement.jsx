@@ -5,7 +5,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
@@ -166,7 +165,7 @@ const InventoryManagement = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Catégorie</Label>
-                    <Select value={productForm.category} onValueChange={v => setProductForm({...productForm, category: v})}>
+                    /* replaced below */
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(CATEGORIES).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
@@ -332,14 +331,15 @@ const InventoryManagement = () => {
               </div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={movementForm.type} onValueChange={v => setMovementForm({...movementForm, type: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="IN">Entrée (+)</SelectItem>
-                    <SelectItem value="OUT">Sortie (-)</SelectItem>
-                    <SelectItem value="ADJUST">Ajustement (=)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                value={movementForm.type}
+                onChange={e => setMovementForm({...movementForm, type: e.target.value})}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="IN">Entrée (+)</option>
+                <option value="OUT">Sortie (-)</option>
+                <option value="ADJUST">Ajustement (=)</option>
+              </select>
               </div>
               <div className="space-y-2">
                 <Label>Quantité *</Label>
