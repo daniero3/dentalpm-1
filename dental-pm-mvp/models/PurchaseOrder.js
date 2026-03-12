@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Op } = require('sequelize');
 const sequelize = require('../database/connection');
 
 const PurchaseOrder = sequelize.define('purchase_orders', {
@@ -9,28 +9,21 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: 'clinics',
-      key: 'id'
-    }
+    allowNull: true,  // ← SUPER_ADMIN peut créer sans clinic
+    references: { model: 'clinics', key: 'id' }
   },
   supplier_id: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'suppliers',
-      key: 'id'
-    }
+    references: { model: 'suppliers', key: 'id' }
   },
   number: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true,
-    comment: 'PO-YYYY-XXXX format'
+    unique: true
   },
   status: {
-    type: DataTypes.ENUM('DRAFT', 'RECEIVED', 'CANCELLED'),
+    type: DataTypes.STRING(20),  // STRING au lieu d'ENUM pour éviter les bugs PostgreSQL
     allowNull: false,
     defaultValue: 'DRAFT'
   },
@@ -46,10 +39,7 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   created_by: {
     type: DataTypes.UUID,
     allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    references: { model: 'users', key: 'id' }
   },
   received_at: {
     type: DataTypes.DATE,
@@ -58,10 +48,7 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   received_by: {
     type: DataTypes.UUID,
     allowNull: true,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    references: { model: 'users', key: 'id' }
   }
 }, {
   tableName: 'purchase_orders',
@@ -77,25 +64,26 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   ]
 });
 
-// Generate next PO number for a clinic
+// Générer le prochain numéro PO — fonctionne avec ou sans clinic_id
 PurchaseOrder.generateNumber = async function(clinic_id) {
   const year = new Date().getFullYear();
   const prefix = `PO-${year}-`;
-  
+
+  // Si clinic_id est null (SUPER_ADMIN), chercher parmi tous les bons
+  const whereClause = { number: { [Op.like]: `${prefix}%` } };
+  if (clinic_id) whereClause.clinic_id = clinic_id;
+
   const lastPO = await PurchaseOrder.findOne({
-    where: { 
-      clinic_id,
-      number: { [require('sequelize').Op.like]: `${prefix}%` }
-    },
+    where: whereClause,
     order: [['number', 'DESC']]
   });
-  
+
   let nextNum = 1;
   if (lastPO) {
     const lastNum = parseInt(lastPO.number.replace(prefix, ''), 10);
-    nextNum = lastNum + 1;
+    if (!isNaN(lastNum)) nextNum = lastNum + 1;
   }
-  
+
   return `${prefix}${String(nextNum).padStart(4, '0')}`;
 };
 
