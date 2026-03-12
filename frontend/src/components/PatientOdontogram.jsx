@@ -152,7 +152,7 @@ const PatientOdontogram = () => {
   return (
     <div className="space-y-6" data-testid="patient-odontogram">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-4">
           <Link to="/patients">
             <Button variant="ghost" size="sm">
@@ -169,6 +169,7 @@ const PatientOdontogram = () => {
             )}
           </div>
         </div>
+        {/* Boutons toujours visibles sur une ligne séparée */}
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchOdontogram}>
             <RefreshCw className="h-4 w-4 mr-2" />Recharger
@@ -177,6 +178,7 @@ const PatientOdontogram = () => {
             onClick={handleSaveAll}
             disabled={saving || Object.keys(pendingChanges).length === 0}
             data-testid="save-all-btn"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             {saving
               ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -184,6 +186,11 @@ const PatientOdontogram = () => {
             }
             Sauvegarder ({Object.keys(pendingChanges).length})
           </Button>
+          {Object.keys(pendingChanges).length > 0 && (
+            <span className="flex items-center text-sm text-amber-600 font-medium">
+              ⚠️ {Object.keys(pendingChanges).length} modification(s) non sauvegardée(s)
+            </span>
+          )}
         </div>
       </div>
 
