@@ -6,54 +6,157 @@ const { Op } = require('sequelize');
 
 const router = express.Router();
 
+// =========================
+// Helpers
+// =========================
+function isSuperAdmin(req) {
+  return req.user?.role === 'SUPER_ADMIN';
+}
+
+function getCurrentUserId(req) {
+  return req.user?.id || req.user?.userId || null;
+}
+
+function getCurrentClinicId(req) {
+  return req.clinic_id || req.user?.clinic_id || null;
+}
+
+function requireClinicOrSuperAdmin(req, res, next) {
+  if (isSuperAdmin(req)) return next();
+  return requireClinicId(req, res, next);
+}
+
+function buildScopedWhere(req, baseWhere = {}) {
+  const where = { ...baseWhere };
+
+  if (!isSuperAdmin(req)) {
+    const clinicId = getCurrentClinicId(req);
+    where.clinic_id = clinicId;
+  }
+
+  return where;
+}
+
+function validateRequest(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({
+      error: 'Données invalides',
+      details: errors.array()
+    });
+    return false;
+  }
+  return true;
+}
+
 // Helper: Generate quote number
 async function generateQuoteNumber(clinicId) {
   const year = new Date().getFullYear();
+
   const whereClause = {
     document_type: 'QUOTE',
     invoice_number: { [Op.like]: `DEV-${year}-%` }
   };
-  if (clinicId) whereClause.clinic_id = clinicId;
+
+  if (clinicId) {
+    whereClause.clinic_id = clinicId;
+  }
+
   const count = await Invoice.count({ where: whereClause });
   return `DEV-${year}-${String(count + 1).padStart(4, '0')}`;
 }
 
+// Helper: Generate invoice number
+async function generateInvoiceNumber(clinicId) {
+  const year = new Date().getFullYear();
+
+  const whereClause = {
+    document_type: 'INVOICE',
+    invoice_number: { [Op.like]: `FACT-${year}-%` }
+  };
+
+  if (clinicId) {
+    whereClause.clinic_id = clinicId;
+  }
+
+  const count = await Invoice.count({ where: whereClause });
+  return `FACT-${year}-${String(count + 1).padStart(4, '0')}`;
+}
+
 // Helper: Format currency
-const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount) + ' Ar';
+const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount || 0) + ' Ar';
+
+// =========================
+// Routes
+// =========================
 
 /**
  * @route GET /api/quotes
- * @desc List all quotes for clinic
+ * @desc List all quotes
  */
-router.get('/', requireClinicId, async (req, res) => {
+router.get('/', requireClinicOrSuperAdmin, [
+  query('status').optional().isString(),
+  query('patient_id').optional().isUUID(),
+  query('clinic_id').optional().isUUID(),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 200 })
+], async (req, res) => {
   try {
-    const { status, patient_id, page = 1, limit = 50 } = req.query;
-    
+    if (!validateRequest(req, res)) return;
+
+    const { status, patient_id, clinic_id, page = 1, limit = 50 } = req.query;
+
     const whereClause = { document_type: 'QUOTE' };
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+
+    if (isSuperAdmin(req)) {
+      if (clinic_id) whereClause.clinic_id = clinic_id;
+    } else {
+      whereClause.clinic_id = getCurrentClinicId(req);
+    }
+
     if (status) whereClause.status = status;
     if (patient_id) whereClause.patient_id = patient_id;
+
+    const parsedPage = parseInt(page, 10);
+    const parsedLimit = parseInt(limit, 10);
 
     const quotes = await Invoice.findAll({
       where: whereClause,
       include: [
-        { model: Patient, as: 'patient', attributes: ['id', 'first_name', 'last_name', 'phone_primary'] },
-        { model: InvoiceItem, as: 'items' }
+        {
+          model: Patient,
+          as: 'patient',
+          attributes: ['id', 'first_name', 'last_name', 'phone_primary'],
+          required: false
+        },
+        {
+          model: InvoiceItem,
+          as: 'items',
+          required: false
+        }
       ],
       order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit)
+      limit: parsedLimit,
+      offset: (parsedPage - 1) * parsedLimit
     });
 
     const total = await Invoice.count({ where: whereClause });
 
-    res.json({
+    return res.json({
       quotes,
-      pagination: { total, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(total / limit) }
+      pagination: {
+        total,
+        page: parsedPage,
+        limit: parsedLimit,
+        pages: Math.ceil(total / parsedLimit)
+      }
     });
   } catch (error) {
     console.error('List quotes error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -61,9 +164,10 @@ router.get('/', requireClinicId, async (req, res) => {
  * @route POST /api/quotes
  * @desc Create a new quote
  */
-router.post('/', requireClinicId, [
+router.post('/', requireClinicOrSuperAdmin, [
   body('patient_id').isUUID(),
   body('schedule_id').isUUID(),
+  body('clinic_id').optional({ nullable: true, checkFalsy: true }).isUUID(),
   body('items').isArray({ min: 1 }),
   body('items.*.description').notEmpty(),
   body('items.*.quantity').isInt({ min: 1 }),
@@ -73,40 +177,73 @@ router.post('/', requireClinicId, [
   body('notes').optional().isString()
 ], async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
-    }
+    if (!validateRequest(req, res)) return;
 
-    const { patient_id, schedule_id, items, discount_percentage = 0, validity_days = 30, notes } = req.body;
+    const {
+      patient_id,
+      schedule_id,
+      clinic_id: bodyClinicId,
+      items,
+      discount_percentage = 0,
+      validity_days = 30,
+      notes
+    } = req.body;
 
     // Verify patient
-    const patientWhere = { id: patient_id };
-    if (req.clinic_id) patientWhere.clinic_id = req.clinic_id;
+    const patientWhere = isSuperAdmin(req)
+      ? { id: patient_id }
+      : { id: patient_id, clinic_id: getCurrentClinicId(req) };
+
     const patient = await Patient.findOne({ where: patientWhere });
+
     if (!patient) {
-      return res.status(404).json({ error: 'Patient non trouvé' });
+      return res.status(404).json({
+        error: 'Patient non trouvé'
+      });
     }
 
-    // Verify schedule (clinic or global SYNDICAL)
-    const scheduleWhere = {
-      id: schedule_id,
-      is_active: true,
-      [Op.or]: [{ clinic_id: null, type: 'SYNDICAL' }]
-    };
-    if (req.clinic_id) scheduleWhere[Op.or].push({ clinic_id: req.clinic_id });
+    // final clinic_id
+    const finalClinicId = isSuperAdmin(req)
+      ? (bodyClinicId || patient.clinic_id || null)
+      : getCurrentClinicId(req);
+
+    // Verify schedule
+    let scheduleWhere;
+
+    if (isSuperAdmin(req)) {
+      scheduleWhere = {
+        id: schedule_id,
+        is_active: true
+      };
+    } else {
+      scheduleWhere = {
+        id: schedule_id,
+        is_active: true,
+        [Op.or]: [
+          { clinic_id: null, type: 'SYNDICAL' },
+          { clinic_id: getCurrentClinicId(req) }
+        ]
+      };
+    }
+
     const schedule = await PricingSchedule.findOne({ where: scheduleWhere });
+
     if (!schedule) {
-      return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
+      return res.status(404).json({
+        error: 'Grille tarifaire non trouvée'
+      });
     }
 
     // Calculate totals
-    const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price_mga), 0);
-    const discountAmount = (subtotal * discount_percentage) / 100;
+    const subtotal = items.reduce((sum, item) => {
+      return sum + (Number(item.quantity) * Number(item.unit_price_mga));
+    }, 0);
+
+    const discountAmount = (subtotal * Number(discount_percentage)) / 100;
     const total = subtotal - discountAmount;
 
     // Generate quote number
-    const quoteNumber = await generateQuoteNumber(req.clinic_id);
+    const quoteNumber = await generateQuoteNumber(finalClinicId);
 
     // Create quote
     const quoteData = {
@@ -114,34 +251,37 @@ router.post('/', requireClinicId, [
       invoice_number: quoteNumber,
       patient_id,
       schedule_id,
+      clinic_id: finalClinicId,
       invoice_date: new Date(),
       subtotal_mga: subtotal,
-      discount_percentage,
+      discount_percentage: Number(discount_percentage),
       discount_amount_mga: discountAmount,
       total_mga: total,
-      validity_days,
-      notes,
+      validity_days: Number(validity_days),
+      notes: notes || null,
       status: 'DRAFT',
-      created_by_user_id: req.user.id
+      created_by_user_id: getCurrentUserId(req)
     };
-    if (req.clinic_id) quoteData.clinic_id = req.clinic_id;
 
     const quote = await Invoice.create(quoteData);
 
     // Create items
-    await Promise.all(items.map(item => InvoiceItem.create({
-      invoice_id: quote.id,
-      description: item.description,
-      quantity: item.quantity,
-      unit_price_mga: item.unit_price_mga,
-      total_price_mga: item.quantity * item.unit_price_mga,
-      procedure_id: item.procedure_id,
-      tooth_number: item.tooth_number
-    })));
+    await Promise.all(
+      items.map((item) => InvoiceItem.create({
+        invoice_id: quote.id,
+        description: item.description,
+        quantity: Number(item.quantity),
+        unit_price_mga: Number(item.unit_price_mga),
+        total_price_mga: Number(item.quantity) * Number(item.unit_price_mga),
+        procedure_id: item.procedure_id || null,
+        tooth_number: item.tooth_number || null,
+        notes: item.notes || null
+      }))
+    );
 
     // Audit log
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: getCurrentUserId(req),
       action: 'CREATE',
       resource_type: 'quotes',
       resource_id: quote.id,
@@ -153,15 +293,21 @@ router.post('/', requireClinicId, [
     // Fetch complete quote
     const completeQuote = await Invoice.findByPk(quote.id, {
       include: [
-        { model: Patient, as: 'patient', attributes: ['id', 'first_name', 'last_name'] },
-        { model: InvoiceItem, as: 'items' }
+        { model: Patient, as: 'patient', attributes: ['id', 'first_name', 'last_name'], required: false },
+        { model: InvoiceItem, as: 'items', required: false }
       ]
     });
 
-    res.status(201).json({ message: 'Devis créé', quote: completeQuote });
+    return res.status(201).json({
+      message: 'Devis créé',
+      quote: completeQuote
+    });
   } catch (error) {
     console.error('Create quote error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -169,16 +315,20 @@ router.post('/', requireClinicId, [
  * @route GET /api/quotes/:id
  * @desc Get quote details
  */
-router.get('/:id', requireClinicId, [param('id').isUUID()], async (req, res) => {
+router.get('/:id', requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
   try {
-    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+    if (!validateRequest(req, res)) return;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
 
     const quote = await Invoice.findOne({
       where: whereClause,
       include: [
-        { model: Patient, as: 'patient' },
-        { model: InvoiceItem, as: 'items' }
+        { model: Patient, as: 'patient', required: false },
+        { model: InvoiceItem, as: 'items', required: false }
       ]
     });
 
@@ -190,15 +340,20 @@ router.get('/:id', requireClinicId, [param('id').isUUID()], async (req, res) => 
     if (quote.validity_days && quote.status !== 'CONVERTED' && quote.status !== 'EXPIRED') {
       const expiryDate = new Date(quote.invoice_date);
       expiryDate.setDate(expiryDate.getDate() + quote.validity_days);
+
       if (new Date() > expiryDate && quote.status !== 'ACCEPTED') {
         await quote.update({ status: 'EXPIRED' });
+        quote.status = 'EXPIRED';
       }
     }
 
-    res.json({ quote });
+    return res.json({ quote });
   } catch (error) {
     console.error('Get quote error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -206,7 +361,7 @@ router.get('/:id', requireClinicId, [param('id').isUUID()], async (req, res) => 
  * @route PUT /api/quotes/:id
  * @desc Update quote (only DRAFT/SENT)
  */
-router.put('/:id', requireClinicId, [
+router.put('/:id', requireClinicOrSuperAdmin, [
   param('id').isUUID(),
   body('items').optional().isArray(),
   body('discount_percentage').optional().isFloat({ min: 0, max: 100 }),
@@ -214,8 +369,12 @@ router.put('/:id', requireClinicId, [
   body('notes').optional().isString()
 ], async (req, res) => {
   try {
-    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+    if (!validateRequest(req, res)) return;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
 
     const quote = await Invoice.findOne({ where: whereClause });
 
@@ -224,52 +383,71 @@ router.put('/:id', requireClinicId, [
     }
 
     if (!['DRAFT', 'SENT'].includes(quote.status)) {
-      return res.status(400).json({ error: 'Impossible de modifier un devis ' + quote.status });
+      return res.status(400).json({
+        error: 'Impossible de modifier un devis ' + quote.status
+      });
     }
 
     const { items, discount_percentage, validity_days, notes } = req.body;
 
+    let subtotal = Number(quote.subtotal_mga || 0);
+    let discPct = Number(
+      discount_percentage !== undefined ? discount_percentage : quote.discount_percentage || 0
+    );
+
     if (items && items.length > 0) {
       await InvoiceItem.destroy({ where: { invoice_id: quote.id } });
-      await Promise.all(items.map(item => InvoiceItem.create({
-        invoice_id: quote.id,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price_mga: item.unit_price_mga,
-        total_price_mga: item.quantity * item.unit_price_mga,
-        procedure_id: item.procedure_id,
-        tooth_number: item.tooth_number
-      })));
 
-      const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price_mga), 0);
-      const discPct = discount_percentage ?? quote.discount_percentage;
-      const discountAmount = (subtotal * discPct) / 100;
-      
-      await quote.update({
-        subtotal_mga: subtotal,
-        discount_percentage: discPct,
-        discount_amount_mga: discountAmount,
-        total_mga: subtotal - discountAmount
-      });
+      await Promise.all(
+        items.map((item) => InvoiceItem.create({
+          invoice_id: quote.id,
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit_price_mga: Number(item.unit_price_mga),
+          total_price_mga: Number(item.quantity) * Number(item.unit_price_mga),
+          procedure_id: item.procedure_id || null,
+          tooth_number: item.tooth_number || null,
+          notes: item.notes || null
+        }))
+      );
+
+      subtotal = items.reduce((sum, item) => {
+        return sum + (Number(item.quantity) * Number(item.unit_price_mga));
+      }, 0);
     }
 
-    const updates = {};
-    if (discount_percentage !== undefined) updates.discount_percentage = discount_percentage;
-    if (validity_days !== undefined) updates.validity_days = validity_days;
+    const discountAmount = (subtotal * discPct) / 100;
+    const total = subtotal - discountAmount;
+
+    const updates = {
+      subtotal_mga: subtotal,
+      discount_percentage: discPct,
+      discount_amount_mga: discountAmount,
+      total_mga: total
+    };
+
+    if (validity_days !== undefined) updates.validity_days = Number(validity_days);
     if (notes !== undefined) updates.notes = notes;
-    
-    if (Object.keys(updates).length > 0) {
-      await quote.update(updates);
-    }
+
+    await quote.update(updates);
 
     const updatedQuote = await Invoice.findByPk(quote.id, {
-      include: [{ model: Patient, as: 'patient' }, { model: InvoiceItem, as: 'items' }]
+      include: [
+        { model: Patient, as: 'patient', required: false },
+        { model: InvoiceItem, as: 'items', required: false }
+      ]
     });
 
-    res.json({ message: 'Devis mis à jour', quote: updatedQuote });
+    return res.json({
+      message: 'Devis mis à jour',
+      quote: updatedQuote
+    });
   } catch (error) {
     console.error('Update quote error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -277,13 +455,17 @@ router.put('/:id', requireClinicId, [
  * @route PATCH /api/quotes/:id/status
  * @desc Update quote status
  */
-router.patch('/:id/status', requireClinicId, [
+router.patch('/:id/status', requireClinicOrSuperAdmin, [
   param('id').isUUID(),
   body('status').isIn(['DRAFT', 'SENT', 'ACCEPTED', 'REJECTED', 'EXPIRED', 'CANCELLED'])
 ], async (req, res) => {
   try {
-    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+    if (!validateRequest(req, res)) return;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
 
     const quote = await Invoice.findOne({ where: whereClause });
 
@@ -296,15 +478,22 @@ router.patch('/:id/status', requireClinicId, [
     }
 
     const { status } = req.body;
+
     await quote.update({
       status,
       sent_at: status === 'SENT' ? new Date() : quote.sent_at
     });
 
-    res.json({ message: 'Statut mis à jour', quote });
+    return res.json({
+      message: 'Statut mis à jour',
+      quote
+    });
   } catch (error) {
     console.error('Update quote status error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -312,14 +501,18 @@ router.patch('/:id/status', requireClinicId, [
  * @route POST /api/quotes/:id/convert
  * @desc Convert quote to invoice
  */
-router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req, res) => {
+router.post('/:id/convert', requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
   try {
-    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+    if (!validateRequest(req, res)) return;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
 
     const quote = await Invoice.findOne({
       where: whereClause,
-      include: [{ model: InvoiceItem, as: 'items' }]
+      include: [{ model: InvoiceItem, as: 'items', required: false }]
     });
 
     if (!quote) {
@@ -327,79 +520,69 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
     }
 
     if (quote.status === 'CONVERTED') {
-      return res.status(400).json({ error: 'Devis déjà converti', invoice_id: quote.converted_to_invoice_id });
+      return res.status(400).json({
+        error: 'Devis déjà converti',
+        invoice_id: quote.converted_to_invoice_id
+      });
     }
 
     if (!['DRAFT', 'SENT', 'ACCEPTED'].includes(quote.status)) {
-      return res.status(400).json({ error: `Impossible de convertir un devis ${quote.status}` });
+      return res.status(400).json({
+        error: `Impossible de convertir un devis ${quote.status}`
+      });
     }
 
-    // Generate invoice number
-    const year = new Date().getFullYear();
-    const allInvoices = await Invoice.findAll({
-      where: {
-        document_type: 'INVOICE',
-        invoice_number: { [Op.like]: `FACT-${year}-%` }
-      },
-      order: [['invoice_number', 'DESC']],
-      limit: 1
-    });
-    
-    let nextNum = 1;
-    if (allInvoices.length > 0) {
-      const lastNum = allInvoices[0].invoice_number.split('-').pop();
-      nextNum = parseInt(lastNum) + 1;
-    }
-    const invoiceNumber = `FACT-${year}-${String(nextNum).padStart(4, '0')}`;
+    const finalClinicId = quote.clinic_id || null;
+    const invoiceNumber = await generateInvoiceNumber(finalClinicId);
 
-    // Create invoice from quote
     const invoiceData = {
       document_type: 'INVOICE',
       invoice_number: invoiceNumber,
       patient_id: quote.patient_id,
       schedule_id: quote.schedule_id,
+      clinic_id: finalClinicId,
       invoice_date: new Date(),
-      due_date: quote.due_date,
+      due_date: quote.due_date || null,
       subtotal_mga: quote.subtotal_mga,
       discount_percentage: quote.discount_percentage,
       discount_amount_mga: quote.discount_amount_mga,
-      discount_type: quote.discount_type,
-      tax_percentage: quote.tax_percentage,
-      tax_amount_mga: quote.tax_amount_mga,
+      discount_type: quote.discount_type || null,
+      tax_percentage: quote.tax_percentage || 0,
+      tax_amount_mga: quote.tax_amount_mga || 0,
       total_mga: quote.total_mga,
-      notes: quote.notes ? `Converti du devis ${quote.invoice_number}. ${quote.notes}` : `Converti du devis ${quote.invoice_number}`,
-      nif_number: quote.nif_number,
-      stat_number: quote.stat_number,
-      clinic_nif: quote.clinic_nif,
-      clinic_stat: quote.clinic_stat,
+      notes: quote.notes
+        ? `Converti du devis ${quote.invoice_number}. ${quote.notes}`
+        : `Converti du devis ${quote.invoice_number}`,
+      nif_number: quote.nif_number || null,
+      stat_number: quote.stat_number || null,
+      clinic_nif: quote.clinic_nif || null,
+      clinic_stat: quote.clinic_stat || null,
       status: 'DRAFT',
-      created_by_user_id: req.user.id
+      created_by_user_id: getCurrentUserId(req)
     };
-    if (req.clinic_id) invoiceData.clinic_id = req.clinic_id;
 
     const invoice = await Invoice.create(invoiceData);
 
-    // Copy items
-    await Promise.all(quote.items.map(item => InvoiceItem.create({
-      invoice_id: invoice.id,
-      description: item.description,
-      quantity: item.quantity,
-      unit_price_mga: item.unit_price_mga,
-      total_price_mga: item.total_price_mga,
-      procedure_id: item.procedure_id,
-      tooth_number: item.tooth_number,
-      notes: item.notes
-    })));
+    await Promise.all(
+      (quote.items || []).map((item) => InvoiceItem.create({
+        invoice_id: invoice.id,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price_mga: item.unit_price_mga,
+        total_price_mga: item.total_price_mga,
+        procedure_id: item.procedure_id || null,
+        tooth_number: item.tooth_number || null,
+        notes: item.notes || null
+      }))
+    );
 
-    // Update quote status
     await quote.update({
       status: 'CONVERTED',
       converted_to_invoice_id: invoice.id
     });
 
-    // Audit log
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: getCurrentUserId(req),
       action: 'CONVERT',
       resource_type: 'quotes',
       resource_id: quote.id,
@@ -410,12 +593,12 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
 
     const completeInvoice = await Invoice.findByPk(invoice.id, {
       include: [
-        { model: Patient, as: 'patient' },
-        { model: InvoiceItem, as: 'items' }
+        { model: Patient, as: 'patient', required: false },
+        { model: InvoiceItem, as: 'items', required: false }
       ]
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Devis converti en facture',
       quote_id: quote.id,
       quote_number: quote.invoice_number,
@@ -423,7 +606,10 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
     });
   } catch (error) {
     console.error('Convert quote error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -431,10 +617,14 @@ router.post('/:id/convert', requireClinicId, [param('id').isUUID()], async (req,
  * @route DELETE /api/quotes/:id
  * @desc Delete quote (DRAFT only)
  */
-router.delete('/:id', requireClinicId, [param('id').isUUID()], async (req, res) => {
+router.delete('/:id', requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
   try {
-    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+    if (!validateRequest(req, res)) return;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
 
     const quote = await Invoice.findOne({ where: whereClause });
 
@@ -443,16 +633,21 @@ router.delete('/:id', requireClinicId, [param('id').isUUID()], async (req, res) 
     }
 
     if (quote.status !== 'DRAFT') {
-      return res.status(400).json({ error: 'Seuls les devis en brouillon peuvent être supprimés' });
+      return res.status(400).json({
+        error: 'Seuls les devis en brouillon peuvent être supprimés'
+      });
     }
 
     await InvoiceItem.destroy({ where: { invoice_id: quote.id } });
     await quote.destroy();
 
-    res.json({ message: 'Devis supprimé' });
+    return res.json({ message: 'Devis supprimé' });
   } catch (error) {
     console.error('Delete quote error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -460,22 +655,25 @@ router.delete('/:id', requireClinicId, [param('id').isUUID()], async (req, res) 
  * @route GET /api/quotes/:id/print
  * @desc Get printable HTML view of quote
  */
-router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, res) => {
+router.get('/:id/print', requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
   try {
+    if (!validateRequest(req, res)) return;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
+
     const quote = await Invoice.findOne({
-      where: { id: req.params.id, document_type: 'QUOTE' },
+      where: whereClause,
       include: [
-        { model: Patient, as: 'patient' },
-        { model: InvoiceItem, as: 'items' }
+        { model: Patient, as: 'patient', required: false },
+        { model: InvoiceItem, as: 'items', required: false }
       ]
     });
 
     if (!quote) {
       return res.status(404).json({ error: 'Devis non trouvé' });
-    }
-
-    if (quote.clinic_id && quote.clinic_id !== req.clinic_id && req.user.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Non autorisé' });
     }
 
     const clinic = quote.clinic_id ? await Clinic.findByPk(quote.clinic_id) : null;
@@ -486,13 +684,13 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
     const isExpired = new Date() > expiryDate && !['ACCEPTED', 'CONVERTED'].includes(quote.status);
 
     const statusLabels = {
-      'DRAFT': 'Brouillon',
-      'SENT': 'Envoyé',
-      'ACCEPTED': 'Accepté',
-      'REJECTED': 'Refusé',
-      'EXPIRED': 'Expiré',
-      'CONVERTED': 'Converti',
-      'CANCELLED': 'Annulé'
+      DRAFT: 'Brouillon',
+      SENT: 'Envoyé',
+      ACCEPTED: 'Accepté',
+      REJECTED: 'Refusé',
+      EXPIRED: 'Expiré',
+      CONVERTED: 'Converti',
+      CANCELLED: 'Annulé'
     };
 
     const html = `
@@ -549,7 +747,7 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       <p class="number">${quote.invoice_number}</p>
       <p>Date: ${formatDate(quote.invoice_date)}</p>
       <p>Valide jusqu'au: ${formatDate(expiryDate)}</p>
-      <p class="status status-${quote.status.toLowerCase()}">
+      <p class="status status-${String(quote.status || '').toLowerCase()}">
         ${statusLabels[quote.status] || quote.status}
       </p>
     </div>
@@ -571,7 +769,7 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
       </tr>
     </thead>
     <tbody>
-      ${quote.items.map(item => `
+      ${(quote.items || []).map(item => `
         <tr>
           <td>${item.description}${item.tooth_number ? ` (Dent ${item.tooth_number})` : ''}</td>
           <td class="amount">${item.quantity}</td>
@@ -584,7 +782,7 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
   <div class="totals">
     <table>
       <tr><td>Sous-total</td><td class="amount">${formatCurrency(quote.subtotal_mga)}</td></tr>
-      ${parseFloat(quote.discount_percentage) > 0 ? `<tr><td>Remise (${quote.discount_percentage}%)</td><td class="amount">-${formatCurrency(quote.discount_amount_mga)}</td></tr>` : ''}
+      ${parseFloat(quote.discount_percentage || 0) > 0 ? `<tr><td>Remise (${quote.discount_percentage}%)</td><td class="amount">-${formatCurrency(quote.discount_amount_mga)}</td></tr>` : ''}
       <tr class="total-row"><td>Total</td><td class="amount">${formatCurrency(quote.total_mga)}</td></tr>
     </table>
   </div>
@@ -602,10 +800,13 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
 </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.send(html);
+    return res.send(html);
   } catch (error) {
     console.error('Print quote error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({
+      error: 'Erreur serveur',
+      details: error.message
+    });
   }
 });
 
@@ -613,18 +814,22 @@ router.get('/:id/print', requireClinicId, [param('id').isUUID()], async (req, re
  * @route GET /api/quotes/:id/pdf
  * @desc Generate and download PDF of quote
  */
-router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res) => {
+router.get('/:id/pdf', requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
   try {
+    if (!validateRequest(req, res)) return;
+
     const { generateQuotePDF } = require('../utils/pdfGenerator');
-    
-    const whereClause = { id: req.params.id, document_type: 'QUOTE' };
-    if (req.clinic_id && req.user.role !== 'SUPER_ADMIN') whereClause.clinic_id = req.clinic_id;
+
+    const whereClause = buildScopedWhere(req, {
+      id: req.params.id,
+      document_type: 'QUOTE'
+    });
 
     const quote = await Invoice.findOne({
       where: whereClause,
       include: [
-        { model: Patient, as: 'patient' },
-        { model: InvoiceItem, as: 'items' }
+        { model: Patient, as: 'patient', required: false },
+        { model: InvoiceItem, as: 'items', required: false }
       ]
     });
 
@@ -634,14 +839,18 @@ router.get('/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res)
 
     const clinic = quote.clinic_id ? await Clinic.findByPk(quote.clinic_id) : null;
     const pdfBuffer = await generateQuotePDF(quote, clinic);
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${quote.invoice_number}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
+
+    return res.send(pdfBuffer);
   } catch (error) {
     console.error('PDF quote error:', error);
-    res.status(500).json({ error: 'Erreur génération PDF', details: error.message });
+    return res.status(500).json({
+      error: 'Erreur génération PDF',
+      details: error.message
+    });
   }
 });
 
