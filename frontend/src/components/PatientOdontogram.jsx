@@ -6,7 +6,6 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { ArrowLeft, User, Loader2, Save, RefreshCw } from 'lucide-react';
 
@@ -241,40 +240,33 @@ const PatientOdontogram = () => {
             <DialogTitle>Dent {selectedTooth}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Statut */}
+            {/* Statut — select natif pour éviter bug Portal shadcn dans Dialog */}
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select
+              <select
                 value={editForm.status}
-                onValueChange={(v) => setEditForm({...editForm, status: v})}
+                onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                data-testid="status-select"
               >
-                <SelectTrigger data-testid="status-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(STATUSES).map(([key, { label }]) => (
-                    <SelectItem key={key} value={key}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {Object.entries(STATUSES).map(([key, { label }]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
             </div>
 
-            {/* Surface — ⚠️ value="NONE" au lieu de value="" */}
+            {/* Surface — select natif pour éviter bug Portal shadcn dans Dialog */}
             <div className="space-y-2">
               <Label>Surface</Label>
-              <Select
+              <select
                 value={editForm.surface}
-                onValueChange={(v) => setEditForm({...editForm, surface: v})}
+                onChange={(e) => setEditForm({...editForm, surface: e.target.value})}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SURFACES.map(s => (
-                    <SelectItem key={s} value={s}>{SURFACE_LABELS[s]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {SURFACES.map(s => (
+                  <option key={s} value={s}>{SURFACE_LABELS[s]}</option>
+                ))}
+              </select>
             </div>
 
             {/* Note */}
