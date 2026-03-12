@@ -7,7 +7,6 @@ import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { ArrowLeft, User, Loader2, Save, RefreshCw } from 'lucide-react';
 
@@ -15,23 +14,24 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const STATUSES = {
-  HEALTHY: { label: 'Sain', color: 'bg-green-500', textColor: 'text-green-700' },
-  CARIES: { label: 'Carie', color: 'bg-red-500', textColor: 'text-red-700' },
-  FILLED: { label: 'Obturé', color: 'bg-blue-500', textColor: 'text-blue-700' },
-  CROWN: { label: 'Couronne', color: 'bg-yellow-500', textColor: 'text-yellow-700' },
-  MISSING: { label: 'Absent', color: 'bg-gray-400', textColor: 'text-gray-600' },
-  IMPLANT: { label: 'Implant', color: 'bg-purple-500', textColor: 'text-purple-700' },
-  ROOT_CANAL: { label: 'Dévitalisé', color: 'bg-orange-500', textColor: 'text-orange-700' },
-  EXTRACTION_NEEDED: { label: 'À extraire', color: 'bg-pink-500', textColor: 'text-pink-700' },
-  BRIDGE: { label: 'Bridge', color: 'bg-cyan-500', textColor: 'text-cyan-700' }
+  HEALTHY:            { label: 'Sain',        color: 'bg-white border-2 border-gray-300', textColor: 'text-green-700' },
+  CARIES:             { label: 'Carie',        color: 'bg-red-500',    textColor: 'text-red-700' },
+  FILLED:             { label: 'Obturé',       color: 'bg-blue-500',   textColor: 'text-blue-700' },
+  CROWN:              { label: 'Couronne',     color: 'bg-yellow-500', textColor: 'text-yellow-700' },
+  MISSING:            { label: 'Absent',       color: 'bg-gray-400',   textColor: 'text-gray-600' },
+  IMPLANT:            { label: 'Implant',      color: 'bg-purple-500', textColor: 'text-purple-700' },
+  ROOT_CANAL:         { label: 'Dévitalisé',   color: 'bg-orange-500', textColor: 'text-orange-700' },
+  EXTRACTION_NEEDED:  { label: 'À extraire',   color: 'bg-pink-500',   textColor: 'text-pink-700' },
+  BRIDGE:             { label: 'Bridge',       color: 'bg-cyan-500',   textColor: 'text-cyan-700' }
 };
 
-const SURFACES = ['M', 'D', 'O', 'B', 'L', 'I', 'MO', 'DO', 'MOD', 'MODBL'];
+// ⚠️ Pas de value="" — shadcn/ui interdit les valeurs vides
+const SURFACES = ['NONE', 'M', 'D', 'O', 'B', 'L', 'I', 'MO', 'DO', 'MOD', 'MODBL'];
+const SURFACE_LABELS = { NONE: 'Aucune', M: 'M', D: 'D', O: 'O', B: 'B', L: 'L', I: 'I', MO: 'MO', DO: 'DO', MOD: 'MOD', MODBL: 'MODBL' };
 
-// FDI tooth arrangement
 const UPPER_RIGHT = ['18', '17', '16', '15', '14', '13', '12', '11'];
-const UPPER_LEFT = ['21', '22', '23', '24', '25', '26', '27', '28'];
-const LOWER_LEFT = ['31', '32', '33', '34', '35', '36', '37', '38'];
+const UPPER_LEFT  = ['21', '22', '23', '24', '25', '26', '27', '28'];
+const LOWER_LEFT  = ['31', '32', '33', '34', '35', '36', '37', '38'];
 const LOWER_RIGHT = ['48', '47', '46', '45', '44', '43', '42', '41'];
 
 const PatientOdontogram = () => {
@@ -41,8 +41,14 @@ const PatientOdontogram = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedTooth, setSelectedTooth] = useState(null);
-  const [editForm, setEditForm] = useState({ status: 'HEALTHY', surface: '', note: '' });
+  const [editForm, setEditForm] = useState({ status: 'HEALTHY', surface: 'NONE', note: '' });
   const [pendingChanges, setPendingChanges] = useState({});
+
+  // Helper token
+  const authHeaders = () => {
+    const token = localStorage.getItem('token');
+    return { headers: { Authorization: `Bearer ${token}` } };
+  };
 
   useEffect(() => {
     fetchPatient();
@@ -51,7 +57,7 @@ const PatientOdontogram = () => {
 
   const fetchPatient = async () => {
     try {
-      const res = await axios.get(`${API}/patients/${patientId}`);
+      const res = await axios.get(`${API}/patients/${patientId}`, authHeaders());
       setPatient(res.data);
     } catch (err) {
       toast.error('Patient non trouvé');
@@ -60,7 +66,7 @@ const PatientOdontogram = () => {
 
   const fetchOdontogram = async () => {
     try {
-      const res = await axios.get(`${API}/patients/${patientId}/odontogram`);
+      const res = await axios.get(`${API}/patients/${patientId}/odontogram`, authHeaders());
       setOdontogram(res.data.odontogram || {});
     } catch (err) {
       toast.error('Erreur chargement odontogramme');
@@ -73,9 +79,9 @@ const PatientOdontogram = () => {
     const existing = pendingChanges[toothFdi] || odontogram[toothFdi] || {};
     setSelectedTooth(toothFdi);
     setEditForm({
-      status: existing.status || 'HEALTHY',
-      surface: existing.surface || '',
-      note: existing.note || ''
+      status:  existing.status  || 'HEALTHY',
+      surface: existing.surface || 'NONE',
+      note:    existing.note    || ''
     });
   };
 
@@ -84,9 +90,9 @@ const PatientOdontogram = () => {
       ...pendingChanges,
       [selectedTooth]: {
         tooth_fdi: selectedTooth,
-        status: editForm.status,
-        surface: editForm.surface,
-        note: editForm.note
+        status:  editForm.status,
+        surface: editForm.surface === 'NONE' ? '' : editForm.surface,
+        note:    editForm.note
       }
     });
     setSelectedTooth(null);
@@ -99,10 +105,9 @@ const PatientOdontogram = () => {
       toast.info('Aucune modification à sauvegarder');
       return;
     }
-
     setSaving(true);
     try {
-      await axios.put(`${API}/patients/${patientId}/odontogram`, { teeth });
+      await axios.put(`${API}/patients/${patientId}/odontogram`, { teeth }, authHeaders());
       toast.success(`${teeth.length} dent(s) sauvegardée(s)`);
       setPendingChanges({});
       fetchOdontogram();
@@ -115,13 +120,11 @@ const PatientOdontogram = () => {
 
   const getToothDisplay = (toothFdi) => {
     const pending = pendingChanges[toothFdi];
-    const saved = odontogram[toothFdi];
-    const data = pending || saved;
-    
+    const saved   = odontogram[toothFdi];
+    const data    = pending || saved;
     if (!data || data.status === 'HEALTHY') {
       return { color: 'bg-white border-2 border-gray-300', isPending: !!pending };
     }
-    
     const statusInfo = STATUSES[data.status] || STATUSES.HEALTHY;
     return { color: statusInfo.color, isPending: !!pending };
   };
@@ -154,8 +157,7 @@ const PatientOdontogram = () => {
         <div className="flex items-center gap-4">
           <Link to="/patients">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+              <ArrowLeft className="h-4 w-4 mr-2" />Retour
             </Button>
           </Link>
           <div>
@@ -170,11 +172,17 @@ const PatientOdontogram = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchOdontogram}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Recharger
+            <RefreshCw className="h-4 w-4 mr-2" />Recharger
           </Button>
-          <Button onClick={handleSaveAll} disabled={saving || Object.keys(pendingChanges).length === 0} data-testid="save-all-btn">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          <Button
+            onClick={handleSaveAll}
+            disabled={saving || Object.keys(pendingChanges).length === 0}
+            data-testid="save-all-btn"
+          >
+            {saving
+              ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              : <Save className="h-4 w-4 mr-2" />
+            }
             Sauvegarder ({Object.keys(pendingChanges).length})
           </Button>
         </div>
@@ -210,11 +218,9 @@ const PatientOdontogram = () => {
                 {UPPER_LEFT.map(t => <ToothButton key={t} toothFdi={t} />)}
               </div>
             </div>
-            
             <div className="text-center text-sm text-gray-500 py-2 border-t border-b w-full">
               ─── Ligne médiane ───
             </div>
-            
             {/* Lower Jaw */}
             <div className="flex gap-1">
               <div className="flex gap-1 border-r-2 border-gray-400 pr-2">
@@ -235,9 +241,13 @@ const PatientOdontogram = () => {
             <DialogTitle>Dent {selectedTooth}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Statut */}
             <div className="space-y-2">
               <Label>Statut</Label>
-              <Select value={editForm.status} onValueChange={(v) => setEditForm({...editForm, status: v})}>
+              <Select
+                value={editForm.status}
+                onValueChange={(v) => setEditForm({...editForm, status: v})}
+              >
                 <SelectTrigger data-testid="status-select">
                   <SelectValue />
                 </SelectTrigger>
@@ -249,21 +259,25 @@ const PatientOdontogram = () => {
               </Select>
             </div>
 
+            {/* Surface — ⚠️ value="NONE" au lieu de value="" */}
             <div className="space-y-2">
               <Label>Surface</Label>
-              <Select value={editForm.surface} onValueChange={(v) => setEditForm({...editForm, surface: v})}>
+              <Select
+                value={editForm.surface}
+                onValueChange={(v) => setEditForm({...editForm, surface: v})}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner..." />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucune</SelectItem>
                   {SURFACES.map(s => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                    <SelectItem key={s} value={s}>{SURFACE_LABELS[s]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Note */}
             <div className="space-y-2">
               <Label>Note</Label>
               <Textarea
