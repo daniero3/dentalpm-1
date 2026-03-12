@@ -73,8 +73,8 @@ const InventoryManagement = () => {
         current_qty:    parseInt(productForm.current_qty)      || 0
       });
       toast.success('Produit créé');
-      setIsAddOpen(false);
       setProductForm({ name: '', sku: '', category: 'CONSUMABLES', unit: 'PIECE', unit_cost_mga: '', sale_price_mga: '', min_qty: '10', current_qty: '0' });
+      setIsAddOpen(false);
       fetchProducts(); fetchAlerts();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Erreur création');
