@@ -165,12 +165,13 @@ const InventoryManagement = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Catégorie</Label>
-                    /* replaced below */
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(CATEGORIES).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    <select
+                      value={productForm.category}
+                      onChange={e => setProductForm({...productForm, category: e.target.value})}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label>Unité</Label>
