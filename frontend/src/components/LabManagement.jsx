@@ -207,10 +207,17 @@ const LabManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const res = await axios.get(`${API}/patients?limit=200`, authHeaders());
-      setPatients(res.data.patients || []);
+      let res;
+      try {
+        res = await axios.get(`${API}/patients?limit=100&page=1`, authHeaders());
+      } catch {
+        res = await axios.get(`${API}/patients`, authHeaders());
+      }
+      const list = res.data.patients || res.data.data || res.data || [];
+      setPatients(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error('Patients error:', err);
+      toast.error('Impossible de charger la liste des patients');
     }
   };
 
