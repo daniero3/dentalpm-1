@@ -6,103 +6,93 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { 
-  FileText, Upload, Download, Eye, Trash2, RotateCcw, 
-  Image, File, ArrowLeft, User, Loader2, X, CheckCircle
+  FileText, Upload, Download, Eye, Trash2,
+  Image, File, ArrowLeft, User, Loader2, CheckCircle
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const CATEGORIES = {
-  RADIO: { label: 'Radio', color: 'bg-purple-100 text-purple-800', icon: Image },
-  PHOTO: { label: 'Photo', color: 'bg-blue-100 text-blue-800', icon: Image },
-  ANALYSE: { label: 'Analyse', color: 'bg-green-100 text-green-800', icon: FileText },
-  FAISABILITE: { label: 'Faisabilité', color: 'bg-amber-100 text-amber-800', icon: FileText },
-  ORDONNANCE: { label: 'Ordonnance', color: 'bg-red-100 text-red-800', icon: FileText },
-  AUTRE: { label: 'Autre', color: 'bg-gray-100 text-gray-800', icon: File }
+  RADIO:       { label: 'Radio',       color: 'bg-purple-100 text-purple-800', icon: Image },
+  PHOTO:       { label: 'Photo',       color: 'bg-blue-100 text-blue-800',     icon: Image },
+  ANALYSE:     { label: 'Analyse',     color: 'bg-green-100 text-green-800',   icon: FileText },
+  FAISABILITE: { label: 'Faisabilité', color: 'bg-amber-100 text-amber-800',   icon: FileText },
+  ORDONNANCE:  { label: 'Ordonnance',  color: 'bg-red-100 text-red-800',       icon: FileText },
+  AUTRE:       { label: 'Autre',       color: 'bg-gray-100 text-gray-800',     icon: File }
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
 const PatientDocuments = () => {
   const { patientId } = useParams();
-  const [patient, setPatient] = useState(null);
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [patient, setPatient]       = useState(null);
+  const [documents, setDocuments]   = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [uploading, setUploading]   = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const fileInputRef = useRef(null);
-  
+  const mountedRef   = useRef(true); // ← fix erreur au démontage
+
   const [uploadForm, setUploadForm] = useState({
-    category: 'AUTRE',
-    description: '',
-    file: null
+    category: 'AUTRE', description: '', file: null
   });
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchPatient();
     fetchDocuments();
+    return () => { mountedRef.current = false; }; // ← nettoyage
   }, [patientId]);
 
   const fetchPatient = async () => {
     try {
       const res = await axios.get(`${API}/patients/${patientId}`);
-      setPatient(res.data);
+      if (mountedRef.current) setPatient(res.data);
     } catch (err) {
-      toast.error('Patient non trouvé');
+      if (mountedRef.current) toast.error('Patient non trouvé');
     }
   };
 
   const fetchDocuments = async () => {
     try {
       const res = await axios.get(`${API}/documents/patient/${patientId}`);
-      setDocuments(res.data.documents || []);
+      if (mountedRef.current) setDocuments(res.data.documents || []);
     } catch (err) {
-      toast.error('Erreur chargement documents');
+      if (mountedRef.current) toast.error('Erreur chargement documents');
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Validate type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error('Type non autorisé. Formats: JPG, PNG, PDF');
-      return;
+      toast.error('Type non autorisé. Formats: JPG, PNG, PDF'); return;
     }
-
-    // Validate size
     if (file.size > MAX_FILE_SIZE) {
-      toast.error('Fichier trop volumineux. Max: 5MB');
-      return;
+      toast.error('Fichier trop volumineux. Max: 5MB'); return;
     }
-
-    setUploadForm({ ...uploadForm, file });
+    setUploadForm(f => ({ ...f, file }));
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!uploadForm.file) {
-      toast.error('Sélectionnez un fichier');
-      return;
-    }
-
+    if (!uploadForm.file) { toast.error('Sélectionnez un fichier'); return; }
     setUploading(true);
     const formData = new FormData();
     formData.append('file', uploadForm.file);
     formData.append('patient_id', patientId);
     formData.append('category', uploadForm.category);
     formData.append('description', uploadForm.description);
-
     try {
       await axios.post(`${API}/documents/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -125,19 +115,7 @@ const PatientDocuments = () => {
       await axios.delete(`${API}/documents/${doc.id}`);
       toast.success('Document supprimé');
       fetchDocuments();
-    } catch (err) {
-      toast.error('Erreur suppression');
-    }
-  };
-
-  const handleRestore = async (doc) => {
-    try {
-      await axios.patch(`${API}/documents/${doc.id}/restore`);
-      toast.success('Document restauré');
-      fetchDocuments();
-    } catch (err) {
-      toast.error('Erreur restauration');
-    }
+    } catch (err) { toast.error('Erreur suppression'); }
   };
 
   const handleDownload = async (doc) => {
@@ -150,27 +128,19 @@ const PatientDocuments = () => {
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = doc.original_filename;
-      document.body.appendChild(a);
-      a.click();
+      a.href = url; a.download = doc.original_filename;
+      document.body.appendChild(a); a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (err) {
-      toast.error('Erreur téléchargement');
-    }
+    } catch (err) { toast.error('Erreur téléchargement'); }
   };
 
   const handleView = (doc) => {
-    const token = localStorage.getItem('token');
     const viewUrl = `${API}/documents/${doc.id}/view`;
-    
     if (doc.mime_type === 'application/pdf') {
-      // Open PDF in new tab
       window.open(viewUrl, '_blank');
-    } else if (doc.mime_type.startsWith('image/')) {
-      // Show image preview inline
-      setPreviewDoc({ ...doc, url: viewUrl, token });
+    } else if (doc.mime_type?.startsWith('image/')) {
+      setPreviewDoc({ ...doc, url: viewUrl });
     }
   };
 
@@ -181,104 +151,130 @@ const PatientDocuments = () => {
   };
 
   const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 256 }}>
+      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    </div>
+  );
 
   return (
-    <div className="space-y-6" data-testid="patient-documents">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+      {/* ── Header ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link to="/patients">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
-            </Button>
+            <button style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 14px', borderRadius: 8,
+              border: '1px solid #E2E8F0', background: '#fff',
+              fontSize: 13, fontWeight: 600, color: '#475569',
+              cursor: 'pointer', fontFamily: 'Plus Jakarta Sans',
+              transition: 'all 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#0D7A87'; e.currentTarget.style.color = '#0D7A87'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#475569'; }}
+            >
+              <ArrowLeft size={15} /> Retour
+            </button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <FileText className="h-6 w-6 text-blue-600" />
-              Documents
+            <h1 style={{
+              fontFamily: 'Plus Jakarta Sans', fontSize: 22, fontWeight: 800,
+              color: '#0F172A', letterSpacing: '-0.025em', margin: 0,
+              display: 'flex', alignItems: 'center', gap: 8
+            }}>
+              <FileText size={20} color="#0D7A87" /> Documents
             </h1>
             {patient && (
-              <p className="text-gray-500 flex items-center gap-1">
-                <User className="h-4 w-4" />
-                {patient.first_name} {patient.last_name}
+              <p style={{ color: '#64748B', fontSize: 13, margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <User size={13} /> {patient.first_name} {patient.last_name}
               </p>
             )}
           </div>
         </div>
 
+        {/* ── Dialog Upload ── */}
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="upload-btn">
-              <Upload className="h-4 w-4 mr-2" />
-              Ajouter un document
-            </Button>
+            <button style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 10,
+              background: 'linear-gradient(135deg, #0D7A87, #13A3B4)',
+              color: '#fff', border: 'none',
+              fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13,
+              cursor: 'pointer', boxShadow: '0 2px 12px rgba(13,122,135,0.3)',
+              transition: 'all 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,122,135,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(13,122,135,0.3)'; }}
+            >
+              <Upload size={15} /> Ajouter un document
+            </button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Ajouter un document</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Catégorie *</Label>
-                <Select 
-                  value={uploadForm.category} 
-                  onValueChange={(v) => setUploadForm({...uploadForm, category: v})}
+            {/* ── FORMULAIRE — select natif pour éviter removeChild ── */}
+            <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                  Catégorie *
+                </label>
+                <select
+                  className={selectClass}
+                  value={uploadForm.category}
+                  onChange={e => setUploadForm(f => ({ ...f, category: e.target.value }))}
                 >
-                  <SelectTrigger data-testid="category-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(CATEGORIES).map(([key, { label }]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {Object.entries(CATEGORIES).map(([key, { label }]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Description</Label>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                  Description
+                </label>
                 <Input
                   value={uploadForm.description}
-                  onChange={(e) => setUploadForm({...uploadForm, description: e.target.value})}
+                  onChange={e => setUploadForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Description optionnelle..."
-                  data-testid="description-input"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Fichier * (JPG, PNG, PDF - max 5MB)</Label>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>
+                  Fichier * (JPG, PNG, PDF — max 5MB)
+                </label>
                 <Input
                   ref={fileInputRef}
                   type="file"
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={handleFileSelect}
-                  data-testid="file-input"
                 />
                 {uploadForm.file && (
-                  <p className="text-sm text-green-600 flex items-center gap-1">
-                    <CheckCircle className="h-4 w-4" />
+                  <p style={{ fontSize: 12, color: '#0EA570', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <CheckCircle size={13} />
                     {uploadForm.file.name} ({formatSize(uploadForm.file.size)})
                   </p>
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8 }}>
                 <Button type="button" variant="outline" onClick={() => setIsUploadOpen(false)}>
                   Annuler
                 </Button>
-                <Button type="submit" disabled={uploading || !uploadForm.file} data-testid="submit-upload">
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                <Button type="submit" disabled={uploading || !uploadForm.file}>
+                  {uploading
+                    ? <Loader2 className="h-4 w-4 animate-spin" style={{ marginRight: 8 }} />
+                    : <Upload size={14} style={{ marginRight: 8 }} />}
                   Envoyer
                 </Button>
               </div>
@@ -287,92 +283,118 @@ const PatientDocuments = () => {
         </Dialog>
       </div>
 
-      {/* Documents List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">
-            {documents.length} document{documents.length !== 1 ? 's' : ''}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* ── Liste documents ── */}
+      <div style={{
+        background: '#fff', borderRadius: 16,
+        border: '1px solid #E2E8F0',
+        boxShadow: '0 2px 8px rgba(15,23,42,0.05)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          padding: '18px 24px',
+          borderBottom: '1px solid #F1F5F9',
+          fontFamily: 'Plus Jakarta Sans',
+          fontWeight: 700, fontSize: 15, color: '#0F172A',
+        }}>
+          {documents.length} document{documents.length !== 1 ? 's' : ''}
+        </div>
+
+        <div style={{ padding: 16 }}>
           {documents.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p>Aucun document</p>
-              <p className="text-sm">Cliquez sur "Ajouter un document" pour commencer</p>
+            <div style={{ textAlign: 'center', padding: '48px 0', color: '#94A3B8' }}>
+              <FileText size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
+              <p style={{ fontWeight: 600, marginBottom: 4 }}>Aucun document</p>
+              <p style={{ fontSize: 13 }}>Cliquez sur "Ajouter un document" pour commencer</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {documents.map((doc) => {
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {documents.map((doc, i) => {
                 const cat = CATEGORIES[doc.category] || CATEGORIES.AUTRE;
                 const CatIcon = cat.icon;
                 return (
-                  <div 
-                    key={doc.id} 
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-                    data-testid={`doc-${doc.id}`}
+                  <div
+                    key={doc.id}
+                    className="animate-fade-up"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 14px', borderRadius: 10,
+                      background: '#F8FAFC', border: '1px solid #F1F5F9',
+                      transition: 'all 0.18s ease',
+                      animationDelay: `${i * 0.04}s`,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#F0F7F8'; e.currentTarget.style.borderColor = '#E0F2F4'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#F1F5F9'; }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded ${cat.color}`}>
-                        <CatIcon className="h-5 w-5" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        padding: 8, borderRadius: 8,
+                        background: 'rgba(13,122,135,0.08)',
+                        color: '#0D7A87',
+                      }}>
+                        <CatIcon size={18} />
                       </div>
                       <div>
-                        <p className="font-medium">{doc.original_filename}</p>
-                        <div className="flex items-center gap-3 text-sm text-gray-500">
-                          <Badge className={cat.color}>{cat.label}</Badge>
-                          <span>{formatSize(doc.file_size)}</span>
-                          <span>{formatDate(doc.created_at)}</span>
-                          {doc.description && <span className="italic">"{doc.description}"</span>}
+                        <p style={{ fontWeight: 600, fontSize: 14, color: '#0F172A', margin: 0 }}>
+                          {doc.original_filename}
+                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3 }}>
+                          <span style={{
+                            fontSize: 11, fontWeight: 700, padding: '2px 8px',
+                            borderRadius: 99, background: 'rgba(13,122,135,0.1)', color: '#0D7A87'
+                          }}>
+                            {cat.label}
+                          </span>
+                          <span style={{ fontSize: 12, color: '#94A3B8' }}>{formatSize(doc.file_size)}</span>
+                          <span style={{ fontSize: 12, color: '#94A3B8' }}>{formatDate(doc.created_at)}</span>
+                          {doc.description && (
+                            <span style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>
+                              "{doc.description}"
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleView(doc)}
-                        data-testid={`view-${doc.id}`}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleDownload(doc)}
-                        data-testid={`download-${doc.id}`}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleDelete(doc)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        data-testid={`delete-${doc.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {[
+                        { icon: Eye,      onClick: () => handleView(doc),     color: '#0D7A87' },
+                        { icon: Download, onClick: () => handleDownload(doc), color: '#3B4FD8' },
+                        { icon: Trash2,   onClick: () => handleDelete(doc),   color: '#E63946' },
+                      ].map(({ icon: Icon, onClick, color }, idx) => (
+                        <button key={idx} onClick={onClick} style={{
+                          width: 32, height: 32, borderRadius: 8,
+                          border: 'none', background: 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', color,
+                          transition: 'background 0.15s',
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.background = `${color}15`}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <Icon size={15} />
+                        </button>
+                      ))}
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Image Preview Modal */}
+      {/* ── Preview image ── */}
       {previewDoc && (
         <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent style={{ maxWidth: 800 }}>
             <DialogHeader>
               <DialogTitle>{previewDoc.original_filename}</DialogTitle>
             </DialogHeader>
-            <div className="flex justify-center">
-              <img 
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <img
                 src={previewDoc.url}
                 alt={previewDoc.original_filename}
-                className="max-h-[70vh] object-contain rounded"
+                style={{ maxHeight: '70vh', objectFit: 'contain', borderRadius: 8 }}
                 onError={() => toast.error('Erreur chargement image')}
               />
             </div>
