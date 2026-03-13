@@ -242,7 +242,7 @@ const MainLayout = ({ children }) => {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="dental-pm-theme">
+    <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
       <AuthProvider>
         <div className="App">
           <BrowserRouter>
