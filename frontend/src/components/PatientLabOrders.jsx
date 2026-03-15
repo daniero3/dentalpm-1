@@ -10,6 +10,11 @@ import { FlaskConical, ArrowLeft, User, Loader2, Printer, Clock, CheckCircle, XC
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+const authHeaders = () => {
+  const token = localStorage.getItem('token');
+  return { headers: { Authorization: `Bearer ${token}` } };
+};
+
 const WORK_TYPES = {
   CROWN: 'Couronne', BRIDGE: 'Bridge', PARTIAL_DENTURE: 'Prothèse partielle',
   COMPLETE_DENTURE: 'Prothèse complète', IMPLANT_CROWN: 'Couronne implant',
@@ -18,36 +23,43 @@ const WORK_TYPES = {
 };
 
 const STATUS_CONFIG = {
-  CREATED: { label: 'Créée', color: 'bg-gray-200 text-gray-700', icon: Clock },
-  SENT: { label: 'Envoyée', color: 'bg-blue-100 text-blue-700', icon: ArrowRight },
+  CREATED:     { label: 'Créée',    color: 'bg-gray-200 text-gray-700',    icon: Clock },
+  SENT:        { label: 'Envoyée',  color: 'bg-blue-100 text-blue-700',    icon: ArrowRight },
   IN_PROGRESS: { label: 'En cours', color: 'bg-yellow-100 text-yellow-700', icon: RefreshCw },
-  DELIVERED: { label: 'Livrée', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-  CANCELLED: { label: 'Annulée', color: 'bg-red-100 text-red-700', icon: XCircle }
+  DELIVERED:   { label: 'Livrée',   color: 'bg-green-100 text-green-700',  icon: CheckCircle },
+  CANCELLED:   { label: 'Annulée',  color: 'bg-red-100 text-red-700',      icon: XCircle }
 };
 
 const PatientLabOrders = () => {
   const { patientId } = useParams();
   const [patient, setPatient] = useState(null);
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ✅ Bloquer si patientId invalide
+    if (!patientId || patientId === 'undefined') {
+      setLoading(false);
+      return;
+    }
     fetchPatient();
     fetchOrders();
   }, [patientId]);
 
   const fetchPatient = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
-      const res = await axios.get(`${API}/patients/${patientId}`);
+      const res = await axios.get(`${API}/patients/${patientId}`, authHeaders());
       setPatient(res.data);
     } catch (err) {
-      toast.error('Patient non trouvé');
+      console.error('Patient error:', err);
     }
   };
 
   const fetchOrders = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
-      const res = await axios.get(`${API}/patients/${patientId}/lab-orders`);
+      const res = await axios.get(`${API}/patients/${patientId}/lab-orders`, authHeaders());
       setOrders(res.data.orders || []);
     } catch (err) {
       toast.error('Erreur chargement commandes');
@@ -60,16 +72,14 @@ const PatientLabOrders = () => {
     window.open(`${API}/labs/orders/${orderId}/print`, '_blank');
   };
 
-  const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR');
-  const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount) + ' MGA';
+  const formatDate     = (date)   => new Date(date).toLocaleDateString('fr-FR');
+  const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount || 0) + ' MGA';
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    </div>
+  );
 
   return (
     <div className="space-y-6" data-testid="patient-lab-orders">
@@ -77,8 +87,7 @@ const PatientLabOrders = () => {
         <div className="flex items-center gap-4">
           <Link to="/patients">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+              <ArrowLeft className="h-4 w-4 mr-2" />Retour
             </Button>
           </Link>
           <div>
@@ -122,12 +131,16 @@ const PatientLabOrders = () => {
                       </div>
                       <div>
                         <p className="font-medium">{order.order_number}</p>
-                        <p className="text-sm text-gray-500">{WORK_TYPES[order.work_type]} • {formatDate(order.due_date)}</p>
+                        <p className="text-sm text-gray-500">
+                          {WORK_TYPES[order.work_type] || order.work_type} • {formatDate(order.due_date)}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
-                      <span className="text-sm">{formatCurrency(order.total_mga)}</span>
+                      <span className="text-sm" style={{ color: '#0D7A87', fontWeight: 700 }}>
+                        {formatCurrency(order.total_mga || order.lab_cost_mga)}
+                      </span>
                       <Button variant="ghost" size="sm" onClick={() => handlePrint(order.id)}>
                         <Printer className="h-4 w-4" />
                       </Button>
