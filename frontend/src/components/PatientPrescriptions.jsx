@@ -17,27 +17,29 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const STATUS_COLORS = {
-  DRAFT: 'bg-yellow-100 text-yellow-800',
-  ISSUED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800'
+const authHeaders = () => {
+  const token = localStorage.getItem('token');
+  return { headers: { Authorization: `Bearer ${token}` } };
 };
 
+const STATUS_COLORS = {
+  DRAFT:     'bg-yellow-100 text-yellow-800',
+  ISSUED:    'bg-green-100 text-green-800',
+  CANCELLED: 'bg-red-100 text-red-800'
+};
 const STATUS_LABELS = {
-  DRAFT: 'Brouillon',
-  ISSUED: 'Émise',
-  CANCELLED: 'Annulée'
+  DRAFT: 'Brouillon', ISSUED: 'Émise', CANCELLED: 'Annulée'
 };
 
 const PatientPrescriptions = () => {
   const { patientId } = useParams();
-  const [patient, setPatient] = useState(null);
+  const [patient, setPatient]             = useState(null);
   const [prescriptions, setPrescriptions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [loading, setLoading]             = useState(true);
+  const [isCreateOpen, setIsCreateOpen]   = useState(false);
+  const [isEditOpen, setIsEditOpen]       = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]               = useState(false);
 
   const [formData, setFormData] = useState({
     items: [{ medication: '', dosage: '', posology: '', duration: '' }],
@@ -45,22 +47,29 @@ const PatientPrescriptions = () => {
   });
 
   useEffect(() => {
+    // ✅ Bloquer si patientId invalide
+    if (!patientId || patientId === 'undefined') {
+      setLoading(false);
+      return;
+    }
     fetchPatient();
     fetchPrescriptions();
   }, [patientId]);
 
   const fetchPatient = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
-      const res = await axios.get(`${API}/patients/${patientId}`);
+      const res = await axios.get(`${API}/patients/${patientId}`, authHeaders());
       setPatient(res.data);
     } catch (err) {
-      toast.error('Patient non trouvé');
+      console.error('Patient error:', err);
     }
   };
 
   const fetchPrescriptions = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
-      const res = await axios.get(`${API}/patients/${patientId}/prescriptions`);
+      const res = await axios.get(`${API}/patients/${patientId}/prescriptions`, authHeaders());
       setPrescriptions(res.data.prescriptions || []);
     } catch (err) {
       toast.error('Erreur chargement ordonnances');
@@ -77,10 +86,7 @@ const PatientPrescriptions = () => {
   };
 
   const addItem = () => {
-    setFormData({
-      ...formData,
-      items: [...formData.items, { medication: '', dosage: '', posology: '', duration: '' }]
-    });
+    setFormData({ ...formData, items: [...formData.items, { medication: '', dosage: '', posology: '', duration: '' }] });
   };
 
   const removeItem = (index) => {
@@ -99,7 +105,6 @@ const PatientPrescriptions = () => {
       toast.error('Ajoutez au moins un médicament');
       return;
     }
-
     setSaving(true);
     try {
       await axios.post(`${API}/patients/${patientId}/prescriptions`, {
@@ -107,7 +112,7 @@ const PatientPrescriptions = () => {
           items: formData.items.filter(item => item.medication.trim()),
           notes: formData.notes
         }
-      });
+      }, authHeaders());
       toast.success('Ordonnance créée');
       setIsCreateOpen(false);
       resetForm();
@@ -127,7 +132,7 @@ const PatientPrescriptions = () => {
           items: formData.items.filter(item => item.medication.trim()),
           notes: formData.notes
         }
-      });
+      }, authHeaders());
       toast.success('Ordonnance mise à jour');
       setIsEditOpen(false);
       setSelectedPrescription(null);
@@ -147,7 +152,7 @@ const PatientPrescriptions = () => {
   const handleIssue = async (prescription) => {
     if (!window.confirm(`Émettre l'ordonnance ${prescription.number} ? Cette action est irréversible.`)) return;
     try {
-      await axios.post(`${API}/prescriptions/${prescription.id}/issue`);
+      await axios.post(`${API}/prescriptions/${prescription.id}/issue`, {}, authHeaders());
       toast.success('Ordonnance émise');
       fetchPrescriptions();
     } catch (err) {
@@ -158,7 +163,7 @@ const PatientPrescriptions = () => {
   const handleCancel = async (prescription) => {
     if (!window.confirm(`Annuler l'ordonnance ${prescription.number} ?`)) return;
     try {
-      await axios.post(`${API}/prescriptions/${prescription.id}/cancel`);
+      await axios.post(`${API}/prescriptions/${prescription.id}/cancel`, {}, authHeaders());
       toast.success('Ordonnance annulée');
       fetchPrescriptions();
     } catch (err) {
@@ -191,23 +196,24 @@ const PatientPrescriptions = () => {
   const openEdit = (prescription) => {
     setSelectedPrescription(prescription);
     setFormData({
-      items: prescription.content.items.length ? prescription.content.items : [{ medication: '', dosage: '', posology: '', duration: '' }],
-      notes: prescription.content.notes || ''
+      items: prescription.content?.items?.length
+        ? prescription.content.items
+        : [{ medication: '', dosage: '', posology: '', duration: '' }],
+      notes: prescription.content?.notes || ''
     });
     setIsEditOpen(true);
   };
 
   const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
   });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    </div>
+  );
 
   const PrescriptionForm = ({ onSubmit, submitLabel }) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto">
@@ -229,30 +235,16 @@ const PatientPrescriptions = () => {
               onChange={(e) => updateItem(index, 'medication', e.target.value)}
             />
             <div className="grid grid-cols-3 gap-2">
-              <Input
-                placeholder="Dosage"
-                value={item.dosage}
-                onChange={(e) => updateItem(index, 'dosage', e.target.value)}
-              />
-              <Input
-                placeholder="Posologie"
-                value={item.posology}
-                onChange={(e) => updateItem(index, 'posology', e.target.value)}
-              />
-              <Input
-                placeholder="Durée"
-                value={item.duration}
-                onChange={(e) => updateItem(index, 'duration', e.target.value)}
-              />
+              <Input placeholder="Dosage"    value={item.dosage}    onChange={(e) => updateItem(index, 'dosage',    e.target.value)} />
+              <Input placeholder="Posologie" value={item.posology}  onChange={(e) => updateItem(index, 'posology',  e.target.value)} />
+              <Input placeholder="Durée"     value={item.duration}  onChange={(e) => updateItem(index, 'duration',  e.target.value)} />
             </div>
           </div>
         ))}
         <Button type="button" variant="outline" size="sm" onClick={addItem}>
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter un médicament
+          <Plus className="h-4 w-4 mr-2" />Ajouter un médicament
         </Button>
       </div>
-
       <div className="space-y-2">
         <Label>Notes</Label>
         <Textarea
@@ -262,7 +254,6 @@ const PatientPrescriptions = () => {
           rows={3}
         />
       </div>
-
       <div className="flex justify-end gap-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={() => { setIsCreateOpen(false); setIsEditOpen(false); resetForm(); }}>
           Annuler
@@ -282,8 +273,7 @@ const PatientPrescriptions = () => {
         <div className="flex items-center gap-4">
           <Link to="/patients">
             <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+              <ArrowLeft className="h-4 w-4 mr-2" />Retour
             </Button>
           </Link>
           <div>
@@ -303,14 +293,11 @@ const PatientPrescriptions = () => {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button data-testid="new-prescription-btn" onClick={() => { resetForm(); setIsCreateOpen(true); }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle ordonnance
+              <Plus className="h-4 w-4 mr-2" />Nouvelle ordonnance
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Nouvelle ordonnance</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>Nouvelle ordonnance</DialogTitle></DialogHeader>
             <PrescriptionForm onSubmit={handleCreate} submitLabel="Créer (brouillon)" />
           </DialogContent>
         </Dialog>
@@ -319,14 +306,12 @@ const PatientPrescriptions = () => {
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Modifier {selectedPrescription?.number}</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Modifier {selectedPrescription?.number}</DialogTitle></DialogHeader>
           <PrescriptionForm onSubmit={handleUpdate} submitLabel="Enregistrer" />
         </DialogContent>
       </Dialog>
 
-      {/* Prescriptions List */}
+      {/* Liste */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
@@ -342,11 +327,7 @@ const PatientPrescriptions = () => {
           ) : (
             <div className="space-y-3">
               {prescriptions.map((presc) => (
-                <div 
-                  key={presc.id} 
-                  className="p-4 border rounded-lg hover:bg-gray-50 transition"
-                  data-testid={`presc-${presc.number}`}
-                >
+                <div key={presc.id} className="p-4 border rounded-lg hover:bg-gray-50 transition" data-testid={`presc-${presc.number}`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -358,8 +339,8 @@ const PatientPrescriptions = () => {
                         {presc.issued_at && ` • Émise le ${formatDate(presc.issued_at)}`}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        {presc.content.items.length} médicament{presc.content.items.length !== 1 ? 's' : ''}
-                        {presc.content.items.length > 0 && `: ${presc.content.items.map(i => i.medication).join(', ')}`}
+                        {presc.content?.items?.length || 0} médicament{(presc.content?.items?.length || 0) !== 1 ? 's' : ''}
+                        {presc.content?.items?.length > 0 && `: ${presc.content.items.map(i => i.medication).join(', ')}`}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
