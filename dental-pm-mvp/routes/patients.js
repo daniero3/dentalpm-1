@@ -132,20 +132,16 @@ router.post('/', requireClinicId, [
       return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
-    // Normalize gender
     let gender = (req.body.gender || '').toString().toLowerCase().trim();
     if (['m', 'male', 'homme', 'masculin'].includes(gender)) gender = 'M';
     else if (['f', 'female', 'femme', 'féminin', 'feminin'].includes(gender)) gender = 'F';
     else return res.status(400).json({ error: 'Genre invalide', message: 'Le genre doit être M ou F' });
 
-    // SUPER_ADMIN: clinic_id peut être null ou spécifié dans le body
     const clinicId = req.clinic_id || req.body.clinic_id || null;
 
-    // Generate patient number — PostgreSQL compatible
     let patient_number = null;
     try {
       if (clinicId) {
-        // Upsert counter using PostgreSQL syntax
         await sequelize.query(`
           INSERT INTO counters (id, clinic_id, counter_type, current_value, created_at, updated_at)
           VALUES (gen_random_uuid(), :clinic_id, 'patient', 1, NOW(), NOW())
@@ -161,7 +157,6 @@ router.post('/', requireClinicId, [
         const counterValue = counterRow?.current_value || 1;
         patient_number = `PAT-${String(counterValue).padStart(6, '0')}`;
       } else {
-        // SUPER_ADMIN sans clinique: numéro basé sur timestamp
         patient_number = `PAT-${Date.now().toString().slice(-6)}`;
       }
     } catch (counterErr) {
@@ -180,11 +175,9 @@ router.post('/', requireClinicId, [
       payer_type: req.body.payer_type || 'CASH',
     };
 
-    // Remove fields that don't belong to Patient model
     delete patientData.clinic_id_from_body;
 
     const patient = await Patient.create(patientData);
-
     res.status(201).json({ message: 'Patient créé avec succès', patient });
 
   } catch (error) {
@@ -283,6 +276,12 @@ router.get('/:id/dental-chart', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
   try {
+    // ✅ Validation UUID — bloque 'undefined' et autres valeurs invalides
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'ID patient invalide', details: errors.array() });
+    }
+
     let whereClause = { id: req.params.id };
     if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
 
@@ -294,30 +293,49 @@ router.get('/:id/dental-chart', requireClinicId, [
       order: [['treatment_date', 'DESC']]
     });
 
-    const dentalChart = { patient_id: req.params.id, last_updated: new Date(), teeth: {} };
+    // ✅ Format teeth_records en tableau (attendu par DentalChart.js)
+    const teethMap = {};
     for (let i = 1; i <= 32; i++) {
-      dentalChart.teeth[i] = { tooth_number: i, status: 'HEALTHY', treatments: [], notes: '' };
+      teethMap[i] = {
+        tooth_position: String(i),
+        status: 'healthy',
+        procedures: [],
+        notes: ''
+      };
     }
 
     treatments.forEach(treatment => {
       if (treatment.tooth_numbers) {
-        const toothNums = treatment.getToothNumbersArray ? treatment.getToothNumbersArray() : [];
+        const toothNums = treatment.getToothNumbersArray
+          ? treatment.getToothNumbersArray()
+          : (Array.isArray(treatment.tooth_numbers)
+              ? treatment.tooth_numbers
+              : [treatment.tooth_numbers]);
+
         toothNums.forEach(toothNum => {
           const num = parseInt(toothNum);
           if (num >= 1 && num <= 32) {
-            dentalChart.teeth[num].treatments.push({
-              id: treatment.id,
-              date: treatment.treatment_date,
-              procedure: treatment.procedure_id,
-              status: treatment.status,
-              notes: treatment.treatment_notes
+            teethMap[num].procedures.push({
+              procedure_type: treatment.procedure_type || 'restoration',
+              procedure_name: treatment.procedure_name || treatment.procedure_id || '',
+              cost_mga: treatment.cost_mga || 0,
+              date_performed: treatment.treatment_date,
+              description: treatment.treatment_notes || '',
+              notes: ''
             });
+            if (treatment.status === 'COMPLETED') {
+              teethMap[num].status = 'filled';
+            }
           }
         });
       }
     });
 
-    res.json(dentalChart);
+    res.json({
+      patient_id: req.params.id,
+      last_updated: new Date(),
+      teeth_records: Object.values(teethMap)
+    });
   } catch (error) {
     console.error('Get dental chart error:', error);
     res.status(500).json({ error: 'Erreur lors de la récupération de la fiche dentaire', message: error.message });
