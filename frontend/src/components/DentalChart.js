@@ -61,35 +61,58 @@ const DentalChart = () => {
     }));
 
   useEffect(() => {
+    if (!patientId || patientId === 'undefined') {
+      setLoading(false);
+      return;
+    }
     fetchPatientData();
     fetchDentalChart();
   }, [patientId]);
 
   const fetchPatientData = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
       const res = await axios.get(`${API}/patients/${patientId}`, authHeaders());
       setPatient(res.data);
     } catch (err) {
-      toast.error('Erreur chargement patient');
+      console.error('Patient load error:', err);
     }
   };
 
   const fetchDentalChart = async () => {
     try {
-      const res = await axios.get(`${API}/patients/${patientId}/dental-chart`, authHeaders());
+      // Utiliser l'API odontogramme qui existe dans le backend
+      const res = await axios.get(`${API}/patients/${patientId}/odontogram`, authHeaders());
       const data = res.data;
 
-      // ── Accepter tous les formats de réponse possibles ──
-      const raw =
-        data?.teeth_records ??
-        data?.teeth ??
-        data?.records ??
-        data?.data ??
-        (Array.isArray(data) ? data : null);
+      let records = [];
 
-      const records = Array.isArray(raw) ? raw : generateEmptyChart();
+      if (data?.odontogram && typeof data.odontogram === 'object') {
+        // Format FDI → numéroté 1-32
+        const fdiToNum = {
+          '18':1,'17':2,'16':3,'15':4,'14':5,'13':6,'12':7,'11':8,
+          '21':9,'22':10,'23':11,'24':12,'25':13,'26':14,'27':15,'28':16,
+          '48':17,'47':18,'46':19,'45':20,'44':21,'43':22,'42':23,'41':24,
+          '31':25,'32':26,'33':27,'34':28,'35':29,'36':30,'37':31,'38':32,
+        };
+        const statusMap = {
+          HEALTHY:'healthy', CARIES:'carious', FILLED:'filled',
+          MISSING:'missing', CROWN:'crowned', IMPLANT:'implant',
+          ROOT_CANAL:'filled', EXTRACTION_NEEDED:'carious', BRIDGE:'crowned'
+        };
+        records = generateEmptyChart().map(tooth => {
+          const num = parseInt(tooth.tooth_position);
+          const fdi = Object.entries(fdiToNum).find(([f, n]) => n === num)?.[0];
+          const od = fdi ? data.odontogram[fdi] : null;
+          if (od) {
+            return { ...tooth, tooth_fdi: fdi, status: statusMap[od.status] || 'healthy', procedures: [], notes: od.note || '' };
+          }
+          return tooth;
+        });
+      } else {
+        records = generateEmptyChart();
+      }
 
-      // Normaliser : s'assurer que procedures est toujours un tableau
       setTeethRecords(records.map(t => ({
         ...t,
         status: t.status || 'healthy',
@@ -97,7 +120,7 @@ const DentalChart = () => {
       })));
     } catch (err) {
       console.error('Dental chart error:', err);
-      toast.error('Erreur chargement fiche dentaire');
+      // Schéma vide sans toast d'erreur
       setTeethRecords(generateEmptyChart());
     } finally {
       setLoading(false);
