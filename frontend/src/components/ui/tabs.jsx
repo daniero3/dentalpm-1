@@ -1,41 +1,52 @@
-import * as React from "react"
-import * as TabsPrimitive from "@radix-ui/react-tabs"
+// frontend/src/components/ui/tabs.jsx
+// Remplacement des Tabs Radix/shadcn par des onglets CSS purs — zéro Portal
+import React, { useState, createContext, useContext } from 'react';
 
-import { cn } from "../../lib/utils"
+const TabsContext = createContext({ value: '', onChange: () => {} });
 
-const Tabs = TabsPrimitive.Root
+const Tabs = ({ defaultValue, value, onValueChange, children, className = '' }) => {
+  const [internal, setInternal] = useState(defaultValue || '');
+  const current  = value !== undefined ? value : internal;
+  const onChange = (v) => { setInternal(v); onValueChange?.(v); };
+  return (
+    <TabsContext.Provider value={{ value: current, onChange }}>
+      <div className={className}>{children}</div>
+    </TabsContext.Provider>
+  );
+};
 
-const TabsList = React.forwardRef(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
-      className
-    )}
-    {...props} />
-))
-TabsList.displayName = TabsPrimitive.List.displayName
+const TabsList = ({ children, className = '' }) => (
+  <div style={{ display:'flex', gap:4, background:'#F1F5F9', borderRadius:10, padding:4 }} className={className}>
+    {children}
+  </div>
+);
 
-const TabsTrigger = React.forwardRef(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
-      className
-    )}
-    {...props} />
-))
-TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+const TabsTrigger = ({ value, children, className = '', ...props }) => {
+  const { value: current, onChange } = useContext(TabsContext);
+  const active = current === value;
+  return (
+    <button
+      onClick={() => onChange(value)}
+      style={{
+        flex:1, padding:'7px 14px', borderRadius:7, border:'none', cursor:'pointer',
+        fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:13, fontWeight: active ? 700 : 500,
+        background: active ? '#fff' : 'transparent',
+        color: active ? '#0F172A' : '#64748B',
+        boxShadow: active ? '0 1px 4px rgba(15,23,42,0.1)' : 'none',
+        transition:'all 0.18s ease', display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+      }}
+      className={className}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
-const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
-  <TabsPrimitive.Content
-    ref={ref}
-    className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      className
-    )}
-    {...props} />
-))
-TabsContent.displayName = TabsPrimitive.Content.displayName
+const TabsContent = ({ value, children, className = '' }) => {
+  const { value: current } = useContext(TabsContext);
+  if (current !== value) return null;
+  return <div className={className}>{children}</div>;
+};
 
-export { Tabs, TabsList, TabsTrigger, TabsContent }
+export { Tabs, TabsList, TabsTrigger, TabsContent };
