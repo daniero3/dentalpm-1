@@ -4,17 +4,35 @@ import { useAuth } from '../App';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Card, CardContent } from './ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
-import { Mail, MessageSquare, Plus, Send, Clock, CheckCircle, XCircle, Calendar, Cake, RefreshCw, Users, FileText } from 'lucide-react';
+import { Mail, MessageSquare, Plus, Send, Clock, CheckCircle, XCircle, Calendar, Cake, RefreshCw, Users, FileText, X } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+
+
+// ── Modal CSS pur ──
+const Modal = ({ open, onClose, title, description, children, maxWidth = 480 }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
+        {(title||description) && <div style={{ marginBottom:20, paddingRight:28 }}>
+          {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:0 }}>{title}</h2>}
+          {description && <p style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{description}</p>}
+        </div>}
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const MessagingManagement = () => {
   const { user } = useAuth();
@@ -234,62 +252,9 @@ const MessagingManagement = () => {
 
         {/* Templates */}
         <TabsContent value="templates" className="space-y-4">
-          <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="mb-4" data-testid="new-template-btn">
-                <Plus className="h-4 w-4 mr-2" />Nouveau Template
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nouveau Template</DialogTitle>
-                <DialogDescription>Créez un modèle de message réutilisable</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreateTemplate} className="space-y-4">
-                <div>
-                  <Label>Clé du template</Label>
-                  <select
-                    value={newTemplate.key}
-                    onChange={e => setNewTemplate({...newTemplate, key: e.target.value})}
-                    className={selectClass}
-                    data-testid="template-key-select"
-                  >
-                    <option value="">Sélectionner...</option>
-                    {templateKeys.map(t => (
-                      <option key={t.key} value={t.key}>{t.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label>Canal</Label>
-                  <select
-                    value={newTemplate.channel}
-                    onChange={e => setNewTemplate({...newTemplate, channel: e.target.value})}
-                    className={selectClass}
-                    data-testid="template-channel-select"
-                  >
-                    <option value="SMS">SMS</option>
-                    <option value="EMAIL">Email</option>
-                  </select>
-                </div>
-                <div>
-                  <Label>Texte du message</Label>
-                  <Textarea
-                    value={newTemplate.text}
-                    onChange={e => setNewTemplate({...newTemplate, text: e.target.value})}
-                    placeholder="Bonjour {patient_name}, ..."
-                    rows={4}
-                    data-testid="template-text"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Variables: {placeholders.join(', ')}</p>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>Annuler</Button>
-                  <Button type="submit" disabled={!newTemplate.key || !newTemplate.text} data-testid="save-template-btn">Créer</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button className="mb-4" data-testid="new-template-btn" onClick={() => setIsTemplateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />Nouveau Template
+          </Button>
 
           {templates.length === 0 ? (
             <Card><CardContent className="flex flex-col items-center justify-center py-12">
@@ -374,6 +339,42 @@ const MessagingManagement = () => {
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+};
+
+      {/* ── Modal Nouveau Template ── */}
+      <Modal open={isTemplateDialogOpen} onClose={() => setIsTemplateDialogOpen(false)}
+        title="Nouveau Template" description="Créez un modèle de message réutilisable">
+        <form onSubmit={handleCreateTemplate} className="space-y-4">
+          <div>
+            <Label>Clé du template</Label>
+            <select value={newTemplate.key} onChange={e => setNewTemplate({...newTemplate, key: e.target.value})}
+              className={selectClass} data-testid="template-key-select" style={{ marginTop:4 }}>
+              <option value="">Sélectionner...</option>
+              {templateKeys.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label>Canal</Label>
+            <select value={newTemplate.channel} onChange={e => setNewTemplate({...newTemplate, channel: e.target.value})}
+              className={selectClass} data-testid="template-channel-select" style={{ marginTop:4 }}>
+              <option value="SMS">SMS</option>
+              <option value="EMAIL">Email</option>
+            </select>
+          </div>
+          <div>
+            <Label>Texte du message</Label>
+            <Textarea value={newTemplate.text} onChange={e => setNewTemplate({...newTemplate, text: e.target.value})}
+              placeholder="Bonjour {patient_name}, ..." rows={4} data-testid="template-text" style={{ marginTop:4 }} />
+            <p className="text-xs text-gray-500 mt-1">Variables: {placeholders.join(', ')}</p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button type="button" variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>Annuler</Button>
+            <Button type="submit" disabled={!newTemplate.key || !newTemplate.text} data-testid="save-template-btn">Créer</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
