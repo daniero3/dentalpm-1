@@ -236,6 +236,7 @@ const DentalChart = () => {
   );
 
   return (
+    <>
     <div className="space-y-6">
 
       {/* Header */}
@@ -429,7 +430,7 @@ const DentalChart = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   );
 };
 
