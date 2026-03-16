@@ -141,12 +141,27 @@ const PatientDocuments = () => {
     } catch (err) { toast.error('Erreur téléchargement'); }
   };
 
-  const handleView = (doc) => {
-    const viewUrl = `${API}/documents/${doc.id}/view`;
-    if (doc.mime_type === 'application/pdf') {
-      window.open(viewUrl, '_blank');
-    } else if (doc.mime_type?.startsWith('image/')) {
-      setPreviewDoc({ ...doc, url: viewUrl });
+  const handleView = async (doc) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/documents/${doc.id}/view`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) { toast.error('Erreur chargement document'); return; }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      if (doc.mime_type === 'application/pdf') {
+        // Ouvrir PDF dans nouvel onglet via blob URL (pas besoin de token)
+        window.open(url, '_blank');
+        // Révoquer après 60s
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      } else if (doc.mime_type?.startsWith('image/')) {
+        // Afficher image dans la modal preview
+        setPreviewDoc({ ...doc, url });
+      }
+    } catch (err) {
+      toast.error('Erreur affichage document');
     }
   };
 
