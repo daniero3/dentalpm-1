@@ -1,155 +1,211 @@
-import React, { useState } from "react"
-import { 
-  Search, Bell, User, LogOut, Settings,
-  AlertCircle, Calendar, Clock
-} from "lucide-react"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
-import { Badge } from "./ui/badge"
-import { ThemeToggle } from "./theme-toggle"
+import React, { useState, useEffect, useRef } from "react"
+import { Search, Bell, LogOut, User, Settings, ChevronDown, Moon, Sun } from "lucide-react"
 import { useAuth } from "../App"
 import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
 
-const mockNotifications = [
-  { id: 1, type: "appointment", title: "Rendez-vous dans 30 minutes", message: "Patient: Marie Rasoarivelo - Consultation", time: "il y a 5 min", unread: true },
-  { id: 2, type: "alert", title: "Stock faible", message: "Composite résine A3 - 3 unités restantes", time: "il y a 1h", unread: true },
-  { id: 3, type: "system", title: "Sauvegarde terminée", message: "Données sauvegardées avec succès", time: "il y a 2h", unread: false }
-]
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL
+const API = `${BACKEND_URL}/api`
 
 export function ModernTopbar() {
-  const [searchQuery, setSearchQuery]     = useState("")
-  const [notifications, setNotifications] = useState(mockNotifications)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [searchTerm, setSearchTerm]     = useState('')
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [isNotifOpen, setIsNotifOpen]   = useState(false)
+  const profileRef  = useRef(null)
+  const notifRef    = useRef(null)
 
-  const unreadCount = notifications.filter(n => n.unread).length
-
-  const handleLogout = () => { logout(); navigate("/login") }
-
-  const markAsRead = (id) =>
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n))
-
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case "appointment": return <Calendar className="h-4 w-4 text-blue-500" />
-      case "alert":       return <AlertCircle className="h-4 w-4 text-amber-500" />
-      default:            return <Clock className="h-4 w-4 text-green-500" />
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setIsProfileOpen(false)
+      if (notifRef.current && !notifRef.current.contains(e.target)) setIsNotifOpen(false)
     }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const getRoleLabel = (role) => {
+    const labels = {
+      SUPER_ADMIN: 'Super Admin', ADMIN: 'Administrateur',
+      DENTIST: 'Dentiste', ASSISTANT: 'Assistante', ACCOUNTANT: 'Comptable'
+    }
+    return labels[role] || role
+  }
+
+  const getRoleColor = (role) => {
+    const colors = {
+      SUPER_ADMIN: '#8B5CF6', ADMIN: '#0D7A87',
+      DENTIST: '#3B4FD8', ASSISTANT: '#F59E0B', ACCOUNTANT: '#0EA570'
+    }
+    return colors[role] || '#64748B'
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between px-4 sm:px-6">
+    <header style={{
+      height: 64,
+      background: 'rgba(255,255,255,0.97)',
+      backdropFilter: 'blur(16px)',
+      borderBottom: '1px solid #E2E8F0',
+      display: 'flex', alignItems: 'center',
+      padding: '0 24px',
+      gap: 16,
+      position: 'sticky', top: 0, zIndex: 100,
+      boxShadow: '0 1px 8px rgba(15,23,42,0.06)',
+    }}>
 
-        {/* Search */}
-        <div className="flex flex-1 items-center space-x-4">
-          <div className="relative max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Rechercher patients, factures..."
-              className="pl-10 pr-4 bg-muted/50 border-0 focus:bg-background focus:ring-2 focus:ring-ring transition-all duration-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      {/* ── Search ── */}
+      <div style={{ flex: 1, maxWidth: 480, position: 'relative' }}>
+        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }} />
+        <input
+          type="text"
+          placeholder="Rechercher patients, factures..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          style={{
+            width: '100%', height: 40, paddingLeft: 42, paddingRight: 16,
+            borderRadius: 99, border: '1.5px solid #E2E8F0',
+            background: '#F8FAFC', fontSize: 13,
+            fontFamily: 'DM Sans, sans-serif', color: '#0F172A',
+            outline: 'none', transition: 'all 0.18s ease',
+            boxSizing: 'border-box',
+          }}
+          onFocus={e => { e.target.style.borderColor = '#0D7A87'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(13,122,135,0.10)'; }}
+          onBlur={e => { e.target.style.borderColor = '#E2E8F0'; e.target.style.background = '#F8FAFC'; e.target.style.boxShadow = 'none'; }}
+        />
+        {searchTerm && (
+          <kbd style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 4, padding: '2px 6px', fontSize: 10, color: '#94A3B8', fontFamily: 'monospace' }}>
+            ESC
+          </kbd>
+        )}
+      </div>
+
+      {/* ── Spacer ── */}
+      <div style={{ flex: 1 }} />
+
+      {/* ── Notifications ── */}
+      <div ref={notifRef} style={{ position: 'relative' }}>
+        <button
+          onClick={() => setIsNotifOpen(!isNotifOpen)}
+          style={{
+            width: 40, height: 40, borderRadius: 10,
+            border: '1.5px solid #E2E8F0', background: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', position: 'relative', color: '#64748B',
+            transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#0D7A87'; e.currentTarget.style.color = '#0D7A87'; e.currentTarget.style.background = '#F0F7F8'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = '#fff'; }}
+        >
+          <Bell size={18} />
+          {/* Badge */}
+          <span style={{
+            position: 'absolute', top: 6, right: 6,
+            width: 8, height: 8, borderRadius: '50%',
+            background: '#0D7A87', border: '2px solid #fff',
+            animation: 'pulse 2s ease-in-out infinite',
+          }} />
+        </button>
+
+        {/* Dropdown notifs */}
+        {isNotifOpen && (
+          <div style={{
+            position: 'absolute', top: 48, right: 0, width: 320,
+            background: '#fff', borderRadius: 14, border: '1px solid #E2E8F0',
+            boxShadow: '0 16px 48px rgba(15,23,42,0.12)', zIndex: 200, overflow: 'hidden',
+          }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 14, color: '#0F172A', margin: 0 }}>Notifications</p>
+              <span style={{ fontSize: 11, color: '#0D7A87', fontWeight: 600, cursor: 'pointer' }}>Tout marquer lu</span>
+            </div>
+            <div style={{ padding: '12px 16px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
+              <Bell size={32} style={{ opacity: 0.2, margin: '8px auto 8px', display: 'block' }} />
+              Aucune nouvelle notification
+            </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Right side */}
-        <div className="flex items-center space-x-2">
-          <ThemeToggle />
+      {/* ── Profile ── */}
+      <div ref={profileRef} style={{ position: 'relative' }}>
+        <button
+          onClick={() => setIsProfileOpen(!isProfileOpen)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '6px 10px 6px 6px', borderRadius: 12,
+            border: '1.5px solid #E2E8F0', background: '#fff',
+            cursor: 'pointer', transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#0D7A87'; e.currentTarget.style.background = '#F0F7F8'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#fff'; }}
+        >
+          {/* Avatar */}
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: 'linear-gradient(135deg, #0D7A87, #3B4FD8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 13, color: '#fff',
+          }}>
+            {user?.full_name?.charAt(0)?.toUpperCase() || 'A'}
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13, color: '#0F172A', margin: 0, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+              {user?.full_name?.split(' ')[0] || 'Utilisateur'}
+            </p>
+            <p style={{ fontSize: 10, margin: 0, color: getRoleColor(user?.role), fontWeight: 700 }}>
+              {getRoleLabel(user?.role)}
+            </p>
+          </div>
+          <ChevronDown size={14} color="#94A3B8" style={{ transition: 'transform 0.2s', transform: isProfileOpen ? 'rotate(180deg)' : 'none' }} />
+        </button>
 
-          {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0">
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs rounded-full flex items-center justify-center">
-                    {unreadCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Notifications</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80" sideOffset={8}>
-              <DropdownMenuLabel className="flex items-center justify-between">
-                Notifications
-                {unreadCount > 0 && (
-                  <Badge variant="secondary" className="ml-2">
-                    {unreadCount} nouveau{unreadCount > 1 ? 'x' : ''}
-                  </Badge>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-96 overflow-y-auto">
-                {notifications.map((notification) => (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className="flex items-start space-x-3 p-3 cursor-pointer"
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-foreground truncate">{notification.title}</p>
-                        {notification.unread && <div className="h-2 w-2 bg-primary rounded-full ml-2" />}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-center text-sm text-muted-foreground">
-                Voir toutes les notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Dropdown profile */}
+        {isProfileOpen && (
+          <div style={{
+            position: 'absolute', top: 52, right: 0, width: 220,
+            background: '#fff', borderRadius: 14, border: '1px solid #E2E8F0',
+            boxShadow: '0 16px 48px rgba(15,23,42,0.12)', zIndex: 200, overflow: 'hidden',
+          }}>
+            {/* User info */}
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #F1F5F9' }}>
+              <p style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 14, color: '#0F172A', margin: 0 }}>{user?.full_name}</p>
+              <p style={{ fontSize: 12, color: '#64748B', margin: '2px 0 0' }}>{user?.email || user?.username}</p>
+              <span style={{ display: 'inline-block', marginTop: 6, padding: '2px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700, background: `${getRoleColor(user?.role)}18`, color: getRoleColor(user?.role) }}>
+                {getRoleLabel(user?.role)}
+              </span>
+            </div>
 
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <span className="text-xs font-medium text-white">
-                    {user?.full_name?.charAt(0) || 'U'}
-                  </span>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.full_name || 'Utilisateur'}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user?.email || 'email@example.com'}</p>
-                  <Badge variant="outline" className="w-fit mt-1">{user?.role || 'Utilisateur'}</Badge>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" /><span>Profil</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" /><span>Paramètres</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-destructive focus:text-destructive"
-                onClick={handleLogout}
-              >
-                <LogOut className="mr-2 h-4 w-4" /><span>Se déconnecter</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            {/* Menu items */}
+            {[
+              { icon: User,     label: 'Mon profil',  action: () => {} },
+              { icon: Settings, label: 'Paramètres',  action: () => navigate('/settings') },
+            ].map((item, i) => (
+              <button key={i} onClick={item.action} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#475569', fontFamily: 'DM Sans', transition: 'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                <item.icon size={15} color="#94A3B8" />
+                {item.label}
+              </button>
+            ))}
+
+            <div style={{ height: 1, background: '#F1F5F9', margin: '4px 0' }} />
+
+            {/* Logout */}
+            <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#E63946', fontFamily: 'DM Sans', fontWeight: 600, transition: 'background 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+              <LogOut size={15} color="#E63946" />
+              Se déconnecter
+            </button>
+          </div>
+        )}
       </div>
     </header>
   )
