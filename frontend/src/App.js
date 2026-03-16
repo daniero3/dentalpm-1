@@ -4,10 +4,10 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
- 
+
 // Theme Provider
 import { ThemeProvider } from "./components/theme-provider";
- 
+
 // Components
 import LoginForm from "./components/LoginForm";
 import Dashboard from "./components/Dashboard";
@@ -24,7 +24,7 @@ import PatientLabOrders from "./components/PatientLabOrders";
 import ReportsManagement from "./components/ReportsManagement";
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
- 
+
 // SaaS Components
 import BillingSettings from "./components/BillingSettings";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
@@ -41,10 +41,10 @@ import SupplierManagement from "./components/SupplierManagement";
 import PurchaseManagement from "./components/PurchaseManagement";
 import OnboardingWizard from "./components/OnboardingWizard";
 import BillingRenew from "./components/BillingRenew";
- 
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
- 
+
 // ══════════════════════════════════════════════════════════════
 // PROTECTION GLOBALE AXIOS
 // Bloque TOUS les appels contenant /undefined ou /null dans l'URL
@@ -63,7 +63,7 @@ axios.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
- 
+
 // Token automatique sur toutes les requêtes
 axios.interceptors.request.use(
   (config) => {
@@ -75,23 +75,23 @@ axios.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
- 
+
 let setGlobalSubscriptionError = null;
- 
+
 // Auth Context
 const AuthContext = React.createContext();
- 
+
 export const useAuth = () => {
   const context = React.useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
- 
+
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [subscriptionError, setSubscriptionError] = useState(null);
- 
+
   useEffect(() => {
     setGlobalSubscriptionError = setSubscriptionError;
     const interceptor = axios.interceptors.response.use(
@@ -111,7 +111,7 @@ const AuthProvider = ({ children }) => {
     );
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
- 
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -121,7 +121,7 @@ const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
- 
+
   const login = async (username, password) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { username, password });
@@ -137,7 +137,7 @@ const AuthProvider = ({ children }) => {
       return { success: false, error: error.response?.data?.error || "Erreur de connexion" };
     }
   };
- 
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -146,9 +146,9 @@ const AuthProvider = ({ children }) => {
     setSubscriptionError(null);
     toast.success("Déconnexion réussie");
   };
- 
+
   const clearSubscriptionError = () => setSubscriptionError(null);
- 
+
   const register = async (userData) => {
     try {
       await axios.post(`${API}/auth/register`, userData);
@@ -159,9 +159,9 @@ const AuthProvider = ({ children }) => {
       return { success: false, error: error.response?.data?.error || "Erreur d'inscription" };
     }
   };
- 
+
   const value = { user, login, logout, register, loading, subscriptionError, clearSubscriptionError };
- 
+
   if (subscriptionError) {
     return (
       <AuthContext.Provider value={value}>
@@ -173,10 +173,10 @@ const AuthProvider = ({ children }) => {
       </AuthContext.Provider>
     );
   }
- 
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
- 
+
 // ── Loading Spinner ────────────────────────────────────────────────────────
 const LoadingSpinner = () => (
   <div style={{
@@ -204,31 +204,31 @@ const LoadingSpinner = () => (
     </p>
   </div>
 );
- 
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
   return user ? children : <Navigate to="/login" />;
 };
- 
+
 // ── Page Transition ────────────────────────────────────────────────────────
 const PageTransition = ({ children }) => {
   const location = useLocation();
   const [displayChildren, setDisplayChildren] = useState(children);
   const [transitionKey, setTransitionKey] = useState(location.pathname);
- 
+
   useEffect(() => {
     setTransitionKey(location.pathname);
     setDisplayChildren(children);
   }, [location.pathname, children]);
- 
+
   return (
     <div key={transitionKey} className="page-enter" style={{ width: '100%', height: '100%' }}>
       {displayChildren}
     </div>
   );
 };
- 
+
 // ── Main Layout ────────────────────────────────────────────────────────────
 const MainLayout = ({ children }) => {
   return (
@@ -258,7 +258,7 @@ const MainLayout = ({ children }) => {
     </div>
   );
 };
- 
+
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
@@ -316,6 +316,5 @@ function App() {
     </ThemeProvider>
   );
 }
- 
+
 export default App;
- 
