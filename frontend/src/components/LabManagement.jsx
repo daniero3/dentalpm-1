@@ -5,13 +5,11 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { 
   FlaskConical, Plus, Printer, RefreshCw, Loader2, Search, 
-  Clock, CheckCircle, XCircle, ArrowRight, Sparkles
+  Clock, CheckCircle, XCircle, ArrowRight, Sparkles, X
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -100,6 +98,22 @@ const authHeaders = () => {
 
 const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount) + ' MGA';
 const formatDate     = (date)   => new Date(date).toLocaleDateString('fr-FR');
+
+
+// ── Modal CSS pur ──
+const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
+        {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:24 }}>{title}</h2>}
+        {children}
+      </div>
+    </div>
+  );
+};
 
 // ── Composant suggestions de tarifs ───────────────────────────────────────
 const TarifSuggestions = ({ workType, onSelect, currentValue }) => {
@@ -294,17 +308,9 @@ const LabManagement = () => {
             <RefreshCw className="h-4 w-4 mr-2" />Actualiser
           </Button>
 
-          {/* ── Dialog Nouvelle commande ── */}
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="new-order-btn">
-                <Plus className="h-4 w-4 mr-2" />Nouvelle commande
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Nouvelle commande labo</DialogTitle>
-              </DialogHeader>
+          <Button data-testid="new-order-btn" onClick={() => setIsAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />Nouvelle commande
+          </Button>
 
               <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
 
@@ -429,8 +435,6 @@ const LabManagement = () => {
                   </Button>
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
@@ -522,33 +526,75 @@ const LabManagement = () => {
         </CardContent>
       </Card>
 
-      {/* ── Dialog Changement statut ── */}
-      <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Changer statut — {selectedOrder?.order_number}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {Object.entries(STATUS_CONFIG).map(([status, config]) => {
-              const Icon = config.icon;
-              const isCurrent = selectedOrder?.status === status;
-              return (
-                <Button
-                  key={status}
-                  variant={isCurrent ? 'default' : 'outline'}
-                  className="w-full justify-start"
-                  onClick={() => !isCurrent && handleStatusChange(status)}
-                  disabled={saving || isCurrent}
-                >
-                  <Icon className="h-4 w-4 mr-2" />
-                  {config.label}
-                  {isCurrent && ' (actuel)'}
-                </Button>
-              );
-            })}
+      {/* ── Modal Nouvelle commande ── */}
+      <Modal open={isAddOpen} onClose={() => setIsAddOpen(false)} title="Nouvelle commande labo" maxWidth={540}>
+        <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+          <div className="space-y-2">
+            <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Patient *</label>
+            <select value={orderForm.patient_id} onChange={e => setOrderForm({ ...orderForm, patient_id: e.target.value })}
+              style={{ width:'100%', padding:'8px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:13, fontFamily:"'DM Sans',sans-serif" }}>
+              <option value="">Sélectionner un patient...</option>
+              {patients.map(p => <option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+            </select>
           </div>
-        </DialogContent>
-      </Dialog>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div>
+              <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Type de travail</label>
+              <select value={orderForm.work_type} onChange={e => setOrderForm({ ...orderForm, work_type: e.target.value, lab_cost_mga: '' })}
+                style={{ width:'100%', marginTop:6, padding:'8px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:13 }}>
+                {Object.entries(WORK_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Date limite *</label>
+              <Input type="date" value={orderForm.due_date} onChange={e => setOrderForm({ ...orderForm, due_date: e.target.value })} style={{ marginTop:6 }} />
+            </div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div>
+              <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Laboratoire</label>
+              <Input value={orderForm.lab_name} onChange={e => setOrderForm({ ...orderForm, lab_name: e.target.value })} placeholder="Nom du labo" style={{ marginTop:6 }} />
+            </div>
+            <div>
+              <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Teinte</label>
+              <Input value={orderForm.shade} onChange={e => setOrderForm({ ...orderForm, shade: e.target.value })} placeholder="A1, A2..." style={{ marginTop:6 }} />
+            </div>
+          </div>
+          <div style={{ background:'linear-gradient(135deg,rgba(13,122,135,0.04),rgba(59,79,216,0.03))', border:'1.5px solid rgba(13,122,135,0.15)', borderRadius:12, padding:'14px 16px' }}>
+            <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Coût labo (MGA)</label>
+            <Input type="number" value={orderForm.lab_cost_mga} onChange={e => setOrderForm({ ...orderForm, lab_cost_mga: e.target.value })} placeholder="Saisir ou choisir ci-dessous" style={{ marginTop:6, marginBottom:4 }} />
+            {orderForm.lab_cost_mga && <p style={{ fontSize:12, color:'#0D7A87', fontWeight:700, textAlign:'right', marginBottom:6 }}>= {formatCurrency(parseFloat(orderForm.lab_cost_mga)||0)}</p>}
+            <TarifSuggestions workType={orderForm.work_type} currentValue={orderForm.lab_cost_mga} onSelect={(m) => setOrderForm({ ...orderForm, lab_cost_mga: String(m) })} />
+          </div>
+          <div>
+            <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Notes</label>
+            <Textarea value={orderForm.notes} onChange={e => setOrderForm({ ...orderForm, notes: e.target.value })} rows={2} placeholder="Instructions spéciales..." style={{ marginTop:6 }} />
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button variant="outline" onClick={() => setIsAddOpen(false)}>Annuler</Button>
+            <Button onClick={handleCreate} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+              Créer la commande
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Modal Changement statut ── */}
+      <Modal open={isStatusOpen} onClose={() => setIsStatusOpen(false)} title={`Changer statut — ${selectedOrder?.order_number || ''}`} maxWidth={400}>
+        <div className="space-y-3">
+          {Object.entries(STATUS_CONFIG).map(([status, config]) => {
+            const Icon = config.icon;
+            const isCurrent = selectedOrder?.status === status;
+            return (
+              <Button key={status} variant={isCurrent ? 'default' : 'outline'} className="w-full justify-start"
+                onClick={() => !isCurrent && handleStatusChange(status)} disabled={saving || isCurrent}>
+                <Icon className="h-4 w-4 mr-2" />{config.label}{isCurrent && ' (actuel)'}
+              </Button>
+            );
+          })}
+        </div>
+      </Modal>
 
     </div>
   );
