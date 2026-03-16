@@ -1,34 +1,31 @@
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { 
+import {
   Home, Users, FileText, Calendar, Settings, Package, Truck,
-  ShoppingCart, FlaskConical, Mail, ChevronLeft,
-  Building2, CreditCard, LayoutDashboard, BarChart3
+  ShoppingCart, FlaskConical, Mail, ChevronLeft, ChevronRight,
+  Building2, CreditCard, LayoutDashboard, BarChart3,
+  Stethoscope, Sparkles
 } from "lucide-react"
-import { ToothIcon } from "./icons/ToothIcon"
 import { Link, useLocation } from "react-router-dom"
-import { Button } from "./ui/button"
-import { cn } from "../lib/utils"
 import { useAuth } from "../App"
 
 const navigation = [
-  { name: "Tableau de bord", href: "/", icon: Home },
-  { name: "Patients", href: "/patients", icon: Users },
-  { name: "Rendez-vous", href: "/appointments", icon: Calendar },
-  { name: "Devis", href: "/quotes", icon: FileText },
-  { name: "Factures", href: "/invoices", icon: FileText },
-  { name: "Rapports", href: "/reports", icon: BarChart3 },
-  { name: "Inventaire", href: "/inventory", icon: Package },
-  { name: "Achats", href: "/purchases", icon: ShoppingCart },
-  { name: "Fournisseurs", href: "/suppliers", icon: Truck },
-  { name: "Laboratoire", href: "/lab", icon: FlaskConical },
-  { name: "Mailing", href: "/mailing", icon: Mail },
-  { name: "Paramètres", href: "/settings", icon: Settings },
+  { name: "Tableau de bord", href: "/",            icon: Home },
+  { name: "Patients",        href: "/patients",     icon: Users },
+  { name: "Rendez-vous",     href: "/appointments", icon: Calendar },
+  { name: "Devis",           href: "/quotes",       icon: FileText },
+  { name: "Factures",        href: "/invoices",     icon: FileText },
+  { name: "Rapports",        href: "/reports",      icon: BarChart3 },
+  { name: "Inventaire",      href: "/inventory",    icon: Package },
+  { name: "Achats",          href: "/purchases",    icon: ShoppingCart },
+  { name: "Fournisseurs",    href: "/suppliers",    icon: Truck },
+  { name: "Laboratoire",     href: "/lab",          icon: FlaskConical },
+  { name: "Mailing",         href: "/mailing",      icon: Mail },
+  { name: "Paramètres",      href: "/settings",     icon: Settings },
 ]
 
 const adminNavigation = [
-  { name: "Dashboard Admin", href: "/admin", icon: LayoutDashboard },
-  { name: "Cliniques", href: "/admin/clinics", icon: Building2 },
+  { name: "Dashboard Admin",      href: "/admin",          icon: LayoutDashboard },
+  { name: "Cliniques",            href: "/admin/clinics",  icon: Building2 },
   { name: "Validation Paiements", href: "/admin/payments", icon: CreditCard },
 ]
 
@@ -36,179 +33,309 @@ const billingNavigation = [
   { name: "Paiement/Abonnement", href: "/payment", icon: CreditCard },
 ]
 
+// Couleurs pour chaque item de nav
+const NAV_COLORS = {
+  '/':            '#0D7A87',
+  '/patients':    '#3B4FD8',
+  '/appointments':'#8B5CF6',
+  '/quotes':      '#F59E0B',
+  '/invoices':    '#0EA570',
+  '/reports':     '#06B6D4',
+  '/inventory':   '#F05A28',
+  '/purchases':   '#EC4899',
+  '/suppliers':   '#84CC16',
+  '/lab':         '#A855F7',
+  '/mailing':     '#14B8A6',
+  '/settings':    '#6B7280',
+}
+
 export function ModernSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [clinicLogo, setClinicLogo] = useState(null)
+  const [clinicLogo, setClinicLogo]   = useState(null)
   const location = useLocation()
   const { user } = useAuth()
 
   useEffect(() => {
-    const savedLogo = localStorage.getItem('clinic_logo')
-    if (savedLogo) setClinicLogo(savedLogo)
+    const saved = localStorage.getItem('clinic_logo')
+    if (saved) setClinicLogo(saved)
   }, [])
 
+  const isActive = (href) => {
+    if (href === '/') return location.pathname === '/'
+    return location.pathname.startsWith(href)
+  }
+
   return (
-    <div
-      className="relative flex flex-col bg-card border-r border-border shadow-sm transition-all duration-300"
-      style={{ width: isCollapsed ? 80 : 280 }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center space-x-3 overflow-hidden">
-          {clinicLogo ? (
-            <img src={clinicLogo} alt="Logo Clinique" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />
-          ) : (
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#0F7E8A] to-[#0a6872] flex items-center justify-center shadow-md flex-shrink-0">
-              <ToothIcon className="h-4 w-4" color="white" />
-            </div>
-          )}
+    <div style={{
+      width: isCollapsed ? 72 : 264,
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #0F172A 0%, #1E293B 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
+      position: 'relative',
+      flexShrink: 0,
+      boxShadow: '4px 0 24px rgba(0,0,0,0.15)',
+      borderRight: '1px solid rgba(255,255,255,0.05)',
+    }}>
+
+      {/* ── Logo / Brand ── */}
+      <div style={{
+        padding: isCollapsed ? '20px 0' : '20px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: isCollapsed ? 'center' : 'space-between',
+        gap: 12,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
+          {/* Logo icon */}
+          <div style={{
+            width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+            background: 'linear-gradient(135deg, #0D7A87, #3B4FD8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(13,122,135,0.4)',
+          }}>
+            {clinicLogo
+              ? <img src={clinicLogo} alt="Logo" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }} />
+              : <Stethoscope size={20} color="#fff" />
+            }
+          </div>
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="font-semibold text-sm text-foreground">Dental Practice</span>
-              <span className="text-xs text-muted-foreground">Madagascar</span>
+            <div style={{ overflow: 'hidden' }}>
+              <p style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 14, color: '#fff', margin: 0, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+                Dental Practice
+              </p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: 0 }}>Madagascar</p>
             </div>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
+
+        {/* Toggle button */}
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-8 w-8 p-0 hover:bg-accent flex-shrink-0"
+          style={{
+            width: 26, height: 26, borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)',
+            background: 'rgba(255,255,255,0.06)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'rgba(255,255,255,0.5)', flexShrink: 0,
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#fff'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; }}
         >
-          <ChevronLeft className={cn("h-4 w-4 transition-transform duration-300", isCollapsed && "rotate-180")} />
-        </Button>
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      {/* ── Navigation ── */}
+      <nav style={{ flex: 1, padding: '12px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
 
-        {/* Main Navigation */}
-        {navigation.map((item) => {
-          const isActive = location.pathname === item.href
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "group flex items-center rounded-lg px-3 py-2 text-sm font-medium",
-                "transition-all duration-200 ease-out",
-                "hover:bg-[#0F7E8A]/10",
-                "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                isActive
-                  ? "bg-[#0F7E8A] text-white shadow-md"
-                  : "text-gray-600 hover:text-[#0F7E8A]"
-              )}
-            >
-              <Icon className={cn(
-                "h-4 w-4 flex-shrink-0 transition-colors duration-200",
-                isActive ? "text-white" : "text-gray-500 group-hover:text-[#0F7E8A]"
-              )} />
-              {!isCollapsed && (
-                <span className="ml-3 truncate">{item.name}</span>
-              )}
-            </Link>
-          )
-        })}
-
-        {/* Billing Section */}
-        {user?.role !== 'SUPER_ADMIN' && (
-          <>
-            {!isCollapsed && (
-              <div className="px-3 py-2 mt-4">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Abonnement
-                </h3>
-              </div>
-            )}
-            {billingNavigation.map((item) => {
-              const isActive = location.pathname === item.href
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
+        {/* Main nav */}
+        <div style={{ marginBottom: 8 }}>
+          {!isCollapsed && (
+            <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '4px 8px 8px', margin: 0 }}>
+              Navigation
+            </p>
+          )}
+          {navigation.map((item) => {
+            const active = isActive(item.href)
+            const Icon   = item.icon
+            const color  = NAV_COLORS[item.href] || '#0D7A87'
+            return (
+              <Link key={item.name} to={item.href} style={{ textDecoration: 'none', display: 'block', marginBottom: 2 }}>
+                <div
+                  title={isCollapsed ? item.name : ''}
+                  style={{
+                    display: 'flex', alignItems: 'center',
+                    gap: 10, padding: isCollapsed ? '10px 0' : '9px 10px',
+                    borderRadius: 10, cursor: 'pointer',
+                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                    background: active
+                      ? `linear-gradient(135deg, ${color}22, ${color}11)`
+                      : 'transparent',
+                    border: active
+                      ? `1px solid ${color}33`
+                      : '1px solid transparent',
+                    transition: 'all 0.18s ease',
+                    position: 'relative',
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.borderColor = 'transparent'
+                    }
+                  }}
                 >
-                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary-foreground" : "")} />
-                  {!isCollapsed && <span className="ml-3 truncate">{item.name}</span>}
+                  {/* Active indicator */}
+                  {active && (
+                    <div style={{
+                      position: 'absolute', left: 0, top: '20%', bottom: '20%',
+                      width: 3, borderRadius: '0 3px 3px 0',
+                      background: color,
+                      boxShadow: `0 0 8px ${color}`,
+                    }} />
+                  )}
+
+                  {/* Icon */}
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: active ? `${color}22` : 'rgba(255,255,255,0.05)',
+                    transition: 'all 0.18s ease',
+                  }}>
+                    <Icon size={16} color={active ? color : 'rgba(255,255,255,0.5)'} />
+                  </div>
+
+                  {/* Label */}
+                  {!isCollapsed && (
+                    <span style={{
+                      fontFamily: 'DM Sans, sans-serif',
+                      fontSize: 13, fontWeight: active ? 700 : 500,
+                      color: active ? '#fff' : 'rgba(255,255,255,0.55)',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      transition: 'all 0.18s ease',
+                    }}>
+                      {item.name}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Billing */}
+        {user?.role !== 'SUPER_ADMIN' && (
+          <div style={{ marginBottom: 8 }}>
+            {!isCollapsed && (
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '12px 8px 8px', margin: 0 }}>
+                Abonnement
+              </p>
+            )}
+            {billingNavigation.map(item => {
+              const active = isActive(item.href)
+              const Icon   = item.icon
+              return (
+                <Link key={item.name} to={item.href} style={{ textDecoration: 'none', display: 'block', marginBottom: 2 }}>
+                  <div
+                    title={isCollapsed ? item.name : ''}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: isCollapsed ? '10px 0' : '9px 10px',
+                      borderRadius: 10, cursor: 'pointer',
+                      justifyContent: isCollapsed ? 'center' : 'flex-start',
+                      background: active ? 'rgba(245,158,11,0.15)' : 'transparent',
+                      border: active ? '1px solid rgba(245,158,11,0.25)' : '1px solid transparent',
+                      transition: 'all 0.18s ease',
+                    }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent' }}}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)' }}>
+                      <Icon size={16} color={active ? '#F59E0B' : 'rgba(255,255,255,0.5)'} />
+                    </div>
+                    {!isCollapsed && (
+                      <span style={{ fontFamily: 'DM Sans', fontSize: 13, fontWeight: active ? 700 : 500, color: active ? '#F59E0B' : 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap' }}>
+                        {item.name}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               )
             })}
-          </>
+          </div>
         )}
 
-        {/* Super Admin Section */}
+        {/* Super Admin */}
         {user?.role === 'SUPER_ADMIN' && (
-          <>
+          <div>
             {!isCollapsed && (
-              <div className="px-3 py-2 mt-4">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <div style={{ padding: '12px 8px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={10} color='#8B5CF6' />
+                <p style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
                   Super Admin
-                </h3>
+                </p>
               </div>
             )}
-            {adminNavigation.map((item) => {
-              const isActive = location.pathname === item.href
-              const Icon = item.icon
+            {adminNavigation.map(item => {
+              const active = isActive(item.href)
+              const Icon   = item.icon
               return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                    "hover:bg-accent hover:text-accent-foreground",
-                    "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                    isActive
-                      ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "")} />
-                  {!isCollapsed && <span className="ml-3 truncate">{item.name}</span>}
+                <Link key={item.name} to={item.href} style={{ textDecoration: 'none', display: 'block', marginBottom: 2 }}>
+                  <div
+                    title={isCollapsed ? item.name : ''}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: isCollapsed ? '10px 0' : '9px 10px',
+                      borderRadius: 10, cursor: 'pointer',
+                      justifyContent: isCollapsed ? 'center' : 'flex-start',
+                      background: active ? 'rgba(139,92,246,0.15)' : 'transparent',
+                      border: active ? '1px solid rgba(139,92,246,0.25)' : '1px solid transparent',
+                      transition: 'all 0.18s ease',
+                    }}
+                    onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}}
+                    onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent' }}}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: active ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)' }}>
+                      <Icon size={16} color={active ? '#8B5CF6' : 'rgba(255,255,255,0.5)'} />
+                    </div>
+                    {!isCollapsed && (
+                      <span style={{ fontFamily: 'DM Sans', fontSize: 13, fontWeight: active ? 700 : 500, color: active ? '#A78BFA' : 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap' }}>
+                        {item.name}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               )
             })}
-          </>
+          </div>
         )}
       </nav>
 
-      {/* User Profile */}
-      <div className="border-t border-border p-4">
-        <div className="flex items-center space-x-3 overflow-hidden">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-medium text-white">
-              {user?.full_name?.charAt(0) || 'U'}
-            </span>
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm font-medium text-foreground truncate">
-                {user?.full_name || 'Utilisateur'}
-              </span>
-              <span className="text-xs text-muted-foreground truncate">
-                {user?.role || 'Rôle'}
-              </span>
-            </div>
-          )}
+      {/* ── User Profile ── */}
+      <div style={{
+        padding: isCollapsed ? '16px 0' : '16px',
+        borderTop: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex', alignItems: 'center',
+        justifyContent: isCollapsed ? 'center' : 'flex-start',
+        gap: 10,
+      }}>
+        {/* Avatar */}
+        <div style={{
+          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+          background: 'linear-gradient(135deg, #0D7A87, #3B4FD8)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 14, color: '#fff',
+          boxShadow: '0 2px 8px rgba(13,122,135,0.3)',
+        }}>
+          {user?.full_name?.charAt(0)?.toUpperCase() || 'A'}
         </div>
-      </div>
+        {!isCollapsed && (
+          <div style={{ overflow: 'hidden', flex: 1 }}>
+            <p style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13, color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user?.full_name || 'Utilisateur'}
+            </p>
+            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+              {user?.role || 'Rôle'}
+            </p>
+          </div>
+        )}
 
-      {/* Status indicator */}
-      <motion.div
-        className="absolute bottom-2 right-2"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <div className="h-2 w-2 bg-green-500 rounded-full" />
-      </motion.div>
+        {/* Online indicator */}
+        <div style={{
+          width: 8, height: 8, borderRadius: '50%',
+          background: '#22C55E', flexShrink: 0,
+          boxShadow: '0 0 0 2px rgba(34,197,94,0.3)',
+          animation: 'pulse 2s ease-in-out infinite',
+        }} />
+      </div>
     </div>
   )
 }
