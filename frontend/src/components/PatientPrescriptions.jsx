@@ -31,6 +31,56 @@ const STATUS_LABELS = {
   DRAFT: 'Brouillon', ISSUED: 'Émise', CANCELLED: 'Annulée'
 };
 
+// ✅ Composant défini HORS du composant principal — évite le re-mount à chaque frappe
+const PrescriptionForm = ({ formData, setFormData, saving, onSubmit, submitLabel, onCancel, addItem, removeItem, updateItem }) => (
+  <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+    <div className="space-y-3">
+      <Label className="font-semibold">Médicaments</Label>
+      {formData.items.map((item, index) => (
+        <div key={index} className="p-3 border rounded-lg space-y-2 bg-gray-50">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Médicament {index + 1}</span>
+            {formData.items.length > 1 && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            )}
+          </div>
+          <Input
+            placeholder="Nom du médicament *"
+            value={item.medication}
+            onChange={(e) => updateItem(index, 'medication', e.target.value)}
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <Input placeholder="Dosage"    value={item.dosage}    onChange={(e) => updateItem(index, 'dosage',    e.target.value)} />
+            <Input placeholder="Posologie" value={item.posology}  onChange={(e) => updateItem(index, 'posology',  e.target.value)} />
+            <Input placeholder="Durée"     value={item.duration}  onChange={(e) => updateItem(index, 'duration',  e.target.value)} />
+          </div>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={addItem}>
+        <Plus className="h-4 w-4 mr-2" />Ajouter un médicament
+      </Button>
+    </div>
+    <div className="space-y-2">
+      <Label>Notes</Label>
+      <Textarea
+        placeholder="Instructions particulières..."
+        value={formData.notes}
+        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+        rows={3}
+      />
+    </div>
+    <div className="flex justify-end gap-2 pt-4 border-t">
+      <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
+      <Button onClick={onSubmit} disabled={saving}>
+        {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+        {submitLabel}
+      </Button>
+    </div>
+  </div>
+);
+
 const PatientPrescriptions = () => {
   const { patientId } = useParams();
   const [patient, setPatient]             = useState(null);
@@ -215,56 +265,7 @@ const PatientPrescriptions = () => {
     </div>
   );
 
-  const PrescriptionForm = ({ onSubmit, submitLabel }) => (
-    <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-      <div className="space-y-3">
-        <Label className="font-semibold">Médicaments</Label>
-        {formData.items.map((item, index) => (
-          <div key={index} className="p-3 border rounded-lg space-y-2 bg-gray-50">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Médicament {index + 1}</span>
-              {formData.items.length > 1 && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              )}
-            </div>
-            <Input
-              placeholder="Nom du médicament *"
-              value={item.medication}
-              onChange={(e) => updateItem(index, 'medication', e.target.value)}
-            />
-            <div className="grid grid-cols-3 gap-2">
-              <Input placeholder="Dosage"    value={item.dosage}    onChange={(e) => updateItem(index, 'dosage',    e.target.value)} />
-              <Input placeholder="Posologie" value={item.posology}  onChange={(e) => updateItem(index, 'posology',  e.target.value)} />
-              <Input placeholder="Durée"     value={item.duration}  onChange={(e) => updateItem(index, 'duration',  e.target.value)} />
-            </div>
-          </div>
-        ))}
-        <Button type="button" variant="outline" size="sm" onClick={addItem}>
-          <Plus className="h-4 w-4 mr-2" />Ajouter un médicament
-        </Button>
-      </div>
-      <div className="space-y-2">
-        <Label>Notes</Label>
-        <Textarea
-          placeholder="Instructions particulières..."
-          value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-          rows={3}
-        />
-      </div>
-      <div className="flex justify-end gap-2 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={() => { setIsCreateOpen(false); setIsEditOpen(false); resetForm(); }}>
-          Annuler
-        </Button>
-        <Button onClick={onSubmit} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-          {submitLabel}
-        </Button>
-      </div>
-    </div>
-  );
+
 
   return (
     <div className="space-y-6" data-testid="patient-prescriptions">
@@ -298,7 +299,17 @@ const PatientPrescriptions = () => {
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Nouvelle ordonnance</DialogTitle></DialogHeader>
-            <PrescriptionForm onSubmit={handleCreate} submitLabel="Créer (brouillon)" />
+            <PrescriptionForm
+              formData={formData}
+              setFormData={setFormData}
+              saving={saving}
+              onSubmit={handleCreate}
+              submitLabel="Créer (brouillon)"
+              onCancel={() => { setIsCreateOpen(false); resetForm(); }}
+              addItem={addItem}
+              removeItem={removeItem}
+              updateItem={updateItem}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -307,7 +318,17 @@ const PatientPrescriptions = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Modifier {selectedPrescription?.number}</DialogTitle></DialogHeader>
-          <PrescriptionForm onSubmit={handleUpdate} submitLabel="Enregistrer" />
+          <PrescriptionForm
+              formData={formData}
+              setFormData={setFormData}
+              saving={saving}
+              onSubmit={handleUpdate}
+              submitLabel="Enregistrer"
+              onCancel={() => { setIsEditOpen(false); resetForm(); }}
+              addItem={addItem}
+              removeItem={removeItem}
+              updateItem={updateItem}
+            />
         </DialogContent>
       </Dialog>
 
