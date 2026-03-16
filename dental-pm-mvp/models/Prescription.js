@@ -9,7 +9,7 @@ const Prescription = sequelize.define('Prescription', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true  // ✅ null pour SUPER_ADMIN
   },
   patient_id: {
     type: DataTypes.UUID,
@@ -17,14 +17,14 @@ const Prescription = sequelize.define('Prescription', {
   },
   prescriber_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true  // ✅ null si pas de prescripteur
   },
   number: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING(30),
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('DRAFT', 'ISSUED', 'CANCELLED'),
+    type: DataTypes.STRING(20),  // ✅ STRING au lieu de ENUM
     defaultValue: 'DRAFT'
   },
   content_json: {
@@ -32,7 +32,9 @@ const Prescription = sequelize.define('Prescription', {
     allowNull: true,
     get() {
       const val = this.getDataValue('content_json');
-      return val ? JSON.parse(val) : { items: [], notes: '' };
+      if (!val) return { items: [], notes: '' };
+      try { return JSON.parse(val); }
+      catch { return { items: [], notes: '' }; }
     },
     set(val) {
       this.setDataValue('content_json', JSON.stringify(val));
@@ -45,11 +47,7 @@ const Prescription = sequelize.define('Prescription', {
 }, {
   tableName: 'prescriptions',
   timestamps: true,
-  underscored: true,
-  indexes: [
-    { fields: ['clinic_id', 'patient_id'] },
-    { fields: ['clinic_id', 'number'], unique: true }
-  ]
+  underscored: true
 });
 
 module.exports = Prescription;
