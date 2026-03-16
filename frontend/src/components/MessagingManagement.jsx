@@ -12,22 +12,26 @@ import { Mail, MessageSquare, Plus, Send, Clock, CheckCircle, XCircle, Calendar,
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-
 const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
-
 // ── Modal CSS pur ──
-const Modal = ({ open, onClose, title, description, children, maxWidth = 480 }) => {
+const Modal = ({ open, onClose, title, description, children }) => {
   if (!open) return null;
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
-        {(title||description) && <div style={{ marginBottom:20, paddingRight:28 }}>
-          {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:0 }}>{title}</h2>}
-          {description && <p style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{description}</p>}
-        </div>}
+    <div
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth:480, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
+          <X size={18} />
+        </button>
+        {(title || description) && (
+          <div style={{ marginBottom:20, paddingRight:28 }}>
+            {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:0 }}>{title}</h2>}
+            {description && <p style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{description}</p>}
+          </div>
+        )}
         {children}
       </div>
     </div>
@@ -36,24 +40,22 @@ const Modal = ({ open, onClose, title, description, children, maxWidth = 480 }) 
 
 const MessagingManagement = () => {
   const { user } = useAuth();
-  const [templates, setTemplates] = useState([]);
-  const [queue, setQueue] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [stats, setStats] = useState({ QUEUED: 0, SENT: 0, FAILED: 0 });
-  const [loading, setLoading] = useState(true);
+  const [templates, setTemplates]                     = useState([]);
+  const [queue, setQueue]                             = useState([]);
+  const [logs, setLogs]                               = useState([]);
+  const [stats, setStats]                             = useState({ QUEUED:0, SENT:0, FAILED:0 });
+  const [loading, setLoading]                         = useState(true);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
-  const [newTemplate, setNewTemplate] = useState({ key: '', channel: 'SMS', text: '' });
+  const [newTemplate, setNewTemplate]                 = useState({ key:'', channel:'SMS', text:'' });
 
   const templateKeys = [
-    { key: 'APPT_REMINDER_24H', label: 'Rappel RDV 24h', icon: Calendar },
-    { key: 'BIRTHDAY',          label: 'Anniversaire',   icon: Cake },
-    { key: 'WELCOME',           label: 'Bienvenue',      icon: Users },
-    { key: 'CUSTOM',            label: 'Personnalisé',   icon: FileText }
+    { key:'APPT_REMINDER_24H', label:'Rappel RDV 24h',  icon: Calendar },
+    { key:'BIRTHDAY',          label:'Anniversaire',    icon: Cake },
+    { key:'WELCOME',           label:'Bienvenue',       icon: Users },
+    { key:'CUSTOM',            label:'Personnalisé',    icon: FileText }
   ];
-
   const placeholders = ['{patient_name}', '{date}', '{time}', '{clinic_name}'];
 
-  // Helper pour obtenir les headers avec token
   const authHeaders = () => {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -68,34 +70,16 @@ const MessagingManagement = () => {
   };
 
   const fetchTemplates = async () => {
-    try {
-      const r = await axios.get(`${API}/messaging/templates`, authHeaders());
-      setTemplates(r.data.templates || []);
-    } catch (e) {
-      console.error('templates:', e);
-      setTemplates([]);
-    }
+    try { const r = await axios.get(`${API}/messaging/templates`, authHeaders()); setTemplates(r.data.templates || []); }
+    catch (e) { setTemplates([]); }
   };
-
   const fetchQueue = async () => {
-    try {
-      const r = await axios.get(`${API}/messaging/queue`, authHeaders());
-      setQueue(r.data.queue || []);
-      setStats(r.data.stats || { QUEUED: 0, SENT: 0, FAILED: 0 });
-    } catch (e) {
-      console.error('queue:', e);
-      setQueue([]);
-    }
+    try { const r = await axios.get(`${API}/messaging/queue`, authHeaders()); setQueue(r.data.queue || []); setStats(r.data.stats || { QUEUED:0, SENT:0, FAILED:0 }); }
+    catch (e) { setQueue([]); }
   };
-
   const fetchLogs = async () => {
-    try {
-      const r = await axios.get(`${API}/messaging/logs`, authHeaders());
-      setLogs(r.data.logs || []);
-    } catch (e) {
-      console.error('logs:', e);
-      setLogs([]);
-    }
+    try { const r = await axios.get(`${API}/messaging/logs`, authHeaders()); setLogs(r.data.logs || []); }
+    catch (e) { setLogs([]); }
   };
 
   const handleCreateTemplate = async (e) => {
@@ -104,44 +88,29 @@ const MessagingManagement = () => {
       await axios.post(`${API}/messaging/templates`, newTemplate, authHeaders());
       toast.success('Template créé');
       setIsTemplateDialogOpen(false);
-      setNewTemplate({ key: '', channel: 'SMS', text: '' });
+      setNewTemplate({ key:'', channel:'SMS', text:'' });
       fetchTemplates();
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur création template');
-    }
+    } catch (error) { toast.error(error.response?.data?.error || 'Erreur création template'); }
   };
 
   const handleRunBirthday = async () => {
-    try {
-      const r = await axios.post(`${API}/messaging/run-birthday`, {}, authHeaders());
-      toast.success(`${r.data.messages_created} message(s) anniversaire créé(s)`);
-      fetchQueue();
-    } catch (e) {
-      toast.error('Erreur job anniversaire');
-    }
+    try { const r = await axios.post(`${API}/messaging/run-birthday`, {}, authHeaders()); toast.success(`${r.data.messages_created} message(s) créé(s)`); fetchQueue(); }
+    catch (e) { toast.error('Erreur job anniversaire'); }
   };
 
   const handleRunDispatch = async () => {
-    try {
-      const r = await axios.post(`${API}/messaging/run-dispatch`, {}, authHeaders());
-      toast.success(`Dispatch: ${r.data.sent} envoyé(s), ${r.data.failed} échoué(s)`);
-      fetchQueue();
-      fetchLogs();
-    } catch (e) {
-      toast.error('Erreur dispatch');
-    }
+    try { const r = await axios.post(`${API}/messaging/run-dispatch`, {}, authHeaders()); toast.success(`Dispatch: ${r.data.sent} envoyé(s), ${r.data.failed} échoué(s)`); fetchQueue(); fetchLogs(); }
+    catch (e) { toast.error('Erreur dispatch'); }
   };
 
-  const formatDate = (date) => new Date(date).toLocaleString('fr-FR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-  });
+  const formatDate = (date) => new Date(date).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
   if (loading) {
     return (
       <div className="p-6 animate-pulse">
-        <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
+        <div className="h-8 bg-gray-300 rounded w-1/4 mb-6" />
         <div className="space-y-4">
-          {[1,2,3].map(i => <div key={i} className="bg-gray-300 h-20 rounded-lg"></div>)}
+          {[1,2,3].map(i => <div key={i} className="bg-gray-300 h-20 rounded-lg" />)}
         </div>
       </div>
     );
@@ -164,137 +133,95 @@ const MessagingManagement = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 text-center">
-          <Clock className="h-6 w-6 mx-auto mb-2 text-amber-500" />
-          <p className="text-2xl font-bold">{stats.QUEUED}</p>
-          <p className="text-sm text-gray-500">En attente</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
-          <CheckCircle className="h-6 w-6 mx-auto mb-2 text-green-500" />
-          <p className="text-2xl font-bold">{stats.SENT}</p>
-          <p className="text-sm text-gray-500">Envoyés</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
-          <XCircle className="h-6 w-6 mx-auto mb-2 text-red-500" />
-          <p className="text-2xl font-bold">{stats.FAILED}</p>
-          <p className="text-sm text-gray-500">Échoués</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 text-center">
-          <FileText className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-          <p className="text-2xl font-bold">{templates.length}</p>
-          <p className="text-sm text-gray-500">Templates</p>
-        </CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><Clock className="h-6 w-6 mx-auto mb-2 text-amber-500" /><p className="text-2xl font-bold">{stats.QUEUED}</p><p className="text-sm text-gray-500">En attente</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><CheckCircle className="h-6 w-6 mx-auto mb-2 text-green-500" /><p className="text-2xl font-bold">{stats.SENT}</p><p className="text-sm text-gray-500">Envoyés</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><XCircle className="h-6 w-6 mx-auto mb-2 text-red-500" /><p className="text-2xl font-bold">{stats.FAILED}</p><p className="text-sm text-gray-500">Échoués</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><FileText className="h-6 w-6 mx-auto mb-2 text-blue-500" /><p className="text-2xl font-bold">{templates.length}</p><p className="text-sm text-gray-500">Templates</p></CardContent></Card>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="queue" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="queue" data-testid="tab-queue">
-            <Clock className="h-4 w-4 mr-2" />File d'attente ({queue.length})
-          </TabsTrigger>
-          <TabsTrigger value="templates" data-testid="tab-templates">
-            <FileText className="h-4 w-4 mr-2" />Templates ({templates.length})
-          </TabsTrigger>
-          <TabsTrigger value="logs" data-testid="tab-logs">
-            <MessageSquare className="h-4 w-4 mr-2" />Historique ({logs.length})
-          </TabsTrigger>
+          <TabsTrigger value="queue"><Clock className="h-4 w-4 mr-2" />File d'attente ({queue.length})</TabsTrigger>
+          <TabsTrigger value="templates"><FileText className="h-4 w-4 mr-2" />Templates ({templates.length})</TabsTrigger>
+          <TabsTrigger value="logs"><MessageSquare className="h-4 w-4 mr-2" />Historique ({logs.length})</TabsTrigger>
         </TabsList>
 
         {/* Queue */}
         <TabsContent value="queue" className="space-y-4">
           <div className="flex gap-2 mb-4">
-            <Button onClick={handleRunBirthday} variant="outline" data-testid="run-birthday-btn">
-              <Cake className="h-4 w-4 mr-2" />Job Anniversaires
-            </Button>
-            <Button onClick={handleRunDispatch} className="bg-purple-600 hover:bg-purple-700" data-testid="run-dispatch-btn">
-              <Send className="h-4 w-4 mr-2" />Exécuter envoi (test)
-            </Button>
+            <Button onClick={handleRunBirthday} variant="outline"><Cake className="h-4 w-4 mr-2" />Job Anniversaires</Button>
+            <Button onClick={handleRunDispatch} className="bg-purple-600 hover:bg-purple-700"><Send className="h-4 w-4 mr-2" />Exécuter envoi</Button>
           </div>
           {queue.length === 0 ? (
             <Card><CardContent className="flex flex-col items-center justify-center py-12">
               <Clock className="h-12 w-12 text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-600">File d'attente vide</h3>
-              <p className="text-gray-500">Aucun message en attente d'envoi</p>
             </CardContent></Card>
-          ) : (
-            <div className="space-y-2">
-              {queue.map(item => (
-                <Card key={item.id} data-testid={`queue-item-${item.id}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-full ${item.status==='QUEUED'?'bg-amber-100':item.status==='SENT'?'bg-green-100':'bg-red-100'}`}>
-                          {item.channel === 'SMS'
-                            ? <MessageSquare className={`h-5 w-5 ${item.status==='QUEUED'?'text-amber-600':item.status==='SENT'?'text-green-600':'text-red-600'}`} />
-                            : <Mail className={`h-5 w-5 ${item.status==='QUEUED'?'text-amber-600':item.status==='SENT'?'text-green-600':'text-red-600'}`} />
-                          }
-                        </div>
-                        <div>
-                          <p className="font-medium">{item.patient?.first_name} {item.patient?.last_name}</p>
-                          <p className="text-sm text-gray-500">{item.to}</p>
-                          <p className="text-sm text-gray-600 mt-1 max-w-md truncate">{item.text}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={item.status==='QUEUED'?'bg-amber-100 text-amber-800':item.status==='SENT'?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}>
-                          {item.status}
-                        </Badge>
-                        <p className="text-xs text-gray-500 mt-1">Prévu: {formatDate(item.scheduled_at)}</p>
-                        {item.message_type && <Badge variant="outline" className="mt-1">{item.message_type}</Badge>}
-                      </div>
+          ) : queue.map(item => (
+            <Card key={item.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-full ${item.status==='QUEUED'?'bg-amber-100':item.status==='SENT'?'bg-green-100':'bg-red-100'}`}>
+                      {item.channel === 'SMS'
+                        ? <MessageSquare className={`h-5 w-5 ${item.status==='QUEUED'?'text-amber-600':item.status==='SENT'?'text-green-600':'text-red-600'}`} />
+                        : <Mail className={`h-5 w-5 ${item.status==='QUEUED'?'text-amber-600':item.status==='SENT'?'text-green-600':'text-red-600'}`} />
+                      }
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                    <div>
+                      <p className="font-medium">{item.patient?.first_name} {item.patient?.last_name}</p>
+                      <p className="text-sm text-gray-500">{item.to}</p>
+                      <p className="text-sm text-gray-600 mt-1 max-w-md truncate">{item.text}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={item.status==='QUEUED'?'bg-amber-100 text-amber-800':item.status==='SENT'?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}>{item.status}</Badge>
+                    <p className="text-xs text-gray-500 mt-1">Prévu: {formatDate(item.scheduled_at)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </TabsContent>
 
         {/* Templates */}
         <TabsContent value="templates" className="space-y-4">
-          <Button className="mb-4" data-testid="new-template-btn" onClick={() => setIsTemplateDialogOpen(true)}>
+          <Button className="mb-4" onClick={() => setIsTemplateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />Nouveau Template
           </Button>
-
           {templates.length === 0 ? (
             <Card><CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-600">Aucun template</h3>
-              <p className="text-gray-500">Créez votre premier modèle de message</p>
             </CardContent></Card>
-          ) : (
-            <div className="grid gap-4">
-              {templates.map(template => {
-                const keyInfo = templateKeys.find(t => t.key === template.key) || templateKeys[3];
-                return (
-                  <Card key={template.id} data-testid={`template-${template.key}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-4">
-                          <div className="p-2 bg-purple-100 rounded-lg">
-                            <keyInfo.icon className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">{keyInfo.label}</h3>
-                              <Badge variant="outline">{template.key}</Badge>
-                              <Badge className={template.channel==='SMS'?'bg-blue-100 text-blue-800':'bg-green-100 text-green-800'}>
-                                {template.channel}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-2 max-w-lg">{template.text}</p>
-                          </div>
-                        </div>
-                        <Badge className={template.is_active?'bg-green-100 text-green-800':'bg-gray-100 text-gray-800'}>
-                          {template.is_active ? 'Actif' : 'Inactif'}
-                        </Badge>
+          ) : templates.map(template => {
+            const keyInfo = templateKeys.find(t => t.key === template.key) || templateKeys[3];
+            return (
+              <Card key={template.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <keyInfo.icon className="h-5 w-5 text-purple-600" />
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">{keyInfo.label}</h3>
+                          <Badge variant="outline">{template.key}</Badge>
+                          <Badge className={template.channel==='SMS'?'bg-blue-100 text-blue-800':'bg-green-100 text-green-800'}>{template.channel}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2 max-w-lg">{template.text}</p>
+                      </div>
+                    </div>
+                    <Badge className={template.is_active?'bg-green-100 text-green-800':'bg-gray-100 text-gray-800'}>
+                      {template.is_active ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </TabsContent>
 
         {/* Logs */}
@@ -303,51 +230,45 @@ const MessagingManagement = () => {
             <Card><CardContent className="flex flex-col items-center justify-center py-12">
               <MessageSquare className="h-12 w-12 text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-600">Aucun historique</h3>
-              <p className="text-gray-500">Les messages envoyés apparaîtront ici</p>
             </CardContent></Card>
-          ) : (
-            <div className="space-y-2">
-              {logs.map(log => (
-                <Card key={log.id} data-testid={`log-${log.id}`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-full ${log.status==='SENT'?'bg-green-100':'bg-red-100'}`}>
-                          {log.status==='SENT'
-                            ? <CheckCircle className="h-5 w-5 text-green-600" />
-                            : <XCircle className="h-5 w-5 text-red-600" />
-                          }
-                        </div>
-                        <div>
-                          <p className="font-medium">{log.patient?.first_name} {log.patient?.last_name}</p>
-                          <p className="text-sm text-gray-500">{log.to}</p>
-                          <p className="text-sm text-gray-600 mt-1 max-w-md truncate">{log.text}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={log.status==='SENT'?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}>
-                          {log.status}
-                        </Badge>
-                        <p className="text-xs text-gray-500 mt-1">{formatDate(log.sent_at)}</p>
-                        <Badge variant="outline" className="mt-1">{log.channel}</Badge>
-                      </div>
+          ) : logs.map(log => (
+            <Card key={log.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-full ${log.status==='SENT'?'bg-green-100':'bg-red-100'}`}>
+                      {log.status==='SENT' ? <CheckCircle className="h-5 w-5 text-green-600" /> : <XCircle className="h-5 w-5 text-red-600" />}
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                    <div>
+                      <p className="font-medium">{log.patient?.first_name} {log.patient?.last_name}</p>
+                      <p className="text-sm text-gray-500">{log.to}</p>
+                      <p className="text-sm text-gray-600 mt-1 max-w-md truncate">{log.text}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={log.status==='SENT'?'bg-green-100 text-green-800':'bg-red-100 text-red-800'}>{log.status}</Badge>
+                    <p className="text-xs text-gray-500 mt-1">{formatDate(log.sent_at)}</p>
+                    <Badge variant="outline" className="mt-1">{log.channel}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </TabsContent>
       </Tabs>
 
-      {/* ── Modal Nouveau Template ── */}
-      <Modal open={isTemplateDialogOpen} onClose={() => setIsTemplateDialogOpen(false)}
-        title="Nouveau Template" description="Créez un modèle de message réutilisable">
+      {/* ── Modal CSS pur — Nouveau Template ── */}
+      <Modal
+        open={isTemplateDialogOpen}
+        onClose={() => setIsTemplateDialogOpen(false)}
+        title="Nouveau Template"
+        description="Créez un modèle de message réutilisable"
+      >
         <form onSubmit={handleCreateTemplate} className="space-y-4">
           <div>
             <Label>Clé du template</Label>
             <select value={newTemplate.key} onChange={e => setNewTemplate({...newTemplate, key: e.target.value})}
-              className={selectClass} data-testid="template-key-select" style={{ marginTop:4 }}>
+              className={selectClass} style={{ marginTop:4 }}>
               <option value="">Sélectionner...</option>
               {templateKeys.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
             </select>
@@ -355,7 +276,7 @@ const MessagingManagement = () => {
           <div>
             <Label>Canal</Label>
             <select value={newTemplate.channel} onChange={e => setNewTemplate({...newTemplate, channel: e.target.value})}
-              className={selectClass} data-testid="template-channel-select" style={{ marginTop:4 }}>
+              className={selectClass} style={{ marginTop:4 }}>
               <option value="SMS">SMS</option>
               <option value="EMAIL">Email</option>
             </select>
@@ -363,12 +284,12 @@ const MessagingManagement = () => {
           <div>
             <Label>Texte du message</Label>
             <Textarea value={newTemplate.text} onChange={e => setNewTemplate({...newTemplate, text: e.target.value})}
-              placeholder="Bonjour {patient_name}, ..." rows={4} data-testid="template-text" style={{ marginTop:4 }} />
+              placeholder="Bonjour {patient_name}, ..." rows={4} style={{ marginTop:4 }} />
             <p className="text-xs text-gray-500 mt-1">Variables: {placeholders.join(', ')}</p>
           </div>
           <div className="flex justify-end gap-2 pt-2 border-t">
             <Button type="button" variant="outline" onClick={() => setIsTemplateDialogOpen(false)}>Annuler</Button>
-            <Button type="submit" disabled={!newTemplate.key || !newTemplate.text} data-testid="save-template-btn">Créer</Button>
+            <Button type="submit" disabled={!newTemplate.key || !newTemplate.text}>Créer</Button>
           </div>
         </form>
       </Modal>
