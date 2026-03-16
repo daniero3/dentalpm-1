@@ -4,12 +4,11 @@ import axios from 'axios';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Save, Activity, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Activity, Calendar, X } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -17,6 +16,27 @@ const API = `${BACKEND_URL}/api`;
 const authHeaders = () => {
   const token = localStorage.getItem('token');
   return { headers: { Authorization: `Bearer ${token}` } };
+};
+
+
+// ── Modal CSS pur ──
+const Modal = ({ open, onClose, title, description, children, maxWidth = 520 }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
+        {(title || description) && (
+          <div style={{ marginBottom:20, paddingRight:28 }}>
+            {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:0 }}>{title}</h2>}
+            {description && <p style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{description}</p>}
+          </div>
+        )}
+        {children}
+      </div>
+    </div>
+  );
 };
 
 const DentalChart = () => {
@@ -330,47 +350,7 @@ const DentalChart = () => {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                     <Label>Procédures ({(selectedTooth.procedures || []).length})</Label>
-                    <Dialog open={procedureDialog} onOpenChange={setProcedureDialog}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" />Ajouter</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Nouvelle Procédure — Dent {selectedTooth.tooth_position}</DialogTitle>
-                          <DialogDescription>Ajoutez une procédure pour cette dent</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label>Type</Label>
-                            <select value={procedureData.procedure_type} onChange={e => setProcedureData({ ...procedureData, procedure_type: e.target.value })}
-                              style={{ width: '100%', marginTop: 6, padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', fontSize: 13 }}>
-                              <option value="">Sélectionner...</option>
-                              {Object.entries(procedureTypes).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-                            </select>
-                          </div>
-                          <div>
-                            <Label>Nom</Label>
-                            <Input value={procedureData.procedure_name} onChange={e => setProcedureData({ ...procedureData, procedure_name: e.target.value })} placeholder="Ex: Amalgame, Couronne..." />
-                          </div>
-                          <div>
-                            <Label>Coût (MGA)</Label>
-                            <Input type="number" value={procedureData.cost_mga} onChange={e => setProcedureData({ ...procedureData, cost_mga: e.target.value })} placeholder="50000" />
-                          </div>
-                          <div>
-                            <Label>Date</Label>
-                            <Input type="date" value={procedureData.date_performed} onChange={e => setProcedureData({ ...procedureData, date_performed: e.target.value })} />
-                          </div>
-                          <div>
-                            <Label>Description</Label>
-                            <Textarea value={procedureData.description} onChange={e => setProcedureData({ ...procedureData, description: e.target.value })} rows={2} />
-                          </div>
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setProcedureDialog(false)}>Annuler</Button>
-                            <Button onClick={addProcedure}><Save className="h-4 w-4 mr-2" />Enregistrer</Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button size="sm" variant="outline" onClick={() => setProcedureDialog(true)}><Plus className="h-4 w-4 mr-1" />Ajouter</Button>
                   </div>
 
                   <div style={{ maxHeight: 200, overflowY: 'auto' }} className="space-y-2">
@@ -412,6 +392,43 @@ const DentalChart = () => {
           </CardContent>
         </Card>
       </div>
+    </div>
+
+      {/* ── Modal Procédure CSS pur ── */}
+      <Modal open={procedureDialog} onClose={() => setProcedureDialog(false)}
+        title={`Nouvelle Procédure — Dent ${selectedTooth?.tooth_position || ''}`}
+        description="Ajoutez une procédure pour cette dent">
+        <div className="space-y-4">
+          <div>
+            <Label>Type</Label>
+            <select value={procedureData.procedure_type} onChange={e => setProcedureData({ ...procedureData, procedure_type: e.target.value })}
+              style={{ width:'100%', marginTop:6, padding:'8px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:13 }}>
+              <option value="">Sélectionner...</option>
+              {Object.entries(procedureTypes).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label>Nom</Label>
+            <Input value={procedureData.procedure_name} onChange={e => setProcedureData({ ...procedureData, procedure_name: e.target.value })} placeholder="Ex: Amalgame, Couronne..." />
+          </div>
+          <div>
+            <Label>Coût (MGA)</Label>
+            <Input type="number" value={procedureData.cost_mga} onChange={e => setProcedureData({ ...procedureData, cost_mga: e.target.value })} placeholder="50000" />
+          </div>
+          <div>
+            <Label>Date</Label>
+            <Input type="date" value={procedureData.date_performed} onChange={e => setProcedureData({ ...procedureData, date_performed: e.target.value })} />
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea value={procedureData.description} onChange={e => setProcedureData({ ...procedureData, description: e.target.value })} rows={2} />
+          </div>
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button variant="outline" onClick={() => setProcedureDialog(false)}>Annuler</Button>
+            <Button onClick={addProcedure}><Save className="h-4 w-4 mr-2" />Enregistrer</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
