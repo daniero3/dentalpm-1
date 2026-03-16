@@ -9,7 +9,7 @@ const Document = sequelize.define('Document', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   },
   patient_id: {
     type: DataTypes.UUID,
@@ -17,10 +17,10 @@ const Document = sequelize.define('Document', {
   },
   uploaded_by_user_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true
   },
   category: {
-    type: DataTypes.ENUM('RADIO', 'PHOTO', 'ANALYSE', 'FAISABILITE', 'ORDONNANCE', 'AUTRE'),
+    type: DataTypes.STRING(50),
     allowNull: false,
     defaultValue: 'AUTRE'
   },
@@ -30,7 +30,7 @@ const Document = sequelize.define('Document', {
   },
   stored_filename: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: true  // ← plus requis, on stocke en base64
   },
   mime_type: {
     type: DataTypes.STRING(100),
@@ -39,6 +39,10 @@ const Document = sequelize.define('Document', {
   file_size: {
     type: DataTypes.INTEGER,
     allowNull: false
+  },
+  file_data: {
+    type: DataTypes.TEXT,  // ← base64 du fichier
+    allowNull: true
   },
   description: {
     type: DataTypes.STRING(500),
@@ -59,13 +63,7 @@ const Document = sequelize.define('Document', {
 }, {
   tableName: 'documents',
   timestamps: true,
-  underscored: true,
-  indexes: [
-    { fields: ['clinic_id'] },
-    { fields: ['patient_id'] },
-    { fields: ['category'] },
-    { fields: ['is_deleted'] }
-  ]
+  underscored: true
 });
 
 module.exports = Document;
