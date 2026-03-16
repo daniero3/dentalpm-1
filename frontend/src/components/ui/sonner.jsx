@@ -1,28 +1,24 @@
-import { useTheme } from "next-themes"
-import { Toaster as Sonner } from "sonner"
+// frontend/src/components/ui/sonner.jsx
+// Wrapper minimal — utilise sonner directement sans Portal shadcn
+import { Toaster as SonnerToaster } from "sonner";
 
-const Toaster = ({
-  ...props
-}) => {
-  const { theme = "system" } = useTheme()
+const Toaster = (props) => (
+  <SonnerToaster
+    position={props.position || "top-right"}
+    toastOptions={{
+      duration: 4000,
+      style: {
+        background: '#fff',
+        color: '#0F172A',
+        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
+        fontFamily: 'DM Sans, sans-serif',
+        fontSize: 13,
+      },
+    }}
+    {...props}
+  />
+);
 
-  return (
-    <Sonner
-      theme={theme}
-      className="toaster group"
-      toastOptions={{
-        classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-        },
-      }}
-      {...props} />
-  );
-}
-
-export { Toaster }
+export { Toaster };
