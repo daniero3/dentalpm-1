@@ -2,26 +2,55 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { toast } from 'sonner';
 import { 
   Users, Plus, Search, Edit, Activity, Phone, Mail,
   AlertTriangle, User, Calendar, FileText, ClipboardList,
-  Grid3X3, FlaskConical, Loader2
+  Grid3X3, FlaskConical, Loader2, X
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const authHeaders = () => {
-  const token = localStorage.getItem('token');
-  return { headers: { Authorization: `Bearer ${token}` } };
-};
-
 const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 const selectClass = inputClass;
 const labelStyle = { display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569', fontFamily: 'Plus Jakarta Sans' };
 const fieldStyle = { marginBottom: 16 };
+
+// ── Modal CSS pur — évite bug Portal/removeChild de shadcn Dialog ──
+const Modal = ({ open, onClose, title, children }) => {
+  if (!open) return null;
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(15,23,42,0.5)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16, overflowY: 'auto'
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        background: '#fff', borderRadius: 16,
+        padding: 28, width: '100%', maxWidth: 640,
+        boxShadow: '0 16px 48px rgba(15,23,42,0.18)',
+        border: '1px solid #E2E8F0',
+        maxHeight: '90vh', overflowY: 'auto',
+        position: 'relative'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 18, fontWeight: 800, color: '#0F172A', margin: 0 }}>
+            {title}
+          </h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4, borderRadius: 6 }}>
+            <X size={18} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const PatientManagement = () => {
   const { user } = useAuth();
@@ -48,9 +77,10 @@ const PatientManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(`${API}/patients`, authHeaders());
+      const response = await axios.get(`${API}/patients`);
       if (mountedRef.current) setPatients(response.data.patients || []);
     } catch (error) {
+      if (axios.isCancel(error)) return;
       if (mountedRef.current) toast.error('Erreur lors du chargement des patients');
     } finally {
       if (mountedRef.current) setLoading(false);
@@ -62,10 +92,10 @@ const PatientManagement = () => {
     setSubmitting(true);
     try {
       if (selectedPatient) {
-        await axios.put(`${API}/patients/${selectedPatient.id}`, formData, authHeaders());
+        await axios.put(`${API}/patients/${selectedPatient.id}`, formData);
         toast.success('Patient mis à jour avec succès');
       } else {
-        await axios.post(`${API}/patients`, formData, authHeaders());
+        await axios.post(`${API}/patients`, formData);
         toast.success('Patient créé avec succès');
       }
       resetForm();
@@ -134,8 +164,7 @@ const PatientManagement = () => {
         width: 34, height: 34, borderRadius: 8,
         border: '1.5px solid #E2E8F0', background: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer', color: '#64748B',
-        transition: 'all 0.18s ease',
+        cursor: 'pointer', color: '#64748B', transition: 'all 0.18s ease',
       }}
         onMouseEnter={e => { e.currentTarget.style.borderColor = '#0D7A87'; e.currentTarget.style.color = '#0D7A87'; e.currentTarget.style.background = '#F0F7F8'; }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = '#fff'; }}
@@ -154,7 +183,7 @@ const PatientManagement = () => {
   return (
     <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={{
         background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
         boxShadow: '0 2px 8px rgba(15,23,42,0.05)', padding: '20px 24px',
@@ -165,144 +194,33 @@ const PatientManagement = () => {
             <Users size={26} color="#0D7A87" />
           </div>
           <div>
-            <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 22, fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.025em' }}>
-              Patients
-            </h1>
+            <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 22, fontWeight: 800, color: '#0F172A', margin: 0 }}>Patients</h1>
             <p style={{ color: '#64748B', fontSize: 13, margin: '2px 0 0' }}>
               {patients.length} patient{patients.length > 1 ? 's' : ''} enregistré{patients.length > 1 ? 's' : ''}
             </p>
           </div>
         </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <button
-              onClick={resetForm}
-              data-testid="new-patient-btn"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '10px 20px', borderRadius: 10,
-                background: 'linear-gradient(135deg, #0D7A87, #13A3B4)',
-                color: '#fff', border: 'none',
-                fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13,
-                cursor: 'pointer', boxShadow: '0 2px 12px rgba(13,122,135,0.3)',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,122,135,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(13,122,135,0.3)'; }}
-            >
-              <Plus size={16} /> Nouveau Patient
-            </button>
-          </DialogTrigger>
-
-          <DialogContent style={{ maxWidth: 640, maxHeight: '90vh', overflowY: 'auto', borderRadius: 16 }}>
-            <DialogHeader>
-              <DialogTitle style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 18, fontWeight: 800 }}>
-                {selectedPatient ? 'Modifier le patient' : 'Nouveau patient'}
-              </DialogTitle>
-              <DialogDescription>Remplissez les informations du patient</DialogDescription>
-            </DialogHeader>
-
-            <form onSubmit={handleSubmit} style={{ marginTop: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Prénom *</label>
-                  <input className={inputClass} value={formData.first_name} onChange={set('first_name')} required placeholder="Prénom" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Nom *</label>
-                  <input className={inputClass} value={formData.last_name} onChange={set('last_name')} required placeholder="Nom" />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Date de naissance *</label>
-                  <input className={inputClass} type="date" value={formData.date_of_birth} onChange={set('date_of_birth')} required />
-                </div>
-                <div>
-                  <label style={labelStyle}>Sexe *</label>
-                  <select className={selectClass} value={formData.gender} onChange={set('gender')} required>
-                    <option value="">Sélectionnez</option>
-                    <option value="male">Homme</option>
-                    <option value="female">Femme</option>
-                    <option value="other">Autre</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Téléphone *</label>
-                  <input className={inputClass} value={formData.phone_primary} onChange={set('phone_primary')} required placeholder="+261 32 00 000 00" data-testid="phone-input" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Email</label>
-                  <input className={inputClass} type="email" value={formData.email} onChange={set('email')} placeholder="patient@email.com" />
-                </div>
-              </div>
-
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Adresse</label>
-                <textarea className={inputClass} value={formData.address} onChange={set('address')} placeholder="Adresse complète" rows={2} style={{ minHeight: 64, resize: 'vertical' }} />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Contact d'urgence</label>
-                  <input className={inputClass} value={formData.emergency_contact_name} onChange={set('emergency_contact_name')} placeholder="Nom (optionnel)" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Tél. d'urgence</label>
-                  <input className={inputClass} value={formData.emergency_contact_phone} onChange={set('emergency_contact_phone')} placeholder="+261 32 (optionnel)" />
-                </div>
-              </div>
-
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Antécédents médicaux</label>
-                <textarea className={inputClass} value={formData.medical_history} onChange={set('medical_history')} placeholder="Antécédents médicaux" rows={3} style={{ minHeight: 72, resize: 'vertical' }} />
-              </div>
-
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Allergies</label>
-                <textarea className={inputClass} value={formData.allergies} onChange={set('allergies')} placeholder="Allergies connues" rows={2} style={{ minHeight: 56, resize: 'vertical' }} />
-              </div>
-
-              <div style={fieldStyle}>
-                <label style={labelStyle}>Médicaments actuels</label>
-                <textarea className={inputClass} value={formData.current_medications} onChange={set('current_medications')} placeholder="Traitements en cours" rows={2} style={{ minHeight: 56, resize: 'vertical' }} />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8 }}>
-                <button type="button" onClick={() => setIsDialogOpen(false)} style={{
-                  padding: '9px 18px', borderRadius: 8, border: '1.5px solid #E2E8F0',
-                  background: '#fff', color: '#475569', fontFamily: 'Plus Jakarta Sans',
-                  fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                }}>
-                  Annuler
-                </button>
-                <button type="submit" disabled={submitting} style={{
-                  padding: '9px 20px', borderRadius: 8, border: 'none',
-                  background: submitting ? '#94A3B8' : 'linear-gradient(135deg, #0D7A87, #13A3B4)',
-                  color: '#fff', fontFamily: 'Plus Jakarta Sans',
-                  fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  boxShadow: submitting ? 'none' : '0 2px 12px rgba(13,122,135,0.3)',
-                }}>
-                  {submitting && <Loader2 size={14} style={{ animation: 'spin 0.75s linear infinite' }} />}
-                  {selectedPatient ? 'Mettre à jour' : 'Créer'}
-                </button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <button
+          onClick={() => { resetForm(); setIsDialogOpen(true); }}
+          data-testid="new-patient-btn"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', borderRadius: 10,
+            background: 'linear-gradient(135deg, #0D7A87, #13A3B4)',
+            color: '#fff', border: 'none',
+            fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13,
+            cursor: 'pointer', boxShadow: '0 2px 12px rgba(13,122,135,0.3)',
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,122,135,0.4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(13,122,135,0.3)'; }}
+        >
+          <Plus size={16} /> Nouveau Patient
+        </button>
       </div>
 
-      {/* ── Recherche ── */}
-      <div style={{
-        background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
-        boxShadow: '0 2px 8px rgba(15,23,42,0.05)', padding: '14px 20px',
-      }}>
+      {/* Recherche */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.05)', padding: '14px 20px' }}>
         <div style={{ position: 'relative' }}>
           <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
           <input
@@ -316,11 +234,8 @@ const PatientManagement = () => {
         </div>
       </div>
 
-      {/* ── Liste ── */}
-      <div style={{
-        background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
-        boxShadow: '0 2px 8px rgba(15,23,42,0.05)', overflow: 'hidden',
-      }}>
+      {/* Liste */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
         {filteredPatients.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
             <div style={{ padding: 16, background: '#F1F5F9', borderRadius: '50%', marginBottom: 16 }}>
@@ -339,22 +254,16 @@ const PatientManagement = () => {
               key={patient.id}
               className="animate-fade-up"
               style={{
-                padding: '16px 20px',
-                borderBottom: '1px solid #F1F5F9',
+                padding: '16px 20px', borderBottom: '1px solid #F1F5F9',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                transition: 'background 0.15s',
-                animationDelay: `${i * 0.04}s`,
+                transition: 'background 0.15s', animationDelay: `${i * 0.04}s`,
               }}
               onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
               onMouseLeave={e => e.currentTarget.style.background = '#fff'}
               data-testid={`patient-${patient.id}`}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{
-                  width: 46, height: 46, borderRadius: 12,
-                  background: 'rgba(13,122,135,0.08)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}>
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(13,122,135,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <User size={22} color="#0D7A87" />
                 </div>
                 <div>
@@ -376,20 +285,13 @@ const PatientManagement = () => {
                   </div>
                   {patient.allergies && (
                     <div style={{ marginTop: 6 }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 4,
-                        padding: '2px 8px', borderRadius: 99,
-                        background: '#FEE2E2', color: '#B91C1C',
-                        fontSize: 11, fontWeight: 700,
-                      }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, background: '#FEE2E2', color: '#B91C1C', fontSize: 11, fontWeight: 700 }}>
                         <AlertTriangle size={11} /> Allergies: {patient.allergies}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
-
-              {/* ── Boutons actions ── */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <ActionBtn to={`/patients/${patient.id}/odontogram`}    icon={Grid3X3}       title="Odontogramme" />
                 <ActionBtn to={`/patients/${patient.id}/documents`}     icon={FileText}      title="Documents" />
@@ -400,12 +302,7 @@ const PatientManagement = () => {
                   onClick={() => handleEdit(patient)}
                   data-testid={`edit-${patient.id}`}
                   title="Modifier"
-                  style={{
-                    width: 34, height: 34, borderRadius: 8,
-                    border: '1.5px solid #E2E8F0', background: '#fff',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', color: '#64748B', transition: 'all 0.18s ease',
-                  }}
+                  style={{ width: 34, height: 34, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748B', transition: 'all 0.18s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#3B4FD8'; e.currentTarget.style.color = '#3B4FD8'; e.currentTarget.style.background = '#EEF0FB'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = '#fff'; }}
                 >
@@ -416,6 +313,97 @@ const PatientManagement = () => {
           ))
         )}
       </div>
+
+      {/* ── Modal CSS pur Nouveau/Modifier Patient ── */}
+      <Modal
+        open={isDialogOpen}
+        onClose={() => { setIsDialogOpen(false); resetForm(); }}
+        title={selectedPatient ? 'Modifier le patient' : 'Nouveau patient'}
+      >
+        <form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={labelStyle}>Prénom *</label>
+              <input className={inputClass} value={formData.first_name} onChange={set('first_name')} required placeholder="Prénom" />
+            </div>
+            <div>
+              <label style={labelStyle}>Nom *</label>
+              <input className={inputClass} value={formData.last_name} onChange={set('last_name')} required placeholder="Nom" />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={labelStyle}>Date de naissance *</label>
+              <input className={inputClass} type="date" value={formData.date_of_birth} onChange={set('date_of_birth')} required />
+            </div>
+            <div>
+              <label style={labelStyle}>Sexe *</label>
+              <select className={selectClass} value={formData.gender} onChange={set('gender')} required>
+                <option value="">Sélectionnez</option>
+                <option value="male">Homme</option>
+                <option value="female">Femme</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={labelStyle}>Téléphone *</label>
+              <input className={inputClass} value={formData.phone_primary} onChange={set('phone_primary')} required placeholder="+261 32 00 000 00" data-testid="phone-input" />
+            </div>
+            <div>
+              <label style={labelStyle}>Email</label>
+              <input className={inputClass} type="email" value={formData.email} onChange={set('email')} placeholder="patient@email.com" />
+            </div>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Adresse</label>
+            <textarea className={inputClass} value={formData.address} onChange={set('address')} placeholder="Adresse complète" rows={2} style={{ minHeight: 64, resize: 'vertical' }} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <div>
+              <label style={labelStyle}>Contact d'urgence</label>
+              <input className={inputClass} value={formData.emergency_contact_name} onChange={set('emergency_contact_name')} placeholder="Nom (optionnel)" />
+            </div>
+            <div>
+              <label style={labelStyle}>Tél. d'urgence</label>
+              <input className={inputClass} value={formData.emergency_contact_phone} onChange={set('emergency_contact_phone')} placeholder="+261 32 (optionnel)" />
+            </div>
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Antécédents médicaux</label>
+            <textarea className={inputClass} value={formData.medical_history} onChange={set('medical_history')} placeholder="Antécédents médicaux" rows={3} style={{ minHeight: 72, resize: 'vertical' }} />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Allergies</label>
+            <textarea className={inputClass} value={formData.allergies} onChange={set('allergies')} placeholder="Allergies connues" rows={2} style={{ minHeight: 56, resize: 'vertical' }} />
+          </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle}>Médicaments actuels</label>
+            <textarea className={inputClass} value={formData.current_medications} onChange={set('current_medications')} placeholder="Traitements en cours" rows={2} style={{ minHeight: 56, resize: 'vertical' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #F1F5F9' }}>
+            <button type="button" onClick={() => { setIsDialogOpen(false); resetForm(); }} style={{
+              padding: '9px 18px', borderRadius: 8, border: '1.5px solid #E2E8F0',
+              background: '#fff', color: '#475569', fontFamily: 'Plus Jakarta Sans',
+              fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            }}>
+              Annuler
+            </button>
+            <button type="submit" disabled={submitting} style={{
+              padding: '9px 20px', borderRadius: 8, border: 'none',
+              background: submitting ? '#94A3B8' : 'linear-gradient(135deg, #0D7A87, #13A3B4)',
+              color: '#fff', fontFamily: 'Plus Jakarta Sans',
+              fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+              boxShadow: submitting ? 'none' : '0 2px 12px rgba(13,122,135,0.3)',
+            }}>
+              {submitting && <Loader2 size={14} style={{ animation: 'spin 0.75s linear infinite' }} />}
+              {selectedPatient ? 'Mettre à jour' : 'Créer'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
