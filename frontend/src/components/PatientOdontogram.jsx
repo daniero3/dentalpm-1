@@ -5,7 +5,6 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
 import { ArrowLeft, User, Loader2, Save, RefreshCw } from 'lucide-react';
 
@@ -157,6 +156,31 @@ const PatientOdontogram = () => {
     </div>
   );
 
+  // ✅ Modal CSS pur — pas de Dialog shadcn pour éviter bug Portal/removeChild
+  const Modal = ({ open, onClose, children }) => {
+    if (!open) return null;
+    return (
+      <div
+        style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(15,23,42,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 16
+        }}
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
+        <div style={{
+          background: '#fff', borderRadius: 16,
+          padding: 24, width: '100%', maxWidth: 440,
+          boxShadow: '0 16px 48px rgba(15,23,42,0.18)',
+          border: '1px solid #E2E8F0'
+        }}>
+          {children}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6" data-testid="patient-odontogram">
       {/* Header */}
@@ -245,54 +269,55 @@ const PatientOdontogram = () => {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!selectedTooth} onOpenChange={() => setSelectedTooth(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Dent {selectedTooth}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Statut</Label>
-              <select
-                value={editForm.status}
-                onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                data-testid="status-select"
-              >
-                {Object.entries(STATUSES).map(([key, { label }]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Surface</Label>
-              <select
-                value={editForm.surface}
-                onChange={(e) => setEditForm({...editForm, surface: e.target.value})}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {SURFACES.map(s => (
-                  <option key={s} value={s}>{SURFACE_LABELS[s]}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Note</Label>
-              <Textarea
-                value={editForm.note}
-                onChange={(e) => setEditForm({...editForm, note: e.target.value})}
-                placeholder="Observations..."
-                rows={2}
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setSelectedTooth(null)}>Annuler</Button>
-              <Button onClick={handleSaveTooth} data-testid="save-tooth-btn">Appliquer</Button>
-            </div>
+      {/* ✅ Modal CSS pur — remplace Dialog shadcn pour éviter bug removeChild */}
+      <Modal open={!!selectedTooth} onClose={() => setSelectedTooth(null)}>
+        <div style={{ marginBottom: 16 }}>
+          <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 17, color: '#0F172A', margin: 0 }}>
+            Dent {selectedTooth}
+          </h2>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Statut</label>
+            <select
+              value={editForm.status}
+              onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'DM Sans', color: '#0F172A', background: '#fff' }}
+              data-testid="status-select"
+            >
+              {Object.entries(STATUSES).map(([key, { label }]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
           </div>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Surface</label>
+            <select
+              value={editForm.surface}
+              onChange={(e) => setEditForm({...editForm, surface: e.target.value})}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'DM Sans', color: '#0F172A', background: '#fff' }}
+            >
+              {SURFACES.map(s => (
+                <option key={s} value={s}>{SURFACE_LABELS[s]}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Note</label>
+            <textarea
+              value={editForm.note}
+              onChange={(e) => setEditForm({...editForm, note: e.target.value})}
+              placeholder="Observations..."
+              rows={2}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 13, fontFamily: 'DM Sans', color: '#0F172A', background: '#fff', resize: 'vertical' }}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #F1F5F9' }}>
+            <Button variant="outline" onClick={() => setSelectedTooth(null)}>Annuler</Button>
+            <Button onClick={handleSaveTooth} data-testid="save-tooth-btn">Appliquer</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
