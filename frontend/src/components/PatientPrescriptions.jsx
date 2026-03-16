@@ -6,7 +6,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { X } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { 
@@ -29,6 +29,24 @@ const STATUS_COLORS = {
 };
 const STATUS_LABELS = {
   DRAFT: 'Brouillon', ISSUED: 'Émise', CANCELLED: 'Annulée'
+};
+
+
+// ── Modal CSS pur ──
+const Modal = ({ open, onClose, title, children }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 520, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4 }}>
+          <X size={18} />
+        </button>
+        {title && <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 17, fontWeight: 700, color: '#0F172A', margin: '0 0 20px', paddingRight: 24 }}>{title}</h2>}
+        {children}
+      </div>
+    </div>
+  );
 };
 
 // ✅ Composant défini HORS du composant principal — évite le re-mount à chaque frappe
@@ -291,46 +309,39 @@ const PatientPrescriptions = () => {
           </div>
         </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="new-prescription-btn" onClick={() => { resetForm(); setIsCreateOpen(true); }}>
+        <Button data-testid="new-prescription-btn" onClick={() => { resetForm(); setIsCreateOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" />Nouvelle ordonnance
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Nouvelle ordonnance</DialogTitle></DialogHeader>
-            <PrescriptionForm
-              formData={formData}
-              setFormData={setFormData}
-              saving={saving}
-              onSubmit={handleCreate}
-              submitLabel="Créer (brouillon)"
-              onCancel={() => { setIsCreateOpen(false); resetForm(); }}
-              addItem={addItem}
-              removeItem={removeItem}
-              updateItem={updateItem}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Modifier {selectedPrescription?.number}</DialogTitle></DialogHeader>
-          <PrescriptionForm
-              formData={formData}
-              setFormData={setFormData}
-              saving={saving}
-              onSubmit={handleUpdate}
-              submitLabel="Enregistrer"
-              onCancel={() => { setIsEditOpen(false); resetForm(); }}
-              addItem={addItem}
-              removeItem={removeItem}
-              updateItem={updateItem}
-            />
-        </DialogContent>
-      </Dialog>
+      {/* ── Modals CSS purs ── */}
+      <Modal open={isCreateOpen} onClose={() => { setIsCreateOpen(false); resetForm(); }} title="Nouvelle ordonnance">
+        <PrescriptionForm
+          formData={formData}
+          setFormData={setFormData}
+          saving={saving}
+          onSubmit={handleCreate}
+          submitLabel="Créer (brouillon)"
+          onCancel={() => { setIsCreateOpen(false); resetForm(); }}
+          addItem={addItem}
+          removeItem={removeItem}
+          updateItem={updateItem}
+        />
+      </Modal>
+
+      <Modal open={isEditOpen} onClose={() => { setIsEditOpen(false); resetForm(); }} title={`Modifier ${selectedPrescription?.number || ''}`}>
+        <PrescriptionForm
+          formData={formData}
+          setFormData={setFormData}
+          saving={saving}
+          onSubmit={handleUpdate}
+          submitLabel="Enregistrer"
+          onCancel={() => { setIsEditOpen(false); resetForm(); }}
+          addItem={addItem}
+          removeItem={removeItem}
+          updateItem={updateItem}
+        />
+      </Modal>
 
       {/* Liste */}
       <Card>
