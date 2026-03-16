@@ -24,7 +24,6 @@ const STATUSES = {
   BRIDGE:             { label: 'Bridge',       color: 'bg-cyan-500',   textColor: 'text-cyan-700' }
 };
 
-// ⚠️ Pas de value="" — shadcn/ui interdit les valeurs vides
 const SURFACES = ['NONE', 'M', 'D', 'O', 'B', 'L', 'I', 'MO', 'DO', 'MOD', 'MODBL'];
 const SURFACE_LABELS = { NONE: 'Aucune', M: 'M', D: 'D', O: 'O', B: 'B', L: 'L', I: 'I', MO: 'MO', DO: 'DO', MOD: 'MOD', MODBL: 'MODBL' };
 
@@ -43,31 +42,41 @@ const PatientOdontogram = () => {
   const [editForm, setEditForm] = useState({ status: 'HEALTHY', surface: 'NONE', note: '' });
   const [pendingChanges, setPendingChanges] = useState({});
 
-  // Helper token
   const authHeaders = () => {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
   useEffect(() => {
+    // ✅ Bloquer si patientId invalide
+    if (!patientId || patientId === 'undefined') {
+      setLoading(false);
+      return;
+    }
     fetchPatient();
     fetchOdontogram();
   }, [patientId]);
 
   const fetchPatient = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
       const res = await axios.get(`${API}/patients/${patientId}`, authHeaders());
       setPatient(res.data);
     } catch (err) {
-      toast.error('Patient non trouvé');
+      // Ignorer les erreurs d'annulation axios (intercepteur global)
+      if (axios.isCancel(err)) return;
+      console.error('Patient error:', err);
     }
   };
 
   const fetchOdontogram = async () => {
+    if (!patientId || patientId === 'undefined') return;
     try {
       const res = await axios.get(`${API}/patients/${patientId}/odontogram`, authHeaders());
       setOdontogram(res.data.odontogram || {});
     } catch (err) {
+      // Ignorer les erreurs d'annulation axios (intercepteur global)
+      if (axios.isCancel(err)) return;
       toast.error('Erreur chargement odontogramme');
     } finally {
       setLoading(false);
@@ -111,6 +120,7 @@ const PatientOdontogram = () => {
       setPendingChanges({});
       fetchOdontogram();
     } catch (err) {
+      if (axios.isCancel(err)) return;
       toast.error('Erreur sauvegarde');
     } finally {
       setSaving(false);
@@ -141,13 +151,11 @@ const PatientOdontogram = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    </div>
+  );
 
   return (
     <div className="space-y-6" data-testid="patient-odontogram">
@@ -169,7 +177,6 @@ const PatientOdontogram = () => {
             )}
           </div>
         </div>
-        {/* Boutons toujours visibles sur une ligne séparée */}
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchOdontogram}>
             <RefreshCw className="h-4 w-4 mr-2" />Recharger
@@ -215,7 +222,6 @@ const PatientOdontogram = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center gap-4">
-            {/* Upper Jaw */}
             <div className="flex gap-1">
               <div className="flex gap-1 border-r-2 border-gray-400 pr-2">
                 {UPPER_RIGHT.map(t => <ToothButton key={t} toothFdi={t} />)}
@@ -227,7 +233,6 @@ const PatientOdontogram = () => {
             <div className="text-center text-sm text-gray-500 py-2 border-t border-b w-full">
               ─── Ligne médiane ───
             </div>
-            {/* Lower Jaw */}
             <div className="flex gap-1">
               <div className="flex gap-1 border-r-2 border-gray-400 pr-2">
                 {LOWER_RIGHT.map(t => <ToothButton key={t} toothFdi={t} />)}
@@ -247,7 +252,6 @@ const PatientOdontogram = () => {
             <DialogTitle>Dent {selectedTooth}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Statut — select natif pour éviter bug Portal shadcn dans Dialog */}
             <div className="space-y-2">
               <Label>Statut</Label>
               <select
@@ -261,8 +265,6 @@ const PatientOdontogram = () => {
                 ))}
               </select>
             </div>
-
-            {/* Surface — select natif pour éviter bug Portal shadcn dans Dialog */}
             <div className="space-y-2">
               <Label>Surface</Label>
               <select
@@ -275,8 +277,6 @@ const PatientOdontogram = () => {
                 ))}
               </select>
             </div>
-
-            {/* Note */}
             <div className="space-y-2">
               <Label>Note</Label>
               <Textarea
@@ -286,7 +286,6 @@ const PatientOdontogram = () => {
                 rows={2}
               />
             </div>
-
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setSelectedTooth(null)}>Annuler</Button>
               <Button onClick={handleSaveTooth} data-testid="save-tooth-btn">Appliquer</Button>
