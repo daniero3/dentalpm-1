@@ -4,11 +4,10 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
-import { Package, Plus, AlertTriangle, ArrowUp, ArrowDown, RefreshCw, Loader2, Search, Boxes } from 'lucide-react';
+import { Package, Plus, AlertTriangle, ArrowUp, ArrowDown, RefreshCw, Loader2, Search, Boxes, X } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -19,15 +18,35 @@ const CATEGORIES = {
   HYGIENE: 'Hygiène', ANESTHESIA: 'Anesthésie', RADIOLOGY: 'Radiologie', OTHER: 'Autre'
 };
 
+const inputCls = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+
+// ── Modal CSS pur ──
+const Modal = ({ open, onClose, title, description, children }) => {
+  if (!open) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 520, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4 }}><X size={18} /></button>
+        <div style={{ marginBottom: 20, paddingRight: 24 }}>
+          {title && <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 17, fontWeight: 700, color: '#0F172A', margin: 0 }}>{title}</h2>}
+          {description && <p style={{ fontSize: 13, color: '#64748B', marginTop: 4 }}>{description}</p>}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const InventoryManagement = () => {
-  const [products, setProducts]             = useState([]);
-  const [alerts, setAlerts]                 = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [isAddOpen, setIsAddOpen]           = useState(false);
-  const [isMovementOpen, setIsMovementOpen] = useState(false);
+  const [products, setProducts]               = useState([]);
+  const [alerts, setAlerts]                   = useState([]);
+  const [loading, setLoading]                 = useState(true);
+  const [isAddOpen, setIsAddOpen]             = useState(false);
+  const [isMovementOpen, setIsMovementOpen]   = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [saving, setSaving]                 = useState(false);
-  const [searchTerm, setSearchTerm]         = useState('');
+  const [saving, setSaving]                   = useState(false);
+  const [searchTerm, setSearchTerm]           = useState('');
 
   const [productForm, setProductForm] = useState({
     name: '', sku: '', category: 'CONSUMABLES', unit: 'PIECE',
@@ -43,22 +62,15 @@ const InventoryManagement = () => {
       const res = await axios.get(`${API}/inventory/products`);
       setProducts(Array.isArray(res.data?.products) ? res.data.products : []);
     } catch (err) {
-      console.error('fetchProducts:', err);
-      toast.error('Erreur chargement produits');
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
+      if (!axios.isCancel(err)) { toast.error('Erreur chargement produits'); setProducts([]); }
+    } finally { setLoading(false); }
   };
 
   const fetchAlerts = async () => {
     try {
       const res = await axios.get(`${API}/inventory/alerts`);
       setAlerts(Array.isArray(res.data?.alerts) ? res.data.alerts : []);
-    } catch (err) {
-      console.error('fetchAlerts:', err);
-      setAlerts([]);
-    }
+    } catch (err) { setAlerts([]); }
   };
 
   const handleAddProduct = async () => {
@@ -89,7 +101,6 @@ const InventoryManagement = () => {
 
   const closeMovement = () => {
     setIsMovementOpen(false);
-    // Delay clearing selectedProduct to avoid render crash during dialog close animation
     setTimeout(() => setSelectedProduct(null), 300);
   };
 
@@ -118,13 +129,11 @@ const InventoryManagement = () => {
     (p.sku  || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    </div>
+  );
 
   return (
     <div className="space-y-6" data-testid="inventory-management">
@@ -140,73 +149,9 @@ const InventoryManagement = () => {
           <Button variant="outline" onClick={() => { fetchProducts(); fetchAlerts(); }}>
             <RefreshCw className="h-4 w-4 mr-2" />Actualiser
           </Button>
-
-          {/* Add product dialog */}
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="add-product-btn"><Plus className="h-4 w-4 mr-2" />Ajouter produit</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nouveau produit</DialogTitle>
-                <DialogDescription>Remplissez les informations du produit</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Nom *</Label>
-                    <Input value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>SKU *</Label>
-                    <Input value={productForm.sku} onChange={e => setProductForm({...productForm, sku: e.target.value})} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Catégorie</Label>
-                    <select
-                      value={productForm.category}
-                      onChange={e => setProductForm({...productForm, category: e.target.value})}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Unité</Label>
-                    <Input value={productForm.unit} onChange={e => setProductForm({...productForm, unit: e.target.value})} placeholder="PIECE, BOX, ML..." />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Coût unitaire (MGA)</Label>
-                    <Input type="number" value={productForm.unit_cost_mga} onChange={e => setProductForm({...productForm, unit_cost_mga: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Prix vente (MGA)</Label>
-                    <Input type="number" value={productForm.sale_price_mga} onChange={e => setProductForm({...productForm, sale_price_mga: e.target.value})} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Stock initial</Label>
-                    <Input type="number" value={productForm.current_qty} onChange={e => setProductForm({...productForm, current_qty: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Seuil alerte</Label>
-                    <Input type="number" value={productForm.min_qty} onChange={e => setProductForm({...productForm, min_qty: e.target.value})} />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsAddOpen(false)}>Annuler</Button>
-                  <Button onClick={handleAddProduct} disabled={saving}>
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}Créer
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setIsAddOpen(true)} data-testid="add-product-btn">
+            <Plus className="h-4 w-4 mr-2" />Ajouter produit
+          </Button>
         </div>
       </div>
 
@@ -259,8 +204,7 @@ const InventoryManagement = () => {
                           </p>
                           <p className="text-xs text-gray-500">Min: {product.min_qty}</p>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => openMovement(product)}
-                          data-testid={`move-${product.sku}`}>
+                        <Button variant="outline" size="sm" onClick={() => openMovement(product)} data-testid={`move-${product.sku}`}>
                           Mouvement
                         </Button>
                       </div>
@@ -314,61 +258,100 @@ const InventoryManagement = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Movement Dialog — only render content when selectedProduct exists */}
-      <Dialog open={isMovementOpen} onOpenChange={(open) => { if (!open) closeMovement(); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Mouvement stock{selectedProduct ? ` — ${selectedProduct.name}` : ''}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedProduct ? `Stock actuel: ${selectedProduct.current_qty} ${selectedProduct.unit}` : ''}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedProduct && (
-            <div className="space-y-4">
-              <div className="p-3 bg-gray-100 rounded">
-                <p className="text-sm">Stock actuel: <strong>{selectedProduct.current_qty} {selectedProduct.unit}</strong></p>
-              </div>
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <select
-                value={movementForm.type}
-                onChange={e => setMovementForm({...movementForm, type: e.target.value})}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
+      {/* ── Modal Ajouter produit ── */}
+      <Modal open={isAddOpen} onClose={() => setIsAddOpen(false)} title="Nouveau produit" description="Remplissez les informations du produit">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Nom *</Label>
+              <Input value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label>SKU *</Label>
+              <Input value={productForm.sku} onChange={e => setProductForm({...productForm, sku: e.target.value})} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Catégorie</Label>
+              <select value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})} className={inputCls}>
+                {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label>Unité</Label>
+              <Input value={productForm.unit} onChange={e => setProductForm({...productForm, unit: e.target.value})} placeholder="PIECE, BOX, ML..." />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Coût unitaire (MGA)</Label>
+              <Input type="number" value={productForm.unit_cost_mga} onChange={e => setProductForm({...productForm, unit_cost_mga: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Prix vente (MGA)</Label>
+              <Input type="number" value={productForm.sale_price_mga} onChange={e => setProductForm({...productForm, sale_price_mga: e.target.value})} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Stock initial</Label>
+              <Input type="number" value={productForm.current_qty} onChange={e => setProductForm({...productForm, current_qty: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Seuil alerte</Label>
+              <Input type="number" value={productForm.min_qty} onChange={e => setProductForm({...productForm, min_qty: e.target.value})} />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setIsAddOpen(false)}>Annuler</Button>
+            <Button onClick={handleAddProduct} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}Créer
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Modal Mouvement stock ── */}
+      <Modal
+        open={isMovementOpen}
+        onClose={closeMovement}
+        title={selectedProduct ? `Mouvement stock — ${selectedProduct.name}` : 'Mouvement stock'}
+        description={selectedProduct ? `Stock actuel: ${selectedProduct.current_qty} ${selectedProduct.unit}` : ''}
+      >
+        {selectedProduct && (
+          <div className="space-y-4">
+            <div className="p-3 bg-gray-100 rounded-lg">
+              <p className="text-sm">Stock actuel: <strong>{selectedProduct.current_qty} {selectedProduct.unit}</strong></p>
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <select value={movementForm.type} onChange={e => setMovementForm({...movementForm, type: e.target.value})} className={inputCls}>
                 <option value="IN">Entrée (+)</option>
                 <option value="OUT">Sortie (-)</option>
                 <option value="ADJUST">Ajustement (=)</option>
               </select>
-              </div>
-              <div className="space-y-2">
-                <Label>Quantité *</Label>
-                <Input type="number" value={movementForm.quantity}
-                  onChange={e => setMovementForm({...movementForm, quantity: e.target.value})} />
-              </div>
-              <div className="space-y-2">
-                <Label>Motif *</Label>
-                <Input value={movementForm.reason}
-                  onChange={e => setMovementForm({...movementForm, reason: e.target.value})}
-                  placeholder="Ex: Utilisation cabinet, Réception commande..." />
-              </div>
-              <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={closeMovement}>Annuler</Button>
-                <Button onClick={handleMovement} disabled={saving}>
-                  {saving
-                    ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    : movementForm.type === 'IN'
-                      ? <ArrowUp className="h-4 w-4 mr-2" />
-                      : <ArrowDown className="h-4 w-4 mr-2" />
-                  }
-                  Enregistrer
-                </Button>
-              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            <div className="space-y-2">
+              <Label>Quantité *</Label>
+              <Input type="number" value={movementForm.quantity} onChange={e => setMovementForm({...movementForm, quantity: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label>Motif *</Label>
+              <Input value={movementForm.reason} onChange={e => setMovementForm({...movementForm, reason: e.target.value})} placeholder="Ex: Utilisation cabinet, Réception commande..." />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={closeMovement}>Annuler</Button>
+              <Button onClick={handleMovement} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  : movementForm.type === 'IN' ? <ArrowUp className="h-4 w-4 mr-2" />
+                  : <ArrowDown className="h-4 w-4 mr-2" />}
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
