@@ -339,9 +339,6 @@ const MessagingManagement = () => {
           )}
         </TabsContent>
       </Tabs>
-    </div>
-  );
-};
 
       {/* ── Modal Nouveau Template ── */}
       <Modal open={isTemplateDialogOpen} onClose={() => setIsTemplateDialogOpen(false)}
