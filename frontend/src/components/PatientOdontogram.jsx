@@ -5,7 +5,6 @@ import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { toast } from 'sonner';
 import { ArrowLeft, User, Loader2, Save, RefreshCw } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -40,6 +39,12 @@ const PatientOdontogram = () => {
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [editForm, setEditForm] = useState({ status: 'HEALTHY', surface: 'NONE', note: '' });
   const [pendingChanges, setPendingChanges] = useState({});
+  const [notification, setNotification] = useState(null); // { type: 'success'|'error'|'info', msg: string }
+
+  const notify = (type, msg) => {
+    setNotification({ type, msg });
+    setTimeout(() => setNotification(null), 3000);
+  };
 
   const authHeaders = () => {
     const token = localStorage.getItem('token');
@@ -76,7 +81,7 @@ const PatientOdontogram = () => {
     } catch (err) {
       // Ignorer les erreurs d'annulation axios (intercepteur global)
       if (axios.isCancel(err)) return;
-      toast.error('Erreur chargement odontogramme');
+      notify('error', 'Erreur chargement odontogramme');
     } finally {
       setLoading(false);
     }
@@ -103,24 +108,24 @@ const PatientOdontogram = () => {
       }
     });
     setSelectedTooth(null);
-    toast.success(`Dent ${selectedTooth} modifiée (non sauvegardé)`);
+    notify('success', `Dent ${selectedTooth} modifiée`);
   };
 
   const handleSaveAll = async () => {
     const teeth = Object.values(pendingChanges);
     if (teeth.length === 0) {
-      toast.info('Aucune modification à sauvegarder');
+      notify('info', 'Aucune modification à sauvegarder');
       return;
     }
     setSaving(true);
     try {
       await axios.put(`${API}/patients/${patientId}/odontogram`, { teeth }, authHeaders());
-      toast.success(`${teeth.length} dent(s) sauvegardée(s)`);
+      notify('success', `${teeth.length} dent(s) sauvegardée(s)`);
       setPendingChanges({});
       fetchOdontogram();
     } catch (err) {
       if (axios.isCancel(err)) return;
-      toast.error('Erreur sauvegarde');
+      notify('error', 'Erreur sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -224,6 +229,31 @@ const PatientOdontogram = () => {
           )}
         </div>
       </div>
+
+      {/* ✅ Notification inline — remplace toast Sonner pour éviter bug Portal */}
+      {notification && (
+        <div style={{
+          padding: '12px 16px',
+          borderRadius: 10,
+          fontFamily: 'DM Sans',
+          fontSize: 13,
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          background: notification.type === 'success' ? '#DCFCE7' :
+                      notification.type === 'error'   ? '#FEE2E2' : '#DBEAFE',
+          color:      notification.type === 'success' ? '#15803D' :
+                      notification.type === 'error'   ? '#B91C1C' : '#1D4ED8',
+          border: `1px solid ${
+                      notification.type === 'success' ? '#BBF7D0' :
+                      notification.type === 'error'   ? '#FECACA' : '#BFDBFE'}`,
+        }}>
+          {notification.type === 'success' ? '✅' :
+           notification.type === 'error'   ? '❌' : 'ℹ️'}
+          {notification.msg}
+        </div>
+      )}
 
       {/* Legend */}
       <Card>
