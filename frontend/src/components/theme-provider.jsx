@@ -1,63 +1,28 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
+// ✅ ThemeProvider CSS pur — remplace la version shadcn qui cause insertBefore
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-const initialState = {
-  theme: "system",
-  setTheme: () => null,
-}
+const ThemeContext = createContext({ theme: "light", setTheme: () => {} });
 
-const ThemeProviderContext = createContext(initialState)
-
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-  storageKey = "dental-pm-theme",
-  ...props
-}) {
-  const [theme, setTheme] = useState(
-    () => (typeof window !== "undefined" ? localStorage.getItem(storageKey) : null) || defaultTheme
-  )
+export function ThemeProvider({ children, defaultTheme = "light", storageKey = "theme" }) {
+  const [theme, setThemeState] = useState(() => {
+    try { return localStorage.getItem(storageKey) || defaultTheme; }
+    catch { return defaultTheme; }
+  });
 
   useEffect(() => {
-    const root = window.document.documentElement
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    try { localStorage.setItem(storageKey, theme); } catch {}
+  }, [theme, storageKey]);
 
-    root.classList.remove("light", "dark")
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
-      return
-    }
-
-    root.classList.add(theme)
-  }, [theme])
-
-  const value = {
-    theme,
-    setTheme: React.useMemo(
-      () => (theme) => {
-        localStorage.setItem(storageKey, theme)
-        setTheme(theme)
-      },
-      [storageKey]
-    ),
-  }
+  const setTheme = (newTheme) => setThemeState(newTheme);
 
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
-    </ThemeProviderContext.Provider>
-  )
+    </ThemeContext.Provider>
+  );
 }
 
-export const useTheme = () => {
-  const context = useContext(ThemeProviderContext)
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider")
-
-  return context
-}
+export const useTheme = () => useContext(ThemeContext);
