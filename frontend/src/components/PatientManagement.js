@@ -25,20 +25,24 @@ const Modal = ({ open, onClose, title, children }) => {
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(15,23,42,0.5)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16, overflowY: 'auto'
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+        padding: '32px 16px', overflowY: 'auto'
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
         background: '#fff', borderRadius: 16,
-        padding: 28, width: '100%', maxWidth: 640,
+        padding: '0', width: '100%', maxWidth: 660,
         boxShadow: '0 16px 48px rgba(15,23,42,0.18)',
         border: '1px solid #E2E8F0',
-        maxHeight: '90vh', overflowY: 'auto',
-        position: 'relative'
+        position: 'relative',
+        maxHeight: '95vh',
+        display: 'flex',
+        flexDirection: 'column',
+        margin: 'auto',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        {/* Header fixe */}
+        <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 18, fontWeight: 800, color: '#0F172A', margin: 0 }}>
             {title}
           </h2>
@@ -46,6 +50,8 @@ const Modal = ({ open, onClose, title, children }) => {
             <X size={18} />
           </button>
         </div>
+        {/* Body scrollable */}
+        <div style={{ overflowY: 'auto', flex: 1, padding: '20px 28px' }}>
         {children}
       </div>
     </div>
