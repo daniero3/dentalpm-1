@@ -88,7 +88,9 @@ const QuoteManagement = () => {
     ACCEPTED:  { name: 'Accepté',   color: 'bg-green-100 text-green-800', icon: CheckCircle },
     REJECTED:  { name: 'Refusé',    color: 'bg-red-100 text-red-800',     icon: XCircle },
     EXPIRED:   { name: 'Expiré',    color: 'bg-amber-100 text-amber-800', icon: AlertCircle },
-    CONVERTED: { name: 'Converti',  color: 'bg-purple-100 text-purple-800', icon: ArrowRight }
+    CONVERTED: { name: 'Converti',  color: 'bg-purple-100 text-purple-800', icon: ArrowRight },
+    PAID:      { name: 'Payé',       color: 'bg-green-100 text-green-800',  icon: CheckCircle },
+    CANCELLED: { name: 'Annulé',     color: 'bg-red-100 text-red-800',     icon: XCircle }
   };
 
   useEffect(() => {
@@ -334,7 +336,7 @@ const QuoteManagement = () => {
                       <StatusIcon className="h-3 w-3 mr-1" />
                       {quoteStatuses[quote.status]?.name || quote.status}
                     </Badge>
-                    {!['CONVERTED', 'EXPIRED'].includes(quote.status) && (
+                    {!['CONVERTED', 'EXPIRED', 'PAID', 'CANCELLED'].includes(quote.status) && (
                       <Button size="sm" onClick={() => handleConvert(quote)} data-testid={`convert-${quote.invoice_number}`}>
                         <ArrowRight className="h-4 w-4 mr-1" />Convertir
                       </Button>
@@ -529,7 +531,7 @@ const QuoteManagement = () => {
                 {['DRAFT', 'SENT'].includes(selectedQuote.status) && (
                   <Button variant="outline" size="sm" onClick={() => handleStatusChange(selectedQuote, 'ACCEPTED')}>Marquer Accepté</Button>
                 )}
-                {!['CONVERTED', 'EXPIRED'].includes(selectedQuote.status) && (
+                {!['CONVERTED', 'EXPIRED', 'PAID', 'CANCELLED'].includes(selectedQuote.status) && (
                   <Button size="sm" onClick={() => handleConvert(selectedQuote)}>
                     <ArrowRight className="h-4 w-4 mr-1" />Convertir en Facture
                   </Button>
