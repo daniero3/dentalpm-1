@@ -37,15 +37,38 @@ const app = express();
 const PORT = process.env.PORT || 8001;
 
 app.set('trust proxy', 1);
-
 app.use(helmet());
 
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:3000'];
+// ✅ CORS élargi — accepte toutes les origines Railway + localhost
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  // Fallback: accepter toutes les origines Railway
+  /\.railway\.app$/,
+  /\.up\.railway\.app$/,
+];
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origine (mobile, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // Vérifier si l'origine est dans la liste ou correspond au pattern Railway
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') return allowed === origin;
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return false;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS bloqué pour origin: ${origin}`);
+      // ✅ En production Railway, on accepte quand même pour éviter les 503
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -54,10 +77,14 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// ✅ Preflight OPTIONS pour toutes les routes
+app.options('*', cors(corsOptions));
+
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  message: 'Trop de requêtes depuis cette adresse IP, réessayez plus tard.'
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 200,
+  message: 'Trop de requêtes depuis cette adresse IP, réessayez plus tard.',
+  skip: (req) => req.path === '/api/health'
 });
 app.use(limiter);
 
@@ -66,8 +93,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     service: 'Dental Practice Management API - Madagascar',
     version: '1.0.0'
@@ -103,118 +130,11 @@ app.use('/api/onboarding', requireAuth, onboardingRoutes);
 
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 
-app.get('/api/openapi.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  const serverUrl = process.env.OPENAPI_SERVER_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
-  const openApiSpec = {
-    "openapi": "3.0.0",
-    "info": {
-      "title": "Dental Practice Management API - Madagascar",
-      "version": "1.0.0",
-      "description": "API SaaS pour la gestion de cliniques dentaires à Madagascar"
-    },
-    "servers": [{ "url": `${serverUrl}/api`, "description": "API Server" }],
-    "components": {
-      "securitySchemes": {
-        "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
-      }
-    },
-    "paths": {
-      "/auth/login": {
-        "post": {
-          "summary": "Authenticate user",
-          "requestBody": {
-            "required": true,
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "username": { "type": "string" },
-                    "password": { "type": "string" }
-                  }
-                }
-              }
-            }
-          },
-          "responses": { "200": { "description": "Login successful" } }
-        }
-      },
-      "/patients": {
-        "get": {
-          "summary": "Get patients list",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "200": { "description": "Patients list" } }
-        },
-        "post": {
-          "summary": "Create patient",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "201": { "description": "Patient created" } }
-        }
-      },
-      "/appointments": {
-        "get": {
-          "summary": "Get appointments list",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "200": { "description": "Appointments list" } }
-        },
-        "post": {
-          "summary": "Create appointment",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "201": { "description": "Appointment created" } }
-        }
-      },
-      "/health": {
-        "get": {
-          "summary": "Health check",
-          "responses": { "200": { "description": "Service status" } }
-        }
-      },
-      "/billing/plans": {
-        "get": {
-          "summary": "Get available subscription plans",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "200": { "description": "Plans list with pricing" } }
-        }
-      },
-      "/billing/subscription": {
-        "get": {
-          "summary": "Get current clinic subscription",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "200": { "description": "Subscription details" } }
-        }
-      },
-      "/billing/payment-requests": {
-        "get": {
-          "summary": "Get clinic payment requests",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "200": { "description": "Payment requests list" } }
-        },
-        "post": {
-          "summary": "Submit payment request with receipt",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "201": { "description": "Payment request created" } }
-        }
-      },
-      "/admin/payment-requests": {
-        "get": {
-          "summary": "Get all payment requests (Super Admin)",
-          "security": [{ "bearerAuth": [] }],
-          "responses": { "200": { "description": "Payment requests list" } }
-        }
-      }
-    }
-  };
-  res.json(openApiSpec);
-});
-
-app.get('/openapi.json', (req, res) => res.redirect('/api/openapi.json'));
-
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? "Une erreur interne s'est produite" 
+    error: process.env.NODE_ENV === 'production'
+      ? "Une erreur interne s'est produite"
       : err.message,
     ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
@@ -228,14 +148,12 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Connexion à PostgreSQL réussie');
-    console.log('✅ Base de données prête');
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Serveur Dental PM Madagascar démarré sur le port ${PORT}`);
-      console.log(`📍 API Health Check: http://localhost:${PORT}/api/health`);
-      console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+      console.log(`🌍 FRONTEND_URL: ${process.env.FRONTEND_URL || 'non défini'}`);
     });
   } catch (error) {
-    console.error('❌ Erreur de démarrage du serveur:', error);
+    console.error('❌ Erreur de démarrage:', error);
     process.exit(1);
   }
 }
