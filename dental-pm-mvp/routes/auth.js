@@ -32,19 +32,13 @@ router.post('/register', [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
     const { username, email, password, full_name, role, phone, specialization, nif_number, stat_number } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({
-      where: {
-        [Op.or]: [{ username }, { email }]
-      }
+      where: { [Op.or]: [{ username }, { email }] }
     });
 
     if (existingUser) {
@@ -53,50 +47,29 @@ router.post('/register', [
       });
     }
 
-    // Create new user
     const user = await User.create({
-      username,
-      email,
-      password_hash: password, // Will be hashed by the model hook
-      full_name,
-      role,
-      phone,
-      specialization,
-      nif_number,
-      stat_number
+      username, email, password_hash: password,
+      full_name, role, phone, specialization, nif_number, stat_number
     });
 
-    // Log the registration
     await AuditLog.create({
-      user_id: user.id,
-      action: 'CREATE',
-      resource_type: 'users',
-      resource_id: user.id,
+      user_id: user.id, action: 'CREATE', resource_type: 'users', resource_id: user.id,
       new_values: { username, email, full_name, role },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
+      ip_address: req.ip, user_agent: req.get('User-Agent'),
       description: `Nouvel utilisateur enregistré: ${username}`
     });
 
     res.status(201).json({
       message: 'Utilisateur créé avec succès',
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role
-      }
+      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role }
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la création de l\'utilisateur'
-    });
+    res.status(500).json({ error: 'Erreur lors de la création de l\'utilisateur' });
   }
 });
 
-// Login user - with rate limiting
+// Login user
 router.post('/login', loginRateLimiter, [
   body('username').notEmpty().withMessage('Nom d\'utilisateur requis'),
   body('password').notEmpty().withMessage('Mot de passe requis')
@@ -104,127 +77,96 @@ router.post('/login', loginRateLimiter, [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
     const { username, password } = req.body;
 
-    // Find user by username or email
     const user = await User.findOne({
-      where: {
-        [Op.or]: [{ username }, { email: username }]
-      }
+      where: { [Op.or]: [{ username }, { email: username }] }
     });
 
     if (!user || !user.is_active) {
-      return res.status(401).json({
-        error: 'Nom d\'utilisateur ou mot de passe incorrect'
-      });
+      return res.status(401).json({ error: 'Nom d\'utilisateur ou mot de passe incorrect' });
     }
 
-    // Validate password
     const isValidPassword = await user.validatePassword(password);
     if (!isValidPassword) {
-      return res.status(401).json({
-        error: 'Nom d\'utilisateur ou mot de passe incorrect'
-      });
+      return res.status(401).json({ error: 'Nom d\'utilisateur ou mot de passe incorrect' });
     }
 
-    // Update last login
     await user.update({ last_login_at: new Date() });
 
-    // Generate JWT token
+    // ── FIX : clinic_id inclus dans le token ──────────────────────────────
     const token = jwt.sign(
-      { 
-        userId: user.id, 
-        username: user.username, 
-        role: user.role 
+      {
+        userId:    user.id,
+        username:  user.username,
+        role:      user.role,
+        clinic_id: user.clinic_id || null   // ← AJOUT CLINIC_ID
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
-    // Log the login
     await AuditLog.create({
-      user_id: user.id,
-      action: 'LOGIN',
-      resource_type: 'auth',
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
+      user_id: user.id, action: 'LOGIN', resource_type: 'auth',
+      ip_address: req.ip, user_agent: req.get('User-Agent'),
       description: `Connexion utilisateur: ${user.username}`
     });
 
-    // Reset rate limit on successful login
     resetLoginAttempts(req, username);
 
+    // ── FIX : clinic_id inclus dans la réponse ────────────────────────────
     res.json({
       message: 'Connexion réussie',
       token,
       user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role,
+        id:             user.id,
+        username:       user.username,
+        email:          user.email,
+        full_name:      user.full_name,
+        role:           user.role,
+        clinic_id:      user.clinic_id || null,   // ← AJOUT CLINIC_ID
         specialization: user.specialization
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la connexion'
-    });
+    res.status(500).json({ error: 'Erreur lors de la connexion' });
   }
 });
 
-// Logout user
+// Logout
 router.post('/logout', authenticateToken, async (req, res) => {
   try {
-    // Log the logout
     await AuditLog.create({
-      user_id: req.user.id,
-      action: 'LOGOUT',
-      resource_type: 'auth',
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
+      user_id: req.user.id, action: 'LOGOUT', resource_type: 'auth',
+      ip_address: req.ip, user_agent: req.get('User-Agent'),
       description: `Déconnexion utilisateur: ${req.user.username}`
     });
-
     res.json({ message: 'Déconnexion réussie' });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la déconnexion'
-    });
+    res.status(500).json({ error: 'Erreur lors de la déconnexion' });
   }
 });
 
-// Get current user profile
+// Get profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ['password_hash'] }
     });
-
-    if (!user) {
-      return res.status(404).json({
-        error: 'Utilisateur non trouvé'
-      });
-    }
-
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     res.json(user);
   } catch (error) {
     console.error('Profile error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la récupération du profil'
-    });
+    res.status(500).json({ error: 'Erreur lors de la récupération du profil' });
   }
 });
 
-// Update user profile
+// Update profile
 router.put('/profile', authenticateToken, [
   body('full_name').optional().isLength({ min: 2, max: 100 }),
   body('phone').optional().matches(/^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/),
@@ -233,57 +175,34 @@ router.put('/profile', authenticateToken, [
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Données invalides',
-        details: errors.array()
-      });
+      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
     }
 
     const { full_name, phone, specialization } = req.body;
     const user = await User.findByPk(req.user.id);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
-    if (!user) {
-      return res.status(404).json({
-        error: 'Utilisateur non trouvé'
-      });
-    }
-
-    const oldValues = {
-      full_name: user.full_name,
-      phone: user.phone,
-      specialization: user.specialization
-    };
-
+    const oldValues = { full_name: user.full_name, phone: user.phone, specialization: user.specialization };
     await user.update({
       full_name: full_name || user.full_name,
       phone: phone || user.phone,
       specialization: specialization || user.specialization
     });
 
-    // Log the update
     await AuditLog.create({
-      user_id: user.id,
-      action: 'UPDATE',
-      resource_type: 'users',
-      resource_id: user.id,
-      old_values: oldValues,
-      new_values: { full_name, phone, specialization },
-      ip_address: req.ip,
-      user_agent: req.get('User-Agent'),
+      user_id: user.id, action: 'UPDATE', resource_type: 'users', resource_id: user.id,
+      old_values: oldValues, new_values: { full_name, phone, specialization },
+      ip_address: req.ip, user_agent: req.get('User-Agent'),
       description: `Mise à jour profil utilisateur: ${user.username}`
     });
 
     res.json({
       message: 'Profil mis à jour avec succès',
-      user: await User.findByPk(user.id, {
-        attributes: { exclude: ['password_hash'] }
-      })
+      user: await User.findByPk(user.id, { attributes: { exclude: ['password_hash'] } })
     });
   } catch (error) {
     console.error('Profile update error:', error);
-    res.status(500).json({
-      error: 'Erreur lors de la mise à jour du profil'
-    });
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du profil' });
   }
 });
 
