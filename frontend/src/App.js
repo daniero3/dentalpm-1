@@ -229,29 +229,35 @@ const PageTransition = ({ children }) => {
   );
 };
 
-// ── Main Layout ────────────────────────────────────────────────────────────
+// ── Main Layout — Responsive ────────────────────────────────────────────
+const useLayoutWidth = () => {
+  const [w, setW] = React.useState(window.innerWidth);
+  React.useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return w;
+};
+
 const MainLayout = ({ children }) => {
+  const w = useLayoutWidth();
+  const isMobile  = w < 768;
+  const isTablet  = w >= 768 && w < 1024;
+  const sidebarW  = isMobile ? 0 : (isTablet ? 72 : 264);
+  const padding   = isMobile ? '12px' : '24px';
+
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden' }}>
       <ModernSidebar />
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display:'flex', flexDirection:'column', flex:1, overflow:'hidden', marginLeft:sidebarW, transition:'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)', minWidth:0 }}>
         <ModernTopbar />
-        <main style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'var(--bg)' }}>
-          <div style={{ maxWidth: 1280, margin: '0 auto', paddingBottom: 64 }}>
+        <main style={{ flex:1, overflowY:'auto', padding:padding, background:'var(--bg)' }}>
+          <div style={{ maxWidth:1280, margin:'0 auto', paddingBottom:64 }}>
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
-        <footer style={{
-          background: 'rgba(255,255,255,0.9)',
-          backdropFilter: 'blur(12px)',
-          borderTop: '1px solid var(--border)',
-          padding: '12px 24px',
-          textAlign: 'center',
-          fontSize: 12,
-          color: 'var(--text-muted)',
-          fontFamily: 'DM Sans, sans-serif',
-          letterSpacing: '0.01em'
-        }}>
+        <footer style={{ background:'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', borderTop:'1px solid var(--border)', padding:'12px 24px', textAlign:'center', fontSize:12, color:'var(--text-muted)', fontFamily:'DM Sans,sans-serif', letterSpacing:'0.01em' }}>
           © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
         </footer>
       </div>
