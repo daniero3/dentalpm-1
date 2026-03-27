@@ -80,13 +80,12 @@ router.post('/renew', [
 
     const paymentRequest = await PaymentRequest.create({
       clinic_id: req.user.clinic_id,
-      user_id: req.user.id,
+      submitted_by_user_id: req.user.id,
+      plan_code: 'PRO',
       amount_mga: amount,
       payment_method,
-      reference,
-      months,
-      status: 'PENDING',
-      description: `Renouvellement abonnement ${months} mois`
+      reference: reference || null,
+      status: 'PENDING'
     });
 
     await AuditLog.create({
@@ -94,7 +93,7 @@ router.post('/renew', [
       action: 'CREATE',
       resource_type: 'payment_request',
       resource_id: paymentRequest.id,
-      new_values: { amount, payment_method, months },
+      new_values: { amount, payment_method },
       description: `Demande de paiement: ${amount} Ar`
     });
 
@@ -274,13 +273,12 @@ router.post('/payment-requests', [
 
     const paymentRequest = await PaymentRequest.create({
       clinic_id: req.user.clinic_id,
-      user_id: req.user.id,
+      submitted_by_user_id: req.user.id,
       plan_code,
       amount_mga: amount,
       payment_method,
       reference: reference || null,
-      status: 'PENDING',
-      description: `Abonnement plan ${plan_code} - ${formatMoney(amount)} Ar/mois`
+      status: 'PENDING'
     });
 
     // Audit log (optionnel, si AuditLog supporte ces champs)
