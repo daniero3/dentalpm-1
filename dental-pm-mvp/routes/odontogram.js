@@ -5,7 +5,6 @@ const { requireClinicId } = require('../middleware/clinic');
 const { requireValidSubscription } = require('../middleware/licensing');
 
 const router = express.Router();
-
 router.use(requireValidSubscription);
 
 const VALID_FDI = [
@@ -15,65 +14,60 @@ const VALID_FDI = [
   '41','42','43','44','45','46','47','48'
 ];
 
-const VALID_STATUSES = ['HEALTHY', 'CARIES', 'FILLED', 'CROWN', 'MISSING', 'IMPLANT', 'ROOT_CANAL', 'EXTRACTION_NEEDED', 'BRIDGE'];
+const VALID_STATUSES = [
+  'HEALTHY','CARIES','FILLED','CROWN','MISSING',
+  'IMPLANT','ROOT_CANAL','EXTRACTION_NEEDED','BRIDGE'
+];
+
+// ✅ Helper — résout req.user.id OU req.user.userId selon le token JWT
+const getUserId = (req) => req.user?.id || req.user?.userId || null;
+
+// ✅ Helper — résout req.clinic_id OU req.user.clinic_id
+const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || null;
 
 /**
- * GET /api/patients/:patientId/odontogram - Get patient odontogram
+ * GET /api/patients/:patientId/odontogram
  */
 router.get('/patients/:patientId/odontogram', requireClinicId, [
   param('patientId').isUUID()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
-    const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
-    });
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient non trouvé' });
-    }
+    const clinicId = getClinicId(req);
+
+    const patient = await Patient.findOne({ where: { id: req.params.patientId, clinic_id: clinicId } });
+    if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
 
     const teeth = await ToothStatus.findAll({
-      where: {
-        clinic_id: req.clinic_id,
-        patient_id: req.params.patientId
-      },
-      include: [
-        { model: User, as: 'updatedBy', attributes: ['id', 'full_name', 'username'] }
-      ],
+      where: { clinic_id: clinicId, patient_id: req.params.patientId },
+      include: [{ model: User, as: 'updatedBy', attributes: ['id','full_name','username'], required: false }],
       order: [['tooth_fdi', 'ASC']]
     });
 
-    // Build odontogram map
     const odontogram = {};
     teeth.forEach(t => {
       odontogram[t.tooth_fdi] = {
-        id: t.id,
-        tooth_fdi: t.tooth_fdi,
-        surface: t.surface,
-        status: t.status,
-        note: t.note,
+        id:         t.id,
+        tooth_fdi:  t.tooth_fdi,
+        surface:    t.surface,
+        status:     t.status,
+        note:       t.note,
         updated_by: t.updatedBy,
         updated_at: t.updatedAt
       };
     });
 
-    res.json({
-      patient_id: req.params.patientId,
-      count: teeth.length,
-      odontogram
-    });
+    return res.json({ patient_id: req.params.patientId, count: teeth.length, odontogram });
   } catch (error) {
     console.error('Get odontogram error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
 /**
- * PUT /api/patients/:patientId/odontogram - Upsert multiple teeth
+ * PUT /api/patients/:patientId/odontogram
  */
 router.put('/patients/:patientId/odontogram', requireClinicId, [
   param('patientId').isUUID(),
@@ -81,93 +75,109 @@ router.put('/patients/:patientId/odontogram', requireClinicId, [
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
-    const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
-    });
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient non trouvé' });
-    }
+    // ✅ Utiliser les helpers pour éviter undefined
+    const clinicId = getClinicId(req);
+    const userId   = getUserId(req);
+
+    if (!clinicId) return res.status(403).json({ error:'clinic_id manquant dans le token' });
+
+    const patient = await Patient.findOne({ where: { id: req.params.patientId, clinic_id: clinicId } });
+    if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
 
     const { teeth } = req.body;
-    const results = { created: 0, updated: 0 };
+    const results = { created:0, updated:0, skipped:0 };
 
     for (const tooth of teeth) {
-      if (!tooth.tooth_fdi || !VALID_FDI.includes(tooth.tooth_fdi)) {
+      // ✅ Valider tooth_fdi
+      if (!tooth.tooth_fdi || !VALID_FDI.includes(String(tooth.tooth_fdi))) {
+        results.skipped++;
         continue;
       }
+      // ✅ Valider status
       if (tooth.status && !VALID_STATUSES.includes(tooth.status)) {
+        results.skipped++;
         continue;
       }
 
-      const [record, created] = await ToothStatus.findOrCreate({
-        where: {
-          clinic_id: req.clinic_id,
-          patient_id: req.params.patientId,
-          tooth_fdi: tooth.tooth_fdi
-        },
-        defaults: {
-          clinic_id: req.clinic_id,
-          patient_id: req.params.patientId,
-          tooth_fdi: tooth.tooth_fdi,
-          surface: tooth.surface || null,
-          status: tooth.status || 'HEALTHY',
-          note: tooth.note || null,
-          updated_by: req.user.id
-        }
-      });
-
-      if (!created) {
-        await record.update({
-          surface: tooth.surface || record.surface,
-          status: tooth.status || record.status,
-          note: tooth.note !== undefined ? tooth.note : record.note,
-          updated_by: req.user.id
+      try {
+        const [record, created] = await ToothStatus.findOrCreate({
+          where: {
+            clinic_id:  clinicId,
+            patient_id: req.params.patientId,
+            tooth_fdi:  String(tooth.tooth_fdi)
+          },
+          defaults: {
+            clinic_id:   clinicId,
+            patient_id:  req.params.patientId,
+            tooth_fdi:   String(tooth.tooth_fdi),
+            surface:     tooth.surface || null,
+            status:      tooth.status  || 'HEALTHY',
+            note:        tooth.note    || null,
+            updated_by:  userId
+          }
         });
-        results.updated++;
-      } else {
-        results.created++;
-      }
 
-      // Log history
-      await ToothHistory.create({
-        clinic_id: req.clinic_id,
-        patient_id: req.params.patientId,
-        tooth_fdi: tooth.tooth_fdi,
-        surface: tooth.surface || null,
-        status: tooth.status || 'HEALTHY',
-        note: tooth.note || null,
-        action: created ? 'CREATE' : 'UPDATE',
-        performed_by: req.user.id
-      });
+        if (!created) {
+          await record.update({
+            surface:    tooth.surface !== undefined ? (tooth.surface || null) : record.surface,
+            status:     tooth.status  || record.status,
+            note:       tooth.note    !== undefined ? tooth.note : record.note,
+            updated_by: userId
+          });
+          results.updated++;
+        } else {
+          results.created++;
+        }
+
+        // ✅ ToothHistory — non-fatal
+        try {
+          await ToothHistory.create({
+            clinic_id:    clinicId,
+            patient_id:   req.params.patientId,
+            tooth_fdi:    String(tooth.tooth_fdi),
+            surface:      tooth.surface || null,
+            status:       tooth.status  || 'HEALTHY',
+            note:         tooth.note    || null,
+            action:       created ? 'CREATE' : 'UPDATE',
+            performed_by: userId
+          });
+        } catch (histErr) {
+          console.warn('ToothHistory error (non-fatal):', histErr.message);
+        }
+
+      } catch (toothErr) {
+        console.error(`Tooth ${tooth.tooth_fdi} error:`, toothErr.message);
+        results.skipped++;
+      }
     }
 
-    // Audit log
-    await AuditLog.create({
-      user_id: req.user.id,
-      action: 'UPDATE',
-      resource_type: 'odontogram',
-      resource_id: req.params.patientId,
-      new_values: { teeth_count: teeth.length },
-      ip_address: req.ip,
-      description: `Odontogramme mis à jour: ${results.created} créés, ${results.updated} modifiés`
-    });
+    // ✅ AuditLog — non-fatal
+    try {
+      await AuditLog.create({
+        user_id:       userId,
+        action:        'UPDATE',
+        resource_type: 'odontogram',
+        resource_id:   req.params.patientId,
+        new_values:    { teeth_count: teeth.length, ...results },
+        ip_address:    req.ip,
+        description:   `Odontogramme mis à jour: ${results.created} créés, ${results.updated} modifiés, ${results.skipped} ignorés`
+      });
+    } catch (auditErr) {
+      console.warn('AuditLog error (non-fatal):', auditErr.message);
+    }
 
-    res.json({
-      message: 'Odontogramme mis à jour',
-      results
-    });
+    return res.json({ message:'Odontogramme mis à jour', results });
+
   } catch (error) {
     console.error('Update odontogram error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
 /**
- * POST /api/patients/:patientId/odontogram/history - Append log entry
+ * POST /api/patients/:patientId/odontogram/history
  */
 router.post('/patients/:patientId/odontogram/history', requireClinicId, [
   param('patientId').isUUID(),
@@ -177,79 +187,60 @@ router.post('/patients/:patientId/odontogram/history', requireClinicId, [
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Données invalides', details: errors.array() });
-    }
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
-    const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
-    });
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient non trouvé' });
-    }
+    const clinicId = getClinicId(req);
+    const userId   = getUserId(req);
+
+    const patient = await Patient.findOne({ where: { id: req.params.patientId, clinic_id: clinicId } });
+    if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
 
     const { tooth_fdi, surface, status, note, action } = req.body;
 
     const history = await ToothHistory.create({
-      clinic_id: req.clinic_id,
-      patient_id: req.params.patientId,
+      clinic_id:    clinicId,
+      patient_id:   req.params.patientId,
       tooth_fdi,
-      surface: surface || null,
-      status: status || 'HEALTHY',
-      note: note || null,
+      surface:      surface || null,
+      status:       status  || 'HEALTHY',
+      note:         note    || null,
       action,
-      performed_by: req.user.id
+      performed_by: userId
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Historique ajouté',
-      history: {
-        id: history.id,
-        tooth_fdi: history.tooth_fdi,
-        action: history.action,
-        created_at: history.createdAt
-      }
+      history: { id: history.id, tooth_fdi: history.tooth_fdi, action: history.action, created_at: history.createdAt }
     });
   } catch (error) {
     console.error('Add history error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
 /**
- * GET /api/patients/:patientId/odontogram/history - Get tooth history
+ * GET /api/patients/:patientId/odontogram/history
  */
 router.get('/patients/:patientId/odontogram/history', requireClinicId, [
   param('patientId').isUUID()
 ], async (req, res) => {
   try {
-    const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
-    });
-    if (!patient) {
-      return res.status(404).json({ error: 'Patient non trouvé' });
-    }
+    const clinicId = getClinicId(req);
+
+    const patient = await Patient.findOne({ where: { id: req.params.patientId, clinic_id: clinicId } });
+    if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
 
     const history = await ToothHistory.findAll({
-      where: {
-        clinic_id: req.clinic_id,
-        patient_id: req.params.patientId
-      },
-      include: [
-        { model: User, as: 'performedBy', attributes: ['id', 'full_name', 'username'] }
-      ],
+      where: { clinic_id: clinicId, patient_id: req.params.patientId },
+      include: [{ model: User, as: 'performedBy', attributes: ['id','full_name','username'], required: false }],
       order: [['created_at', 'DESC']],
       limit: 100
     });
 
-    res.json({
-      patient_id: req.params.patientId,
-      count: history.length,
-      history
-    });
+    return res.json({ patient_id: req.params.patientId, count: history.length, history });
   } catch (error) {
     console.error('Get history error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
