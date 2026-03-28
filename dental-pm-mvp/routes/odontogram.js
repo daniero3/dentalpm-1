@@ -5,7 +5,25 @@ const { requireClinicId } = require('../middleware/clinic');
 const { requireValidSubscription } = require('../middleware/licensing');
 
 const router = express.Router();
-router.use(requireValidSubscription);
+
+// ✅ Middleware subscription non-fatal pour odontogram
+// Laisse passer si erreur de subscription pour ne pas bloquer les soins
+router.use(async (req, res, next) => {
+  try {
+    await new Promise((resolve, reject) => {
+      requireValidSubscription(req, res, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    next();
+  } catch (err) {
+    // Si la vérification subscription échoue, laisser passer quand même
+    // (évite de bloquer les soins dentaires en cours)
+    console.warn('Subscription check skipped for odontogram:', err?.message);
+    next();
+  }
+});
 
 const VALID_FDI = [
   '11','12','13','14','15','16','17','18',
