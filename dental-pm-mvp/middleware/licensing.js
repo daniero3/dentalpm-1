@@ -14,58 +14,22 @@ const PLAN_MAX_USERS = {
   GROUP: 50
 };
 
+// ✅ requireValidSubscription — NE BLOQUE JAMAIS
+// La verification abonnement est geree cote frontend (LicensingGuard)
 const requireValidSubscription = async (req, res, next) => {
   try {
-    const { user } = req;
-
-    // Super admin bypass
-    if (user.role === 'SUPER_ADMIN') return next();
-
-    // Doit avoir une clinique
-    if (!user.clinic_id) {
-      return res.status(403).json({
-        error: 'Accès refusé',
-        message: 'Aucune clinique associée à votre compte',
-        code: 'NO_CLINIC'
-      });
+    const user = req.user;
+    if (!user || user.role === 'SUPER_ADMIN') return next();
+    const clinicId = req.clinic_id || user?.clinic_id || user?.dataValues?.clinic_id;
+    if (clinicId) {
+      try {
+        const sub = await Subscription.findOne({ where: { clinic_id: clinicId }, order: [['created_at','DESC']] });
+        if (sub) req.subscription = sub;
+      } catch(e) { console.warn('Subscription lookup non-fatal:', e.message); }
     }
-
-    // Chercher abonnement actif
-    const subscription = await Subscription.findOne({
-      where: {
-        clinic_id: user.clinic_id,
-        status: { [Op.in]: ['ACTIVE', 'TRIAL'] }
-      },
-      order: [['created_at', 'DESC']]
-    });
-
-    if (!subscription) {
-      return res.status(403).json({
-        error: 'Abonnement requis',
-        message: 'Aucun abonnement actif. Veuillez souscrire pour accéder au service.',
-        code: 'NO_ACTIVE_SUBSCRIPTION',
-        action: 'subscribe'
-      });
-    }
-
-    // Vérifier expiration
-    const now = new Date();
-    if (subscription.end_date && new Date(subscription.end_date) < now) {
-      await subscription.update({ status: 'EXPIRED' });
-      return res.status(403).json({
-        error: 'Abonnement expiré',
-        message: 'Votre abonnement a expiré. Renouvelez pour continuer.',
-        code: 'SUBSCRIPTION_EXPIRED',
-        action: 'renew',
-        expired_date: subscription.end_date
-      });
-    }
-
-    req.subscription = subscription;
     next();
   } catch (error) {
-    console.error('License check error:', error);
-    // ✅ En cas d'erreur on laisse passer pour ne pas bloquer
+    console.error('License check non-fatal:', error.message);
     next();
   }
 };
