@@ -52,77 +52,132 @@ const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
   );
 };
 
-// ── Formulaire Patient (hors du composant principal pour éviter perte de focus) ──
-const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit }) => {
-  const fieldStyle = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'DM Sans,sans-serif', color:'#0F172A', background:'#fff', outline:'none', boxSizing:'border-box' };
-  const labelStyle = { display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 };
-
-  const Field = ({ label, name, type='text', placeholder, required, half }) => (
-    <div style={{ flex: half ? '1 1 45%' : '1 1 100%' }}>
-      <label style={labelStyle}>{label}{required && ' *'}</label>
-      <input
-        style={fieldStyle}
-        type={type}
-        value={data[name] || ''}
-        onChange={e => onChange(name, e.target.value)}
-        placeholder={placeholder}
-        required={required}
-        onFocus={e => e.target.style.borderColor='#0D7A87'}
-        onBlur={e => e.target.style.borderColor='#E2E8F0'}
-      />
-    </div>
-  );
-
-  return (
-    <form onSubmit={onSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-        <Field label="Prénom" name="first_name" placeholder="Jean" required half />
-        <Field label="Nom" name="last_name" placeholder="Rakoto" required half />
-      </div>
-      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-        <Field label="Date de naissance" name="date_of_birth" type="date" half />
-        <div style={{ flex:'1 1 45%' }}>
-          <label style={labelStyle}>Sexe</label>
-          <select style={fieldStyle} value={data.gender || ''} onChange={e => onChange('gender', e.target.value)}
-            onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'}>
-            <option value="">Sélectionner...</option>
-            <option value="M">Masculin</option>
-            <option value="F">Féminin</option>
-            <option value="OTHER">Autre</option>
-          </select>
-        </div>
-      </div>
-      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-        <Field label="Téléphone" name="phone_primary" placeholder="034 00 000 00" required half />
-        <Field label="Email" name="email" type="email" placeholder="jean@email.mg" half />
-      </div>
-      <Field label="Adresse" name="address" placeholder="Antananarivo, Madagascar" />
-      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-        <Field label="Contact urgence" name="emergency_contact_name" placeholder="Nom (optionnel)" half />
-        <Field label="Tél. urgence" name="emergency_contact_phone" placeholder="+261 34..." half />
-      </div>
-      <div>
-        <label style={labelStyle}>Antécédents médicaux</label>
-        <textarea style={{ ...fieldStyle, minHeight:64, resize:'vertical' }} value={data.medical_history || ''} onChange={e => onChange('medical_history', e.target.value)} placeholder="Antécédents médicaux..." onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} />
-      </div>
-      <div>
-        <label style={labelStyle}>Allergies</label>
-        <textarea style={{ ...fieldStyle, minHeight:52, resize:'vertical' }} value={data.allergies || ''} onChange={e => onChange('allergies', e.target.value)} placeholder="Allergies connues..." onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} />
-      </div>
-      <div>
-        <label style={labelStyle}>Médicaments actuels</label>
-        <textarea style={{ ...fieldStyle, minHeight:52, resize:'vertical' }} value={data.current_medications || ''} onChange={e => onChange('current_medications', e.target.value)} placeholder="Traitements en cours..." onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} />
-      </div>
-      <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:10, borderTop:'1px solid #F1F5F9' }}>
-        <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
-        <Button type="submit" disabled={submitting}>
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {isEdit ? 'Modifier' : 'Créer'}
-        </Button>
-      </div>
-    </form>
-  );
+// ✅ Styles HORS des composants — évite la recréation à chaque frappe
+const fieldStyle = {
+  width:'100%', padding:'9px 12px', borderRadius:10,
+  border:'1.5px solid #E2E8F0', fontSize:13,
+  fontFamily:'DM Sans,sans-serif', color:'#0F172A',
+  background:'#fff', outline:'none', boxSizing:'border-box',
+  transition:'border-color 0.18s ease'
 };
+const labelStyle = { display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 };
+const focusField = e => e.target.style.borderColor = '#0D7A87';
+const blurField  = e => e.target.style.borderColor = '#E2E8F0';
+
+// ✅ PatientForm — inputs directs SANS sous-composant Field
+// pour éviter la perte de focus à chaque frappe
+const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit }) => (
+  <form onSubmit={onSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+
+    {/* Prénom + Nom */}
+    <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Prénom *</label>
+        <input style={fieldStyle} type="text" placeholder="Jean"
+          value={data.first_name || ''} onChange={e => onChange('first_name', e.target.value)}
+          onFocus={focusField} onBlur={blurField} required />
+      </div>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Nom *</label>
+        <input style={fieldStyle} type="text" placeholder="Rakoto"
+          value={data.last_name || ''} onChange={e => onChange('last_name', e.target.value)}
+          onFocus={focusField} onBlur={blurField} required />
+      </div>
+    </div>
+
+    {/* Date naissance + Sexe */}
+    <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Date de naissance</label>
+        <input style={fieldStyle} type="date"
+          value={data.date_of_birth || ''} onChange={e => onChange('date_of_birth', e.target.value)}
+          onFocus={focusField} onBlur={blurField} />
+      </div>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Sexe</label>
+        <select style={fieldStyle} value={data.gender || ''} onChange={e => onChange('gender', e.target.value)}
+          onFocus={focusField} onBlur={blurField}>
+          <option value="">Sélectionner...</option>
+          <option value="M">Masculin</option>
+          <option value="F">Féminin</option>
+          <option value="OTHER">Autre</option>
+        </select>
+      </div>
+    </div>
+
+    {/* Téléphone + Email */}
+    <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Téléphone *</label>
+        <input style={fieldStyle} type="text" placeholder="034 00 000 00"
+          value={data.phone_primary || ''} onChange={e => onChange('phone_primary', e.target.value)}
+          onFocus={focusField} onBlur={blurField} required />
+      </div>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Email</label>
+        <input style={fieldStyle} type="email" placeholder="jean@email.mg"
+          value={data.email || ''} onChange={e => onChange('email', e.target.value)}
+          onFocus={focusField} onBlur={blurField} />
+      </div>
+    </div>
+
+    {/* Adresse */}
+    <div>
+      <label style={labelStyle}>Adresse</label>
+      <input style={fieldStyle} type="text" placeholder="Antananarivo, Madagascar"
+        value={data.address || ''} onChange={e => onChange('address', e.target.value)}
+        onFocus={focusField} onBlur={blurField} />
+    </div>
+
+    {/* Contact urgence */}
+    <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Contact urgence</label>
+        <input style={fieldStyle} type="text" placeholder="Nom (optionnel)"
+          value={data.emergency_contact_name || ''} onChange={e => onChange('emergency_contact_name', e.target.value)}
+          onFocus={focusField} onBlur={blurField} />
+      </div>
+      <div style={{ flex:'1 1 45%' }}>
+        <label style={labelStyle}>Tél. urgence</label>
+        <input style={fieldStyle} type="text" placeholder="+261 34..."
+          value={data.emergency_contact_phone || ''} onChange={e => onChange('emergency_contact_phone', e.target.value)}
+          onFocus={focusField} onBlur={blurField} />
+      </div>
+    </div>
+
+    {/* Antécédents */}
+    <div>
+      <label style={labelStyle}>Antécédents médicaux</label>
+      <textarea style={{ ...fieldStyle, minHeight:64, resize:'vertical' }}
+        value={data.medical_history || ''} onChange={e => onChange('medical_history', e.target.value)}
+        placeholder="Antécédents médicaux..." onFocus={focusField} onBlur={blurField} />
+    </div>
+
+    {/* Allergies */}
+    <div>
+      <label style={labelStyle}>Allergies</label>
+      <textarea style={{ ...fieldStyle, minHeight:52, resize:'vertical' }}
+        value={data.allergies || ''} onChange={e => onChange('allergies', e.target.value)}
+        placeholder="Allergies connues..." onFocus={focusField} onBlur={blurField} />
+    </div>
+
+    {/* Médicaments */}
+    <div>
+      <label style={labelStyle}>Médicaments actuels</label>
+      <textarea style={{ ...fieldStyle, minHeight:52, resize:'vertical' }}
+        value={data.current_medications || ''} onChange={e => onChange('current_medications', e.target.value)}
+        placeholder="Traitements en cours..." onFocus={focusField} onBlur={blurField} />
+    </div>
+
+    <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:10, borderTop:'1px solid #F1F5F9' }}>
+      <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
+      <Button type="submit" disabled={submitting}>
+        {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+        {isEdit ? 'Modifier' : 'Créer'}
+      </Button>
+    </div>
+  </form>
+);
 
 // ══ Composant principal ══
 const PatientManagement = () => {
