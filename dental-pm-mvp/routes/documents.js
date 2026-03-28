@@ -127,4 +127,38 @@ router.delete('/:id', [param('id').isUUID()], async (req, res) => {
   }
 });
 
+// ── POST /api/documents/upload (alias pour compatibilite frontend) ────────────
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    const patientId = req.body.patient_id || req.query.patient_id;
+    if (!patientId) return res.status(400).json({ error:'patient_id requis' });
+    if (!req.file)  return res.status(400).json({ error:'Fichier requis' });
+
+    const clinicId   = getClinicId(req);
+    const userId     = getUserId(req);
+    const fileBase64 = req.file.buffer.toString('base64');
+    const fileDataUrl = `data:${req.file.mimetype};base64,${fileBase64}`;
+
+    const document = await Document.create({
+      patient_id:        patientId,
+      clinic_id:         clinicId,
+      uploaded_by:       userId,
+      title:             req.body.title    || req.file.originalname,
+      category:          req.body.category || 'AUTRE',
+      original_filename: req.file.originalname,
+      mime_type:         req.file.mimetype,
+      file_size:         req.file.size,
+      file_data:         fileDataUrl
+    });
+
+    return res.status(201).json({
+      message:'Document enregistré',
+      document: { id: document.id, title: document.title, category: document.category, mime_type: document.mime_type, file_size: document.file_size, createdAt: document.createdAt }
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;
