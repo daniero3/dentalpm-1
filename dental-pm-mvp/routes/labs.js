@@ -1,6 +1,6 @@
 const express = require('express');
 const { param, body, query, validationResult } = require('express-validator');
-const { LabOrder, Patient, User, AuditLog } = require('../models');
+const { LabOrder, Patient, AuditLog } = require('../models');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -22,8 +22,7 @@ router.get('/orders', async (req, res) => {
     const orders = await LabOrder.findAll({
       where,
       include: [
-        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name','phone_primary'], required: false },
-        { model: User,    as: 'dentist', attributes: ['id','full_name'], required: false }
+        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name','phone_primary'], required: false }
       ],
       order: [['createdAt','DESC']],
       limit: 100
@@ -76,9 +75,12 @@ router.post('/orders', [
       await AuditLog.create({ user_id: userId, action:'CREATE', resource_type:'lab_orders', resource_id: order.id, ip_address: req.ip, description:`Commande labo créée: ${orderNumber}` });
     } catch (e) { console.warn('AuditLog (non-fatal):', e.message); }
 
-    const complete = await LabOrder.findByPk(order.id, {
-      include: [{ model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }]
-    });
+    let complete = order;
+    try {
+      complete = await LabOrder.findByPk(order.id, {
+        include: [{ model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }]
+      });
+    } catch(e) { console.warn('Include error (non-fatal):', e.message); }
 
     return res.status(201).json({ message:'Commande créée', order: complete });
   } catch (error) {
