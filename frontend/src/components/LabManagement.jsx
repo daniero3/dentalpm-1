@@ -52,10 +52,10 @@ const Modal = ({ open, onClose, title, children, maxWidth }) => {
   if (!open) return null;
   return (
     <div
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, overflowY:'auto' }}
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth:maxWidth||560, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth: maxWidth||560, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
         <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
           <X size={18} />
         </button>
