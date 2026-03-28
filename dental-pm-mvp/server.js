@@ -121,6 +121,7 @@ app.use('/api/pricing-schedules', requireAuth, pricingRoutes);
 app.use('/api/procedure-fees', requireAuth, pricingRoutes);
 app.use('/api/documents', requireAuth, documentRoutes);
 app.use('/api', requireAuth, prescriptionRoutes);
+app.use('/api/prescriptions', requireAuth, prescriptionRoutes);
 app.use('/api', requireAuth, odontogramRoutes);
 app.use('/api', requireAuth, dentalChartRoutes);
 app.use('/api/reports', requireAuth, reportsRoutes);
