@@ -1,6 +1,5 @@
 const express = require('express');
 const { param, validationResult } = require('express-validator');
-const { requireClinicId } = require('../middleware/clinic');
 
 const router = express.Router();
 
@@ -20,7 +19,7 @@ function generateEmptyTeeth() {
 }
 
 // GET /api/patients/:patientId/dental-chart
-router.get('/patients/:patientId/dental-chart', requireClinicId, [
+router.get('/patients/:patientId/dental-chart', [
   param('patientId').isUUID()
 ], async (req, res) => {
   try {
@@ -66,7 +65,7 @@ router.get('/patients/:patientId/dental-chart', requireClinicId, [
 });
 
 // PUT /api/patients/:patientId/dental-chart/tooth/:toothPosition
-router.put('/patients/:patientId/dental-chart/tooth/:toothPosition', requireClinicId, async (req, res) => {
+router.put('/patients/:patientId/dental-chart/tooth/:toothPosition', async (req, res) => {
   try {
     const { patientId, toothPosition } = req.params;
     const sequelize = require('../database/connection');
