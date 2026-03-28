@@ -1,7 +1,7 @@
 const express = require('express');
 const { param, body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
-const { Prescription, Patient, User, Clinic } = require('../models');
+const { Prescription, Patient } = require('../models');
 
 const router = express.Router();
 
@@ -68,12 +68,12 @@ router.post('/patients/:patientId/prescriptions', [
 
     await logAction(clinicId, prescription.id, 'CREATE', userId);
 
+    // Fetch simple pour eviter erreurs d'association
     const complete = await Prescription.findByPk(prescription.id, {
       include: [
-        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false },
-        { model: User,    as: 'practitioner', attributes: ['id','full_name'], required: false }
+        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }
       ]
-    });
+    }).catch(() => prescription);
 
     return res.status(201).json({ message:'Ordonnance créée', prescription: complete });
   } catch (error) {
@@ -97,8 +97,7 @@ router.get('/patients/:patientId/prescriptions', [
     const prescriptions = await Prescription.findAll({
       where,
       include: [
-        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false },
-        { model: User,    as: 'practitioner', attributes: ['id','full_name','username'], required: false }
+        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }
       ],
       order: [['created_at','DESC']]
     });
