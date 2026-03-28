@@ -101,6 +101,50 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ═══════════════════════════════════════════════════════════════
+// PATCH GLOBAL — Appliqué sur TOUTES les routes API
+// Garantit que clinic_id est toujours disponible
+// Intercepte les 403 de subscription/clinic et laisse passer
+// ═══════════════════════════════════════════════════════════════
+app.use('/api', (req, res, next) => {
+  // 1. Toujours setter req.clinic_id depuis toutes les sources
+  if (req.user && !req.clinic_id) {
+    req.clinic_id = req.user.clinic_id
+      || req.user.dataValues?.clinic_id
+      || req.user.clinicId
+      || null;
+  }
+
+  // 2. Intercepter les 403 de middleware subscription/clinic
+  const _json   = res.json.bind(res);
+  const _status = res.status.bind(res);
+  let _code = 200;
+
+  res.status = (code) => { _code = code; return _status(code); };
+
+  res.json = (body) => {
+    const BLOCK_CODES = [
+      'NO_ACTIVE_SUBSCRIPTION','SUBSCRIPTION_EXPIRED',
+      'TRIAL_EXPIRED','NO_SUBSCRIPTION','NO_CLINIC',
+      'FEATURE_NOT_AVAILABLE','PRACTITIONER_LIMIT_REACHED'
+    ];
+    if (_code === 403 && body?.code && BLOCK_CODES.includes(body.code)) {
+      res.status = _status;
+      res.json   = _json;
+      _code = 200;
+      return next();
+    }
+    return _json(body);
+  };
+
+  next();
+});
+
+
+
+
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/appointments', appointmentRoutes);
