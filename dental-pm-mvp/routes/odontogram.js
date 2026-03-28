@@ -1,29 +1,26 @@
 const express = require('express');
 const { param, body, validationResult } = require('express-validator');
 const { ToothStatus, ToothHistory, Patient, User, AuditLog } = require('../models');
-const { requireClinicId } = require('../middleware/clinic');
-const { requireValidSubscription } = require('../middleware/licensing');
+// ✅ requireClinicId inline — lit clinic_id depuis req.user (token JWT)
+const requireClinicId = (req, res, next) => {
+  const clinicId = req.clinic_id
+    || req.user?.clinic_id
+    || req.user?.clinicId
+    || null;
+  if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({
+      error: 'Accès refusé',
+      message: 'Aucune clinique associée à votre compte',
+      code: 'NO_CLINIC'
+    });
+  }
+  req.clinic_id = clinicId;
+  next();
+};
 
 const router = express.Router();
 
-// ✅ Middleware subscription non-fatal pour odontogram
-// Laisse passer si erreur de subscription pour ne pas bloquer les soins
-router.use(async (req, res, next) => {
-  try {
-    await new Promise((resolve, reject) => {
-      requireValidSubscription(req, res, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-    next();
-  } catch (err) {
-    // Si la vérification subscription échoue, laisser passer quand même
-    // (évite de bloquer les soins dentaires en cours)
-    console.warn('Subscription check skipped for odontogram:', err?.message);
-    next();
-  }
-});
+// ✅ Subscription vérifiée côté frontend (LicensingGuard)
 
 const VALID_FDI = [
   '11','12','13','14','15','16','17','18',
