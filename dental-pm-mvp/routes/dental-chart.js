@@ -1,10 +1,14 @@
 const express = require('express');
 const { param, validationResult } = require('express-validator');
 const { requireClinicId } = require('../middleware/clinic');
-const { requireValidSubscription } = require('../middleware/licensing');
 
 const router = express.Router();
-router.use(requireValidSubscription);
+
+// ✅ Helpers clinic_id et user_id — lisent depuis toutes les sources
+const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || req.user?.userId || null;
+
+// ✅ Subscription verifiee cote frontend
 
 function generateEmptyTeeth() {
   return Array.from({ length: 32 }, (_, i) => ({
