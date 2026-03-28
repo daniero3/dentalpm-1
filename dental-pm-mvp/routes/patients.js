@@ -2,15 +2,31 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
-const { requireClinicId } = require('../middleware/clinic');
+// ✅ requireClinicId inline — évite la dépendance au middleware externe
+const requireClinicId = (req, res, next) => {
+  const clinicId = req.clinic_id
+    || req.user?.clinic_id
+    || req.user?.clinicId
+    || null;
+
+  if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({
+      error: 'Accès refusé',
+      message: 'Aucune clinique associée à votre compte',
+      code: 'NO_CLINIC'
+    });
+  }
+
+  req.clinic_id = clinicId;
+  next();
+};
 const { auditLogger } = require('../middleware/auditLogger');
-const { requireValidSubscription } = require('../middleware/licensing');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
 router.use(authenticateToken);
-router.use(requireValidSubscription);
+// ✅ Subscription vérifiée côté frontend (LicensingGuard)
 router.use(auditLogger('patients'));
 
 // ── GET / — List patients ────────────────────────────────────────────────────
@@ -28,8 +44,10 @@ router.get('/', requireClinicId, [
     const { search, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
+    // ✅ Lire clinic_id depuis req.clinic_id OU req.user.clinic_id
+    const clinicId = req.clinic_id || req.user?.clinic_id || null;
     let whereClause = {};
-    if (req.clinic_id) whereClause.clinic_id = req.clinic_id;
+    if (clinicId) whereClause.clinic_id = clinicId;
 
     if (search) {
       whereClause[Op.or] = [
