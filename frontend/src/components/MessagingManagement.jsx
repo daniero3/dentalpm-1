@@ -19,7 +19,7 @@ const Modal = ({ open, onClose, title, description, children }) => {
   if (!open) return null;
   return (
     <div
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth:480, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
