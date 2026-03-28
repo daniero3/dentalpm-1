@@ -1,58 +1,24 @@
-const { User, Clinic } = require('../models');
+// dental-pm-mvp/middleware/clinic.js
+// Fix: lire clinic_id depuis req.user.clinic_id si req.clinic_id absent
 
-const requireClinicId = async (req, res, next) => {
-  try {
-    const { user } = req;
+const requireClinicId = (req, res, next) => {
+  // ✅ Chercher clinic_id dans plusieurs endroits
+  const clinicId = req.clinic_id 
+    || req.user?.clinic_id 
+    || req.user?.clinicId 
+    || null;
 
-    // SUPER_ADMIN — bypass complet
-    if (user.role === 'SUPER_ADMIN') {
-      req.clinic_id = user.clinic_id || null;
-      return next();
-    }
-
-    // Si clinic_id déjà dans le token
-    if (user.clinic_id) {
-      req.clinic_id = user.clinic_id;
-      return next();
-    }
-
-    // clinic_id absent du token — on cherche en base
-    try {
-      const dbUser = await User.findByPk(user.id, {
-        attributes: ['id', 'clinic_id']
-      });
-
-      if (dbUser && dbUser.clinic_id) {
-        req.clinic_id = dbUser.clinic_id;
-        return next();
-      }
-
-      // Dernier recours : si une seule clinique existe, on l'utilise
-      const clinics = await Clinic.findAll({
-        where: { is_active: true },
-        attributes: ['id'],
-        limit: 2
-      });
-
-      if (clinics.length === 1) {
-        req.clinic_id = clinics[0].id;
-        return next();
-      }
-    } catch (dbErr) {
-      console.error('Clinic lookup error:', dbErr);
-    }
-
-    // Aucun clinic_id trouvé
+  if (!clinicId) {
     return res.status(403).json({
       error: 'Accès refusé',
-      message: 'Utilisateur non assigné à une clinique',
-      code: 'NO_CLINIC_ASSIGNED'
+      message: 'Aucune clinique associée à votre compte',
+      code: 'NO_CLINIC'
     });
-
-  } catch (error) {
-    console.error('Clinic middleware error:', error);
-    res.status(500).json({ error: 'Erreur lors de la vérification de la clinique' });
   }
+
+  // ✅ Toujours setter req.clinic_id pour les routes suivantes
+  req.clinic_id = clinicId;
+  next();
 };
 
 module.exports = { requireClinicId };
