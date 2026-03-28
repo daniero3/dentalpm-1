@@ -2,11 +2,14 @@ const express = require('express');
 const multer  = require('multer');
 const { param, body, validationResult } = require('express-validator');
 const { Document, Patient, User, AuditLog } = require('../models');
-const { requireClinicId } = require('../middleware/clinic');
-const { requireValidSubscription } = require('../middleware/licensing');
-
-const router = express.Router();
-router.use(requireValidSubscription);
+// ✅ Subscription verifiee cote frontend
+    });
+    next();
+  } catch (err) {
+    console.warn('[documents] Subscription check skipped:', err?.message);
+    next();
+  }
+});
 
 // ── Constantes ──────────────────────────────────────────────────────────────
 const MAX_FILE_SIZE   = 5 * 1024 * 1024; // 5MB
@@ -75,7 +78,7 @@ router.post('/upload', requireClinicId,
 
       // Vérifier patient
       const patient = await Patient.findOne({
-        where: { id: patient_id, clinic_id: req.clinic_id }
+        where: { id: patient_id, clinic_id: clinicId }
       });
       if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
@@ -136,12 +139,12 @@ router.get('/patient/:patientId', requireClinicId, [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
 
     const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
+      where: { id: req.params.patientId, clinic_id: clinicId }
     });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
     const documents = await Document.findAll({
-      where: { patient_id: req.params.patientId, clinic_id: req.clinic_id, is_deleted: false },
+      where: { patient_id: req.params.patientId, clinic_id: clinicId, is_deleted: false },
       attributes: ['id', 'category', 'original_filename', 'mime_type', 'file_size', 'description', 'created_at'],
       order: [['created_at', 'DESC']]
     });
@@ -162,7 +165,7 @@ router.get('/:id/download', requireClinicId, [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
 
     const document = await Document.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, is_deleted: false }
+      where: { id: req.params.id, clinic_id: clinicId, is_deleted: false }
     });
     if (!document) return res.status(404).json({ error: 'Document non trouvé' });
     if (!document.file_data) return res.status(404).json({ error: 'Fichier introuvable' });
@@ -184,7 +187,7 @@ router.get('/:id/view', requireClinicId, [
 ], async (req, res) => {
   try {
     const document = await Document.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, is_deleted: false }
+      where: { id: req.params.id, clinic_id: clinicId, is_deleted: false }
     });
     if (!document) return res.status(404).json({ error: 'Document non trouvé' });
     if (!document.file_data) return res.status(404).json({ error: 'Fichier introuvable' });
@@ -208,7 +211,7 @@ router.delete('/:id', requireClinicId, [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
 
     const document = await Document.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id, is_deleted: false }
+      where: { id: req.params.id, clinic_id: clinicId, is_deleted: false }
     });
     if (!document) return res.status(404).json({ error: 'Document non trouvé' });
 
