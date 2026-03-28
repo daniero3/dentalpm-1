@@ -1,293 +1,279 @@
 const express = require('express');
 const { param, body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
-const PDFDocument = require('pdfkit');
 const { Prescription, Patient, User, Clinic } = require('../models');
-// ✅ Subscription verifiee cote frontend (LicensingGuard)
 
-// ── Helper: numéro ordonnance ─────────────────────────────────────────────
+const router = express.Router();
+
+const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || req.user?.userId || null;
+
 async function generatePrescriptionNumber(clinicId) {
-  const year = new Date().getFullYear();
+  const year   = new Date().getFullYear();
   const prefix = `ORD-${year}-`;
   try {
-    const lastPrescription = await Prescription.findOne({
-      where: {
-        clinic_id: clinicId,
-        number: { [Op.iLike]: `${prefix}%` }
-      },
-      order: [['created_at', 'DESC']]
+    const last = await Prescription.findOne({
+      where: { ...(clinicId ? { clinic_id: clinicId } : {}), number: { [Op.iLike]: `${prefix}%` } },
+      order: [['created_at','DESC']]
     });
-    let nextNum = 1;
-    if (lastPrescription) {
-      const parts = lastPrescription.number.split('-');
-      const lastNum = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(lastNum)) nextNum = lastNum + 1;
+    let next = 1;
+    if (last) {
+      const parts = last.number.split('-');
+      const n = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(n)) next = n + 1;
     }
-    return `${prefix}${String(nextNum).padStart(4, '0')}`;
-  } catch (err) {
-    // Fallback si erreur
+    return `${prefix}${String(next).padStart(4,'0')}`;
+  } catch (e) {
     return `${prefix}${Date.now().toString().slice(-4)}`;
   }
 }
 
-// ── Helper: log action (optionnel) ────────────────────────────────────────
 async function logAction(clinicId, prescriptionId, action, userId, meta = {}) {
   try {
     const { PrescriptionLog } = require('../models');
-    await PrescriptionLog.create({
-      clinic_id: clinicId,
-      prescription_id: prescriptionId,
-      action,
-      user_id: userId,
-      meta_json: meta
-    });
-  } catch (err) {
-    // Non-fatal si PrescriptionLog n'existe pas
-    console.warn('PrescriptionLog error (non-fatal):', err.message);
-  }
+    await PrescriptionLog.create({ clinic_id: clinicId, prescription_id: prescriptionId, action, user_id: userId, meta_json: meta });
+  } catch (e) { console.warn('PrescriptionLog (non-fatal):', e.message); }
 }
 
-/**
- * POST /api/patients/:patientId/prescriptions
- */
-router.post('/patients/:patientId/prescriptions', requireClinicId, [
+// ── POST /api/patients/:patientId/prescriptions ───────────────────────────────
+router.post('/patients/:patientId/prescriptions', [
   param('patientId').isUUID(),
   body('content').optional().isObject()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
-    const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: clinicId }
-    });
-    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+    const clinicId = getClinicId(req);
+    const userId   = getUserId(req);
 
-    const number  = await generatePrescriptionNumber(req.clinic_id);
-    const content = req.body.content || { items: [], notes: '' };
+    const wherePatient = { id: req.params.patientId };
+    if (clinicId) wherePatient.clinic_id = clinicId;
+    const patient = await Patient.findOne({ where: wherePatient });
+    if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
+
+    const number = await generatePrescriptionNumber(clinicId);
+    const { content, notes, status } = req.body;
 
     const prescription = await Prescription.create({
-      clinic_id:     req.clinic_id,
-      patient_id:    req.params.patientId,
-      prescriber_id: req.user.id,
       number,
-      status:        'DRAFT',
-      content_json:  content
+      patient_id:   req.params.patientId,
+      clinic_id:    clinicId,
+      practitioner_id: userId,
+      content:      content || {},
+      notes:        notes   || null,
+      status:       status  || 'DRAFT',
+      issued_at:    new Date()
     });
 
-    await logAction(req.clinic_id, prescription.id, 'CREATE', req.user.id, { number });
+    await logAction(clinicId, prescription.id, 'CREATE', userId);
 
-    res.status(201).json({
-      message: 'Ordonnance créée',
-      prescription: {
-        id:         prescription.id,
-        number:     prescription.number,
-        status:     prescription.status,
-        content:    prescription.content_json,
-        created_at: prescription.createdAt
-      }
+    const complete = await Prescription.findByPk(prescription.id, {
+      include: [
+        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false },
+        { model: User,    as: 'practitioner', attributes: ['id','full_name'], required: false }
+      ]
     });
+
+    return res.status(201).json({ message:'Ordonnance créée', prescription: complete });
   } catch (error) {
     console.error('Create prescription error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
-/**
- * GET /api/patients/:patientId/prescriptions
- */
-router.get('/patients/:patientId/prescriptions', requireClinicId, [
+// ── GET /api/patients/:patientId/prescriptions ────────────────────────────────
+router.get('/patients/:patientId/prescriptions', [
   param('patientId').isUUID()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ error: 'ID invalide' });
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
-    const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: clinicId }
-    });
-    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+    const clinicId = getClinicId(req);
+    const where    = { patient_id: req.params.patientId };
+    if (clinicId) where.clinic_id = clinicId;
 
     const prescriptions = await Prescription.findAll({
-      where: { patient_id: req.params.patientId, clinic_id: clinicId },
+      where,
       include: [
-        { model: User, as: 'prescriber', attributes: ['id', 'full_name', 'username'], required: false }
+        { model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false },
+        { model: User,    as: 'practitioner', attributes: ['id','full_name','username'], required: false }
       ],
-      order: [['created_at', 'DESC']]
+      order: [['created_at','DESC']]
     });
 
-    res.json({
-      patient_id: req.params.patientId,
-      count: prescriptions.length,
-      prescriptions: prescriptions.map(p => ({
-        id:         p.id,
-        number:     p.number,
-        status:     p.status,
-        content:    p.content_json,
-        prescriber: p.prescriber,
-        issued_at:  p.issued_at,
-        created_at: p.createdAt
-      }))
-    });
+    return res.json({ prescriptions, count: prescriptions.length });
   } catch (error) {
-    console.error('List prescriptions error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    console.error('Get prescriptions error:', error);
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
-/**
- * PUT /api/prescriptions/:id
- */
-router.put('/prescriptions/:id', requireClinicId, [
+// ── GET /api/patients/:patientId/prescriptions/:id ────────────────────────────
+router.get('/patients/:patientId/prescriptions/:id', [
+  param('patientId').isUUID(),
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, patient_id: req.params.patientId };
+    if (clinicId) where.clinic_id = clinicId;
+
+    const prescription = await Prescription.findOne({
+      where,
+      include: [
+        { model: Patient, as: 'patient', required: false },
+        { model: User,    as: 'practitioner', attributes: ['id','full_name'], required: false },
+        { model: Clinic,  as: 'clinic', attributes: ['id','name','address','phone'], required: false }
+      ]
+    });
+
+    if (!prescription) return res.status(404).json({ error:'Ordonnance non trouvée' });
+    return res.json({ prescription });
+  } catch (error) {
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
+// ── PUT /api/patients/:patientId/prescriptions/:id ────────────────────────────
+router.put('/patients/:patientId/prescriptions/:id', [
+  param('patientId').isUUID(),
   param('id').isUUID(),
-  body('content').isObject()
+  body('content').optional().isObject(),
+  body('status').optional().isIn(['DRAFT','ISSUED','CANCELLED'])
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
+
+    const clinicId = getClinicId(req);
+    const userId   = getUserId(req);
+    const where    = { id: req.params.id, patient_id: req.params.patientId };
+    if (clinicId) where.clinic_id = clinicId;
+
+    const prescription = await Prescription.findOne({ where });
+    if (!prescription) return res.status(404).json({ error:'Ordonnance non trouvée' });
+
+    const { content, notes, status } = req.body;
+    const updates = {};
+    if (content !== undefined) updates.content = content;
+    if (notes   !== undefined) updates.notes   = notes;
+    if (status  !== undefined) {
+      updates.status = status;
+      if (status === 'ISSUED') updates.issued_at = new Date();
+    }
+
+    await prescription.update(updates);
+    await logAction(clinicId, prescription.id, 'UPDATE', userId, { status });
+
+    return res.json({ message:'Ordonnance mise à jour', prescription });
+  } catch (error) {
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
+// ── DELETE /api/patients/:patientId/prescriptions/:id ─────────────────────────
+router.delete('/patients/:patientId/prescriptions/:id', [
+  param('patientId').isUUID(),
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, patient_id: req.params.patientId };
+    if (clinicId) where.clinic_id = clinicId;
+
+    const prescription = await Prescription.findOne({ where });
+    if (!prescription) return res.status(404).json({ error:'Ordonnance non trouvée' });
+
+    await prescription.destroy();
+    return res.json({ message:'Ordonnance supprimée' });
+  } catch (error) {
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
+// ── GET /api/patients/:patientId/prescriptions/:id/print ─────────────────────
+router.get('/patients/:patientId/prescriptions/:id/print', [
+  param('patientId').isUUID(),
+  param('id').isUUID()
+], async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, patient_id: req.params.patientId };
+    if (clinicId) where.clinic_id = clinicId;
 
     const prescription = await Prescription.findOne({
-      where: { id: req.params.id, clinic_id: clinicId }
-    });
-    if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
-    if (prescription.status !== 'DRAFT') return res.status(409).json({ error: 'PRESCRIPTION_LOCKED', message: 'Ordonnance verrouillée' });
-
-    await prescription.update({ content_json: req.body.content });
-    await logAction(req.clinic_id, prescription.id, 'UPDATE', req.user.id);
-
-    res.json({ message: 'Ordonnance mise à jour', prescription: { id: prescription.id, number: prescription.number, status: prescription.status, content: prescription.content_json } });
-  } catch (error) {
-    console.error('Update prescription error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
-  }
-});
-
-/**
- * POST /api/prescriptions/:id/issue
- */
-router.post('/prescriptions/:id/issue', requireClinicId, [param('id').isUUID()], async (req, res) => {
-  try {
-    const prescription = await Prescription.findOne({ where: { id: req.params.id, clinic_id: clinicId } });
-    if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
-    if (prescription.status !== 'DRAFT') return res.status(409).json({ error: 'INVALID_STATUS' });
-
-    await prescription.update({ status: 'ISSUED', issued_at: new Date() });
-    await logAction(req.clinic_id, prescription.id, 'ISSUE', req.user.id);
-
-    res.json({ message: 'Ordonnance émise', prescription: { id: prescription.id, number: prescription.number, status: prescription.status, issued_at: prescription.issued_at } });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
-  }
-});
-
-/**
- * POST /api/prescriptions/:id/cancel
- */
-router.post('/prescriptions/:id/cancel', requireClinicId, [param('id').isUUID()], async (req, res) => {
-  try {
-    const prescription = await Prescription.findOne({ where: { id: req.params.id, clinic_id: clinicId } });
-    if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
-    if (prescription.status === 'CANCELLED') return res.status(409).json({ error: 'Déjà annulée' });
-
-    await prescription.update({ status: 'CANCELLED' });
-    await logAction(req.clinic_id, prescription.id, 'CANCEL', req.user.id);
-
-    res.json({ message: 'Ordonnance annulée', prescription: { id: prescription.id, number: prescription.number, status: prescription.status } });
-  } catch (error) {
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
-  }
-});
-
-/**
- * GET /api/prescriptions/:id/pdf
- */
-router.get('/prescriptions/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res) => {
-  try {
-    const prescription = await Prescription.findOne({
-      where: { id: req.params.id, clinic_id: clinicId },
+      where,
       include: [
         { model: Patient, as: 'patient', required: false },
-        { model: User,    as: 'prescriber', required: false },
-        { model: Clinic,  as: 'clinic', required: false }
+        { model: User,    as: 'practitioner', attributes: ['id','full_name','specialization'], required: false },
+        { model: Clinic,  as: 'clinic', attributes: ['id','name','address','phone'], required: false }
       ]
     });
-    if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
+    if (!prescription) return res.status(404).json({ error:'Ordonnance non trouvée' });
 
-    await logAction(req.clinic_id, prescription.id, 'PRINT', req.user.id);
+    const p = prescription.patient;
+    const d = prescription.practitioner;
+    const c = prescription.clinic;
+    const items = prescription.content?.items || [];
 
-    const doc    = new PDFDocument({ size: 'A4', margin: 50 });
-    const chunks = [];
-    doc.on('data', chunk => chunks.push(chunk));
-    doc.on('end', () => {
-      const pdf = Buffer.concat(chunks);
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${prescription.number}.pdf"`);
-      res.setHeader('Content-Length', pdf.length);
-      res.send(pdf);
-    });
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+    <title>Ordonnance ${prescription.number}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:30px;font-size:13px}
+      .header{display:flex;justify-content:space-between;border-bottom:2px solid #0D7A87;padding-bottom:16px;margin-bottom:20px}
+      .clinic h2{color:#0D7A87;margin:0 0 4px}
+      .number{text-align:right;font-size:18px;font-weight:bold;color:#0D7A87}
+      .patient{background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:20px}
+      .item{padding:10px 0;border-bottom:1px solid #eee}
+      .item-name{font-weight:bold;font-size:14px}
+      .item-detail{color:#555;margin-top:4px}
+      .footer{margin-top:40px;text-align:right}
+      @media print{body{padding:0}}
+    </style></head><body>
+    <div class="header">
+      <div class="clinic">
+        <h2>${c?.name || 'Cabinet Dentaire'}</h2>
+        <p>${c?.address || ''}</p>
+        <p>${c?.phone || ''}</p>
+        ${d ? `<p>Dr. ${d.full_name}${d.specialization ? ` — ${d.specialization}` : ''}</p>` : ''}
+      </div>
+      <div>
+        <div class="number">ORDONNANCE</div>
+        <p>${prescription.number}</p>
+        <p>Le ${new Date(prescription.issued_at || prescription.created_at).toLocaleDateString('fr-FR')}</p>
+      </div>
+    </div>
+    <div class="patient">
+      <strong>Patient :</strong> ${p?.first_name || ''} ${p?.last_name || ''}
+    </div>
+    <div>
+      ${items.length > 0 ? items.map(item => `
+        <div class="item">
+          <div class="item-name">${item.medication || item.name || ''}</div>
+          <div class="item-detail">
+            ${item.dosage    ? `Dosage: ${item.dosage}` : ''}
+            ${item.frequency ? ` — ${item.frequency}` : ''}
+            ${item.duration  ? ` — Durée: ${item.duration}` : ''}
+          </div>
+          ${item.instructions ? `<div class="item-detail">${item.instructions}</div>` : ''}
+        </div>`).join('') : '<p>Aucun médicament</p>'}
+    </div>
+    ${prescription.notes ? `<p style="margin-top:20px"><em>Notes: ${prescription.notes}</em></p>` : ''}
+    <div class="footer">
+      <p>Signature du praticien</p>
+      <br><br>
+      <p>____________________________</p>
+      ${d ? `<p>Dr. ${d.full_name}</p>` : ''}
+    </div>
+    <script>if(window.opener || window.print) window.print();</script>
+    </body></html>`;
 
-    const clinic     = prescription.clinic;
-    const patient    = prescription.patient;
-    const prescriber = prescription.prescriber;
-    const content    = prescription.content_json || { items: [], notes: '' };
-
-    // Header
-    doc.fontSize(18).font('Helvetica-Bold').text(clinic?.name || 'Cabinet Dentaire', { align: 'center' });
-    doc.fontSize(10).font('Helvetica').text(clinic?.address || '', { align: 'center' });
-    doc.moveDown(0.5);
-    if (clinic?.phone || clinic?.email) doc.text(`Tél: ${clinic?.phone || ''} | Email: ${clinic?.email || ''}`, { align: 'center' });
-    doc.moveDown(1);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown(1);
-
-    doc.fontSize(16).font('Helvetica-Bold').text('ORDONNANCE MÉDICALE', { align: 'center' });
-    doc.fontSize(12).font('Helvetica').text(`N° ${prescription.number}`, { align: 'center' });
-    doc.moveDown(1);
-
-    if (patient) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Patient:');
-      doc.font('Helvetica').text(`${patient.first_name} ${patient.last_name}`);
-      if (patient.date_of_birth) doc.text(`Né(e) le: ${new Date(patient.date_of_birth).toLocaleDateString('fr-FR')}`);
-      doc.moveDown(1);
-    }
-
-    const issueDate = prescription.issued_at
-      ? new Date(prescription.issued_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-      : new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-    doc.text(`Date: ${issueDate}`);
-    doc.moveDown(1);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown(1);
-
-    if (content.items?.length > 0) {
-      content.items.forEach((item, i) => {
-        doc.font('Helvetica-Bold').text(`${i + 1}. ${item.medication || item.name || 'Médicament'}`);
-        if (item.dosage)   doc.font('Helvetica').text(`   Dosage: ${item.dosage}`);
-        if (item.posology) doc.font('Helvetica').text(`   Posologie: ${item.posology}`);
-        if (item.duration) doc.font('Helvetica').text(`   Durée: ${item.duration}`);
-        doc.moveDown(0.5);
-      });
-    } else {
-      doc.font('Helvetica').text('Aucune prescription');
-    }
-
-    if (content.notes) {
-      doc.moveDown(1);
-      doc.font('Helvetica-Bold').text('Notes:');
-      doc.font('Helvetica').text(content.notes);
-    }
-
-    doc.moveDown(3);
-    doc.font('Helvetica').text('Signature:', { align: 'right' });
-    doc.moveDown(2);
-    doc.font('Helvetica-Bold').text(`Dr. ${prescriber?.full_name || prescriber?.username || 'Prescripteur'}`, { align: 'right' });
-    doc.moveDown(2);
-    doc.fontSize(8).font('Helvetica').fillColor('gray').text(`Généré le ${new Date().toLocaleDateString('fr-FR')} - ${prescription.number}`, { align: 'center' });
-
-    doc.end();
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
   } catch (error) {
-    console.error('PDF error:', error);
-    res.status(500).json({ error: 'Erreur PDF', details: error.message });
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
 
