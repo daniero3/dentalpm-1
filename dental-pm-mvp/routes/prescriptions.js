@@ -3,11 +3,7 @@ const { param, body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const PDFDocument = require('pdfkit');
 const { Prescription, Patient, User, Clinic } = require('../models');
-const { requireClinicId } = require('../middleware/clinic');
-const { requireValidSubscription } = require('../middleware/licensing');
-
-const router = express.Router();
-router.use(requireValidSubscription);
+// ✅ Subscription verifiee cote frontend (LicensingGuard)
 
 // ── Helper: numéro ordonnance ─────────────────────────────────────────────
 async function generatePrescriptionNumber(clinicId) {
@@ -63,7 +59,7 @@ router.post('/patients/:patientId/prescriptions', requireClinicId, [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
 
     const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
+      where: { id: req.params.patientId, clinic_id: clinicId }
     });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
@@ -108,12 +104,12 @@ router.get('/patients/:patientId/prescriptions', requireClinicId, [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'ID invalide' });
 
     const patient = await Patient.findOne({
-      where: { id: req.params.patientId, clinic_id: req.clinic_id }
+      where: { id: req.params.patientId, clinic_id: clinicId }
     });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
     const prescriptions = await Prescription.findAll({
-      where: { patient_id: req.params.patientId, clinic_id: req.clinic_id },
+      where: { patient_id: req.params.patientId, clinic_id: clinicId },
       include: [
         { model: User, as: 'prescriber', attributes: ['id', 'full_name', 'username'], required: false }
       ],
@@ -151,7 +147,7 @@ router.put('/prescriptions/:id', requireClinicId, [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
 
     const prescription = await Prescription.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id }
+      where: { id: req.params.id, clinic_id: clinicId }
     });
     if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
     if (prescription.status !== 'DRAFT') return res.status(409).json({ error: 'PRESCRIPTION_LOCKED', message: 'Ordonnance verrouillée' });
@@ -171,7 +167,7 @@ router.put('/prescriptions/:id', requireClinicId, [
  */
 router.post('/prescriptions/:id/issue', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
-    const prescription = await Prescription.findOne({ where: { id: req.params.id, clinic_id: req.clinic_id } });
+    const prescription = await Prescription.findOne({ where: { id: req.params.id, clinic_id: clinicId } });
     if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
     if (prescription.status !== 'DRAFT') return res.status(409).json({ error: 'INVALID_STATUS' });
 
@@ -189,7 +185,7 @@ router.post('/prescriptions/:id/issue', requireClinicId, [param('id').isUUID()],
  */
 router.post('/prescriptions/:id/cancel', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
-    const prescription = await Prescription.findOne({ where: { id: req.params.id, clinic_id: req.clinic_id } });
+    const prescription = await Prescription.findOne({ where: { id: req.params.id, clinic_id: clinicId } });
     if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
     if (prescription.status === 'CANCELLED') return res.status(409).json({ error: 'Déjà annulée' });
 
@@ -208,7 +204,7 @@ router.post('/prescriptions/:id/cancel', requireClinicId, [param('id').isUUID()]
 router.get('/prescriptions/:id/pdf', requireClinicId, [param('id').isUUID()], async (req, res) => {
   try {
     const prescription = await Prescription.findOne({
-      where: { id: req.params.id, clinic_id: req.clinic_id },
+      where: { id: req.params.id, clinic_id: clinicId },
       include: [
         { model: Patient, as: 'patient', required: false },
         { model: User,    as: 'prescriber', required: false },
