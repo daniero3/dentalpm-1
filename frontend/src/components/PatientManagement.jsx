@@ -3,76 +3,133 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
-import { 
+import {
   Users, Plus, Search, Edit, Activity, Phone, Mail,
   AlertTriangle, User, Calendar, FileText, ClipboardList,
-  Grid3X3, FlaskConical, Loader2, X
+  FlaskConical, X, Save, Loader2, ChevronRight
 } from 'lucide-react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { Card, CardContent } from './ui/card';
+import { Badge } from './ui/badge';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const inputClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
-const selectClass = inputClass;
-const labelStyle = { display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569', fontFamily: 'Plus Jakarta Sans' };
-const fieldStyle = { marginBottom: 16 };
+const authHeaders = () => {
+  const token = localStorage.getItem('token');
+  return { headers: { Authorization: `Bearer ${token}` } };
+};
 
-// ── Modal CSS pur — évite bug Portal/removeChild de shadcn Dialog ──
-const Modal = ({ open, onClose, title, children }) => {
+// ── Modal CSS pur — zéro shadcn Portal ──
+const Modal = ({ open, onClose, title, children, maxWidth = 560 }) => {
   if (!open) return null;
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(15,23,42,0.5)',
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: '32px 16px', overflowY: 'auto'
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, overflowY:'auto' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{
-        background: '#fff', borderRadius: 16,
-        padding: '0', width: '100%', maxWidth: 660,
-        boxShadow: '0 16px 48px rgba(15,23,42,0.18)',
-        border: '1px solid #E2E8F0',
-        position: 'relative',
-        maxHeight: '95vh',
-        display: 'flex',
-        flexDirection: 'column',
-        margin: 'auto',
-      }}>
-        {/* Header fixe */}
-        <div style={{ padding: '20px 28px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 18, fontWeight: 800, color: '#0F172A', margin: 0 }}>
-            {title}
-          </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4, borderRadius: 6 }}>
-            <X size={18} />
-          </button>
-        </div>
-        {/* Body scrollable */}
-        <div style={{ overflowY: 'auto', flex: 1, padding: '20px 28px' }}>
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
+        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4, borderRadius:6 }}>
+          <X size={18} />
+        </button>
+        {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:24 }}>{title}</h2>}
         {children}
       </div>
     </div>
   );
 };
 
+// ── Formulaire Patient (hors du composant principal pour éviter perte de focus) ──
+const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit }) => {
+  const fieldStyle = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'DM Sans,sans-serif', color:'#0F172A', background:'#fff', outline:'none', boxSizing:'border-box' };
+  const labelStyle = { display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 };
+
+  const Field = ({ label, name, type='text', placeholder, required, half }) => (
+    <div style={{ flex: half ? '1 1 45%' : '1 1 100%' }}>
+      <label style={labelStyle}>{label}{required && ' *'}</label>
+      <input
+        style={fieldStyle}
+        type={type}
+        value={data[name] || ''}
+        onChange={e => onChange(name, e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        onFocus={e => e.target.style.borderColor='#0D7A87'}
+        onBlur={e => e.target.style.borderColor='#E2E8F0'}
+      />
+    </div>
+  );
+
+  return (
+    <form onSubmit={onSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <Field label="Prénom" name="first_name" placeholder="Jean" required half />
+        <Field label="Nom" name="last_name" placeholder="Rakoto" required half />
+      </div>
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <Field label="Date de naissance" name="date_of_birth" type="date" half />
+        <div style={{ flex:'1 1 45%' }}>
+          <label style={labelStyle}>Sexe</label>
+          <select style={fieldStyle} value={data.gender || ''} onChange={e => onChange('gender', e.target.value)}
+            onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'}>
+            <option value="">Sélectionner...</option>
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+            <option value="OTHER">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <Field label="Téléphone" name="phone_primary" placeholder="034 00 000 00" required half />
+        <Field label="Email" name="email" type="email" placeholder="jean@email.mg" half />
+      </div>
+      <Field label="Adresse" name="address" placeholder="Antananarivo, Madagascar" />
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+        <Field label="Contact urgence" name="emergency_contact_name" placeholder="Nom (optionnel)" half />
+        <Field label="Tél. urgence" name="emergency_contact_phone" placeholder="+261 34..." half />
+      </div>
+      <div>
+        <label style={labelStyle}>Antécédents médicaux</label>
+        <textarea style={{ ...fieldStyle, minHeight:64, resize:'vertical' }} value={data.medical_history || ''} onChange={e => onChange('medical_history', e.target.value)} placeholder="Antécédents médicaux..." onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} />
+      </div>
+      <div>
+        <label style={labelStyle}>Allergies</label>
+        <textarea style={{ ...fieldStyle, minHeight:52, resize:'vertical' }} value={data.allergies || ''} onChange={e => onChange('allergies', e.target.value)} placeholder="Allergies connues..." onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} />
+      </div>
+      <div>
+        <label style={labelStyle}>Médicaments actuels</label>
+        <textarea style={{ ...fieldStyle, minHeight:52, resize:'vertical' }} value={data.current_medications || ''} onChange={e => onChange('current_medications', e.target.value)} placeholder="Traitements en cours..." onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} />
+      </div>
+      <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:10, borderTop:'1px solid #F1F5F9' }}>
+        <Button type="button" variant="outline" onClick={onCancel}>Annuler</Button>
+        <Button type="submit" disabled={submitting}>
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          {isEdit ? 'Modifier' : 'Créer'}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+// ══ Composant principal ══
 const PatientManagement = () => {
   const { user } = useAuth();
-  const [patients, setPatients]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [patients, setPatients]         = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [searchTerm, setSearchTerm]     = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting]     = useState(false);
   const mountedRef = useRef(true);
 
   const [formData, setFormData] = useState({
-    first_name: '', last_name: '', date_of_birth: '', gender: '',
-    phone_primary: '', email: '', address: '',
-    emergency_contact_name: '', emergency_contact_phone: '',
-    medical_history: '', allergies: '', current_medications: ''
+    first_name:'', last_name:'', date_of_birth:'', gender:'',
+    phone_primary:'', email:'', address:'',
+    emergency_contact_name:'', emergency_contact_phone:'',
+    medical_history:'', allergies:'', current_medications:''
   });
 
   useEffect(() => {
@@ -83,14 +140,43 @@ const PatientManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(`${API}/patients`);
-      if (mountedRef.current) setPatients(response.data.patients || []);
-    } catch (error) {
-      if (axios.isCancel(error)) return;
-      if (mountedRef.current) toast.error('Erreur lors du chargement des patients');
+      const res = await axios.get(`${API}/patients`, authHeaders());
+      const list = res.data.patients || res.data.data || res.data || [];
+      if (mountedRef.current) setPatients(Array.isArray(list) ? list : []);
+    } catch (err) {
+      if (!axios.isCancel(err)) toast.error('Erreur chargement patients');
     } finally {
       if (mountedRef.current) setLoading(false);
     }
+  };
+
+  const handleFieldChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const openCreate = () => {
+    setSelectedPatient(null);
+    setFormData({ first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' });
+    setIsDialogOpen(true);
+  };
+
+  const openEdit = (patient) => {
+    setSelectedPatient(patient);
+    setFormData({
+      first_name:              patient.first_name || '',
+      last_name:               patient.last_name  || '',
+      date_of_birth:           patient.date_of_birth || '',
+      gender:                  patient.gender || '',
+      phone_primary:           patient.phone_primary || '',
+      email:                   patient.email || '',
+      address:                 patient.address || '',
+      emergency_contact_name:  patient.emergency_contact_name || '',
+      emergency_contact_phone: patient.emergency_contact_phone || '',
+      medical_history:         patient.medical_history || '',
+      allergies:               patient.allergies || '',
+      current_medications:     patient.current_medications || '',
+    });
+    setIsDialogOpen(true);
   };
 
   const handleSubmit = async (e) => {
@@ -98,317 +184,200 @@ const PatientManagement = () => {
     setSubmitting(true);
     try {
       if (selectedPatient) {
-        await axios.put(`${API}/patients/${selectedPatient.id}`, formData);
-        toast.success('Patient mis à jour avec succès');
+        await axios.put(`${API}/patients/${selectedPatient.id}`, formData, authHeaders());
+        toast.success('Patient modifié !');
       } else {
-        await axios.post(`${API}/patients`, formData);
-        toast.success('Patient créé avec succès');
+        await axios.post(`${API}/patients`, formData, authHeaders());
+        toast.success('Patient créé !');
       }
-      resetForm();
       setIsDialogOpen(false);
       fetchPatients();
-    } catch (error) {
-      const apiError = error.response?.data;
-      if (apiError?.details && Array.isArray(apiError.details)) {
-        toast.error(apiError.details.map(d => d.msg || d.message).join(', '));
-      } else {
-        toast.error(apiError?.error || "Erreur lors de l'enregistrement");
-      }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Erreur lors de la sauvegarde');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      first_name: '', last_name: '', date_of_birth: '', gender: '',
-      phone_primary: '', email: '', address: '',
-      emergency_contact_name: '', emergency_contact_phone: '',
-      medical_history: '', allergies: '', current_medications: ''
-    });
-    setSelectedPatient(null);
+  const calculateAge = (dob) => {
+    if (!dob) return null;
+    const diff = Date.now() - new Date(dob).getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   };
 
-  const handleEdit = (patient) => {
-    setSelectedPatient(patient);
-    setFormData({
-      first_name: patient.first_name || '',
-      last_name: patient.last_name || '',
-      date_of_birth: patient.date_of_birth ? patient.date_of_birth.split('T')[0] : '',
-      gender: patient.gender || '',
-      phone_primary: patient.phone_primary || patient.phone || '',
-      email: patient.email || '',
-      address: patient.address || '',
-      emergency_contact_name: patient.emergency_contact_name || '',
-      emergency_contact_phone: patient.emergency_contact_phone || '',
-      medical_history: patient.medical_history || '',
-      allergies: patient.allergies || '',
-      current_medications: patient.current_medications || ''
-    });
-    setIsDialogOpen(true);
-  };
-
-  const set = (field) => (e) => setFormData(f => ({ ...f, [field]: e.target.value }));
-
-  const filteredPatients = patients.filter(p =>
-    `${p.first_name} ${p.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.phone_primary || p.phone || '').includes(searchTerm)
-  );
-
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return '?';
-    const today = new Date(), birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
-  };
-
-  const ActionBtn = ({ to, icon: Icon, title }) => (
-    <Link to={to} title={title}>
-      <button style={{
-        width: 34, height: 34, borderRadius: 8,
-        border: '1.5px solid #E2E8F0', background: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer', color: '#64748B', transition: 'all 0.18s ease',
-      }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#0D7A87'; e.currentTarget.style.color = '#0D7A87'; e.currentTarget.style.background = '#F0F7F8'; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = '#fff'; }}
-      >
-        <Icon size={15} />
-      </button>
-    </Link>
-  );
+  const filteredPatients = patients.filter(p => {
+    if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      p.first_name?.toLowerCase().includes(q) ||
+      p.last_name?.toLowerCase().includes(q) ||
+      p.phone_primary?.toLowerCase().includes(q) ||
+      p.email?.toLowerCase().includes(q)
+    );
+  });
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 256 }}>
-      <Loader2 size={32} style={{ color: '#0D7A87', animation: 'spin 0.75s linear infinite' }} />
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:256 }}>
+      <Loader2 className="h-8 w-8 animate-spin" style={{ color:'#0D7A87' }} />
     </div>
   );
 
   return (
-    <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="space-y-6" data-testid="patient-management">
 
       {/* Header */}
-      <div style={{
-        background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
-        boxShadow: '0 2px 8px rgba(15,23,42,0.05)', padding: '20px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(13,122,135,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Users size={26} color="#0D7A87" />
-          </div>
-          <div>
-            <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 22, fontWeight: 800, color: '#0F172A', margin: 0 }}>Patients</h1>
-            <p style={{ color: '#64748B', fontSize: 13, margin: '2px 0 0' }}>
-              {patients.length} patient{patients.length > 1 ? 's' : ''} enregistré{patients.length > 1 ? 's' : ''}
-            </p>
-          </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+        <div>
+          <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:26, color:'#0F172A', margin:0, display:'flex', alignItems:'center', gap:10 }}>
+            <Users size={26} style={{ color:'#0D7A87' }} />Patients
+          </h1>
+          <p style={{ color:'#64748B', fontSize:13, marginTop:4 }}>{patients.length} patient(s) enregistré(s)</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setIsDialogOpen(true); }}
-          data-testid="new-patient-btn"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '10px 20px', borderRadius: 10,
-            background: 'linear-gradient(135deg, #0D7A87, #13A3B4)',
-            color: '#fff', border: 'none',
-            fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 13,
-            cursor: 'pointer', boxShadow: '0 2px 12px rgba(13,122,135,0.3)',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,122,135,0.4)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(13,122,135,0.3)'; }}
-        >
-          <Plus size={16} /> Nouveau Patient
-        </button>
+        <Button onClick={openCreate} data-testid="new-patient-btn" style={{ background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', borderRadius:12, padding:'10px 20px', fontFamily:'Plus Jakarta Sans', fontWeight:700, display:'flex', alignItems:'center', gap:8, boxShadow:'0 4px 16px rgba(13,122,135,0.3)', cursor:'pointer' }}>
+          <Plus size={18} />Nouveau Patient
+        </Button>
       </div>
 
-      {/* Recherche */}
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.05)', padding: '14px 20px' }}>
-        <div style={{ position: 'relative' }}>
-          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-          <input
-            className={inputClass}
-            style={{ paddingLeft: 38, background: '#F8FAFC' }}
-            placeholder="Rechercher un patient par nom ou téléphone..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            data-testid="search-patient"
-          />
-        </div>
+      {/* Search */}
+      <div style={{ position:'relative' }}>
+        <Search size={16} style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color:'#94A3B8', pointerEvents:'none' }} />
+        <input
+          type="text"
+          placeholder="Rechercher un patient par nom ou téléphone..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          data-testid="search-input"
+          style={{ width:'100%', padding:'11px 14px 11px 42px', borderRadius:12, border:'1.5px solid #E2E8F0', background:'#F8FAFC', fontSize:13, fontFamily:'DM Sans,sans-serif', color:'#0F172A', outline:'none', boxSizing:'border-box', transition:'all 0.18s' }}
+          onFocus={e => { e.target.style.borderColor='#0D7A87'; e.target.style.background='#fff'; e.target.style.boxShadow='0 0 0 3px rgba(13,122,135,0.10)'; }}
+          onBlur={e => { e.target.style.borderColor='#E2E8F0'; e.target.style.background='#F8FAFC'; e.target.style.boxShadow='none'; }}
+        />
       </div>
 
       {/* Liste */}
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(15,23,42,0.05)', overflow: 'hidden' }}>
-        {filteredPatients.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 0' }}>
-            <div style={{ padding: 16, background: '#F1F5F9', borderRadius: '50%', marginBottom: 16 }}>
-              <Users size={40} color="#94A3B8" />
-            </div>
-            <h3 style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, color: '#475569', marginBottom: 4 }}>
-              {searchTerm ? 'Aucun patient trouvé' : 'Aucun patient'}
+      {filteredPatients.length === 0 ? (
+        <Card>
+          <CardContent style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:48, textAlign:'center' }}>
+            <Users size={48} style={{ color:'#E2E8F0', marginBottom:16 }} />
+            <h3 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:16, color:'#475569', margin:'0 0 8px' }}>
+              {searchTerm ? 'Aucun résultat' : 'Aucun patient'}
             </h3>
-            <p style={{ color: '#94A3B8', fontSize: 13 }}>
-              {searchTerm ? "Essayez avec d'autres termes" : 'Commencez par ajouter un patient'}
+            <p style={{ fontSize:13, color:'#94A3B8', margin:0 }}>
+              {searchTerm ? 'Essayez un autre terme de recherche' : 'Cliquez sur "Nouveau Patient" pour commencer'}
             </p>
-          </div>
-        ) : (
-          filteredPatients.map((patient, i) => (
-            <div
-              key={patient.id}
-              className="animate-fade-up"
-              style={{
-                padding: '16px 20px', borderBottom: '1px solid #F1F5F9',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                transition: 'background 0.15s', animationDelay: `${i * 0.04}s`,
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'}
-              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-              data-testid={`patient-${patient.id}`}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(13,122,135,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <User size={22} color="#0D7A87" />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 700, fontSize: 15, color: '#0F172A', margin: 0 }}>
-                    {patient.first_name} {patient.last_name}
-                  </h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4, fontSize: 13, color: '#64748B' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Calendar size={13} /> {calculateAge(patient.date_of_birth)} ans
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <Phone size={13} /> {patient.phone_primary || patient.phone}
-                    </span>
-                    {patient.email && (
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Mail size={13} /> {patient.email}
-                      </span>
+          </CardContent>
+        </Card>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {filteredPatients.map(patient => {
+            const age = calculateAge(patient.date_of_birth);
+            return (
+              <div key={patient.id} data-testid={`patient-${patient.id}`}
+                style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'14px 18px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap', transition:'all 0.18s', boxShadow:'0 1px 4px rgba(15,23,42,0.05)' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow='0 4px 16px rgba(15,23,42,0.10)'; e.currentTarget.style.borderColor='#CBD5E1'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(15,23,42,0.05)'; e.currentTarget.style.borderColor='#E2E8F0'; }}
+              >
+                {/* Infos patient */}
+                <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0 }}>
+                  <div style={{ width:42, height:42, borderRadius:12, background:'linear-gradient(135deg,rgba(13,122,135,0.12),rgba(59,79,216,0.12))', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <User size={20} style={{ color:'#0D7A87' }} />
+                  </div>
+                  <div style={{ minWidth:0 }}>
+                    <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                      {patient.first_name} {patient.last_name}
+                    </p>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:3, flexWrap:'wrap' }}>
+                      {age !== null && (
+                        <span style={{ fontSize:12, color:'#64748B', display:'flex', alignItems:'center', gap:4 }}>
+                          <Calendar size={11} />{age} ans
+                        </span>
+                      )}
+                      {patient.phone_primary && (
+                        <span style={{ fontSize:12, color:'#64748B', display:'flex', alignItems:'center', gap:4 }}>
+                          <Phone size={11} />{patient.phone_primary}
+                        </span>
+                      )}
+                      {patient.email && (
+                        <span style={{ fontSize:12, color:'#64748B', display:'flex', alignItems:'center', gap:4, overflow:'hidden', maxWidth:180 }}>
+                          <Mail size={11} /><span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{patient.email}</span>
+                        </span>
+                      )}
+                    </div>
+                    {patient.allergies && (
+                      <div style={{ marginTop:4, display:'flex', alignItems:'center', gap:5 }}>
+                        <AlertTriangle size={11} style={{ color:'#F59E0B', flexShrink:0 }} />
+                        <span style={{ fontSize:11, color:'#92400E', background:'#FEF3C7', padding:'1px 8px', borderRadius:99, fontWeight:600 }}>
+                          Allergies: {patient.allergies}
+                        </span>
+                      </div>
                     )}
                   </div>
-                  {patient.allergies && (
-                    <div style={{ marginTop: 6 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, background: '#FEE2E2', color: '#B91C1C', fontSize: 11, fontWeight: 700 }}>
-                        <AlertTriangle size={11} /> Allergies: {patient.allergies}
-                      </span>
-                    </div>
-                  )}
+                </div>
+
+                {/* Actions */}
+                <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                  <Link to={`/patients/${patient.id}/odontogram`} title="Odontogramme">
+                    <button style={{ width:34, height:34, borderRadius:8, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B', transition:'all 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.color='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.color='#64748B'; e.currentTarget.style.background='#fff'; }}>
+                      <Activity size={15} />
+                    </button>
+                  </Link>
+                  <Link to={`/patients/${patient.id}/documents`} title="Documents">
+                    <button style={{ width:34, height:34, borderRadius:8, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B', transition:'all 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.color='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.color='#64748B'; e.currentTarget.style.background='#fff'; }}>
+                      <FileText size={15} />
+                    </button>
+                  </Link>
+                  <Link to={`/patients/${patient.id}/prescriptions`} title="Ordonnances">
+                    <button style={{ width:34, height:34, borderRadius:8, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B', transition:'all 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.color='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.color='#64748B'; e.currentTarget.style.background='#fff'; }}>
+                      <ClipboardList size={15} />
+                    </button>
+                  </Link>
+                  <Link to={`/patients/${patient.id}/lab-orders`} title="Laboratoire">
+                    <button style={{ width:34, height:34, borderRadius:8, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B', transition:'all 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.color='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.color='#64748B'; e.currentTarget.style.background='#fff'; }}>
+                      <FlaskConical size={15} />
+                    </button>
+                  </Link>
+                  <Link to={`/patients/${patient.id}/chart`} title="Fiche dentaire">
+                    <button style={{ width:34, height:34, borderRadius:8, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B', transition:'all 0.15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.color='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.06)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.color='#64748B'; e.currentTarget.style.background='#fff'; }}>
+                      <ChevronRight size={15} />
+                    </button>
+                  </Link>
+                  <button onClick={() => openEdit(patient)} title="Modifier" data-testid={`edit-${patient.id}`}
+                    style={{ width:34, height:34, borderRadius:8, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B', transition:'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.color='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.06)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.color='#64748B'; e.currentTarget.style.background='#fff'; }}>
+                    <Edit size={15} />
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <ActionBtn to={`/patients/${patient.id}/odontogram`}    icon={Grid3X3}       title="Odontogramme" />
-                <ActionBtn to={`/patients/${patient.id}/documents`}     icon={FileText}      title="Documents" />
-                <ActionBtn to={`/patients/${patient.id}/prescriptions`} icon={ClipboardList} title="Ordonnances" />
-                <ActionBtn to={`/patients/${patient.id}/lab-orders`}    icon={FlaskConical}  title="Labo" />
-                <ActionBtn to={`/patients/${patient.id}/chart`}         icon={Activity}      title="Fiche clinique" />
-                <button
-                  onClick={() => handleEdit(patient)}
-                  data-testid={`edit-${patient.id}`}
-                  title="Modifier"
-                  style={{ width: 34, height: 34, borderRadius: 8, border: '1.5px solid #E2E8F0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748B', transition: 'all 0.18s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#3B4FD8'; e.currentTarget.style.color = '#3B4FD8'; e.currentTarget.style.background = '#EEF0FB'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.color = '#64748B'; e.currentTarget.style.background = '#fff'; }}
-                >
-                  <Edit size={15} />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* ── Modal CSS pur Nouveau/Modifier Patient ── */}
+      {/* ── Modal Créer/Modifier patient ── */}
       <Modal
         open={isDialogOpen}
-        onClose={() => { setIsDialogOpen(false); resetForm(); }}
-        title={selectedPatient ? 'Modifier le patient' : 'Nouveau patient'}
+        onClose={() => setIsDialogOpen(false)}
+        title={selectedPatient ? `Modifier — ${selectedPatient.first_name} ${selectedPatient.last_name}` : 'Nouveau Patient'}
+        maxWidth={560}
       >
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-            <div>
-              <label style={labelStyle}>Prénom *</label>
-              <input className={inputClass} value={formData.first_name} onChange={set('first_name')} required placeholder="Prénom" />
-            </div>
-            <div>
-              <label style={labelStyle}>Nom *</label>
-              <input className={inputClass} value={formData.last_name} onChange={set('last_name')} required placeholder="Nom" />
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-            <div>
-              <label style={labelStyle}>Date de naissance *</label>
-              <input className={inputClass} type="date" value={formData.date_of_birth} onChange={set('date_of_birth')} required />
-            </div>
-            <div>
-              <label style={labelStyle}>Sexe *</label>
-              <select className={selectClass} value={formData.gender} onChange={set('gender')} required>
-                <option value="">Sélectionnez</option>
-                <option value="male">Homme</option>
-                <option value="female">Femme</option>
-                <option value="other">Autre</option>
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-            <div>
-              <label style={labelStyle}>Téléphone *</label>
-              <input className={inputClass} value={formData.phone_primary} onChange={set('phone_primary')} required placeholder="+261 32 00 000 00" data-testid="phone-input" />
-            </div>
-            <div>
-              <label style={labelStyle}>Email</label>
-              <input className={inputClass} type="email" value={formData.email} onChange={set('email')} placeholder="patient@email.com" />
-            </div>
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Adresse</label>
-            <textarea className={inputClass} value={formData.address} onChange={set('address')} placeholder="Adresse complète" rows={2} style={{ minHeight: 64, resize: 'vertical' }} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-            <div>
-              <label style={labelStyle}>Contact d'urgence</label>
-              <input className={inputClass} value={formData.emergency_contact_name} onChange={set('emergency_contact_name')} placeholder="Nom (optionnel)" />
-            </div>
-            <div>
-              <label style={labelStyle}>Tél. d'urgence</label>
-              <input className={inputClass} value={formData.emergency_contact_phone} onChange={set('emergency_contact_phone')} placeholder="+261 32 (optionnel)" />
-            </div>
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Antécédents médicaux</label>
-            <textarea className={inputClass} value={formData.medical_history} onChange={set('medical_history')} placeholder="Antécédents médicaux" rows={3} style={{ minHeight: 72, resize: 'vertical' }} />
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Allergies</label>
-            <textarea className={inputClass} value={formData.allergies} onChange={set('allergies')} placeholder="Allergies connues" rows={2} style={{ minHeight: 56, resize: 'vertical' }} />
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Médicaments actuels</label>
-            <textarea className={inputClass} value={formData.current_medications} onChange={set('current_medications')} placeholder="Traitements en cours" rows={2} style={{ minHeight: 56, resize: 'vertical' }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #F1F5F9' }}>
-            <button type="button" onClick={() => { setIsDialogOpen(false); resetForm(); }} style={{
-              padding: '9px 18px', borderRadius: 8, border: '1.5px solid #E2E8F0',
-              background: '#fff', color: '#475569', fontFamily: 'Plus Jakarta Sans',
-              fontWeight: 600, fontSize: 13, cursor: 'pointer',
-            }}>
-              Annuler
-            </button>
-            <button type="submit" disabled={submitting} style={{
-              padding: '9px 20px', borderRadius: 8, border: 'none',
-              background: submitting ? '#94A3B8' : 'linear-gradient(135deg, #0D7A87, #13A3B4)',
-              color: '#fff', fontFamily: 'Plus Jakarta Sans',
-              fontWeight: 700, fontSize: 13, cursor: submitting ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6,
-              boxShadow: submitting ? 'none' : '0 2px 12px rgba(13,122,135,0.3)',
-            }}>
-              {submitting && <Loader2 size={14} style={{ animation: 'spin 0.75s linear infinite' }} />}
-              {selectedPatient ? 'Mettre à jour' : 'Créer'}
-            </button>
-          </div>
-        </form>
+        <PatientForm
+          data={formData}
+          onChange={handleFieldChange}
+          onSubmit={handleSubmit}
+          onCancel={() => setIsDialogOpen(false)}
+          submitting={submitting}
+          isEdit={!!selectedPatient}
+        />
       </Modal>
     </div>
   );
