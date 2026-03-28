@@ -228,4 +228,90 @@ router.get('/patients/:patientId/prescriptions/:id/print', [
   }
 });
 
+
+// ── GET /api/prescriptions/:id/pdf (route directe) ───────────────────────────
+router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
+  try {
+    const { Prescription, Patient } = await getModels();
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
+
+    const prescription = await Prescription.findOne({ where });
+    if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
+
+    let patient = null;
+    try { patient = await Patient.findByPk(prescription.patient_id); } catch(e) {}
+
+    const items = prescription.content_json?.items || prescription.content?.items || [];
+    const html  = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+    <title>Ordonnance ${prescription.number}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:30px;font-size:13px;color:#333}
+      .header{border-bottom:2px solid #0D7A87;padding-bottom:16px;margin-bottom:20px;display:flex;justify-content:space-between}
+      .title{font-size:22px;font-weight:bold;color:#0D7A87}
+      .number{font-size:14px;color:#555}
+      .patient{background:#f8fafc;padding:12px;border-radius:8px;margin-bottom:20px;border-left:4px solid #0D7A87}
+      .item{padding:10px 0;border-bottom:1px solid #eee}
+      .item-name{font-weight:bold;font-size:14px;color:#0D7A87}
+      .item-detail{color:#555;margin-top:4px;font-size:12px}
+      .footer{margin-top:40px;display:flex;justify-content:flex-end}
+      .sign{text-align:center;border-top:1px solid #333;padding-top:8px;width:200px}
+      @media print{body{padding:0}}
+    </style>
+    </head><body>
+    <div class="header">
+      <div>
+        <div class="title">ORDONNANCE</div>
+        <div class="number">${prescription.number}</div>
+      </div>
+      <div style="text-align:right;color:#555;font-size:12px">
+        <div>Date: ${new Date(prescription.issued_at || prescription.created_at).toLocaleDateString('fr-FR')}</div>
+      </div>
+    </div>
+    <div class="patient">
+      <strong>Patient:</strong> ${patient?.first_name || ''} ${patient?.last_name || ''}
+    </div>
+    <div>
+      ${items.length > 0 ? items.map(item => `
+        <div class="item">
+          <div class="item-name">${item.medication || item.name || item.drug || ''}</div>
+          <div class="item-detail">
+            ${item.dosage    ? `<span>Dosage: ${item.dosage}</span>` : ''}
+            ${item.frequency ? `<span> &bull; ${item.frequency}</span>` : ''}
+            ${item.duration  ? `<span> &bull; Durée: ${item.duration}</span>` : ''}
+          </div>
+          ${item.instructions ? `<div class="item-detail">${item.instructions}</div>` : ''}
+        </div>`).join('') : '<p style="color:#999">Aucun médicament prescrit</p>'}
+    </div>
+    ${prescription.notes ? `<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${prescription.notes}</p>` : ''}
+    <div class="footer">
+      <div class="sign">
+        <div style="height:48px"></div>
+        <div>Signature du praticien</div>
+      </div>
+    </div>
+    <script>window.print();</script>
+    </body></html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
+  } catch (error) {
+    console.error('PDF prescription error:', error.message);
+    return res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── GET /api/prescriptions/:id/print (alias) ─────────────────────────────────
+router.get('/:id/print', [param('id').isUUID()], async (req, res) => {
+  req.params = { ...req.params, id: req.params.id };
+  // Reutiliser la meme logique que /pdf
+  const { Prescription, Patient } = await getModels().catch(() => ({}));
+  if (!Prescription) return res.status(500).json({ error: 'Modele non disponible' });
+  const clinicId = getClinicId(req);
+  const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
+  const prescription = await Prescription.findOne({ where }).catch(() => null);
+  if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
+  res.redirect(`/api/prescriptions/${req.params.id}/pdf`);
+});
+
 module.exports = router;
