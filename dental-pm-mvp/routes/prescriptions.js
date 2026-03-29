@@ -229,6 +229,39 @@ router.get('/patients/:patientId/prescriptions/:id/print', [
 });
 
 
+
+// ── POST /api/prescriptions/:id/issue ────────────────────────────────────────
+router.post('/:id/issue', [param('id').isUUID()], async (req, res) => {
+  try {
+    const { Prescription } = await getModels();
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
+    const prescription = await Prescription.findOne({ where });
+    if (!prescription) return res.status(404).json({ error:'Ordonnance non trouvée' });
+
+    await prescription.update({ status:'ISSUED', issued_at: new Date() });
+    return res.json({ message:'Ordonnance émise', prescription });
+  } catch (error) {
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
+// ── POST /api/prescriptions/:id/cancel ───────────────────────────────────────
+router.post('/:id/cancel', [param('id').isUUID()], async (req, res) => {
+  try {
+    const { Prescription } = await getModels();
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
+    const prescription = await Prescription.findOne({ where });
+    if (!prescription) return res.status(404).json({ error:'Ordonnance non trouvée' });
+
+    await prescription.update({ status:'CANCELLED' });
+    return res.json({ message:'Ordonnance annulée', prescription });
+  } catch (error) {
+    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
 // ── GET /api/prescriptions/:id/pdf (route directe) ───────────────────────────
 router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
   try {
