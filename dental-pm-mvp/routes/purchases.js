@@ -55,16 +55,30 @@ router.post('/', [
 
     const total_mga = (items || []).reduce((sum, i) => sum + ((i.quantity || 0) * (i.unit_price_mga || 0)), 0);
 
-    const purchase = await Purchase.create({
-      order_number,
-      supplier_id:            supplier_id || null,
-      clinic_id:              clinicId,
-      created_by_user_id:     userId,
-      status:                 'DRAFT',
-      total_mga,
-      notes:                  notes || null,
-      expected_delivery_date: expected_delivery_date || null
-    });
+    // Colonnes exactes de la table purchase_orders
+    const purchaseData = {
+      number:     order_number,   // colonne 'number' pas 'order_number'
+      created_by: userId,         // colonne 'created_by' pas 'created_by_user_id'
+      status:     'DRAFT',
+    };
+    if (clinicId)               purchaseData.clinic_id              = clinicId;
+    if (supplier_id)            purchaseData.supplier_id            = supplier_id;
+    if (total_mga)              purchaseData.total_mga              = total_mga;
+    if (notes)                  purchaseData.notes                  = notes;
+    if (expected_delivery_date) purchaseData.expected_delivery_date = expected_delivery_date;
+
+    // Essayer aussi order_number au cas où
+    let purchase;
+    try {
+      purchase = await Purchase.create(purchaseData);
+    } catch(e1) {
+      if (e1.message?.includes('number')) {
+        // Essayer avec order_number
+        delete purchaseData.number;
+        purchaseData.order_number = order_number;
+        purchase = await Purchase.create(purchaseData);
+      } else throw e1;
+    }
 
     // Créer les items si PurchaseItem existe
     if (items?.length > 0 && models.PurchaseItem) {
