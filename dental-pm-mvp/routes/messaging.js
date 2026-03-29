@@ -124,7 +124,7 @@ router.get('/logs', async (req, res) => {
 router.post('/run-birthday', async (req, res) => {
   try {
     const clinicId = getClinicId(req);
-    if (!clinicId) return res.status(400).json({ error:'clinic_id requis' });
+    if (!clinicId) return res.json({ message:'Aucune clinique associée', birthday_patients_found: 0, messages_created: 0 });
 
     const today = new Date();
     const todayMonth = today.getMonth() + 1;
