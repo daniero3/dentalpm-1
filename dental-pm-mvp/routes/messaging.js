@@ -41,7 +41,21 @@ router.post('/templates', [
     const existing = await MessageTemplate.findOne({ where: { clinic_id: clinicId, key } });
     if (existing) return res.status(409).json({ error:'Un template avec cette clé existe déjà' });
 
-    const template = await MessageTemplate.create({ clinic_id: clinicId, key, channel, text, is_active: true });
+    // clinic_id NOT NULL dans message_templates — toujours requis
+    let resolvedClinicId = clinicId;
+    if (!resolvedClinicId && req.user) {
+      // Chercher clinic_id depuis la DB via l'utilisateur
+      try {
+        const { User } = require('../models');
+        const u = await User.findByPk(req.user.id || req.user.dataValues?.id, { attributes: ['clinic_id'] });
+        resolvedClinicId = u?.clinic_id || null;
+      } catch(e) {}
+    }
+    if (!resolvedClinicId) {
+      return res.status(400).json({ error: 'Clinique requise pour créer un template. Reconnectez-vous.' });
+    }
+
+    const template = await MessageTemplate.create({ clinic_id: resolvedClinicId, key, channel, text, is_active: true });
 
     try { await AuditLog.create({ user_id: getUserId(req), action:'CREATE', resource_type:'message_template', resource_id: template.id, new_values: { key, channel }, ip_address: req.ip, description:`Template créé: ${key}` }); } catch(e) {}
 
