@@ -110,6 +110,9 @@ app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 // ── Error handlers ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
   res.status(err.status || 500).json({ error: err.message || "Erreur interne" });
 });
 
