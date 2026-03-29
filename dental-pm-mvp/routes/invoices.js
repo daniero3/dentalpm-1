@@ -11,7 +11,7 @@ const router = express.Router();
 router.use(auditLogger('invoices'));
 
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const getUserId   = (req) => req.user?.id || req.user?.dataValues?.id || req.user?.userId || req.user?.user_id || null;
 
 const clinicWhere = (req, extra = {}) => {
   if (req.user?.role === 'SUPER_ADMIN') return extra;
@@ -96,24 +96,33 @@ router.post('/', [
     const discountAmount = (subtotal * discount_percentage) / 100;
     const total          = subtotal - discountAmount;
 
-    // Construire les données de la facture
-    const invoiceData = {
+    // Essayer de créer la facture — champs minimaux garantis
+    let invoice;
+    const baseInvoice = {
       invoice_number:      invoiceNumber,
       patient_id,
       subtotal_mga:        subtotal,
-      discount_percentage,
+      discount_percentage: discount_percentage || 0,
       discount_amount_mga: discountAmount,
       total_mga:           total,
+      status:              'DRAFT',
     };
-    // Champs optionnels
-    if (clinicId)    invoiceData.clinic_id           = clinicId;
-    if (schedule_id) invoiceData.schedule_id         = schedule_id;
-    if (notes)       invoiceData.notes               = notes;
-    if (userId)      invoiceData.created_by_user_id  = userId;
-    // Champ document_type si la colonne existe
-    try { invoiceData.document_type = 'INVOICE'; } catch(e) {}
+    if (clinicId)    baseInvoice.clinic_id           = clinicId;
+    if (schedule_id) baseInvoice.schedule_id         = schedule_id;
+    if (notes)       baseInvoice.notes               = notes;
+    if (userId)      baseInvoice.created_by_user_id  = userId;
 
-    const invoice = await Invoice.create(invoiceData);
+    // Tenter avec document_type d'abord
+    try {
+      invoice = await Invoice.create({ ...baseInvoice, document_type: 'INVOICE' });
+    } catch(e1) {
+      // Si document_type n'existe pas, réessayer sans
+      if (e1.message?.includes('document_type') || e1.message?.includes('column')) {
+        invoice = await Invoice.create(baseInvoice);
+      } else {
+        throw e1;
+      }
+    }
 
     await Promise.all(items.map(item => InvoiceItem.create({
       invoice_id:      invoice.id,
