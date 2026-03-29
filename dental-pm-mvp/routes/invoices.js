@@ -96,18 +96,24 @@ router.post('/', [
     const discountAmount = (subtotal * discount_percentage) / 100;
     const total          = subtotal - discountAmount;
 
-    const invoice = await Invoice.create({
+    // Construire les données de la facture
+    const invoiceData = {
       invoice_number:      invoiceNumber,
       patient_id,
-      clinic_id:           clinicId,
-      ...(schedule_id ? { schedule_id } : {}),
       subtotal_mga:        subtotal,
       discount_percentage,
       discount_amount_mga: discountAmount,
       total_mga:           total,
-      notes,
-      created_by_user_id:  userId
-    });
+    };
+    // Champs optionnels
+    if (clinicId)    invoiceData.clinic_id           = clinicId;
+    if (schedule_id) invoiceData.schedule_id         = schedule_id;
+    if (notes)       invoiceData.notes               = notes;
+    if (userId)      invoiceData.created_by_user_id  = userId;
+    // Champ document_type si la colonne existe
+    try { invoiceData.document_type = 'INVOICE'; } catch(e) {}
+
+    const invoice = await Invoice.create(invoiceData);
 
     await Promise.all(items.map(item => InvoiceItem.create({
       invoice_id:      invoice.id,
