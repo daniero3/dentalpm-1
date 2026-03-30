@@ -23,7 +23,6 @@ const router = express.Router();
 // ✅ Pas de requireValidSubscription — géré par licensing.js global
 router.use(auditLogger('invoices'));
 
-const jwt = require('jsonwebtoken');
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
 
 // Décoder le token JWT directement pour obtenir userId de façon fiable
