@@ -4,6 +4,16 @@ const { Clinic, Subscription, PaymentRequest, AuditLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
 const PDFDocument = require('pdfkit');
 
+const jwt = require('jsonwebtoken');
+const _getUserId = (req) => {
+  const v = req.user?.id || req.user?.dataValues?.id || req.user?.userId;
+  if (v) return v;
+  try {
+    const t = req.headers?.authorization?.split(' ')[1];
+    return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null;
+  } catch(e) { return null; }
+};
+
 const router = express.Router();
 
 
@@ -79,7 +89,7 @@ router.post('/renew', [
 
     const paymentRequest = await PaymentRequest.create({
       clinic_id: req.user.clinic_id,
-      submitted_by_user_id: req.user.id,
+      submitted_by_user_id: _getUserId(req),
       plan_code: 'PRO',
       amount_mga: amount,
       payment_method,
@@ -88,7 +98,7 @@ router.post('/renew', [
     });
 
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: _getUserId(req),
       action: 'CREATE',
       resource_type: 'payment_request',
       resource_id: paymentRequest.id,
@@ -272,7 +282,7 @@ router.post('/payment-requests', [
 
     const paymentRequest = await PaymentRequest.create({
       clinic_id: req.user.clinic_id,
-      submitted_by_user_id: req.user.id,
+      submitted_by_user_id: _getUserId(req),
       plan_code,
       amount_mga: amount,
       payment_method,
@@ -283,7 +293,7 @@ router.post('/payment-requests', [
     // Audit log (optionnel, si AuditLog supporte ces champs)
     try {
       await AuditLog.create({
-        user_id: req.user.id,
+        user_id: _getUserId(req),
         action: 'CREATE',
         resource_type: 'payment_request',
         resource_id: paymentRequest.id,
