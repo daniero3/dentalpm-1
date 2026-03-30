@@ -56,7 +56,7 @@ router.post('/templates', [
       try {
         const { User, Clinic } = require('../models');
         // Chercher via User
-        const uid = req.user.id || req.user.dataValues?.id;
+        const uid = (req.user?.id || req.user?.dataValues?.id) || req.user.dataValues?.id;
         if (uid) {
           const u = await User.findByPk(uid, { attributes: ['clinic_id'] });
           resolvedClinicId = u?.clinic_id || null;
