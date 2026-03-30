@@ -28,7 +28,7 @@ const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.d
 // Décoder le token JWT directement pour obtenir userId de façon fiable
 const getUserId = (req) => {
   // 1. Depuis req.user Sequelize
-  if (req.user?.id)             return req.user.id;
+  if (req.user?.id)             return (req.user?.id || req.user?.dataValues?.id);
   if (req.user?.dataValues?.id) return req.user.dataValues.id;
   if (req.user?.userId)         return req.user.userId;
 
