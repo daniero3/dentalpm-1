@@ -136,7 +136,7 @@ router.get('/:id', requireClinicId, [
 
     try {
       await AuditLog.create({
-        user_id: req.user.id,
+        user_id: getUserId(req),
         action: 'VIEW',
         resource_type: 'patients',
         resource_id: patient.id,
@@ -212,7 +212,7 @@ router.post('/', requireClinicId, [
       patient_number,
       gender,
       clinic_id: clinicId,
-      created_by_user_id: req.user.id,
+      created_by_user_id: getUserId(req),
       emergency_contact_name:  req.body.emergency_contact_name  || null,
       emergency_contact_phone: req.body.emergency_contact_phone || null,
       payer_type: req.body.payer_type || 'CASH',
@@ -258,7 +258,7 @@ router.put('/:id', requireClinicId, [
 
     try {
       await AuditLog.create({
-        user_id: req.user.id,
+        user_id: getUserId(req),
         action: 'UPDATE',
         resource_type: 'patients',
         resource_id: patient.id,
@@ -296,7 +296,7 @@ router.delete('/:id', requireClinicId, [
 
     try {
       await AuditLog.create({
-        user_id: req.user.id,
+        user_id: getUserId(req),
         action: 'DELETE',
         resource_type: 'patients',
         resource_id: patient.id,
