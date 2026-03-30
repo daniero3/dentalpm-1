@@ -110,7 +110,29 @@ router.post('/', [
     if (clinicId)    baseInvoice.clinic_id           = clinicId;
     if (schedule_id) baseInvoice.schedule_id         = schedule_id;
     if (notes)       baseInvoice.notes               = notes;
-    if (userId)      baseInvoice.created_by_user_id  = userId;
+    // created_by_user_id NOT NULL — résoudre depuis toutes sources
+    let finalUserId = userId
+      || req.user?.id
+      || req.user?.dataValues?.id
+      || req.user?.userId
+      || null;
+
+    // Dernier recours DB
+    if (!finalUserId && req.user?.username) {
+      try {
+        const { User } = require('../models');
+        const u = await User.findOne({ where: { username: req.user.username }, attributes: ['id'] });
+        finalUserId = u?.id || null;
+      } catch(e) {}
+    }
+
+    if (!finalUserId) {
+      return res.status(401).json({
+        error: 'Session expirée — reconnectez-vous',
+        code: 'USER_ID_NULL'
+      });
+    }
+    baseInvoice.created_by_user_id = finalUserId;
 
     // Tenter avec document_type d'abord
     try {
@@ -302,6 +324,14 @@ ${invoice.notes?`<p style="margin-top:16px;color:#666;font-style:italic">Notes: 
   } catch (error) {
     res.status(500).json({ error:'Erreur serveur', message: error.message });
   }
+});
+
+
+// ── GET /:id/pdf (alias de print) ────────────────────────────────────────────
+router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
+  // Rediriger vers print
+  req.url = req.url.replace('/pdf', '/print');
+  return router.handle(req, res, () => {});
 });
 
 module.exports = router;
