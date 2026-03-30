@@ -6,6 +6,16 @@ const { Clinic, Subscription, SubscriptionInvoice, User, PaymentRequest } = requ
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
+const jwt = require('jsonwebtoken');
+const _getUserId = (req) => {
+  const v = req.user?.id || req.user?.dataValues?.id || req.user?.userId;
+  if (v) return v;
+  try {
+    const t = req.headers?.authorization?.split(' ')[1];
+    return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null;
+  } catch(e) { return null; }
+};
+
 // ============================================================
 // CLINICS MANAGEMENT
 // ============================================================
@@ -92,7 +102,7 @@ router.post('/clinics', requireRole('SUPER_ADMIN'), [
       nif_number: nif_number || null, stat_number: stat_number || null,
       subscription_status: 'TRIAL', trial_ends_at: trialEnd, current_plan: plan,
       is_active: true, is_verified: true, onboarding_completed: false,
-      created_by_user_id: req.user.id
+      created_by_user_id: _getUserId(req)
     });
 
     const passwordHash = await bcrypt.hash(admin_password, 12);
@@ -194,7 +204,7 @@ router.post('/subscriptions', requireRole('SUPER_ADMIN'), [
     const subscription = await Subscription.create({
       clinic_id, plan, status: 'ACTIVE', start_date: startDate, end_date: endDate,
       duration_months: parseInt(duration_months), monthly_price_mga: amount_mga,
-      notes, created_by_user_id: req.user.id
+      notes, created_by_user_id: _getUserId(req)
     });
 
     await clinic.update({ subscription_status: 'ACTIVE', current_plan: plan });
@@ -306,7 +316,7 @@ router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN')
     await request.update({
       status: 'VERIFIED',
       note_admin: req.body.note_admin || null,
-      verified_by: req.user.id,
+      verified_by: _getUserId(req),
       verified_at: new Date()
     });
 
@@ -328,7 +338,7 @@ router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN')
           duration_months: 1,
           monthly_price_mga: request.amount_mga || 0,
           notes: `Paiement vérifié le ${new Date().toLocaleDateString('fr-FR')}`,
-          created_by_user_id: req.user.id
+          created_by_user_id: _getUserId(req)
         });
       } catch (e) { console.log('Subscription creation skipped:', e.message); }
     }
@@ -350,7 +360,7 @@ router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN', 'ADMIN')
     await request.update({
       status: 'REJECTED',
       note_admin: req.body.note_admin || null,
-      verified_by: req.user.id,
+      verified_by: _getUserId(req),
       verified_at: new Date()
     });
 
