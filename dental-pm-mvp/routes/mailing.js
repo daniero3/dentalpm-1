@@ -264,14 +264,14 @@ router.post('/campaigns', requireClinicId, [
     const campaign = await MailingCampaign.create({
       ...req.body,
       clinic_id: req.clinic_id, // Automatic clinic assignment
-      created_by_user_id: req.user.id,
+      created_by_user_id: _getUserId(req),
       total_recipients: audienceCount,
       status: req.body.scheduled_at ? 'SCHEDULED' : 'DRAFT'
     });
 
     // Log campaign creation
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: _getUserId(req),
       action: 'CREATE',
       resource_type: 'mailing_campaigns',
       resource_id: campaign.id,
@@ -403,7 +403,7 @@ router.post('/campaigns/:id/send', requireClinicId, [
 
     // Log campaign sending
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: _getUserId(req),
       action: 'SEND',
       resource_type: 'mailing_campaigns',
       resource_id: campaign.id,
