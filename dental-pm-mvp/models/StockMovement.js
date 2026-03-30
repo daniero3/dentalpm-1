@@ -69,7 +69,7 @@ const StockMovement = sequelize.define('stock_movements', {
   },
   user_id: {
     type: DataTypes.UUID,
-    allowNull: true  // ✅ nullable - set par JWT,
+    allowNull: true,  // ✅ nullable - set par JWT
     references: {
       model: 'users',
       key: 'id'
