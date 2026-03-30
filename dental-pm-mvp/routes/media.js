@@ -7,6 +7,16 @@ const { Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { Op } = require('sequelize');
 
+const jwt = require('jsonwebtoken');
+const _getUserId = (req) => {
+  const v = req.user?.id || req.user?.dataValues?.id || req.user?.userId;
+  if (v) return v;
+  try {
+    const t = req.headers?.authorization?.split(' ')[1];
+    return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null;
+  } catch(e) { return null; }
+};
+
 const router = express.Router();
 
 // All routes require authentication
@@ -102,7 +112,7 @@ router.get('/patients/:patientId', [
         file_size: 245760,
         mime_type: 'image/jpeg',
         uploaded_at: new Date(),
-        uploaded_by: req.user.id,
+        uploaded_by: _getUserId(req),
         url: `/api/media/files/patient_profile_${patientId}.jpg`,
         thumbnail_url: `/api/media/thumbnails/patient_profile_${patientId}_thumb.jpg`,
         description: 'Photo de profil du patient'
@@ -116,7 +126,7 @@ router.get('/patients/:patientId', [
         file_size: 512000,
         mime_type: 'image/jpeg',
         uploaded_at: new Date(Date.now() - 86400000), // 1 day ago
-        uploaded_by: req.user.id,
+        uploaded_by: _getUserId(req),
         url: `/api/media/files/xray_panoramic_${patientId}.jpg`,
         thumbnail_url: `/api/media/thumbnails/xray_panoramic_${patientId}_thumb.jpg`,
         description: 'Radiographie panoramique - Contrôle annuel'
@@ -130,7 +140,7 @@ router.get('/patients/:patientId', [
         file_size: 156789,
         mime_type: 'image/jpeg',
         uploaded_at: new Date(Date.now() - 172800000), // 2 days ago
-        uploaded_by: req.user.id,
+        uploaded_by: _getUserId(req),
         url: `/api/media/files/intraoral_front_${patientId}.jpg`,
         thumbnail_url: `/api/media/thumbnails/intraoral_front_${patientId}_thumb.jpg`,
         description: 'Photo intra-orale - Vue frontale'
@@ -217,7 +227,7 @@ router.post('/patients/:patientId/upload', [
         mime_type: file.mimetype,
         file_path: file.path,
         uploaded_at: new Date(),
-        uploaded_by: req.user.id,
+        uploaded_by: _getUserId(req),
         url: `/api/media/files/${file.filename}`,
         thumbnail_url: file.mimetype.startsWith('image/') 
           ? `/api/media/thumbnails/${file.filename}` 
@@ -230,7 +240,7 @@ router.post('/patients/:patientId/upload', [
 
     // Log upload action
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: _getUserId(req),
       action: 'UPLOAD',
       resource_type: 'patient_media',
       resource_id: patientId,
@@ -303,7 +313,7 @@ router.delete('/patients/:patientId/:mediaId', [
     
     // Log deletion
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: _getUserId(req),
       action: 'DELETE',
       resource_type: 'patient_media',
       resource_id: patientId,
@@ -414,7 +424,7 @@ router.post('/staff/:userId/photo', [
     }
 
     // Allow users to update their own photo
-    if (req.user.role !== 'ADMIN' && req.user.id !== userId) {
+    if (req.user.role !== 'ADMIN' && _getUserId(req) !== userId) {
       return res.status(403).json({
         error: 'Permission insuffisante'
       });
@@ -426,7 +436,7 @@ router.post('/staff/:userId/photo', [
 
     // Log photo update
     await AuditLog.create({
-      user_id: req.user.id,
+      user_id: _getUserId(req),
       action: 'UPDATE',
       resource_type: 'user_photo',
       resource_id: userId,
