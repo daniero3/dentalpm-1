@@ -41,6 +41,16 @@ const PORT = process.env.PORT || 8001;
 app.set('trust proxy', 1);
 app.use(helmet());
 
+// ✅ CORS headers INCONDITIONNELS — avant tout middleware
+// Garantit que même les erreurs 500 ont les bons headers CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  next();
+});
+
 // ── CORS ──────────────────────────────────────────────────────────────────────
 const corsOptions = {
   origin: (origin, cb) => cb(null, true),
