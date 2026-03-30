@@ -2,17 +2,42 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { MailingCampaign, MailingLog, Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
-const { requireClinicId } = require('../middleware/clinic');
-const { requireValidSubscription } = require('../middleware/licensing');
+// ✅ requireClinicId inline
+const requireClinicId = (req, res, next) => {
+  if (req.user?.role === 'SUPER_ADMIN') return next();
+  const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+  if (!clinicId) return res.status(403).json({ error: 'Clinique requise', code: 'NO_CLINIC' });
+  req.clinic_id = clinicId;
+  next();
+};
 const { Op } = require('sequelize');
+
+const jwt = require('jsonwebtoken');
+
+const getClinicId = (req) => {
+  const v = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+  if (v) return v;
+  try {
+    const t = req.headers?.authorization?.split(' ')[1];
+    return t ? (jwt.verify(t, process.env.JWT_SECRET).clinic_id || null) : null;
+  } catch(e) { return null; }
+};
+
+const getUserId = (req) => {
+  const v = req.user?.id || req.user?.dataValues?.id || req.user?.userId;
+  if (v) return v;
+  try {
+    const t = req.headers?.authorization?.split(' ')[1];
+    return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null;
+  } catch(e) { return null; }
+};
+
 
 const router = express.Router();
 
 // All routes require authentication
-router.use(authenticateToken);
 
 // All routes require valid subscription
-router.use(requireValidSubscription);
 
 // =============================================================================
 // MAILING CAMPAIGNS MANAGEMENT

@@ -2,30 +2,44 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
-// ✅ requireClinicId inline — évite la dépendance au middleware externe
-const requireClinicId = (req, res, next) => {
-  const clinicId = req.clinic_id
-    || req.user?.clinic_id
-    || req.user?.clinicId
-    || null;
+const jwt = require('jsonwebtoken');
 
-  if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
-    return res.status(403).json({
-      error: 'Accès refusé',
-      message: 'Aucune clinique associée à votre compte',
-      code: 'NO_CLINIC'
-    });
+// ✅ requireClinicId — lit depuis JWT si clinic_id absent
+const requireClinicId = (req, res, next) => {
+  if (req.user?.role === 'SUPER_ADMIN') return next();
+  
+  let clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+  
+  // Fallback: lire depuis le token JWT directement
+  if (!clinicId) {
+    try {
+      const token = req.headers?.authorization?.split(' ')[1];
+      if (token) clinicId = jwt.verify(token, process.env.JWT_SECRET).clinic_id;
+    } catch(e) {}
+  }
+
+  if (!clinicId) {
+    return res.status(403).json({ error: 'Accès refusé', message: 'Reconnectez-vous', code: 'NO_CLINIC' });
   }
 
   req.clinic_id = clinicId;
   next();
+};
+
+const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+const getUserId   = (req) => {
+  const v = req.user?.id || req.user?.dataValues?.id;
+  if (v) return v;
+  try {
+    const t = req.headers?.authorization?.split(' ')[1];
+    return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null;
+  } catch(e) { return null; }
 };
 const { auditLogger } = require('../middleware/auditLogger');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
-router.use(authenticateToken);
 // ✅ Subscription vérifiée côté frontend (LicensingGuard)
 router.use(auditLogger('patients'));
 

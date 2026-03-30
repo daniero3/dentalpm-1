@@ -9,7 +9,7 @@ const MessageTemplate = sequelize.define('message_templates', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true  // ✅ nullable pour templates globaux,
     references: {
       model: 'clinics',
       key: 'id'

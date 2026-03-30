@@ -10,7 +10,6 @@ const { Op } = require('sequelize');
 const router = express.Router();
 
 // All routes require authentication
-router.use(authenticateToken);
 
 // Configure multer for file uploads (mock storage for now)
 const storage = multer.diskStorage({

@@ -6,7 +6,6 @@ const PDFDocument = require('pdfkit');
 
 const router = express.Router();
 
-router.use(authenticateToken);
 
 // Subscription prices par plan
 const PLAN_PRICES = {

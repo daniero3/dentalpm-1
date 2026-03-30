@@ -1,7 +1,14 @@
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Invoice, InvoiceItem, Patient, Clinic, AuditLog, PricingSchedule } = require('../models');
-const { requireClinicId } = require('../middleware/clinic');
+// ✅ requireClinicId inline
+const requireClinicId = (req, res, next) => {
+  if (req.user?.role === 'SUPER_ADMIN') return next();
+  const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+  if (!clinicId) return res.status(403).json({ error: 'Clinique requise', code: 'NO_CLINIC' });
+  req.clinic_id = clinicId;
+  next();
+};
 const { Op } = require('sequelize');
 
 const router = express.Router();

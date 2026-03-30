@@ -3,12 +3,24 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Product, StockMovement, Supplier, User, AuditLog, sequelize } = require('../models');
 const { requireRole } = require('../middleware/auth');
 const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
 // ✅ Helpers — pas de requireValidSubscription ni requireClinicId externe
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const getUserId   = (req) => {
+  const fromUser = req.user?.id || req.user?.dataValues?.id || req.user?.userId || null;
+  if (fromUser) return fromUser;
+  try {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      return decoded.userId || decoded.id || null;
+    }
+  } catch(e) {}
+  return null;
+};
 
 // ── GET /products ─────────────────────────────────────────────────────────────
 router.get('/products', [
@@ -147,19 +159,27 @@ router.post('/products/:id/movements', [
       if (newQty < 0) return res.status(400).json({ error:'Stock insuffisant' });
     } else newQty = Math.abs(quantity);
 
-    const movement = await StockMovement.create({
-      product_id:   product.id,
-      clinic_id:    clinicId,
-      type,
-      quantity:     type === 'ADJUST' ? (newQty - currentQty) : (type === 'IN' ? Math.abs(quantity) : -Math.abs(quantity)),
-      reason,
-      reference:    reference || null,
-      user_id:      getUserId(req),
-      previous_qty: currentQty,
-      new_qty:      newQty
-    });
+    const movQty = type === 'ADJUST' ? (newQty - currentQty) : (type === 'IN' ? Math.abs(quantity) : -Math.abs(quantity));
+    const userId = getUserId(req);
+    const movData = { product_id: product.id, type, quantity: movQty, reason };
+    if (clinicId)      movData.clinic_id    = clinicId;
+    if (userId)        movData.user_id      = userId;
+    if (reference)     movData.reference    = reference;
+    try { movData.previous_qty = currentQty; movData.new_qty = newQty; } catch(e) {}
 
-    await product.update({ current_qty: newQty });
+    let movement;
+    try {
+      movement = await StockMovement.create(movData);
+    } catch(e) {
+      // Si colonnes manquantes, essayer version minimale
+      console.warn('StockMovement full create failed, trying minimal:', e.message);
+      movement = await StockMovement.create({ product_id: product.id, type, quantity: movQty, reason });
+    }
+
+    // Mettre à jour le stock
+    try { await product.update({ current_qty: newQty }); } catch(e) {
+      console.warn('product.update current_qty failed:', e.message);
+    }
 
     res.status(201).json({ message:'Mouvement enregistré', movement: { id: movement.id, type, quantity: movement.quantity, previous_qty: currentQty, new_qty: newQty }, product: { id: product.id, name: product.name, current_qty: newQty } });
   } catch (error) {

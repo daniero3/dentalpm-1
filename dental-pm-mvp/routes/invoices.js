@@ -4,6 +4,19 @@ const { Invoice, InvoiceItem, Patient, Payment, AuditLog, PricingSchedule, Clini
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { auditLogger } = require('../middleware/auditLogger');
 const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
+
+// Lire userId depuis JWT token directement
+const getUserIdFromToken = (req) => {
+  try {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      return decoded.userId || decoded.id || null;
+    }
+  } catch(e) {}
+  return null;
+};
 
 const router = express.Router();
 
@@ -103,7 +116,7 @@ router.post('/', [
 
     const { patient_id, schedule_id, items, discount_percentage=0, notes } = req.body;
     const clinicId = getClinicId(req);
-    const userId   = getUserId(req);
+    const userId   = getUserIdFromToken(req);
 
     const patient = await Patient.findByPk(patient_id);
     if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
@@ -131,7 +144,7 @@ router.post('/', [
     if (schedule_id) baseInvoice.schedule_id         = schedule_id;
     if (notes)       baseInvoice.notes               = notes;
     // created_by_user_id — getUserId lit depuis req.user ET le token JWT
-    const finalUserId = getUserId(req);
+    const finalUserId = getUserIdFromToken(req);
     if (finalUserId) baseInvoice.created_by_user_id = finalUserId;
 
     // Dernier recours DB
@@ -267,7 +280,7 @@ router.post('/:id/payments', [
       payment_number:       `PAY-${String(paymentCount+1).padStart(6,'0')}`,
       amount_mga:           parseFloat(amount_mga),
       payment_method, reference_number, notes,
-      processed_by_user_id: getUserId(req),
+      processed_by_user_id: getUserIdFromToken(req),
       status:               'COMPLETED'
     });
 

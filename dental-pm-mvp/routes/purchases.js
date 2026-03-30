@@ -1,11 +1,20 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
 
 const router = express.Router();
 
-const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const getClinicId = (req) => {
+  const fromReq = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+  if (fromReq) return fromReq;
+  try { const t = req.headers['authorization']?.split(' ')[1]; return t ? jwt.verify(t, process.env.JWT_SECRET).clinic_id : null; } catch(e) { return null; }
+};
+const getUserId = (req) => {
+  const fromUser = req.user?.id || req.user?.dataValues?.id || req.user?.userId || null;
+  if (fromUser) return fromUser;
+  try { const t = req.headers['authorization']?.split(' ')[1]; return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null; } catch(e) { return null; }
+};
 
 async function getModels() { return require('../models'); }
 
@@ -50,8 +59,9 @@ router.post('/', [
     const { supplier_id, items, notes, expected_delivery_date } = req.body;
 
     const year  = new Date().getFullYear();
-    const count = await Purchase.count({ where: clinicId ? { clinic_id: clinicId } : {} });
-    const order_number = `PO-${year}-${String(count+1).padStart(4,'0')}`;
+    // Utiliser timestamp pour garantir l'unicité
+    const ts    = Date.now().toString().slice(-6);
+    const order_number = `PO-${year}-${ts}`;
 
     const total_mga = (items || []).reduce((sum, i) => sum + ((i.quantity || 0) * (i.unit_price_mga || 0)), 0);
 

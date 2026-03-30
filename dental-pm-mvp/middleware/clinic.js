@@ -1,14 +1,11 @@
 // dental-pm-mvp/middleware/clinic.js
-// Fix: lire clinic_id depuis req.user.clinic_id si req.clinic_id absent
-
 const requireClinicId = (req, res, next) => {
-  // ✅ Chercher clinic_id dans plusieurs endroits
-  const clinicId = req.clinic_id 
-    || req.user?.clinic_id 
-    || req.user?.clinicId 
+  const clinicId = req.clinic_id
+    || req.user?.clinic_id
+    || req.user?.dataValues?.clinic_id
     || null;
 
-  if (!clinicId) {
+  if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
     return res.status(403).json({
       error: 'Accès refusé',
       message: 'Aucune clinique associée à votre compte',
@@ -16,7 +13,6 @@ const requireClinicId = (req, res, next) => {
     });
   }
 
-  // ✅ Toujours setter req.clinic_id pour les routes suivantes
   req.clinic_id = clinicId;
   next();
 };

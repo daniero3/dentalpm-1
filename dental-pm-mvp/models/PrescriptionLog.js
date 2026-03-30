@@ -9,7 +9,7 @@ const PrescriptionLog = sequelize.define('PrescriptionLog', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: true  // ✅ nullable - non requis
   },
   prescription_id: {
     type: DataTypes.UUID,

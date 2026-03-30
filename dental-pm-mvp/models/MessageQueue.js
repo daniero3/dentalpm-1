@@ -9,7 +9,7 @@ const MessageQueue = sequelize.define('message_queue', {
   },
   clinic_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true  // ✅ nullable pour messages globaux,
     references: {
       model: 'clinics',
       key: 'id'

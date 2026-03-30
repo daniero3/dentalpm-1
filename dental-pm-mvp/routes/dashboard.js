@@ -6,7 +6,6 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 // All routes require authentication
-router.use(authenticateToken);
 
 // Get dashboard KPIs
 router.get('/kpi', async (req, res) => {

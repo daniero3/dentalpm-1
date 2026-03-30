@@ -8,7 +8,6 @@ const csv = require('csv-parse/sync');
 
 const router = express.Router();
 
-router.use(authenticateToken);
 
 // GET onboarding status
 router.get('/status', async (req, res) => {

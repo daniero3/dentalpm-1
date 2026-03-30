@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { body, validationResult, param, query } = require('express-validator');
 const { MessageTemplate, MessageQueue, MessageLog, Patient, Appointment, Clinic, AuditLog } = require('../models');
 const { auditLogger } = require('../middleware/auditLogger');
@@ -9,8 +10,16 @@ const router = express.Router();
 // ✅ Pas de requireValidSubscription ni requireClinicId bloquant
 router.use(auditLogger('messaging'));
 
-const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const getClinicId = (req) => {
+  const fromReq = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+  if (fromReq) return fromReq;
+  try { const t = req.headers['authorization']?.split(' ')[1]; return t ? jwt.verify(t, process.env.JWT_SECRET).clinic_id : null; } catch(e) { return null; }
+};
+const getUserId = (req) => {
+  const fromUser = req.user?.id || req.user?.dataValues?.id || req.user?.userId || null;
+  if (fromUser) return fromUser;
+  try { const t = req.headers['authorization']?.split(' ')[1]; return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null; } catch(e) { return null; }
+};
 
 // ── GET /templates ────────────────────────────────────────────────────────────
 router.get('/templates', async (req, res) => {
@@ -241,6 +250,7 @@ async function createAppointmentReminder(appointment, clinic_id) {
     const existing = await MessageQueue.findOne({ where: { reference_id: appointment.id, message_type:'APPT_REMINDER_24H', status:'QUEUED' } });
     if (existing) { await existing.update({ text, scheduled_at: scheduledAt, to: patient.phone_primary }); return existing; }
 
+    if (!clinic_id) { console.warn('createAppointmentReminder: clinic_id null, skip'); return null; }
     return await MessageQueue.create({ clinic_id, patient_id: patient.id, channel: template?.channel || 'SMS', to: patient.phone_primary, text, scheduled_at: scheduledAt, status:'QUEUED', message_type:'APPT_REMINDER_24H', reference_id: appointment.id });
   } catch (error) {
     console.error('Create appointment reminder error:', error);

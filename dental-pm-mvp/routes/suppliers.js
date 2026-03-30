@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const { body, validationResult, param, query } = require('express-validator');
 const { Supplier, Product, AuditLog } = require('../models');
 const { Op } = require('sequelize');
@@ -6,8 +7,16 @@ const { Op } = require('sequelize');
 const router = express.Router();
 
 // ✅ Helpers
-const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const getClinicId = (req) => {
+  const fromReq = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+  if (fromReq) return fromReq;
+  try { const t = req.headers['authorization']?.split(' ')[1]; return t ? jwt.verify(t, process.env.JWT_SECRET).clinic_id : null; } catch(e) { return null; }
+};
+const getUserId = (req) => {
+  const fromUser = req.user?.id || req.user?.dataValues?.id || req.user?.userId || null;
+  if (fromUser) return fromUser;
+  try { const t = req.headers['authorization']?.split(' ')[1]; return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null; } catch(e) { return null; }
+};
 
 const clinicWhere = (req, extra = {}) => {
   if (req.user?.role === 'SUPER_ADMIN') return extra;
