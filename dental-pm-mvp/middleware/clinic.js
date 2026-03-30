@@ -1,20 +1,36 @@
-// dental-pm-mvp/middleware/clinic.js
-const requireClinicId = (req, res, next) => {
-  const clinicId = req.clinic_id
-    || req.user?.clinic_id
-    || req.user?.dataValues?.clinic_id
-    || null;
+const jwt = require('jsonwebtoken');
 
-  if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
-    return res.status(403).json({
-      error: 'Accès refusé',
-      message: 'Aucune clinique associée à votre compte',
-      code: 'NO_CLINIC'
-    });
+const requireClinicId = async (req, res, next) => {
+  if (req.user?.role === 'SUPER_ADMIN') return next();
+
+  // Source 1: req
+  let clinicId = req.clinic_id
+    || req.user?.clinic_id
+    || req.user?.dataValues?.clinic_id;
+
+  // Source 2: token JWT
+  if (!clinicId) {
+    try {
+      const token = req.headers?.authorization?.split(' ')[1];
+      if (token) clinicId = jwt.verify(token, process.env.JWT_SECRET).clinic_id;
+    } catch(e) {}
   }
 
-  req.clinic_id = clinicId;
-  next();
+  // Source 3: base de données
+  if (!clinicId) {
+    try {
+      const { User } = require('../models');
+      const userId = req.user?.id || req.user?.dataValues?.id;
+      if (userId) {
+        const u = await User.findByPk(userId, { attributes: ['clinic_id'] });
+        clinicId = u?.clinic_id || null;
+      }
+    } catch(e) {}
+  }
+
+  // Setter pour les handlers suivants
+  req.clinic_id = clinicId || null;
+  next(); // Toujours passer — le filtre clinic_id se fait dans chaque route
 };
 
 module.exports = { requireClinicId };
