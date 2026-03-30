@@ -10,9 +10,29 @@ const router = express.Router();
 // ✅ Pas de requireValidSubscription — géré par licensing.js global
 router.use(auditLogger('invoices'));
 
+const jwt = require('jsonwebtoken');
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id || req.user?.dataValues?.id || req.user?.userId || req.user?.user_id || null;
 
+// Décoder le token JWT directement pour obtenir userId de façon fiable
+const getUserId = (req) => {
+  // 1. Depuis req.user Sequelize
+  if (req.user?.id)             return req.user.id;
+  if (req.user?.dataValues?.id) return req.user.dataValues.id;
+  if (req.user?.userId)         return req.user.userId;
+
+  // 2. Décoder directement depuis le header Authorization
+  try {
+    const token = req.headers['authorization']?.split(' ')[1];
+    if (token) {
+      const parts  = token.split('.');
+      const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+      if (decoded?.userId) return decoded.userId;
+      if (decoded?.id)     return decoded.id;
+    }
+  } catch(e) {}
+
+  return null;
+};
 const clinicWhere = (req, extra = {}) => {
   if (req.user?.role === 'SUPER_ADMIN') return extra;
   const clinicId = getClinicId(req);
@@ -110,12 +130,9 @@ router.post('/', [
     if (clinicId)    baseInvoice.clinic_id           = clinicId;
     if (schedule_id) baseInvoice.schedule_id         = schedule_id;
     if (notes)       baseInvoice.notes               = notes;
-    // created_by_user_id NOT NULL — résoudre depuis toutes sources
-    let finalUserId = userId
-      || req.user?.id
-      || req.user?.dataValues?.id
-      || req.user?.userId
-      || null;
+    // created_by_user_id — getUserId lit depuis req.user ET le token JWT
+    const finalUserId = getUserId(req);
+    if (finalUserId) baseInvoice.created_by_user_id = finalUserId;
 
     // Dernier recours DB
     if (!finalUserId && req.user?.username) {
