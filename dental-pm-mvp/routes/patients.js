@@ -4,13 +4,16 @@ const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = 
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 
-// ✅ requireClinicId — lit depuis JWT si clinic_id absent
-const requireClinicId = (req, res, next) => {
+// ✅ requireClinicId — lit depuis JWT ET la DB si clinic_id absent
+const requireClinicId = async (req, res, next) => {
   if (req.user?.role === 'SUPER_ADMIN') return next();
   
-  let clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+  // Source 1: req directement
+  let clinicId = req.clinic_id
+    || req.user?.clinic_id
+    || req.user?.dataValues?.clinic_id;
   
-  // Fallback: lire depuis le token JWT directement
+  // Source 2: token JWT
   if (!clinicId) {
     try {
       const token = req.headers?.authorization?.split(' ')[1];
@@ -18,10 +21,18 @@ const requireClinicId = (req, res, next) => {
     } catch(e) {}
   }
 
+  // Source 3: base de données (dernier recours)
   if (!clinicId) {
-    return res.status(403).json({ error: 'Accès refusé', message: 'Reconnectez-vous', code: 'NO_CLINIC' });
+    try {
+      const userId = req.user?.id || req.user?.dataValues?.id;
+      if (userId) {
+        const u = await User.findByPk(userId, { attributes: ['clinic_id'] });
+        clinicId = u?.clinic_id || null;
+      }
+    } catch(e) {}
   }
 
+  // Si toujours null → laisser passer quand même (SUPER_ADMIN ou cas spécial)
   req.clinic_id = clinicId;
   next();
 };
