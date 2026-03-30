@@ -124,10 +124,18 @@ router.post('/login', loginRateLimiter, [
 
     const needsSelection = availableClinics.length > 1;
 
-    // Token temporaire si sélection nécessaire
+    // Token avec clinic_id garanti
+    const resolvedClinicId = user.clinic_id 
+      || availableClinics[0]?.id 
+      || null;
+
     const tokenPayload = {
-      userId: user.id, username: user.username, role: user.role,
-      clinic_id: needsSelection ? null : (user.clinic_id || (availableClinics[0]?.id || null))
+      userId:    user.id,
+      username:  user.username,
+      role:      user.role,
+      // Toujours inclure clinic_id si disponible
+      // Même si sélection requise, on met le premier disponible
+      clinic_id: resolvedClinicId || (availableClinics[0]?.id || null)
     };
 
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
