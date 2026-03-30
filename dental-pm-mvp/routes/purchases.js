@@ -144,4 +144,43 @@ router.patch('/:id/status', [
   }
 });
 
+
+// ── POST /:id/receive ─────────────────────────────────────────────────────────
+router.post('/:id/receive', [param('id').isUUID()], async (req, res) => {
+  try {
+    const models   = await getModels();
+    const Purchase = models.Purchase || models.PurchaseOrder;
+    if (!Purchase) return res.status(500).json({ error: 'Modèle non disponible' });
+
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id };
+    if (clinicId) where.clinic_id = clinicId;
+
+    const purchase = await Purchase.findOne({ where });
+    if (!purchase) return res.status(404).json({ error: 'Commande non trouvée' });
+
+    await purchase.update({ status: 'RECEIVED', received_at: new Date() });
+
+    // Mettre à jour le stock des produits si items disponibles
+    if (models.PurchaseItem && models.Product) {
+      try {
+        const items = await models.PurchaseItem.findAll({ where: { purchase_id: purchase.id } });
+        for (const item of items) {
+          if (item.product_id) {
+            const product = await models.Product.findByPk(item.product_id);
+            if (product) {
+              await product.update({ current_qty: (product.current_qty || 0) + (item.quantity || 0) });
+            }
+          }
+        }
+      } catch(e) { console.warn('Stock update (non-fatal):', e.message); }
+    }
+
+    res.json({ message: 'Commande reçue', purchase });
+  } catch (error) {
+    console.error('Receive purchase error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;
