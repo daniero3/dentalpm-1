@@ -107,7 +107,7 @@ const Invoice = sequelize.define('invoices', {
   },
   created_by_user_id: {
     type: DataTypes.UUID,
-    allowNull: true  // ✅ nullable - set par JWT,
+    allowNull: true,  // ✅ nullable - set par JWT
     references: { model: 'users', key: 'id' }
   },
   sent_at: {
