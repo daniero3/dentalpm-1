@@ -126,13 +126,10 @@ router.post('/', [
       } catch(e) {}
     }
 
-    if (!finalUserId) {
-      return res.status(401).json({
-        error: 'Session expirée — reconnectez-vous',
-        code: 'USER_ID_NULL'
-      });
+    // Si userId trouvé, l'ajouter — sinon continuer sans (colonne nullable après SQL)
+    if (finalUserId) {
+      baseInvoice.created_by_user_id = finalUserId;
     }
-    baseInvoice.created_by_user_id = finalUserId;
 
     // Tenter avec document_type d'abord
     try {
