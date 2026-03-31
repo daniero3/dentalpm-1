@@ -38,6 +38,15 @@ const { authenticateToken: requireAuth } = require('./middleware/auth');
 const app  = express();
 const PORT = process.env.PORT || 8001;
 
+// ✅ CORS inconditionnel — tout premier middleware
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  next();
+});
+
 app.set('trust proxy', 1);
 app.use(helmet());
 
