@@ -271,6 +271,122 @@ router.get('/dashboard', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) =
   }
 });
 
+
+// ============================================================
+// REVENUS & ANALYTICS
+// ============================================================
+
+// GET /api/admin/revenue — statistiques revenus complètes
+router.get('/revenue', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const PLAN_PRICES = { ESSENTIAL: 150000, PRO: 300000, GROUP: 500000 };
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear  = new Date(now.getFullYear(), 0, 1);
+
+    // Tous les abonnements actifs
+    const activeSubs = await Subscription.findAll({
+      where: { status: 'ACTIVE' },
+      include: [{ model: Clinic, as: 'clinic', attributes: ['id','name','email','city','current_plan'], required: false }]
+    }).catch(() => []);
+
+    // Calculer revenus
+    const mrr = activeSubs.reduce((sum, s) => {
+      const price = PLAN_PRICES[s.plan] || s.price_mga || 0;
+      return sum + price;
+    }, 0);
+
+    // Stats par plan
+    const byPlan = { ESSENTIAL: 0, PRO: 0, GROUP: 0, TRIAL: 0 };
+    const allClinics = await Clinic.findAll({ attributes: ['id','name','email','city','subscription_status','current_plan','created_at','trial_ends_at'] }).catch(() => []);
+    allClinics.forEach(c => {
+      if (c.subscription_status === 'TRIAL') byPlan.TRIAL++;
+      else if (byPlan[c.current_plan] !== undefined) byPlan[c.current_plan]++;
+    });
+
+    // Paiements en attente
+    const pendingPayments = await PaymentRequest.findAll({
+      where: { status: 'PENDING' },
+      order: [['created_at', 'DESC']]
+    }).catch(() => []);
+
+    // Paiements vérifiés ce mois
+    const verifiedThisMonth = await PaymentRequest.findAll({
+      where: { status: 'VERIFIED', verified_at: { [require('sequelize').Op.gte]: startOfMonth } }
+    }).catch(() => []);
+
+    const revenueThisMonth = verifiedThisMonth.reduce((sum, p) => sum + (p.amount_mga || 0), 0);
+
+    res.json({
+      mrr,
+      arr: mrr * 12,
+      revenueThisMonth,
+      activeClinics: activeSubs.length,
+      byPlan,
+      pendingCount: pendingPayments.length,
+      pendingPayments: pendingPayments.slice(0, 20),
+      activeSubs: activeSubs.map(s => ({
+        id: s.id, plan: s.plan, status: s.status,
+        price: PLAN_PRICES[s.plan] || s.price_mga || 0,
+        end_date: s.end_date,
+        clinic: s.clinic ? { name: s.clinic.name, email: s.clinic.email, city: s.clinic.city } : null
+      })),
+      allClinics: allClinics.map(c => ({
+        id: c.id, name: c.name, email: c.email, city: c.city,
+        status: c.subscription_status, plan: c.current_plan,
+        created_at: c.created_at, trial_ends_at: c.trial_ends_at
+      }))
+    });
+  } catch (error) {
+    console.error('Revenue error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// PATCH /api/admin/payment-requests/:id/approve — Approuver paiement + activer abonnement
+router.patch('/payment-requests/:id/approve', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const request = await PaymentRequest.findByPk(req.params.id);
+    if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
+
+    const PLAN_PRICES = { ESSENTIAL: 150000, PRO: 300000, GROUP: 500000 };
+    const plan = req.body.plan || request.plan_code || 'ESSENTIAL';
+    const clinic = await Clinic.findByPk(request.clinic_id);
+    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
+
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    await Subscription.create({
+      clinic_id: request.clinic_id, plan, status: 'ACTIVE',
+      start_date: new Date(), end_date: endDate,
+      price_mga: PLAN_PRICES[plan] || request.amount_mga || 0,
+      billing_cycle: 'MONTHLY', auto_renew: true,
+      converted_from_trial: clinic.subscription_status === 'TRIAL',
+      discount_percentage: 0, currency: 'MGA'
+    }).catch(() => {});
+
+    await clinic.update({ subscription_status: 'ACTIVE', current_plan: plan });
+    await request.update({ status: 'VERIFIED', verified_by: _getUserId(req), verified_at: new Date() });
+
+    res.json({ message: 'Paiement approuvé — abonnement activé', clinic: clinic.name, plan });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// PATCH /api/admin/payment-requests/:id/reject — Rejeter paiement
+router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const request = await PaymentRequest.findByPk(req.params.id);
+    if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
+    await request.update({ status: 'REJECTED', note_admin: req.body.reason || 'Rejeté', verified_by: _getUserId(req), verified_at: new Date() });
+    res.json({ message: 'Paiement rejeté' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;
 
 // ============================================================
