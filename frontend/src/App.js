@@ -11,6 +11,7 @@ import { ThemeProvider } from "./components/theme-provider";
 // Components
 import LoginForm from "./components/LoginForm";
 import LandingPage from "./components/LandingPage";
+import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import Dashboard from "./components/Dashboard";
 import PatientManagement from "./components/PatientManagement";
 import DentalChart from "./components/DentalChart";
@@ -274,6 +275,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/landing" element={<LandingPage />} />
+              <Route path="/super-admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/" element={<ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
