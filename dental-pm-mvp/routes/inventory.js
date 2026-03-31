@@ -138,7 +138,7 @@ router.put('/products/:id', [param('id').isUUID()], async (req, res) => {
 router.post('/products/:id/movements', [
   param('id').isUUID(),
   body('type').isIn(['IN','OUT','ADJUST']),
-  body('quantity').isInt({ min:1 }),
+  body('quantity').customSanitizer(v => parseInt(v)).isInt({ min:1 }),
   body('reason').isLength({ min:1, max:255 }).trim()
 ], async (req, res) => {
   try {
@@ -167,21 +167,35 @@ router.post('/products/:id/movements', [
     if (reference)     movData.reference    = reference;
     try { movData.previous_qty = currentQty; movData.new_qty = newQty; } catch(e) {}
 
+    // Transaction atomique — StockMovement + Product update ensemble
+    const { sequelize } = require('../models');
     let movement;
+
     try {
-      movement = await StockMovement.create(movData);
+      await sequelize.transaction(async (t) => {
+        // Créer le mouvement
+        try {
+          movement = await StockMovement.create(movData, { transaction: t });
+        } catch(e) {
+          console.warn('StockMovement full create failed, trying minimal:', e.message);
+          movement = await StockMovement.create(
+            { product_id: product.id, type, quantity: movQty, reason },
+            { transaction: t }
+          );
+        }
+        // Mettre à jour le stock — atomique dans la même transaction
+        await product.update({ current_qty: newQty }, { transaction: t });
+      });
     } catch(e) {
-      // Si colonnes manquantes, essayer version minimale
-      console.warn('StockMovement full create failed, trying minimal:', e.message);
-      movement = await StockMovement.create({ product_id: product.id, type, quantity: movQty, reason });
+      console.error('Transaction failed:', e.message);
+      return res.status(500).json({ error: 'Erreur mise à jour stock', details: e.message });
     }
 
-    // Mettre à jour le stock
-    try { await product.update({ current_qty: newQty }); } catch(e) {
-      console.warn('product.update current_qty failed:', e.message);
-    }
-
-    res.status(201).json({ message:'Mouvement enregistré', movement: { id: movement.id, type, quantity: movement.quantity, previous_qty: currentQty, new_qty: newQty }, product: { id: product.id, name: product.name, current_qty: newQty } });
+    res.status(201).json({
+      message: 'Mouvement enregistré',
+      movement: { id: movement.id, type, quantity: movement.quantity, previous_qty: currentQty, new_qty: newQty },
+      product:  { id: product.id, name: product.name, current_qty: newQty }
+    });
   } catch (error) {
     res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
