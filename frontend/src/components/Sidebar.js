@@ -115,6 +115,22 @@ const Sidebar = () => {
         })}
       </nav>
 
+      {/* Dashboard SUPER_ADMIN */}
+      {user?.role === 'SUPER_ADMIN' && (
+        <div className="px-3 pb-2">
+          <NavLink to="/super-admin"
+            className={({ isActive }) =>
+              `flex items-center px-3 py-2 text-sm font-bold rounded-lg transition-colors ${
+                isActive ? 'bg-teal-600 text-white' : 'bg-teal-50 text-teal-700 hover:bg-teal-100'
+              }`
+            }
+          >
+            <span style={{ marginRight:10, fontSize:16 }}>💰</span>
+            Dashboard Revenus
+          </NavLink>
+        </div>
+      )}
+
       {/* Footer / Logout */}
       <div className="p-4 border-t border-gray-200">
         <Button
