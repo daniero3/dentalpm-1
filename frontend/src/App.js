@@ -29,7 +29,6 @@ import { ModernTopbar } from "./components/ModernTopbar";
 
 // SaaS Components
 import BillingSettings from "./components/BillingSettings";
-import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import SuperAdminClinics from "./components/SuperAdminClinics";
 import LicensingGuard from "./components/LicensingGuard";
 import SubscriptionExpiredPage from "./components/SubscriptionExpiredPage";
