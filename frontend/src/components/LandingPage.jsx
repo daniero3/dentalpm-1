@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const PLANS = [
   {
@@ -47,6 +48,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('monthly');
   const [showModal, setShowModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -85,7 +87,7 @@ export default function LandingPage() {
           <span style={{ fontSize: 11, color: '#64748B', background: '#F1F5F9', padding: '2px 8px', borderRadius: 99 }}>Madagascar</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <a href="https://gracious-serenity-production-e854.up.railway.app" style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontWeight: 600, fontSize: 14, textDecoration: 'none', cursor: 'pointer' }}>Se connecter</a>
+          <button onClick={() => navigate('/login')} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Se connecter</button>
           <button onClick={() => handleSelectPlan(PLANS[1])} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(13,122,135,0.3)' }}>Essai gratuit 30 jours</button>
         </div>
       </nav>
@@ -288,9 +290,9 @@ export default function LandingPage() {
                   <p style={{ margin: 0, fontSize: 14, color: '#0D7A87', fontWeight: 600 }}>📧 Un email de confirmation a été envoyé à :</p>
                   <p style={{ margin: '4px 0 0', fontSize: 14, color: '#0F172A' }}>{form.email}</p>
                 </div>
-                <a href="https://gracious-serenity-production-e854.up.railway.app" style={{ display: 'block', padding: 14, borderRadius: 12, background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', color: '#fff', fontWeight: 700, fontSize: 15, textDecoration: 'none', marginBottom: 10 }}>
+                <button onClick={() => navigate('/login')} style={{ display: 'block', width: '100%', padding: 14, borderRadius: 12, background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', color: '#fff', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer', marginBottom: 10 }}>
                   Accéder à mon espace →
-                </a>
+                </button>
               </div>
             )}
           </div>
