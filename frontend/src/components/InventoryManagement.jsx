@@ -320,27 +320,65 @@ const InventoryManagement = () => {
         description={selectedProduct ? `Stock actuel: ${selectedProduct.current_qty} ${selectedProduct.unit}` : ''}
       >
         {selectedProduct && (
-          <div className="space-y-4">
-            <div className="p-3 bg-gray-100 rounded-lg">
-              <p className="text-sm">Stock actuel: <strong>{selectedProduct.current_qty} {selectedProduct.unit}</strong></p>
+          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ background:'#F0FDFE', border:'1px solid #0D7A87', borderRadius:10, padding:'10px 14px' }}>
+              <p style={{ margin:0, fontSize:14, color:'#0D7A87', fontWeight:600 }}>
+                Stock actuel : <strong>{selectedProduct.current_qty}</strong> {selectedProduct.unit}
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <select value={movementForm.type} onChange={e => setMovementForm({...movementForm, type: e.target.value})} className={inputCls}>
-                <option value="IN">Entrée (+)</option>
-                <option value="OUT">Sortie (-)</option>
-                <option value="ADJUST">Ajustement (=)</option>
+            <div>
+              <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Type de mouvement</label>
+              <select
+                value={movementForm.type}
+                onChange={e => setMovementForm(prev => ({...prev, type: e.target.value}))}
+                style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'DM Sans,sans-serif', background:'#fff' }}
+              >
+                <option value="IN">📥 Entrée — Ajout de stock (+)</option>
+                <option value="OUT">📤 Sortie — Utilisation stock (-)</option>
+                <option value="ADJUST">🔧 Ajustement — Inventaire physique (=)</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <Label>Quantité *</Label>
-              <Input type="number" value={movementForm.quantity} onChange={e => setMovementForm({...movementForm, quantity: e.target.value})} />
+            <div>
+              <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Quantité *</label>
+              <input
+                type="number"
+                min="1"
+                value={movementForm.quantity}
+                onChange={e => setMovementForm(prev => ({...prev, quantity: e.target.value}))}
+                placeholder="Ex: 10"
+                style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'DM Sans,sans-serif', outline:'none', boxSizing:'border-box' }}
+                onFocus={e => e.target.style.borderColor='#0D7A87'}
+                onBlur={e => e.target.style.borderColor='#E2E8F0'}
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Motif *</Label>
-              <Input value={movementForm.reason} onChange={e => setMovementForm({...movementForm, reason: e.target.value})} placeholder="Ex: Utilisation cabinet, Réception commande..." />
+            <div>
+              <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Motif *</label>
+              <input
+                type="text"
+                value={movementForm.reason}
+                onChange={e => setMovementForm(prev => ({...prev, reason: e.target.value}))}
+                placeholder="Ex: Réception commande, Utilisation cabinet..."
+                style={{ width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'DM Sans,sans-serif', outline:'none', boxSizing:'border-box' }}
+                onFocus={e => e.target.style.borderColor='#0D7A87'}
+                onBlur={e => e.target.style.borderColor='#E2E8F0'}
+              />
             </div>
-            <div className="flex justify-end gap-2 pt-4">
+            {movementForm.type === 'IN' && movementForm.quantity && (
+              <div style={{ background:'#DCFCE7', border:'1px solid #BBF7D0', borderRadius:8, padding:'8px 12px' }}>
+                <p style={{ margin:0, fontSize:13, color:'#15803D' }}>
+                  Nouveau stock : <strong>{selectedProduct.current_qty + parseInt(movementForm.quantity || 0)}</strong> {selectedProduct.unit}
+                </p>
+              </div>
+            )}
+            {movementForm.type === 'OUT' && movementForm.quantity && (
+              <div style={{ background: (selectedProduct.current_qty - parseInt(movementForm.quantity||0)) < 0 ? '#FEE2E2':'#FEF9C3', border:'1px solid #FDE68A', borderRadius:8, padding:'8px 12px' }}>
+                <p style={{ margin:0, fontSize:13, color: (selectedProduct.current_qty - parseInt(movementForm.quantity||0)) < 0 ? '#B91C1C':'#92400E' }}>
+                  Nouveau stock : <strong>{selectedProduct.current_qty - parseInt(movementForm.quantity || 0)}</strong> {selectedProduct.unit}
+                  {(selectedProduct.current_qty - parseInt(movementForm.quantity||0)) < 0 && ' ⚠️ Stock insuffisant !'}
+                </p>
+              </div>
+            )}
+            <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
               <Button variant="outline" onClick={closeMovement}>Annuler</Button>
               <Button onClick={handleMovement} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
