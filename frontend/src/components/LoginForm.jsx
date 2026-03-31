@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { User, Lock, Eye, EyeOff, Building2, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
 import axios from 'axios';
@@ -199,7 +199,7 @@ const LoginForm = () => {
             </form>
             <div style={{ textAlign:'center', marginTop:20, paddingTop:20, borderTop:'1px solid #F1F5F9' }}>
               <span style={{ fontSize:13, color:'#64748B' }}>Pas encore de compte ? </span>
-              <button onClick={() => { setStep(STEP_REGISTER); setError(''); }}
+              <button onClick={() => navigate('/landing')}
                 style={{ fontSize:13, color:'#0D7A87', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
                 S'inscrire
               </button>
