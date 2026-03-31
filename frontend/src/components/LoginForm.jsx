@@ -32,6 +32,7 @@ const inputStyle = {
 
 const LoginForm = () => {
   const { user, login, register } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep]                   = useState(STEP_LOGIN);
   const [loginData, setLoginData]         = useState({ username:'', password:'' });
   const [clinics, setClinics]             = useState([]);
