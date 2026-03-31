@@ -154,8 +154,8 @@ const LoginForm = () => {
         <div style={{ width:64, height:64, borderRadius:18, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px', boxShadow:'0 8px 24px rgba(13,122,135,0.3)' }}>
           <DentalLogo size={32} />
         </div>
-        <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:0 }}>DentalPM</h1>
-        <p style={{ color:'#64748B', fontSize:13, marginTop:4 }}>Gestion de cabinet dentaire</p>
+        <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:0 }}>DPM</h1>
+        <p style={{ color:'#64748B', fontSize:13, marginTop:4 }}>Logiciel de gestion de cabinet dentaire à Madagascar</p>
       </div>
 
       {/* Card */}
