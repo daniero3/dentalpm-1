@@ -88,7 +88,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => navigate('/login')} style={{ padding: '8px 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', background: '#fff', color: '#0F172A', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Se connecter</button>
-          <button onClick={() => handleSelectPlan(PLANS[1])} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(13,122,135,0.3)' }}>Essai gratuit 30 jours</button>
+          <button onClick={() => handleSelectPlan(PLANS[1])} style={{ padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(13,122,135,0.3)' }}>Essai gratuit 7 jours</button>
         </div>
       </nav>
 
@@ -109,7 +109,7 @@ export default function LandingPage() {
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => handleSelectPlan(PLANS[1])} style={{ padding: '14px 28px', borderRadius: 12, background: '#fff', color: '#0D7A87', fontWeight: 700, fontSize: 16, border: 'none', cursor: 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
-              Commencer gratuitement — 30 jours
+              Commencer gratuitement — 7 jours
             </button>
             <a href="#plans" style={{ padding: '14px 28px', borderRadius: 12, background: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 700, fontSize: 16, border: '2px solid rgba(255,255,255,0.3)', textDecoration: 'none', display: 'inline-block' }}>
               Voir les tarifs
@@ -146,7 +146,7 @@ export default function LandingPage() {
       <section id="plans" style={{ background: '#F1F5F9', padding: '64px 40px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 32, color: '#0F172A', textAlign: 'center', marginBottom: 8 }}>Tarifs simples et transparents</h2>
-          <p style={{ color: '#64748B', textAlign: 'center', marginBottom: 12, fontSize: 16 }}>30 jours d'essai gratuit — aucune carte bancaire requise</p>
+          <p style={{ color: '#64748B', textAlign: 'center', marginBottom: 12, fontSize: 16 }}>7 jours d'essai gratuit — aucune carte bancaire requise</p>
           <p style={{ color: '#0D7A87', textAlign: 'center', marginBottom: 48, fontSize: 14, fontWeight: 600 }}>Paiement par MVola, Orange Money, Airtel Money ou virement bancaire</p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
@@ -170,7 +170,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <button onClick={() => handleSelectPlan(plan)} style={{ width: '100%', padding: '14px', borderRadius: 12, background: plan.popular ? '#fff' : 'linear-gradient(135deg,#0D7A87,#13A3B4)', color: plan.popular ? '#0D7A87' : '#fff', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer', boxShadow: plan.popular ? '0 4px 12px rgba(0,0,0,0.15)' : '0 4px 12px rgba(13,122,135,0.3)' }}>
-                  Commencer — 30 jours gratuits
+                  Commencer — 7 jours gratuits
                 </button>
               </div>
             ))}
@@ -253,7 +253,7 @@ export default function LandingPage() {
                 {step === 2 && (
                   <div>
                     <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
-                      Votre <strong>30 jours d'essai gratuit</strong> commence immédiatement après validation.<br />
+                      Votre <strong>7 jours d'essai gratuit</strong> commence immédiatement après validation.<br />
                       À la fin de l'essai, choisissez votre moyen de paiement :
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
@@ -284,7 +284,7 @@ export default function LandingPage() {
                 <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 22, color: '#0F172A', marginBottom: 8 }}>Inscription confirmée !</h2>
                 <p style={{ color: '#475569', fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
                   Bienvenue sur DPM, <strong>{form.cabinet}</strong> !<br />
-                  Votre essai gratuit de <strong>30 jours</strong> commence maintenant.
+                  Votre essai gratuit de <strong>7 jours</strong> commence maintenant.
                 </p>
                 <div style={{ background: '#F0FDFE', border: '1px solid #0D7A87', borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'left' }}>
                   <p style={{ margin: 0, fontSize: 14, color: '#0D7A87', fontWeight: 600 }}>📧 Un email de confirmation a été envoyé à :</p>
