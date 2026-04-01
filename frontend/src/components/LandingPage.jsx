@@ -195,7 +195,7 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer style={{ background: '#0F172A', padding: '32px 40px', textAlign: 'center' }}>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, margin: 0 }}>
-          © {new Date().getFullYear()} DPM — Logiciel de gestion de cabinet dentaire à Madagascar
+          © {new Date().getFullYear()} DPM — Logiciel de Gestion de Cabinet Dentaire à Madagascar
         </p>
       </footer>
 
