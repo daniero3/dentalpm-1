@@ -4,19 +4,19 @@ import { useNavigate } from 'react-router-dom';
 const PLANS = [
   {
     name: 'ESSENTIAL',
-    price: '150 000',
+    price: '149 000',
     period: 'Ar/mois',
     color: '#0D7A87',
     popular: false,
     features: [
-      '1 praticien', 'Jusqu\'à 500 patients', 'Gestion RDV',
+      '1 praticien', '1 assistant','Jusqu\'à 500 patients', 'Gestion RDV',
       'Facturation de base', 'Ordonnances', 'Odontogramme',
       'Support email'
     ]
   },
   {
     name: 'PRO',
-    price: '300 000',
+    price: '199 000',
     period: 'Ar/mois',
     color: '#0D7A87',
     popular: true,
@@ -28,7 +28,7 @@ const PLANS = [
   },
   {
     name: 'GROUP',
-    price: '500 000',
+    price: '249 000',
     period: 'Ar/mois',
     color: '#0D7A87',
     popular: false,
@@ -100,8 +100,8 @@ export default function LandingPage() {
             🇲🇬 Fait pour Madagascar
           </div>
           <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 800, fontSize: 48, color: '#fff', lineHeight: 1.2, margin: '0 0 20px' }}>
-            Logiciel de gestion de<br />
-            <span style={{ color: '#7DD3DA' }}>cabinet dentaire</span> à Madagascar
+            Logiciel de Gestion de<br />
+            <span style={{ color: '#7DD3DA' }}>Cabinet Dentaire</span> à Madagascar
           </h1>
           <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.8)', marginBottom: 36, lineHeight: 1.6 }}>
             Gérez vos patients, rendez-vous, factures et laboratoire en un seul endroit.<br />
