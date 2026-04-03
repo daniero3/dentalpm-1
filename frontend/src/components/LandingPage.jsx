@@ -406,7 +406,7 @@ export default function LandingPage(){
             </div>
 
             <h1 className="au1" style={{fontFamily:'Plus Jakarta Sans',fontWeight:900,fontSize:52,lineHeight:1.15,color:'#fff',marginBottom:12}}>
-              Votre cabinet dentaire,<br/><span className="shimmer">géré intelligemment</span>
+              Votre Cabinet Dentaire,<br/><span className="shimmer">géré intelligemment</span>
             </h1>
 
             <div className="au2" style={{height:44,marginBottom:20,display:'flex',alignItems:'center'}}>
@@ -416,7 +416,7 @@ export default function LandingPage(){
             </div>
 
             <p className="au2" style={{fontSize:17,color:'rgba(255,255,255,.73)',lineHeight:1.72,marginBottom:36,maxWidth:480}}>
-              Simplifiez la gestion administrative de votre cabinet dentaire à Madagascar. Patients, RDV, facturation, ordonnances — tout en un.
+              Simplifiez la gestion administrative de votre cabinet dentaire à Madagascar. Patients , RDV, facturation, ordonnances tout en un.
             </p>
 
             <div className="au3" style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:36}}>
@@ -430,7 +430,7 @@ export default function LandingPage(){
             </div>
 
             <div className="au4" style={{display:'flex',gap:18,flexWrap:'wrap'}}>
-              {['✅ Aucune carte','🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support en français'].map(b=>(
+              {['🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support en français'].map(b=>(
                 <span key={b} style={{fontSize:13,color:'rgba(255,255,255,.65)',fontWeight:500}}>{b}</span>
               ))}
             </div>
@@ -462,7 +462,6 @@ export default function LandingPage(){
         <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:36}}>
           <StatCounter end={50} suffix="+" label="Cabinets dentaires"/>
           <StatCounter end={98} suffix="%" label="Taux de satisfaction"/>
-          <StatCounter end={7}  suffix=" j" label="Essai gratuit"/>
           <StatCounter end={24} suffix="/7" label="Support disponible"/>
           <StatCounter end={3}  suffix=" secondes" label="Temps de création facture"/>
         </div>
@@ -705,7 +704,7 @@ export default function LandingPage(){
               Une question ? Un besoin spécifique ? Notre équipe à Antananarivo est là pour vous accompagner.
             </p>
             {[
-              {icon:'📧',label:'Email',val:'radisonfrancky@gmail.com',href:'mailto:radisonfrancky@gmail.com'},
+              {icon:'📧',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},
               {icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},
               {icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'},
             ].map((c,i)=>(
@@ -726,7 +725,7 @@ export default function LandingPage(){
               <p style={{color:'rgba(255,255,255,.6)',fontSize:13,margin:'0 0 8px',fontWeight:600}}>PRÊT À COMMENCER ?</p>
               <button onClick={()=>open(PLANS[1])} className="btn-cta"
                 style={{padding:'13px 24px',borderRadius:11,background:'#fff',color:'#0D7A87',fontWeight:800,fontSize:15,border:'none',cursor:'pointer'}}>
-                Essai gratuit 7 jours ✨
+                Essai gratuit 7 jours 
               </button>
             </div>
           </div>
