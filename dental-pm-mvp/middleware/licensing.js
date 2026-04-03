@@ -7,7 +7,7 @@ const PLAN_FEATURES = {
   GROUP:     ['patients','appointments','invoicing','inventory','lab_orders','patient_mailing','advanced_reports','basic_reports','multi_site','api_access']
 };
 
-const PLAN_MAX_USERS = { ESSENTIAL: 3, PRO: 10, GROUP: 50 };
+const PLAN_MAX_USERS = { ESSENTIAL: 2, PRO: 5, GROUP: 50 };
 
 // ✅ JAMAIS BLOQUANT — attache juste les infos subscription à req
 const requireValidSubscription = async (req, res, next) => {
