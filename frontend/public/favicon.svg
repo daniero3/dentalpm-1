@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fond rond gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D7A87"/>
+      <stop offset="100%" style="stop-color:#083D44"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+  
+  <!-- Dent blanche -->
+  <path d="M50 12 C37 12, 24 21, 22 34 C20 45, 24 53, 26 59 C29 69, 32 80, 36 88 C38 93, 42 95, 45 92 C48 89, 49 82, 50 74 C51 82, 52 89, 55 92 C58 95, 62 93, 64 88 C68 80, 71 69, 74 59 C76 53, 80 45, 78 34 C76 21, 63 12, 50 12 Z"
+    fill="white" opacity="0.95"/>
+  <!-- Reflet dent -->
+  <path d="M36 21 C30 25, 26 33, 26 40 C26 42, 28 43, 29 42 C31 34, 36 26, 43 22 C45 21, 45 18, 43 18 C40 18, 38 19, 36 21 Z"
+    fill="white" opacity="0.45"/>
+  
+  <!-- Croix médicale -->
+  <rect x="44" y="32" width="12" height="34" rx="5" fill="#0D7A87" opacity="0.9"/>
+  <rect x="30" y="46" width="40" height="12" rx="5" fill="#0D7A87" opacity="0.9"/>
+</svg>
