@@ -68,21 +68,21 @@ const LicensingGuard = ({ children }) => {
   const PLAN_CONFIGS = {
     ESSENTIAL: {
       name: 'Essential',
-      price: '180,000 MGA/mois',
+      price: '149 000 Ar/mois',
       color: 'blue',
       icon: Users,
-      features: ['1-2 praticiens', 'Gestion patients', 'Rendez-vous', 'Facturation MGA']
+      features: ['1 praticien + 1 assistante', 'Gestion patients', 'Rendez-vous', 'Facturation MGA']
     },
     PRO: {
       name: 'Pro',
-      price: '390,000 MGA/mois', 
+      price: '199 000 Ar/mois', 
       color: 'purple',
       icon: Zap,
       features: ['2-4 praticiens', 'Inventaire avancé', 'Laboratoire', 'Mailing patients', 'Rapports avancés']
     },
     GROUP: {
       name: 'Group',
-      price: '790,000 MGA/mois',
+      price: '299 000 Ar/mois',
       color: 'yellow',
       icon: Crown,
       features: ['5+ praticiens', 'Multi-site', 'API access', 'Formation personnalisée', 'Support dédié 24/7']
