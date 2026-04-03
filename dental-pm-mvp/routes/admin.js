@@ -279,7 +279,7 @@ router.get('/dashboard', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) =
 // GET /api/admin/revenue — statistiques revenus complètes
 router.get('/revenue', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
-    const PLAN_PRICES = { ESSENTIAL: 150000, PRO: 300000, GROUP: 500000 };
+    const PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear  = new Date(now.getFullYear(), 0, 1);
@@ -349,7 +349,7 @@ router.patch('/payment-requests/:id/approve', requireRole('SUPER_ADMIN'), async 
     const request = await PaymentRequest.findByPk(req.params.id);
     if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
 
-    const PLAN_PRICES = { ESSENTIAL: 150000, PRO: 300000, GROUP: 500000 };
+    const PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
     const plan = req.body.plan || request.plan_code || 'ESSENTIAL';
     const clinic = await Clinic.findByPk(request.clinic_id);
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
