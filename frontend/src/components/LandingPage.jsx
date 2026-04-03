@@ -231,11 +231,11 @@ const StatCounter = ({ end, label, suffix = '' }) => {
 
 // ── PLANS ──────────────────────────────────────────────────────────────────────
 const PLANS = [
-  { name:'ESSENTIAL', price:'150 000', popular:false,
-    features:['1 praticien','500 patients','Gestion RDV','Facturation de base','Ordonnances','Odontogramme','Support email'] },
-  { name:'PRO', price:'300 000', popular:true,
+  { name:'ESSENTIAL', price:'149 000', popular:false,
+    features:['1 praticien + 1 assistant(e)','500 patients','Gestion RDV','Facturation de base','Ordonnances','Odontogramme','Support email'] },
+  { name:'PRO', price:'199 000', popular:true,
     features:['5 praticiens','Patients illimités','RDV avancé','Facturation complète','Laboratoire dentaire','Inventaire & Stock','Rapports financiers','SMS automatiques','Support prioritaire'] },
-  { name:'GROUP', price:'500 000', popular:false,
+  { name:'GROUP', price:'299 000', popular:false,
     features:['Praticiens illimités','Multi-sites','Patients illimités','Toutes les fonctions PRO','API dédiée','Dashboard groupe','Gestionnaire dédié','Formation incluse'] },
 ];
 
@@ -280,7 +280,7 @@ const Modal = ({ show, onClose, plan, navigate }) => {
                 ))}
               </div>
               <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:22, color:'#0F172A' }}>
-                {step === 1 ? '🚀 Essai gratuit 30 jours' : '💳 Modalités de paiement'}
+                {step === 1 ? '🚀 Essai gratuit 7 jours' : '💳 Modalités de paiement'}
               </h2>
               {plan && (
                 <div style={{ background:'#F0FDFE', border:'1px solid #0D7A87', borderRadius:10, padding:'8px 14px', marginTop:10, display:'flex', justifyContent:'space-between' }}>
@@ -327,7 +327,7 @@ const Modal = ({ show, onClose, plan, navigate }) => {
             {step === 2 && (
               <div>
                 <p style={{ color:'#475569', fontSize:14, lineHeight:1.6, marginBottom:16 }}>
-                  Votre <strong>30 jours d'essai gratuit</strong> commence immédiatement. À la fin, payez par :
+                  Votre <strong>7 jours d'essai gratuit</strong> commence immédiatement. À la fin, payez par :
                 </p>
                 {PAYMENTS.map(p => (
                   <div key={p.name} style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:10, padding:'10px 14px', marginBottom:8, display:'flex', justifyContent:'space-between' }}>
@@ -352,7 +352,7 @@ const Modal = ({ show, onClose, plan, navigate }) => {
             <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:22, color:'#0F172A', marginBottom:8 }}>Inscription confirmée !</h2>
             <p style={{ color:'#475569', lineHeight:1.6, marginBottom:20 }}>
               Bienvenue sur DPM, <strong>{form.cabinet}</strong> !<br/>
-              Votre essai de <strong>30 jours</strong> commence maintenant.
+              Votre essai de <strong>7 jours</strong> commence maintenant.
             </p>
             <div style={{ background:'#F0FDFE', border:'1px solid #0D7A87', borderRadius:12, padding:14, marginBottom:20, textAlign:'left' }}>
               <p style={{ margin:0, fontSize:13, color:'#0D7A87', fontWeight:600 }}>📧 Confirmation envoyée à :</p>
@@ -467,7 +467,7 @@ export default function LandingPage() {
           <div className="animate-fade-up-delay-3" style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap', marginBottom:48 }}>
             <button onClick={() => openModal(PLANS[1])} className="btn-primary"
               style={{ padding:'16px 32px', borderRadius:14, background:'#fff', color:'#0D7A87', fontWeight:800, fontSize:16, border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(0,0,0,0.2)' }}>
-              Commencer gratuitement — 30 jours ✨
+              Commencer gratuitement — 7 jours ✨
             </button>
             <a href="#plans" style={{ padding:'16px 32px', borderRadius:14, background:'rgba(255,255,255,0.12)', color:'#fff', fontWeight:700, fontSize:16, border:'1px solid rgba(255,255,255,0.25)', textDecoration:'none', backdropFilter:'blur(8px)', transition:'all 0.2s' }}>
               Voir les tarifs →
@@ -523,7 +523,7 @@ export default function LandingPage() {
           <div className="scroll-reveal" style={{ textAlign:'center', marginBottom:52 }}>
             <span style={{ fontSize:13, fontWeight:700, color:'#0D7A87', letterSpacing:2, textTransform:'uppercase', display:'block', marginBottom:10 }}>TARIFS</span>
             <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:38, color:'#0F172A', marginBottom:12 }}>Simple et transparent</h2>
-            <p style={{ color:'#64748B', fontSize:16, marginBottom:8 }}>30 jours d'essai gratuit — aucune carte bancaire requise</p>
+            <p style={{ color:'#64748B', fontSize:16, marginBottom:8 }}>7 jours d'essai gratuit — aucune carte bancaire requise</p>
             <p style={{ color:'#0D7A87', fontWeight:600, fontSize:14 }}>💳 Paiement par MVola · Orange Money · Airtel Money · Virement</p>
           </div>
 
@@ -574,11 +574,11 @@ export default function LandingPage() {
             Prêt à moderniser votre cabinet ? 🦷
           </h2>
           <p style={{ color:'rgba(255,255,255,0.75)', fontSize:17, marginBottom:32, lineHeight:1.7 }}>
-            Rejoignez les cabinets dentaires malgaches qui font confiance à DPM. Essai gratuit de 30 jours, sans engagement.
+            Rejoignez les cabinets dentaires malgaches qui font confiance à DPM. Essai gratuit de 7 jours, sans engagement.
           </p>
           <button onClick={() => openModal(PLANS[1])} className="btn-primary"
             style={{ padding:'18px 40px', borderRadius:14, background:'#fff', color:'#0D7A87', fontWeight:800, fontSize:17, border:'none', cursor:'pointer', boxShadow:'0 8px 32px rgba(0,0,0,0.25)' }}>
-            Commencer gratuitement — 30 jours ✨
+            Commencer gratuitement — 7 jours ✨
           </button>
         </div>
       </section>
