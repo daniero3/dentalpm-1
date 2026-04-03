@@ -206,10 +206,24 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Si déjà connecté et va sur /landing → rediriger vers dashboard
+const LandingRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  return user ? <Navigate to="/" /> : <LandingPage />;
+};
+
+// Si déjà connecté et va sur /login → rediriger vers dashboard
+const LoginRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  return user ? <Navigate to="/" /> : <LoginForm />;
+};
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/landing" />;
 };
 
 // ── Page Transition ────────────────────────────────────────────────────────
@@ -273,9 +287,9 @@ function App() {
         <div className="App">
           <BrowserRouter>
             <Routes>
-              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/landing" element={<LandingRedirect />} />
               <Route path="/super-admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
-              <Route path="/login" element={<LoginForm />} />
+              <Route path="/login" element={<LoginRedirect />} />
               <Route path="/" element={<ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/patients/:patientId/chart" element={<ProtectedRoute><LicensingGuard><MainLayout><DentalChart /></MainLayout></LicensingGuard></ProtectedRoute>} />
