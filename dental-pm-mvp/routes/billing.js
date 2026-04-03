@@ -19,9 +19,9 @@ const router = express.Router();
 
 // Subscription prices par plan
 const PLAN_PRICES = {
-  ESSENTIAL: 150000,
-  PRO: 300000,
-  GROUP: 500000
+  ESSENTIAL: 149000,
+  PRO: 199000,
+  GROUP: 299000
 };
 const MONTHLY_PRICE_MGA = 245000; // prix legacy conservé
 
