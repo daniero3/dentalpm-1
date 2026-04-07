@@ -21,6 +21,9 @@ const G = () => (
     @keyframes particle { 0%{transform:translateY(0) scale(1);opacity:.7} 100%{transform:translateY(-140px) scale(.6);opacity:0} }
     @keyframes countUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
     @keyframes scaleIn  { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
+    @keyframes imgFade  { 0%{opacity:0;transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
+    @keyframes imgFadeOut{ 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.04)} }
+    .img-fade-in { animation: imgFade 1.2s cubic-bezier(.22,1,.36,1) both; }
     @keyframes slideLeft{ from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
     @keyframes spin     { to{transform:rotate(360deg)} }
     @keyframes gradAnim { 0%,100%{background-position:0 50%} 50%{background-position:100% 50%} }
@@ -581,6 +584,75 @@ const DashboardSlider = () => {
   );
 };
 
+
+// ── FadeSlider — défilement doux entre images ─────────────────────────────────
+const FadeSlider = ({ images, height = 340, interval = 4000 }) => {
+  const [current, setCurrent] = React.useState(0);
+  const [prev, setPrev]       = React.useState(null);
+  const [fading, setFading]   = React.useState(false);
+
+  React.useEffect(() => {
+    const t = setInterval(() => {
+      setPrev(current);
+      setFading(true);
+      setTimeout(() => {
+        setCurrent(c => (c + 1) % images.length);
+        setFading(false);
+        setPrev(null);
+      }, 1000);
+    }, interval);
+    return () => clearInterval(t);
+  }, [current, images.length, interval]);
+
+  return (
+    <div style={{ position:'relative', height, borderRadius:20, overflow:'hidden', boxShadow:'0 20px 48px rgba(0,0,0,.16)' }}>
+      {/* Image précédente — sort en fondu */}
+      {prev !== null && (
+        <img
+          src={images[prev].src}
+          alt={images[prev].alt}
+          style={{
+            position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover',
+            animation: 'imgFadeOut 1.2s cubic-bezier(.22,1,.36,1) both',
+            zIndex:1,
+          }}
+        />
+      )}
+      {/* Image courante — entre en fondu */}
+      <img
+        key={current}
+        src={images[current].src}
+        alt={images[current].alt}
+        style={{
+          position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover',
+          animation: 'imgFade 1.2s cubic-bezier(.22,1,.36,1) both',
+          zIndex:2,
+        }}
+      />
+      {/* Overlay léger en bas avec caption */}
+      <div style={{
+        position:'absolute', bottom:0, left:0, right:0, zIndex:3,
+        background:'linear-gradient(transparent, rgba(8,61,68,.65))',
+        padding:'32px 20px 16px',
+      }}>
+        <p style={{ color:'rgba(255,255,255,.9)', fontSize:13, fontWeight:600, margin:0, textShadow:'0 1px 4px rgba(0,0,0,.4)' }}>
+          {images[current].caption}
+        </p>
+      </div>
+      {/* Indicateurs */}
+      <div style={{ position:'absolute', bottom:12, right:14, zIndex:4, display:'flex', gap:5 }}>
+        {images.map((_,i) => (
+          <div key={i} onClick={() => setCurrent(i)} style={{
+            width: i===current ? 20 : 6, height:6, borderRadius:99,
+            background: i===current ? '#fff' : 'rgba(255,255,255,.4)',
+            transition:'all .4s ease', cursor:'pointer',
+          }}/>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
@@ -746,9 +818,12 @@ export default function LandingPage(){
         {/* 2 images + texte */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:40,alignItems:'center'}}>
           <div className="sr">
-            <div className="img-wrap" style={{height:340}}>
-              <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=85" alt="Chirurgien dentiste au travail" className="img-dental"/>
-            </div>
+            <FadeSlider height={340} interval={3800} images={[
+              {src:"https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=85", alt:"Chirurgien dentiste", caption:"🦷 Soins de précision pour chaque patient"},
+              {src:"https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=800&q=85", alt:"Cabinet moderne", caption:"🏥 Cabinet dentaire équipé et moderne"},
+              {src:"https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=800&q=85", alt:"Dentiste et patient", caption:"😊 Relation de confiance avec vos patients"},
+              {src:"https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&q=85", alt:"Examen dentaire", caption:"🔍 Diagnostic précis et professionnel"},
+            ]}/>
           </div>
           <div className="sr">
             <h3 style={{fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:28,color:'#0F172A',marginBottom:16}}>
@@ -828,11 +903,19 @@ export default function LandingPage(){
 
         {/* Image réalisation */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
-          <div className="sr img-wrap" style={{height:280}}>
-            <img src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&q=85" alt="Dentiste examinant un patient" className="img-dental"/>
+          <div className="sr" style={{height:280}}>
+            <FadeSlider height={280} interval={4500} images={[
+              {src:"https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&q=85", alt:"Examen patient", caption:"🦷 Suivi personnalisé de chaque patient"},
+              {src:"https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=800&q=85", alt:"Cabinet", caption:"✨ Environnement propre et professionnel"},
+              {src:"https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=85", alt:"Equipe", caption:"👥 Une équipe dédiée à votre réussite"},
+            ]}/>
           </div>
-          <div className="sr img-wrap" style={{height:280,transitionDelay:'.15s'}}>
-            <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=85" alt="Cabinet dentaire équipé" className="img-dental"/>
+          <div className="sr" style={{height:280,transitionDelay:'.15s'}}>
+            <FadeSlider height={280} interval={5000} images={[
+              {src:"https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=85", alt:"Cabinet équipé", caption:"🏥 Équipements de dernière génération"},
+              {src:"https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=85", alt:"Soin dentaire", caption:"💎 Qualité de soins optimale"},
+              {src:"https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=800&q=85", alt:"Patient satisfait", caption:"😊 +98% de patients satisfaits"},
+            ]}/>
           </div>
         </div>
       </section>
@@ -864,9 +947,11 @@ export default function LandingPage(){
             </div>
           </div>
           <div className="sr" style={{transitionDelay:'.15s'}}>
-            <div className="img-wrap" style={{height:420}}>
-              <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=85" alt="Équipe dentaire professionnelle" className="img-dental"/>
-            </div>
+            <FadeSlider height={420} interval={4200} images={[
+              {src:"https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=85", alt:"Équipe dentaire", caption:"🤝 Notre équipe à votre service"},
+              {src:"https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=85", alt:"Cabinet moderne", caption:"🏥 Technologie au service du soin"},
+              {src:"https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=800&q=85", alt:"Soin professionnel", caption:"🇲🇬 Fièrement Made in Madagascar"},
+            ]}/>
           </div>
         </div>
       </section>
