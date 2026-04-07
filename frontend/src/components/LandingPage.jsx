@@ -412,7 +412,7 @@ const DashboardSlider = () => {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
           {[
-            { label: 'RDV aujourd'hui', val: '8', color: '#0D7A87', icon: '📅' },
+            { label: 'RDV auj.', val: '8', color: '#0D7A87', icon: '📅' },
             { label: 'Patients total', val: '247', color: '#7C3AED', icon: '👤' },
             { label: 'CA du mois', val: '1.2M', color: '#16A34A', icon: '💰' },
           ].map((kpi, i) => (
