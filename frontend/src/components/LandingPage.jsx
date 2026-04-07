@@ -487,13 +487,13 @@ export default function LandingPage() {
 
   const IMGS_SERVICES = [
     {src:'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=900&q=85',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
-    {src:'https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=900&q=85',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
+    {src:'dentaire1.jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
     {src:'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=900&q=85',alt:'Examen',caption:'🔍 Diagnostic précis et professionnel'},
   ];
   const IMGS_ABOUT = [
     {src:'/daniero.jpg',alt:'Équipe DPM',caption:'🤝 Notre équipe à votre service'},
-    {src:'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=900&q=85',alt:'Technologie',caption:'🇲🇬 Fièrement Made in Madagascar'},
-    {src:'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=900&q=85',alt:'Équipe',caption:'💎 Excellence et proximité'},
+    {src:'/612314406_2121491475327414_7965256401016505944_n.jpg',alt:'Technologie',caption:'🇲🇬 Fièrement Made in Madagascar'},
+    {src:'/dentaire2.jpg',alt:'Équipe',caption:'💎 Excellence et proximité'},
   ];
 
   /* ── Section Title helper ── */
@@ -556,7 +556,7 @@ export default function LandingPage() {
             </div>
             <h1 className="au1" style={{ fontFamily:'Bricolage Grotesque', fontWeight:800, fontSize:60, lineHeight:1.08, color:'#fff', marginBottom:16 }}>
               Logiciel de gestion<br/>
-              <span style={{ color:'#7DD3DA' }}>cabinet dentaire</span><br/>
+              <span style={{ color:'#7DD3DA' }}>Cabinet Dentaire</span><br/>
               à Madagascar
             </h1>
             <div className="au2" style={{ height:40, marginBottom:20, display:'flex', alignItems:'center' }}>
@@ -578,7 +578,7 @@ export default function LandingPage() {
               </a>
             </div>
             <div className="au4" style={{ display:'flex', gap:22, flexWrap:'wrap' }}>
-              {['✅ Sans carte bancaire','🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support français'].map(b=>(
+              {['🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support français'].map(b=>(
                 <span key={b} style={{ fontSize:13, color:'rgba(255,255,255,.55)' }}>{b}</span>
               ))}
             </div>
@@ -612,7 +612,7 @@ export default function LandingPage() {
         <div style={{ maxWidth:1000, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
           <Counter end={50} suffix="+" label="+50 cabinets" sub="clients actifs en Madagascar"/>
           <Counter end={98} suffix="%" label="98% satisfaction" sub="notés par nos praticiens"/>
-          <Counter end={7} suffix=" j" label="7 jours d'essai" sub="100% gratuit, sans carte"/>
+          <Counter end={3} suffix=" mn" label="construction du facture" sub="rapide, fiable"/>
           <Counter end={24} suffix="/7" label="Support 24/7" sub="Équipe basée à Antananarivo"/>
         </div>
       </section>
@@ -627,7 +627,7 @@ export default function LandingPage() {
         <div style={{ textAlign:'center', marginBottom:72, maxWidth:740, margin:'0 auto 72px' }}>
           <span className="tag tag-teal au0" style={{ marginBottom:16, display:'inline-flex' }}>🚀 DPM Madagascar</span>
           <h2 className="au1" style={{ fontFamily:'Bricolage Grotesque', fontWeight:800, fontSize:48, color:'var(--ink)', lineHeight:1.15, marginBottom:18 }}>
-            Votre cabinet dentaire,<br/>digitalisé et optimisé
+            Votre Cabinet Dentaire,<br/>digitalisé et optimisé
           </h2>
           <p className="au2" style={{ fontSize:18, color:'var(--slate)', lineHeight:1.75 }}>
             Une solution complète et intuitive qui centralise tous vos outils — de la planification intelligente des RDV à la génération d'ordonnances PDF, en passant par la gestion du laboratoire.
