@@ -333,6 +333,254 @@ const Modal=({show,onClose,plan,navigate})=>{
   );
 };
 
+
+// ── Dashboard Slider animé ─────────────────────────────────────────────────────
+const DashboardSlider = () => {
+  const [slide, setSlide] = React.useState(0);
+  const slides = [
+    'dashboard', 'patients', 'revenue', 'agenda', 'odonto'
+  ];
+  React.useEffect(() => {
+    const t = setInterval(() => setSlide(s => (s + 1) % slides.length), 3200);
+    return () => clearInterval(t);
+  }, []);
+
+  const DonutChart = ({ pct, color, label, val }) => {
+    const r = 28, circ = 2 * Math.PI * r;
+    const dash = (pct / 100) * circ;
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <svg width={72} height={72} viewBox="0 0 72 72">
+          <circle cx={36} cy={36} r={r} fill="none" stroke="#E2E8F0" strokeWidth={7} />
+          <circle cx={36} cy={36} r={r} fill="none" stroke={color} strokeWidth={7}
+            strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
+            transform="rotate(-90 36 36)"
+            style={{ transition: 'stroke-dasharray 1.2s cubic-bezier(.22,1,.36,1)' }} />
+          <text x={36} y={40} textAnchor="middle" fontSize={13} fontWeight={800} fill={color}>{pct}%</text>
+        </svg>
+        <p style={{ fontSize: 11, color: '#64748B', margin: '2px 0 0', fontWeight: 600 }}>{label}</p>
+        <p style={{ fontSize: 12, color: '#0F172A', margin: 0, fontWeight: 800 }}>{val}</p>
+      </div>
+    );
+  };
+
+  const BarChart = ({ bars }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 72, padding: '0 4px' }}>
+      {bars.map((b, i) => (
+        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+          <span style={{ fontSize: 9, color: '#64748B', fontWeight: 600 }}>{b.v}</span>
+          <div style={{ width: '100%', background: `linear-gradient(180deg,${b.c},${b.c}88)`, borderRadius: '4px 4px 0 0', height: `${b.h}%`, transition: 'height 1s cubic-bezier(.22,1,.36,1)', minHeight: 4 }} />
+          <span style={{ fontSize: 9, color: '#94A3B8' }}>{b.l}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const LineChart = ({ points, color }) => {
+    const w = 200, h = 60;
+    const xs = points.map((_, i) => (i / (points.length - 1)) * w);
+    const min = Math.min(...points), max = Math.max(...points);
+    const ys = points.map(p => h - ((p - min) / (max - min || 1)) * (h - 10) - 5);
+    const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ');
+    const area = `${path} L${w},${h} L0,${h} Z`;
+    return (
+      <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id={`lg${color.slice(1)}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity=".25" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill={`url(#lg${color.slice(1)})`} />
+        <path d={path} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        {xs.map((x, i) => <circle key={i} cx={x} cy={ys[i]} r={3} fill={color} />)}
+      </svg>
+    );
+  };
+
+  const screens = {
+    dashboard: (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div>
+            <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#0F172A' }}>Tableau de bord</p>
+            <p style={{ margin: 0, fontSize: 11, color: '#94A3B8' }}>Aujourd'hui — Antananarivo</p>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', borderRadius: 8, padding: '4px 10px' }}>
+            <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>🟢 En ligne</span>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+          {[
+            { label: 'RDV aujourd'hui', val: '8', color: '#0D7A87', icon: '📅' },
+            { label: 'Patients total', val: '247', color: '#7C3AED', icon: '👤' },
+            { label: 'CA du mois', val: '1.2M', color: '#16A34A', icon: '💰' },
+          ].map((kpi, i) => (
+            <div key={i} style={{ background: '#F8FAFC', borderRadius: 10, padding: '10px 8px', border: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: 18, marginBottom: 4 }}>{kpi.icon}</div>
+              <p style={{ margin: 0, fontWeight: 900, fontSize: 18, color: kpi.color }}>{kpi.val}</p>
+              <p style={{ margin: 0, fontSize: 10, color: '#64748B' }}>{kpi.label}</p>
+            </div>
+          ))}
+        </div>
+        <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#475569' }}>Revenus mensuels (Ar)</p>
+        <LineChart points={[85000, 140000, 110000, 180000, 160000, 220000, 195000, 260000]} color="#0D7A87" />
+      </div>
+    ),
+    patients: (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#0F172A' }}>Gestion patients</p>
+          <div style={{ background: '#F0FDFE', border: '1px solid #0D7A87', borderRadius: 8, padding: '3px 10px' }}>
+            <span style={{ fontSize: 11, color: '#0D7A87', fontWeight: 700 }}>247 patients</span>
+          </div>
+        </div>
+        {[
+          { nom: 'Rakoto Jean', rdv: '09:00', statut: 'Confirmé', color: '#16A34A', bg: '#DCFCE7' },
+          { nom: 'Rasoa Marie', rdv: '10:30', statut: 'En attente', color: '#D97706', bg: '#FEF9C3' },
+          { nom: 'Andry Paul', rdv: '11:00', statut: 'Confirmé', color: '#16A34A', bg: '#DCFCE7' },
+          { nom: 'Hanta Elisa', rdv: '14:00', statut: 'Nouveau', color: '#7C3AED', bg: '#EDE9FE' },
+        ].map((p, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: '#F8FAFC', borderRadius: 9, marginBottom: 6, border: '1px solid #F1F5F9' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#0D7A87,#13A3B4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11, fontWeight: 800 }}>
+                {p.nom[0]}
+              </div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: 12, color: '#0F172A' }}>{p.nom}</p>
+                <p style={{ margin: 0, fontSize: 10, color: '#94A3B8' }}>RDV {p.rdv}</p>
+              </div>
+            </div>
+            <span style={{ background: p.bg, color: p.color, borderRadius: 99, padding: '2px 8px', fontSize: 10, fontWeight: 700 }}>{p.statut}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    revenue: (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#0F172A' }}>Rapports financiers</p>
+          <span style={{ fontSize: 11, color: '#16A34A', fontWeight: 700, background: '#DCFCE7', padding: '3px 8px', borderRadius: 99 }}>+18% ce mois</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 14 }}>
+          <DonutChart pct={78} color="#0D7A87" label="Taux occupation" val="8/10 RDV" />
+          <DonutChart pct={92} color="#16A34A" label="Paiements reçus" val="1.1M Ar" />
+          <DonutChart pct={45} color="#F59E0B" label="Stock" val="Bon état" />
+        </div>
+        <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#475569' }}>CA par semaine (Ar en milliers)</p>
+        <BarChart bars={[
+          { l: 'S1', v: '280k', h: 55, c: '#0D7A87' },
+          { l: 'S2', v: '340k', h: 67, c: '#13A3B4' },
+          { l: 'S3', v: '290k', h: 57, c: '#0D7A87' },
+          { l: 'S4', v: '420k', h: 83, c: '#16A34A' },
+          { l: 'S5', v: '380k', h: 75, c: '#13A3B4' },
+          { l: 'S6', v: '460k', h: 91, c: '#16A34A' },
+        ]} />
+      </div>
+    ),
+    agenda: (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#0F172A' }}>Agenda du jour</p>
+          <span style={{ fontSize: 11, color: '#64748B' }}>{new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 10px', alignItems: 'start' }}>
+          {[
+            { h: '08:30', nom: 'Dr. Rakoto', type: 'Détartrage', color: '#0D7A87', bg: '#F0FDFE', dur: '45min' },
+            { h: '09:15', nom: 'Dr. Rasoa', type: 'Carie M16', color: '#7C3AED', bg: '#EDE9FE', dur: '30min' },
+            { h: '10:00', nom: 'Dr. Rakoto', type: 'Couronne', color: '#D97706', bg: '#FEF9C3', dur: '90min' },
+            { h: '11:30', nom: 'Pause', type: '', color: '#94A3B8', bg: '#F8FAFC', dur: '30min' },
+            { h: '14:00', nom: 'Dr. Andry', type: 'Extraction', color: '#DC2626', bg: '#FEF2F2', dur: '45min' },
+          ].map((r, i) => (
+            <React.Fragment key={i}>
+              <span style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700, paddingTop: 7 }}>{r.h}</span>
+              <div style={{ background: r.bg, border: `1.5px solid ${r.color}22`, borderLeft: `3px solid ${r.color}`, borderRadius: '0 8px 8px 0', padding: '5px 8px', marginBottom: 4 }}>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: r.color }}>{r.type || 'Pause'}</p>
+                <p style={{ margin: 0, fontSize: 10, color: '#64748B' }}>{r.nom} · {r.dur}</p>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    ),
+    odonto: (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#0F172A' }}>Odontogramme</p>
+          <span style={{ fontSize: 11, color: '#0D7A87', fontWeight: 700 }}>Patient: Rakoto J.</span>
+        </div>
+        {/* Schéma dentaire simplifié */}
+        {[
+          { label: 'Maxillaire supérieur', teeth: [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28] },
+          { label: 'Mandibule inférieure', teeth: [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38] },
+        ].map((row, ri) => (
+          <div key={ri} style={{ marginBottom: 10 }}>
+            <p style={{ margin: '0 0 5px', fontSize: 10, color: '#94A3B8', fontWeight: 600 }}>{row.label}</p>
+            <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+              {row.teeth.map(t => {
+                const states = { 16: '#EF4444', 21: '#F59E0B', 36: '#EF4444', 26: '#16A34A', 11: '#7C3AED' };
+                const c = states[t] || '#E2E8F0';
+                const tc = states[t] ? '#fff' : '#94A3B8';
+                return (
+                  <div key={t} style={{ width: 20, height: 22, background: c, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, fontWeight: 800, color: tc, border: `1px solid ${c === '#E2E8F0' ? '#CBD5E1' : c}` }}>
+                    {t}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+          {[{ c: '#EF4444', l: 'Carie' }, { c: '#F59E0B', l: 'Obturation' }, { c: '#16A34A', l: 'Sain' }, { c: '#7C3AED', l: 'Couronne' }].map(s => (
+            <div key={s.l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: 10, height: 10, background: s.c, borderRadius: 2 }} />
+              <span style={{ fontSize: 10, color: '#64748B' }}>{s.l}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  };
+
+  const labels = { dashboard: '📊 Dashboard', patients: '👤 Patients', revenue: '💰 Rapports', agenda: '📅 Agenda', odonto: '🦷 Odontogramme' };
+
+  return (
+    <div style={{ background: '#fff', borderRadius: 20, padding: 20, boxShadow: '0 24px 64px rgba(0,0,0,.18)', border: '1px solid #E2E8F0', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Barre titre simulant un navigateur */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF5F57' }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FFBD2E' }} />
+        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#28CA41' }} />
+        <div style={{ flex: 1, background: '#F8FAFC', borderRadius: 6, padding: '4px 10px', marginLeft: 8 }}>
+          <span style={{ fontSize: 11, color: '#94A3B8' }}>app.dpm-madagascar.com</span>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 14, flexWrap: 'wrap' }}>
+        {Object.entries(labels).map(([k, l]) => (
+          <button key={k} onClick={() => setSlide(Object.keys(labels).indexOf(k))}
+            style={{ padding: '4px 8px', borderRadius: 7, border: 'none', background: slide === Object.keys(labels).indexOf(k) ? 'linear-gradient(135deg,#0D7A87,#13A3B4)' : '#F1F5F9', color: slide === Object.keys(labels).indexOf(k) ? '#fff' : '#64748B', fontSize: 10, fontWeight: 700, cursor: 'pointer', transition: 'all .2s' }}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* Contenu slide */}
+      <div style={{ flex: 1, animation: 'fadeIn .4s ease' }} key={slide}>
+        {screens[slides[slide]]}
+      </div>
+
+      {/* Indicateurs */}
+      <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginTop: 12 }}>
+        {slides.map((_, i) => (
+          <div key={i} onClick={() => setSlide(i)} style={{ width: i === slide ? 20 : 7, height: 7, borderRadius: 99, background: i === slide ? '#0D7A87' : '#E2E8F0', cursor: 'pointer', transition: 'all .3s' }} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ══════════════════════════════════════════════════════════════════════════════
@@ -406,7 +654,7 @@ export default function LandingPage(){
             </div>
 
             <h1 className="au1" style={{fontFamily:'Plus Jakarta Sans',fontWeight:900,fontSize:52,lineHeight:1.15,color:'#fff',marginBottom:12}}>
-              Votre Cabinet Dentaire,<br/><span className="shimmer">géré intelligemment</span>
+              Votre cabinet dentaire,<br/><span className="shimmer">géré intelligemment</span>
             </h1>
 
             <div className="au2" style={{height:44,marginBottom:20,display:'flex',alignItems:'center'}}>
@@ -416,7 +664,7 @@ export default function LandingPage(){
             </div>
 
             <p className="au2" style={{fontSize:17,color:'rgba(255,255,255,.73)',lineHeight:1.72,marginBottom:36,maxWidth:480}}>
-              Simplifiez la gestion administrative de votre cabinet dentaire à Madagascar. Patients , RDV, facturation, ordonnances tout en un.
+              Simplifiez la gestion administrative de votre cabinet dentaire à Madagascar. Patients, RDV, facturation, ordonnances — tout en un.
             </p>
 
             <div className="au3" style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:36}}>
@@ -430,18 +678,17 @@ export default function LandingPage(){
             </div>
 
             <div className="au4" style={{display:'flex',gap:18,flexWrap:'wrap'}}>
-              {['🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support en français'].map(b=>(
+              {['✅ Aucune carte','🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support en français'].map(b=>(
                 <span key={b} style={{fontSize:13,color:'rgba(255,255,255,.65)',fontWeight:500}}>{b}</span>
               ))}
             </div>
           </div>
 
-          {/* Image dentaire hero */}
+          {/* Dashboard animé */}
           <div className="au3" style={{position:'relative'}}>
-            <div className="img-wrap" style={{height:460}}>
-              <img src="https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=800&q=85" alt="Cabinet dentaire moderne" className="img-dental"/>
+            <div style={{height:460,position:'relative'}}>
+              <DashboardSlider />
             </div>
-            {/* Badge flottant */}
             <div style={{position:'absolute',bottom:-20,left:-20,background:'#fff',borderRadius:16,padding:'14px 20px',boxShadow:'0 16px 40px rgba(0,0,0,.15)',display:'flex',alignItems:'center',gap:10,animation:'float 4s ease-in-out infinite'}}>
               <span style={{fontSize:28}}>🦷</span>
               <div>
@@ -462,6 +709,7 @@ export default function LandingPage(){
         <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:36}}>
           <StatCounter end={50} suffix="+" label="Cabinets dentaires"/>
           <StatCounter end={98} suffix="%" label="Taux de satisfaction"/>
+          <StatCounter end={7}  suffix=" j" label="Essai gratuit"/>
           <StatCounter end={24} suffix="/7" label="Support disponible"/>
           <StatCounter end={3}  suffix=" secondes" label="Temps de création facture"/>
         </div>
@@ -704,7 +952,7 @@ export default function LandingPage(){
               Une question ? Un besoin spécifique ? Notre équipe à Antananarivo est là pour vous accompagner.
             </p>
             {[
-              {icon:'📧',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},
+              {icon:'📧',label:'Email',val:'radisonfrancky@gmail.com',href:'mailto:radisonfrancky@gmail.com'},
               {icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},
               {icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'},
             ].map((c,i)=>(
@@ -725,7 +973,7 @@ export default function LandingPage(){
               <p style={{color:'rgba(255,255,255,.6)',fontSize:13,margin:'0 0 8px',fontWeight:600}}>PRÊT À COMMENCER ?</p>
               <button onClick={()=>open(PLANS[1])} className="btn-cta"
                 style={{padding:'13px 24px',borderRadius:11,background:'#fff',color:'#0D7A87',fontWeight:800,fontSize:15,border:'none',cursor:'pointer'}}>
-                Essai gratuit 7 jours 
+                Essai gratuit 7 jours ✨
               </button>
             </div>
           </div>
