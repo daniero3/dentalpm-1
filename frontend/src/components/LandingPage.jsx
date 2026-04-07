@@ -757,7 +757,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:22 }}>
-            <div className="sr"><FadeSlider images={[{src:'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=900&q=85',alt:'Soin',caption:'🦷 Soins de qualité pour chaque patient'},{src:'https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=900&q=85',alt:'Cabinet',caption:'✨ Cabinet professionnel et équipé'}]} height={280} interval={4500}/></div>
+            <div className="sr"><FadeSlider images={[{src:'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=900&q=85',alt:'Soin',caption:'🦷 Soins de qualité pour chaque patient'},{src:'/salle-dentaire.jpg',alt:'Cabinet',caption:'✨ Cabinet professionnel et équipé'}]} height={280} interval={4500}/></div>
             <div className="sr" style={{ transitionDelay:'.15s' }}><FadeSlider images={[{src:'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=900&q=85',alt:'Tech',caption:'🏥 Technologie au service du soin'},{src:'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=900&q=85',alt:'Dentiste',caption:'💎 Excellence clinique quotidienne'}]} height={280} interval={5200}/></div>
           </div>
         </div>
