@@ -911,7 +911,7 @@ export default function LandingPage(){
             <FadeSlider height={280} interval={4500} images={[
               {src:"https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&q=85", alt:"Examen patient", caption:"🦷 Suivi personnalisé de chaque patient"},
               {src:"https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=800&q=85", alt:"Cabinet", caption:"✨ Environnement propre et professionnel"},
-              {src:"https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=85", alt:"Equipe", caption:"👥 Une équipe dédiée à votre réussite"},
+              {src:"/daniero.jpg", alt:"Equipe", caption:"👥 Une équipe dédiée à votre réussite"},
             ]}/>
           </div>
           <div className="sr" style={{height:280,transitionDelay:'.15s'}}>
@@ -952,7 +952,7 @@ export default function LandingPage(){
           </div>
           <div className="sr" style={{transitionDelay:'.15s'}}>
             <FadeSlider height={420} interval={4200} images={[
-              {src:"https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=85", alt:"Équipe dentaire", caption:"🤝 Notre équipe à votre service"},
+              {src:"/daniero.jpg", alt:"Équipe dentaire", caption:"🤝 Notre équipe à votre service"},
               {src:"https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=85", alt:"Cabinet moderne", caption:"🏥 Technologie au service du soin"},
               {src:"https://images.unsplash.com/photo-1588776814546-1ffbb74a7258?w=800&q=85", alt:"Soin professionnel", caption:"🇲🇬 Fièrement Made in Madagascar"},
             ]}/>
