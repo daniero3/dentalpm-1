@@ -606,6 +606,11 @@ const FadeSlider = ({ images, height = 340, interval = 4000 }) => {
 
   return (
     <div style={{ position:'relative', height, borderRadius:20, overflow:'hidden', boxShadow:'0 20px 48px rgba(0,0,0,.16)' }}>
+      {/* Keyframes injectés directement pour garantir le chargement */}
+      <style>{`
+        @keyframes imgFade    { 0%{opacity:0;transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes imgFadeOut { 0%{opacity:1;transform:scale(1)}    100%{opacity:0;transform:scale(1.05)} }
+      `}</style>
       {/* Image précédente — sort en fondu */}
       {prev !== null && (
         <img
@@ -750,7 +755,7 @@ export default function LandingPage(){
             </div>
 
             <div className="au4" style={{display:'flex',gap:18,flexWrap:'wrap'}}>
-              {['✅ Aucune carte','🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support en français'].map(b=>(
+              {['🔒 Données sécurisées','📱 MVola & Orange Money','🇲🇬 Support en français'].map(b=>(
                 <span key={b} style={{fontSize:13,color:'rgba(255,255,255,.65)',fontWeight:500}}>{b}</span>
               ))}
             </div>
@@ -781,9 +786,8 @@ export default function LandingPage(){
         <div style={{maxWidth:900,margin:'0 auto',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:36}}>
           <StatCounter end={50} suffix="+" label="Cabinets dentaires"/>
           <StatCounter end={98} suffix="%" label="Taux de satisfaction"/>
-          <StatCounter end={7}  suffix=" j" label="Essai gratuit"/>
           <StatCounter end={24} suffix="/7" label="Support disponible"/>
-          <StatCounter end={3}  suffix=" secondes" label="Temps de création facture"/>
+          <StatCounter end={3}   label="Temps de création facture"/>
         </div>
       </section>
 
