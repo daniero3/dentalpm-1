@@ -387,8 +387,6 @@ router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN'), async (
   }
 });
 
-module.exports = router;
-
 // ============================================================
 // PAYMENT REQUESTS (Validation paiements)
 // ============================================================
@@ -452,7 +450,7 @@ router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN')
           start_date: new Date(),
           end_date: endDate,
           duration_months: 1,
-          monthly_price_mga: request.amount_mga || 0,
+          price_mga: request.amount_mga || 0,
           notes: `Paiement vérifié le ${new Date().toLocaleDateString('fr-FR')}`,
           created_by_user_id: _getUserId(req)
         });
