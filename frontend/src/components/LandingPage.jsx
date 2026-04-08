@@ -405,14 +405,14 @@ export default function LandingPage() {
   const sc    = scrolled || mobMenu;
 
   const IMGS_SERVICES = [
-    {src:'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=900&q=85',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
-    {src:'dentaire1.jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
-    {src:'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=900&q=85',alt:'Examen',caption:'🔍 Diagnostic précis et professionnel'},
+    {src:'/Cabinet dentaire MAEVA shooting (135).jpg',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
+    {src:'/Cabinet dentaire MAEVA shooting (157).jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
+    {src:'/Cabinet dentaire MAEVA shooting (147).jpg',alt:'Examen',caption:'🔍 Diagnostic précis et professionnel'},
   ];
   const IMGS_ABOUT = [
     {src:'/daniero.jpg',alt:'Équipe DPM',caption:'🤝 Notre équipe à votre service'},
     {src:'/612314406_2121491475327414_7965256401016505944_n.jpg',alt:'Technologie',caption:'🇲🇬 Fièrement Made in Madagascar'},
-    {src:'/dentaire2.jpg',alt:'Équipe',caption:'💎 Excellence et proximité'},
+    {src:'/Cabinet dentaire MAEVA shooting (86).jpg',alt:'Équipe',caption:'💎 Excellence et proximité'},
   ];
 
   const ST = ({tag,title,sub,light=false}) => (
