@@ -33,7 +33,7 @@ const MONTHLY_PRICE_MGA = 245000; // prix legacy conservé
 router.get('/status', async (req, res) => {
   try {
     const subscription = await Subscription.findOne({
-      where: { clinic_id: req.user.clinic_id },
+      where: { clinic_id: req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id },
       order: [['created_at', 'DESC']]
     });
 
@@ -88,7 +88,7 @@ router.post('/renew', [
     const amount = MONTHLY_PRICE_MGA * months;
 
     const paymentRequest = await PaymentRequest.create({
-      clinic_id: req.user.clinic_id,
+      clinic_id: clinicId,
       submitted_by_user_id: _getUserId(req),
       plan_code: 'PRO',
       amount_mga: amount,
@@ -125,7 +125,7 @@ router.post('/renew', [
 router.get('/payments', async (req, res) => {
   try {
     const payments = await PaymentRequest.findAll({
-      where: { clinic_id: req.user.clinic_id },
+      where: { clinic_id: req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id },
       order: [['created_at', 'DESC']],
       limit: 10
     });
@@ -140,7 +140,7 @@ router.get('/payments', async (req, res) => {
 router.get('/invoice/:year/:month', async (req, res) => {
   try {
     const { year, month } = req.params;
-    const clinic = await Clinic.findByPk(req.user.clinic_id);
+    const clinic = await Clinic.findByPk(req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id);
 
     if (!clinic) {
       return res.status(404).json({ error: 'Clinique non trouvée' });
@@ -206,7 +206,7 @@ router.get('/invoice/:year/:month', async (req, res) => {
 router.get('/subscription', async (req, res) => {
   try {
     const subscription = await Subscription.findOne({
-      where: { clinic_id: req.user.clinic_id },
+      where: { clinic_id: req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id },
       order: [['created_at', 'DESC']]
     });
 
@@ -240,7 +240,7 @@ router.get('/subscription', async (req, res) => {
 router.get('/payment-requests', async (req, res) => {
   try {
     const paymentRequests = await PaymentRequest.findAll({
-      where: { clinic_id: req.user.clinic_id },
+      where: { clinic_id: req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id },
       order: [['created_at', 'DESC']],
       limit: 20
     });
@@ -267,11 +267,11 @@ router.post('/payment-requests', [
     const amount = PLAN_PRICES[plan_code];
 
     // Vérifier s'il y a déjà une demande en attente
+    const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+    if (!clinicId) return res.status(400).json({ error: 'Clinique non identifiée. Reconnectez-vous.' });
+
     const existing = await PaymentRequest.findOne({
-      where: {
-        clinic_id: req.user.clinic_id,
-        status: 'PENDING'
-      }
+      where: { clinic_id: clinicId, status: 'PENDING' }
     });
 
     if (existing) {
@@ -281,7 +281,7 @@ router.post('/payment-requests', [
     }
 
     const paymentRequest = await PaymentRequest.create({
-      clinic_id: req.user.clinic_id,
+      clinic_id: clinicId,
       submitted_by_user_id: _getUserId(req),
       plan_code,
       amount_mga: amount,
