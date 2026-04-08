@@ -59,6 +59,68 @@ const GlobalCSS = () => (
     .stat-card:hover{transform:translateY(-4px);box-shadow:var(--sh3)}
     .tag{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--slate)}
     .tag-teal{background:#F0FDFE;border-color:#7DD3DA;color:var(--teal)}
+
+    /* ── Améliorations premium ── */
+    @keyframes shimmerText{0%{background-position:-300% center}100%{background-position:300% center}}
+    @keyframes gradBorder{0%,100%{opacity:.6}50%{opacity:1}}
+    @keyframes floatSlow{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-8px) rotate(.5deg)}66%{transform:translateY(-4px) rotate(-.5deg)}}
+    @keyframes orb{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(20px,-15px) scale(1.05)}75%{transform:translate(-15px,20px) scale(.95)}}
+    @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    .shimmer-gold{
+      background:linear-gradient(90deg,#F59E0B,#fff,#F59E0B,#FCD34D);
+      background-size:300% auto;
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+      animation:shimmerText 4s linear infinite;
+    }
+    .shimmer-teal{
+      background:linear-gradient(90deg,#7DD3DA,#fff,#7DD3DA,#B2EBF2);
+      background-size:300% auto;
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+      animation:shimmerText 3.5s linear infinite;
+    }
+    .glow-card{
+      transition:all .3s cubic-bezier(.22,1,.36,1);
+      position:relative;
+    }
+    .glow-card::before{
+      content:'';position:absolute;inset:-1px;border-radius:inherit;
+      background:linear-gradient(135deg,rgba(13,122,135,.4),rgba(125,211,218,.2),rgba(13,122,135,.4));
+      opacity:0;transition:opacity .3s;z-index:-1;
+    }
+    .glow-card:hover::before{opacity:1;}
+    .glow-card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 20px 60px rgba(13,122,135,.20);}
+
+    .number-accent{
+      font-variant-numeric:tabular-nums;
+      letter-spacing:-0.02em;
+    }
+    
+    /* Barre de progression animée */
+    @keyframes progressBar{from{width:0}to{width:var(--w,100%)}}
+    .progress-bar{animation:progressBar 1.2s cubic-bezier(.22,1,.36,1) both;}
+    
+    /* Effet de hover sur liens nav */
+    .nav-link::after{
+      content:'';display:block;height:2px;width:0;background:var(--teal);
+      transition:width .25s ease;border-radius:99px;margin-top:2px;
+    }
+    .nav-link:hover::after{width:100%;}
+
+    /* Card testimonial premium */
+    .testi-card{
+      transition:all .35s cubic-bezier(.22,1,.36,1);
+      position:relative;overflow:hidden;
+    }
+    .testi-card::after{
+      content:'❝';position:absolute;top:-10px;right:16px;
+      font-size:80px;color:rgba(13,122,135,.06);
+      font-family:Georgia,serif;line-height:1;
+      pointer-events:none;
+    }
+    .testi-card:hover{transform:translateY(-8px);box-shadow:0 24px 64px rgba(13,122,135,.12);}
   `}</style>
 );
 
@@ -481,7 +543,7 @@ export default function LandingPage() {
             </div>
             <h1 className="au1" style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:fs1,lineHeight:1.1,color:'#fff',marginBottom:12}}>
               Logiciel de Gestion<br/>
-              <span style={{color:'#7DD3DA'}}>Cabinet Dentaire</span><br/>
+              <span className="shimmer-teal">Cabinet Dentaire</span><br/>
               à Madagascar
             </h1>
             <div className="au2" style={{height:34,marginBottom:14,display:'flex',alignItems:'center'}}>
@@ -528,9 +590,121 @@ export default function LandingPage() {
         </div>}
       </section>
 
+
+      {/* ══ PAIN POINTS ══ */}
+      <section style={{background:'var(--ink)',padding:`${isMobile?'56px 16px':'88px 56px'}`,position:'relative',overflow:'hidden'}}>
+        {/* Fond décoratif */}
+        <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(ellipse at 10% 50%,rgba(13,122,135,.15),transparent 55%),radial-gradient(ellipse at 90% 20%,rgba(13,122,135,.10),transparent 55%)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px)',backgroundSize:'48px 48px',pointerEvents:'none'}}/>
+
+        <div style={{maxWidth:1100,margin:'0 auto',position:'relative'}}>
+          {/* En-tête */}
+          <div className="sr" style={{textAlign:'center',marginBottom:isMobile?36:64}}>
+            <span style={{display:'inline-flex',alignItems:'center',gap:8,background:'rgba(239,68,68,.12)',border:'1px solid rgba(239,68,68,.25)',borderRadius:99,padding:'6px 18px',fontSize:12,fontWeight:700,color:'#FCA5A5',letterSpacing:1.5,textTransform:'uppercase',marginBottom:18}}>
+              💡 Vous reconnaissez-vous ?
+            </span>
+            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?26:isTablet?34:46,color:'#fff',lineHeight:1.15,marginBottom:16}}>
+              Ces problèmes freinent<br/>
+              <span style={{color:'#7DD3DA'}}>votre cabinet au quotidien</span>
+            </h2>
+            <p style={{fontSize:isMobile?14:17,color:'rgba(255,255,255,.58)',maxWidth:560,margin:'0 auto',lineHeight:1.75}}>
+              Des heures perdues en administratif, des factures à refaire, des rendez-vous oubliés... Ça vous parle ?
+            </p>
+          </div>
+
+          {/* Grille des problèmes */}
+          <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':isTablet?'repeat(2,1fr)':'repeat(3,1fr)',gap:isMobile?12:16,marginBottom:isMobile?36:56}}>
+            {[
+              {
+                icon:'📋',
+                q:'Vous gérez encore vos dossiers patients sur papier ?',
+                pain:'Des heures à chercher une fiche patient, risque de perte, impossible de partager entre praticiens.',
+                color:'#EF4444',
+              },
+              {
+                icon:'🧾',
+                q:'Créer une facture vous prend plus de 10 minutes ?',
+                pain:'Calculs manuels, erreurs fréquentes, format non standard — et le patient qui attend au bureau.',
+                color:'#F59E0B',
+              },
+              {
+                icon:'📅',
+                q:'Des patients oublient leurs rendez-vous sans prévenir ?',
+                pain:"Des créneaux vides, du temps perdu, et un chiffre d'affaires qui s'évapore chaque semaine.",
+                color:'#8B5CF6',
+              },
+              {
+                icon:'📦',
+                q:'Votre stock de matériel vous réserve des surprises ?',
+                pain:'Commandes oubliées, ruptures en plein soin, produits périmés découverts trop tard.',
+                color:'#10B981',
+              },
+              {
+                icon:'💊',
+                q:'Rédiger une ordonnance vous prend trop de temps ?',
+                pain:"Écriture manuelle, illisibilité, risque d'erreurs de dosage, pas de trace numérique.",
+                color:'#F59E0B',
+              },
+              {
+                icon:'📊',
+                q:'Vous ne savez pas exactement combien rapporte votre cabinet ?',
+                pain:'Pas de tableau de bord, revenus flous, impossible de planifier ou de prouver la rentabilité.',
+                color:'#0D7A87',
+              },
+            ].map((item,i)=>(
+              <div key={i} className="sr" onClick={()=>open(PLANS[1])} style={{
+                background:'rgba(255,255,255,.04)',
+                border:'1px solid rgba(255,255,255,.08)',
+                borderRadius:18,
+                padding:isMobile?'20px 18px':'26px 24px',
+                cursor:'pointer',
+                transition:'all .3s cubic-bezier(.22,1,.36,1)',
+                transitionDelay:`${i*.06}s`,
+                position:'relative',
+                overflow:'hidden',
+              }}
+              onMouseOver={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)';e.currentTarget.style.borderColor='rgba(255,255,255,.18)';e.currentTarget.style.transform='translateY(-4px)';}}
+              onMouseOut={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)';e.currentTarget.style.borderColor='rgba(255,255,255,.08)';e.currentTarget.style.transform='translateY(0)';}}>
+                {/* Pastille couleur */}
+                <div style={{width:44,height:44,borderRadius:13,background:`${item.color}18`,border:`1px solid ${item.color}33`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,marginBottom:14}}>{item.icon}</div>
+                {/* Question */}
+                <p style={{fontFamily:'Bricolage Grotesque',fontWeight:700,fontSize:isMobile?14:15,color:'#fff',lineHeight:1.45,marginBottom:10}}>{item.q}</p>
+                {/* Pain */}
+                <p style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,.45)',lineHeight:1.65,margin:0}}>{item.pain}</p>
+                {/* Trait couleur bas */}
+                <div style={{position:'absolute',bottom:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${item.color}66,transparent)`,borderRadius:'0 0 18px 18px'}}/>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA bas de section */}
+          <div className="sr" style={{textAlign:'center'}}>
+            <div style={{background:'linear-gradient(135deg,rgba(13,122,135,.2),rgba(13,163,180,.1))',border:'1px solid rgba(13,122,135,.35)',borderRadius:20,padding:isMobile?'28px 20px':'36px 48px',display:'inline-block',width:'100%',maxWidth:640}}>
+              <p style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?20:26,color:'#fff',marginBottom:8,lineHeight:1.3}}>
+                ✅ DPM résout tous ces problèmes.<br/>
+                <span style={{color:'#7DD3DA'}}>En 30 minutes, chrono.</span>
+              </p>
+              <p style={{fontSize:isMobile?13:15,color:'rgba(255,255,255,.6)',marginBottom:22,lineHeight:1.6}}>
+                Rejoignez les cabinets dentaires malgaches qui ont repris le contrôle de leur gestion.
+              </p>
+              <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
+                <button onClick={()=>open(PLANS[1])} className="btn-main"
+                  style={{padding:isMobile?'13px 22px':'14px 32px',borderRadius:12,background:'var(--teal)',color:'#fff',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>
+                  Essayer gratuitement — 7 jours ✨
+                </button>
+                <a href="#tarifs" style={{padding:isMobile?'13px 18px':'14px 24px',borderRadius:12,background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontWeight:600,fontSize:isMobile?14:15,border:'1px solid rgba(255,255,255,.18)',textDecoration:'none',display:'inline-flex',alignItems:'center'}}>
+                  Voir les tarifs →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ══ STATS ══ */}
-      <section style={{background:'var(--surface)',padding:`${isMobile?'36px':'60px'} ${px}`,borderBottom:'1px solid var(--border)'}}>
-        <div style={{maxWidth:1000,margin:'0 auto',display:'grid',gridTemplateColumns:c4,gap:isMobile?10:20}}>
+      <section style={{background:'#fff',padding:`${isMobile?'36px':'60px'} ${px}`,borderBottom:'1px solid var(--border)',position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 50% 100%,rgba(13,122,135,.04),transparent 65%)',pointerEvents:'none'}}/>
+        <div style={{maxWidth:1000,margin:'0 auto',display:'grid',gridTemplateColumns:c4,gap:isMobile?10:20,position:'relative'}}>
           <Counter end={50} suffix="+" label="+50 cabinets" sub="clients actifs en Madagascar"/>
           <Counter end={98} suffix="%" label="98% satisfaction" sub="notés par nos praticiens"/>
           <Counter end={3} suffix=" s" label="construction du facture" sub="rapide, fiable"/>
@@ -636,7 +810,7 @@ export default function LandingPage() {
             {icon:'📱',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
             {icon:'🤝',t:'Support réactif',d:"Équipe basée à Antananarivo, réponse sous 24h. En français, par des Malgaches.",c:'#0D7A87'},
           ].map((a,i)=>(
-            <div key={i} className="sr plan-hover" style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,padding:isMobile?'18px 16px':'28px 24px',transitionDelay:`${i*.07}s`}}>
+            <div key={i} className="sr glow-card" style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,padding:isMobile?'18px 16px':'28px 24px',transitionDelay:`${i*.07}s`}}>
               <div style={{width:46,height:46,borderRadius:13,background:`${a.c}12`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,marginBottom:13}}>{a.icon}</div>
               <h3 style={{fontFamily:'Bricolage Grotesque',fontWeight:700,fontSize:isMobile?15:18,color:'var(--ink)',marginBottom:7}}>{a.t}</h3>
               <p style={{color:'var(--slate)',fontSize:isMobile?12:14,lineHeight:1.65}}>{a.d}</p>
@@ -653,7 +827,7 @@ export default function LandingPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:c3,gap:isMobile?12:22,marginBottom:isMobile?18:48}}>
             {TEMOIGNAGES.map((t,i)=>(
-              <div key={i} className="sr plan-hover" style={{background:'#fff',borderRadius:20,padding:isMobile?'18px 16px':'28px 26px',border:'1px solid var(--border)',boxShadow:'var(--sh1)',transitionDelay:`${i*.1}s`}}>
+              <div key={i} className="sr testi-card" style={{background:'#fff',borderRadius:20,padding:isMobile?'18px 16px':'28px 26px',border:'1px solid var(--border)',boxShadow:'var(--sh1)',transitionDelay:`${i*.1}s`}}>
                 <div style={{display:'flex',gap:2,marginBottom:11}}>{Array(5).fill(0).map((_,j)=><span key={j} style={{color:'#F59E0B',fontSize:15}}>★</span>)}</div>
                 <p style={{color:'var(--slate)',fontSize:isMobile?13:15,lineHeight:1.8,marginBottom:16,fontStyle:'italic'}}>&ldquo;{t.txt}&rdquo;</p>
                 <div style={{display:'flex',alignItems:'center',gap:10,paddingTop:14,borderTop:'1px solid var(--border)'}}>
@@ -714,6 +888,7 @@ export default function LandingPage() {
             {PLANS.map((plan,i)=>(
               <div key={plan.name} className="plan-hover sr" style={{background:'#fff',borderRadius:20,padding:isMobile?'22px 18px':'32px 26px',border:plan.popular?'2px solid var(--teal)':'1px solid var(--border)',boxShadow:plan.popular?'var(--sh-teal)':'var(--sh1)',position:'relative',transitionDelay:`${i*.1}s`}}>
                 {plan.popular&&<div style={{position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:'var(--teal)',color:'#fff',padding:'3px 14px',borderRadius:99,fontSize:11,fontWeight:800,whiteSpace:'nowrap'}}>⭐ Le plus populaire</div>}
+                {!plan.popular&&i===2&&<div style={{position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:'#7C3AED',color:'#fff',padding:'3px 14px',borderRadius:99,fontSize:11,fontWeight:800,whiteSpace:'nowrap'}}>🏆 Premium</div>}
                 <div style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>{plan.name}</div>
                 <div style={{fontSize:12,color:'var(--muted)',marginBottom:14}}>{plan.desc}</div>
                 <div style={{marginBottom:18}}>
