@@ -126,12 +126,8 @@ const GlobalCSS = () => (
 
 /* ── Logo ── */
 const Logo = ({ size=36 }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-    <rect width="100" height="100" rx="18" fill="var(--teal)"/>
-    <path d="M50 14C37 14,24 23,22 36C20 48,24 56,26 62C29 73,32 83,36 91C38 95,42 97,45 94C48 91,49 84,50 77 50 77 51 84,52 91C55 97,59 95,64 91C68 83,71 73,74 62C76 56,80 48,78 36C76 23,63 14,50 14Z" fill="white" opacity=".95"/>
-    <rect x="45" y="32" width="10" height="30" rx="5" fill="var(--teal)"/>
-    <rect x="31" y="46" width="38" height="10" rx="5" fill="var(--teal)"/>
-  </svg>
+  <img src="/logo.jpeg" alt="DPM Madagascar" width={size} height={size}
+    style={{ borderRadius: size * 0.18, objectFit:'cover', display:'block', flexShrink:0 }}/>
 );
 
 /* ── FadeSlider ── */
