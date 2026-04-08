@@ -65,19 +65,10 @@ const useScreenSize = () => {
 }
 
 
-// ── Logo Dentaire SVG ──
+// ── Logo ──
 const DentalLogo = () => (
-  <svg width="22" height="22" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {/* Dent principale */}
-    <path d="M50 8 C35 8, 20 18, 18 32 C16 44, 20 52, 22 58 C25 68, 28 80, 32 88 C34 93, 38 95, 42 92 C45 89, 46 82, 48 74 C49 70, 50 68, 50 68 C50 68, 51 70, 52 74 C54 82, 55 89, 58 92 C62 95, 66 93, 68 88 C72 80, 75 68, 78 58 C80 52, 84 44, 82 32 C80 18, 65 8, 50 8 Z"
-      fill="white" opacity="0.95"/>
-    {/* Reflet */}
-    <path d="M35 18 C28 22, 24 30, 24 38 C24 40, 26 41, 27 40 C29 32, 34 24, 42 20 C44 19, 44 16, 42 16 C39 16, 37 17, 35 18 Z"
-      fill="white" opacity="0.5"/>
-    {/* Croix médicale */}
-    <rect x="44" y="30" width="12" height="36" rx="5" fill="#0D7A87" opacity="0.85"/>
-    <rect x="30" y="44" width="40" height="12" rx="5" fill="#0D7A87" opacity="0.85"/>
-  </svg>
+  <img src="/logo.jpeg" alt="DPM" width={28} height={28}
+    style={{ borderRadius: 7, objectFit:'cover', display:'block' }}/>
 );
 
 // ── Contenu sidebar (réutilisé desktop + drawer) ──
