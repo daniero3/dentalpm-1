@@ -94,6 +94,17 @@ const ActivityItem = ({ item, index }) => (
   </div>
 );
 
+
+const useWindowWidth = () => {
+  const [w, setW] = React.useState(window.innerWidth);
+  React.useEffect(() => {
+    const h = () => setW(window.innerWidth);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  return w;
+};
+
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -179,7 +190,7 @@ const Dashboard = () => {
       </div>
 
       {/* Charts row 1 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
 
         {/* Revenue Bar Chart */}
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,0.05)' }}>
@@ -230,7 +241,7 @@ const Dashboard = () => {
       </div>
 
       {/* Charts row 2 */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
 
         {/* Pie Chart */}
         <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(15,23,42,0.05)' }}>
