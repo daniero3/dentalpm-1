@@ -9,6 +9,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
   : 'https://dentalpm-1-production.up.railway.app/api';
 
+const useWin = () => { const [w, setW] = React.useState(window.innerWidth); React.useEffect(() => { const h = () => setW(window.innerWidth); window.addEventListener('resize', h); return () => window.removeEventListener('resize', h); }, []); return w; };
 const fmt = n => new Intl.NumberFormat('fr-MG').format(n || 0);
 
 const PLANS = [
@@ -196,7 +197,7 @@ export default function PaymentRequestPage() {
               <div>
                 <h3 style={{fontWeight:700,fontSize:16,color:'#0F172A',margin:'0 0 4px'}}>Quel plan souhaitez-vous ?</h3>
                 <p style={{color:'#64748B',fontSize:13,margin:'0 0 18px'}}>Sélectionnez le plan adapté à votre cabinet dentaire</p>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:22}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginBottom:22}}>
                   {PLANS.map(p=>(
                     <div key={p.code} className={`pc ${plan===p.code?'sel':''}`} onClick={()=>setPlan(p.code)}>
                       {p.popular && <div style={{position:'absolute',top:-10,left:'50%',transform:'translateX(-50%)',background:'#0D7A87',color:'#fff',fontSize:10,fontWeight:800,padding:'3px 12px',borderRadius:99,whiteSpace:'nowrap'}}>⭐ POPULAIRE</div>}
