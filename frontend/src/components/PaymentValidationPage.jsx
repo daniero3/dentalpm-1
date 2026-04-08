@@ -118,7 +118,7 @@ export default function PaymentValidationPage() {
       </div>
 
       {/* KPI cards */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:22}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14,marginBottom:22}}>
         {ST_TABS.map(t=>(
           <div key={t.key} style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:`1.5px solid ${filter===t.key?t.dot:'#E8EDF2'}`,boxShadow:filter===t.key?`0 4px 20px ${t.dot}33`:'var(--sh1,0 1px 4px rgba(0,0,0,.05))',cursor:'pointer',transition:'all .2s'}} onClick={()=>setFilter(t.key)}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
