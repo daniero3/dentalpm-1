@@ -1,251 +1,307 @@
-import React, { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { toast } from "sonner";
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  Eye,
-  FileText,
-  Building2
-} from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
+/**
+ * PaymentValidationPage.jsx — Côté ADMIN / SUPER_ADMIN
+ * Interface moderne pour valider/rejeter les demandes de paiement
+ */
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : 'https://dentalpm-1-production.up.railway.app/api';
 
-const PaymentValidationPage = () => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [actionType, setActionType] = useState(null); // 'verify' or 'reject'
-  const [note, setNote] = useState('');
-  const [processing, setProcessing] = useState(false);
+const fmt  = n => new Intl.NumberFormat('fr-MG').format(n || 0);
+const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
 
-  const fetchRequests = useCallback(async () => {
+const METHODS = {
+  MVOLA:'MVola 📱', ORANGE_MONEY:'Orange Money 📱',
+  AIRTEL_MONEY:'Airtel Money 📱', BANK_TRANSFER:'Virement BNI 🏦', CASH:'Espèces 💵',
+};
+
+const ST_TABS = [
+  { key:'PENDING',  label:'En attente', color:'#B45309', bg:'#FEF3C7', dot:'#F59E0B' },
+  { key:'VERIFIED', label:'Approuvés',  color:'#065F46', bg:'#D1FAE5', dot:'#10B981' },
+  { key:'REJECTED', label:'Rejetés',    color:'#991B1B', bg:'#FEE2E2', dot:'#EF4444' },
+];
+
+const G = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+  @keyframes fu2{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .fu2{animation:fu2 .3s ease both}
+  @keyframes sp2{to{transform:rotate(360deg)}}
+  .av-btn{padding:10px 18px;border-radius:11px;font-weight:700;font-size:13px;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+  .av-btn:hover{transform:translateY(-1px);opacity:.9}
+  .av-inp{width:100%;padding:10px 13px;border-radius:10px;border:1.5px solid #E2E8F0;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;resize:vertical}
+  .av-inp:focus{border-color:#0D7A87;box-shadow:0 0 0 3px rgba(13,122,135,.1)}
+  .req-card{background:#fff;border:1px solid #E8EDF2;border-radius:18px;padding:20px 22px;transition:box-shadow .2s;margin-bottom:12px}
+  .req-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08)}
+  .overlay{position:fixed;inset:0;background:rgba(10,15,20,.65);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal{background:#fff;border-radius:22px;padding:32px 28px;max-width:480px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.18);animation:fu2 .3s ease}
+`;
+
+export default function PaymentValidationPage() {
+  const [all, setAll]       = useState([]);
+  const [loading, setLoad]  = useState(true);
+  const [filter, setFilter] = useState('PENDING');
+  const [modal, setModal]   = useState(null); // { req, action:'approve'|'reject' }
+  const [note, setNote]     = useState('');
+  const [busy, setBusy]     = useState(false);
+  const [notif, setNotif]   = useState(null);
+  const [search, setSearch] = useState('');
+
+  const notify = (msg, err=false) => { setNotif({msg,err}); setTimeout(()=>setNotif(null),4000); };
+
+  const refresh = useCallback(async () => {
+    setLoad(true);
     try {
-      setLoading(true);
-      const response = await axios.get(`${API}/admin/payment-requests?status=PENDING`);
-      setRequests(response.data.paymentRequests || []);
-    } catch (error) {
-      toast.error('Erreur lors du chargement des demandes');
-    } finally {
-      setLoading(false);
-    }
+      const r = await axios.get(`${API}/admin/payment-requests`);
+      setAll(r.data?.paymentRequests || []);
+    } catch(e) {
+      notify('Impossible de charger les demandes', true);
+    } finally { setLoad(false); }
   }, []);
 
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  useEffect(()=>{ refresh(); },[refresh]);
 
-  const handleAction = async () => {
-    if (!selectedRequest || !actionType) return;
-    
-    if (actionType === 'reject' && !note.trim()) {
-      toast.error('Motif de rejet requis');
-      return;
-    }
+  const filtered = all
+    .filter(r => r.status === filter)
+    .filter(r => {
+      if (!search) return true;
+      const s = search.toLowerCase();
+      return (
+        r.clinic?.name?.toLowerCase().includes(s) ||
+        r.plan_code?.toLowerCase().includes(s) ||
+        r.reference?.toLowerCase().includes(s)
+      );
+    });
 
-    setProcessing(true);
+  const counts = { PENDING: 0, VERIFIED: 0, REJECTED: 0 };
+  all.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+
+  const openModal = (req, action) => { setModal({req, action}); setNote(''); };
+  const closeModal = () => { setModal(null); setNote(''); };
+
+  const doAction = async () => {
+    if (!modal) return;
+    if (modal.action === 'reject' && !note.trim()) { notify('Motif de rejet requis', true); return; }
+    setBusy(true);
     try {
-      const endpoint = actionType === 'verify' 
-        ? `${API}/admin/payment-requests/${selectedRequest.id}/verify`
-        : `${API}/admin/payment-requests/${selectedRequest.id}/reject`;
-
-      await axios.patch(endpoint, { note_admin: note });
-
-      toast.success(actionType === 'verify' ? 'Paiement vérifié' : 'Demande rejetée');
-      setSelectedRequest(null);
-      setActionType(null);
-      setNote('');
-      fetchRequests();
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur');
-    } finally {
-      setProcessing(false);
-    }
+      const url = modal.action === 'approve'
+        ? `${API}/admin/payment-requests/${modal.req.id}/verify`
+        : `${API}/admin/payment-requests/${modal.req.id}/reject`;
+      await axios.patch(url, { note_admin: note.trim() || undefined });
+      notify(modal.action === 'approve' ? '✅ Paiement approuvé et abonnement activé !' : '❌ Demande rejetée.');
+      closeModal();
+      refresh();
+    } catch(e) {
+      notify(e.response?.data?.error || 'Erreur lors de la validation', true);
+    } finally { setBusy(false); }
   };
 
-  const openDialog = (request, type) => {
-    setSelectedRequest(request);
-    setActionType(type);
-    setNote('');
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  const CARD_BG = { background:'#fff', borderRadius:20, border:'1px solid #E8EDF2', boxShadow:'0 1px 6px rgba(0,0,0,.05)', marginBottom:18, overflow:'hidden' };
+  const HDR     = { padding:'15px 22px', borderBottom:'1px solid #F1F5F9', fontWeight:700, fontSize:15, color:'#0F172A', display:'flex', alignItems:'center', gap:8 };
 
   return (
-    <div className="space-y-6" data-testid="payment-validation-page">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <FileText className="h-6 w-6 text-primary" />
-          Validation des paiements
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Vérifiez les preuves de paiement des cliniques
-        </p>
-      </div>
+    <div style={{maxWidth:1000,margin:'0 auto',padding:'20px 20px 48px'}}>
+      <style>{G}</style>
 
-      {requests.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <p className="text-muted-foreground">Aucune demande en attente</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {requests.map(req => (
-            <Card key={req.id} data-testid={`request-card-${req.id}`}>
-              <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-semibold">{req.clinic?.name || 'Clinique'}</span>
-                      <Badge variant="secondary">{req.plan_code}</Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Montant:</span>
-                        <span className="ml-1 font-medium">{req.amount_mga?.toLocaleString()} MGA</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Méthode:</span>
-                        <span className="ml-1">{req.payment_method}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Référence:</span>
-                        <span className="ml-1 font-mono">{req.reference || '-'}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Date:</span>
-                        <span className="ml-1">{new Date(req.created_at).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                    </div>
-
-                    {req.receipt_url && (
-                      <a 
-                        href={`${process.env.REACT_APP_BACKEND_URL}${req.receipt_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-2"
-                      >
-                        <Eye className="h-3 w-3" />
-                        Voir le reçu
-                      </a>
-                    )}
-
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Soumis par: {req.submittedBy?.full_name || req.submittedBy?.email || 'Inconnu'}
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => openDialog(req, 'reject')}
-                      data-testid={`reject-btn-${req.id}`}
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Rejeter
-                    </Button>
-                    <Button
-                      onClick={() => openDialog(req, 'verify')}
-                      data-testid={`verify-btn-${req.id}`}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Vérifier
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* Toast */}
+      {notif && (
+        <div style={{position:'fixed',top:20,right:20,zIndex:9999,padding:'14px 20px',borderRadius:14,background:notif.err?'#FEE2E2':'#D1FAE5',color:notif.err?'#991B1B':'#065F46',fontWeight:700,fontSize:14,boxShadow:'0 8px 32px rgba(0,0,0,.15)',animation:'fu2 .3s ease'}}>
+          {notif.msg}
         </div>
       )}
 
-      {/* Confirmation Dialog */}
-      <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className={actionType === 'verify' ? 'text-green-600' : 'text-red-600'}>
-              {actionType === 'verify' ? 'Vérifier le paiement' : 'Rejeter la demande'}
-            </DialogTitle>
-            <DialogDescription>
-              {actionType === 'verify' 
-                ? 'Cette action activera l\'abonnement de la clinique pour 30 jours.'
-                : 'Indiquez le motif du rejet.'}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Titre */}
+      <div style={{marginBottom:24}}>
+        <h1 style={{fontFamily:'Plus Jakarta Sans,sans-serif',fontWeight:800,fontSize:22,color:'#0F172A',margin:0}}>🏦 Validation des paiements</h1>
+        <p style={{color:'#64748B',fontSize:13,marginTop:4}}>Approuvez ou rejetez les demandes de paiement des cabinets</p>
+      </div>
 
-          {selectedRequest && (
-            <div className="py-4">
-              <div className="bg-muted/50 p-3 rounded-lg mb-4">
-                <p className="font-medium">{selectedRequest.clinic?.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedRequest.plan_code} - {selectedRequest.amount_mga?.toLocaleString()} MGA
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedRequest.payment_method} • {selectedRequest.reference || 'Sans référence'}
-                </p>
+      {/* KPI cards */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:22}}>
+        {ST_TABS.map(t=>(
+          <div key={t.key} style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:`1.5px solid ${filter===t.key?t.dot:'#E8EDF2'}`,boxShadow:filter===t.key?`0 4px 20px ${t.dot}33`:'var(--sh1,0 1px 4px rgba(0,0,0,.05))',cursor:'pointer',transition:'all .2s'}} onClick={()=>setFilter(t.key)}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+              <div style={{width:10,height:10,borderRadius:'50%',background:t.dot}}/>
+              <span style={{fontSize:13,fontWeight:600,color:t.color}}>{t.label}</span>
+            </div>
+            <div style={{fontFamily:'Plus Jakarta Sans,sans-serif',fontWeight:800,fontSize:36,color:'#0F172A',lineHeight:1}}>
+              {counts[t.key]}
+            </div>
+            <div style={{fontSize:12,color:'#94A3B8',marginTop:4}}>demande{counts[t.key]>1?'s':''}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Barre filtre + recherche */}
+      <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:18,flexWrap:'wrap'}}>
+        <div style={{display:'flex',gap:6}}>
+          {ST_TABS.map(t=>(
+            <button key={t.key} onClick={()=>setFilter(t.key)}
+              style={{padding:'8px 16px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all .2s',background:filter===t.key?t.dot:'#F1F5F9',color:filter===t.key?'#fff':t.color}}>
+              {t.label} ({counts[t.key]})
+            </button>
+          ))}
+        </div>
+        <input type="text" placeholder="Rechercher par cabinet, plan, référence..." value={search} onChange={e=>setSearch(e.target.value)}
+          style={{flex:1,minWidth:200,padding:'9px 14px',borderRadius:11,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none'}}
+          onFocus={e=>e.target.style.borderColor='#0D7A87'}
+          onBlur={e=>e.target.style.borderColor='#E2E8F0'}/>
+        <button onClick={refresh} style={{padding:'9px 16px',borderRadius:11,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+          🔄 Actualiser
+        </button>
+      </div>
+
+      {/* Liste */}
+      {loading ? (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:200}}>
+          <div style={{width:40,height:40,border:'4px solid #E2E8F0',borderTopColor:'#0D7A87',borderRadius:'50%',animation:'sp2 .8s linear infinite'}}/>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{...CARD_BG,padding:'48px 20px',textAlign:'center',color:'#94A3B8'}}>
+          <div style={{fontSize:48,marginBottom:12}}>
+            {filter==='PENDING'?'⏳':filter==='VERIFIED'?'✅':'❌'}
+          </div>
+          <p style={{margin:0,fontSize:15,fontWeight:600}}>
+            {search ? 'Aucun résultat pour cette recherche' : `Aucune demande ${ST_TABS.find(t=>t.key===filter)?.label.toLowerCase()}`}
+          </p>
+        </div>
+      ) : (
+        <div className="fu2">
+          {filtered.map(req => {
+            const tab = ST_TABS.find(t=>t.key===req.status)||ST_TABS[0];
+            return (
+              <div key={req.id} className="req-card">
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:12}}>
+
+                  {/* Infos cabinet */}
+                  <div style={{display:'flex',alignItems:'flex-start',gap:14,flex:1,minWidth:240}}>
+                    <div style={{width:46,height:46,borderRadius:13,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontFamily:'Plus Jakarta Sans,sans-serif',fontWeight:800,fontSize:17,flexShrink:0}}>
+                      {req.clinic?.name?.[0]||'C'}
+                    </div>
+                    <div>
+                      <div style={{fontWeight:800,fontSize:16,color:'#0F172A',marginBottom:3}}>
+                        {req.clinic?.name||`Clinique #${req.clinic_id?.slice?.(0,8)||'?'}`}
+                      </div>
+                      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                        <span style={{background:'#F0FDFE',color:'#0D7A87',borderRadius:99,padding:'2px 10px',fontSize:12,fontWeight:700}}>
+                          Plan {req.plan_code}
+                        </span>
+                        <span style={{background:'#F8FAFC',color:'#475569',borderRadius:99,padding:'2px 10px',fontSize:12,fontWeight:600}}>
+                          {METHODS[req.payment_method]||req.payment_method}
+                        </span>
+                        {req.reference && (
+                          <span style={{background:'#F8FAFC',color:'#475569',borderRadius:99,padding:'2px 10px',fontSize:12}}>
+                            Réf: {req.reference}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{fontSize:12,color:'#94A3B8',marginTop:5}}>
+                        Soumis le {fdate(req.created_at)}
+                        {req.reviewed_at && ` · Traité le ${fdate(req.reviewed_at)}`}
+                      </div>
+                      {req.note_admin && (
+                        <div style={{marginTop:8,background:'#F8FAFC',border:'1px solid #E2E8F0',borderRadius:8,padding:'7px 10px',fontSize:12,color:'#475569',display:'flex',gap:6}}>
+                          <span>💬</span><span><strong>Note :</strong> {req.note_admin}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Montant + status + actions */}
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10,flexShrink:0}}>
+                    <div style={{fontFamily:'Plus Jakarta Sans,sans-serif',fontWeight:900,fontSize:22,color:'#0D7A87',textAlign:'right'}}>
+                      {fmt(req.amount_mga)} Ar
+                    </div>
+                    <span style={{padding:'5px 14px',borderRadius:99,fontSize:12,fontWeight:700,background:tab.bg,color:tab.color}}>
+                      {tab.label}
+                    </span>
+
+                    {/* Actions uniquement si PENDING */}
+                    {req.status === 'PENDING' && (
+                      <div style={{display:'flex',gap:8}}>
+                        <button className="av-btn" onClick={()=>openModal(req,'reject')}
+                          style={{background:'#FEE2E2',color:'#991B1B'}}>
+                          ✕ Rejeter
+                        </button>
+                        <button className="av-btn" onClick={()=>openModal(req,'approve')}
+                          style={{background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',boxShadow:'0 4px 14px rgba(16,185,129,.3)'}}>
+                          ✓ Approuver
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
 
+      {/* Modal confirmation */}
+      {modal && (
+        <div className="overlay" onClick={e=>e.target===e.currentTarget&&closeModal()}>
+          <div className="modal">
+            {/* Header */}
+            <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:22}}>
+              <div style={{width:52,height:52,borderRadius:16,background:modal.action==='approve'?'linear-gradient(135deg,#10B981,#059669)':'#FEE2E2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>
+                {modal.action==='approve'?'✅':'❌'}
+              </div>
               <div>
-                <Label htmlFor="note">
-                  {actionType === 'verify' ? 'Note (optionnel)' : 'Motif du rejet *'}
-                </Label>
-                <Textarea
-                  id="note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder={actionType === 'verify' 
-                    ? 'Note optionnelle...'
-                    : 'Expliquez pourquoi la demande est rejetée...'}
-                  rows={3}
-                  data-testid="note-textarea"
-                />
+                <h2 style={{fontFamily:'Plus Jakarta Sans,sans-serif',fontWeight:800,fontSize:20,color:'#0F172A',margin:0}}>
+                  {modal.action==='approve'?'Approuver le paiement':'Rejeter la demande'}
+                </h2>
+                <p style={{color:'#64748B',fontSize:13,margin:0,marginTop:3}}>
+                  {modal.req.clinic?.name||'Cabinet'} · Plan {modal.req.plan_code}
+                </p>
               </div>
             </div>
-          )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedRequest(null)}>
-              Annuler
-            </Button>
-            <Button
-              onClick={handleAction}
-              disabled={processing}
-              variant={actionType === 'verify' ? 'default' : 'destructive'}
-              data-testid="confirm-action-btn"
-            >
-              {processing ? 'Traitement...' : (actionType === 'verify' ? 'Confirmer la vérification' : 'Confirmer le rejet')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            {/* Recap */}
+            <div style={{background:'#F8FAFC',borderRadius:14,padding:'14px 18px',border:'1px solid #E2E8F0',marginBottom:18}}>
+              {[
+                {l:'Cabinet',   v:modal.req.clinic?.name||'—'},
+                {l:'Plan',      v:modal.req.plan_code},
+                {l:'Montant',   v:`${fmt(modal.req.amount_mga)} Ar`},
+                {l:'Paiement',  v:METHODS[modal.req.payment_method]||modal.req.payment_method},
+                {l:'Référence', v:modal.req.reference||'—'},
+              ].map((r,i)=>(
+                <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:i<4?'1px solid #F1F5F9':'none'}}>
+                  <span style={{fontSize:13,color:'#64748B'}}>{r.l}</span>
+                  <span style={{fontSize:13,fontWeight:700,color:'#0F172A'}}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+
+            {modal.action === 'approve' ? (
+              <div style={{background:'#D1FAE5',borderRadius:12,padding:'13px 16px',marginBottom:18}}>
+                <p style={{fontSize:13,color:'#065F46',margin:0,fontWeight:600}}>
+                  ✅ Cette action activera immédiatement l'abonnement Plan {modal.req.plan_code} du cabinet pour 30 jours.
+                </p>
+              </div>
+            ) : (
+              <div style={{marginBottom:18}}>
+                <label style={{display:'block',fontSize:13,fontWeight:600,color:'#475569',marginBottom:6}}>
+                  Motif de rejet <span style={{color:'#EF4444'}}>*</span>
+                </label>
+                <textarea rows={3} className="av-inp" placeholder="Ex: Référence de paiement invalide, montant incorrect..."
+                  value={note} onChange={e=>setNote(e.target.value)}/>
+                <p style={{fontSize:12,color:'#94A3B8',marginTop:4}}>Ce message sera visible par le cabinet</p>
+              </div>
+            )}
+
+            <div style={{display:'flex',gap:10}}>
+              <button onClick={closeModal} style={{flex:1,padding:'12px',borderRadius:12,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',fontWeight:600,fontSize:14,cursor:'pointer'}}>
+                Annuler
+              </button>
+              <button onClick={doAction} disabled={busy}
+                style={{flex:2,padding:'12px',borderRadius:12,border:'none',background:modal.action==='approve'?'linear-gradient(135deg,#10B981,#059669)':'linear-gradient(135deg,#EF4444,#DC2626)',color:'#fff',fontWeight:700,fontSize:14,cursor:busy?'not-allowed':'pointer',opacity:busy?.7:1}}>
+                {busy ? '⏳ Traitement...' : modal.action==='approve' ? '✅ Confirmer et activer' : '❌ Confirmer le rejet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default PaymentValidationPage;
+}
