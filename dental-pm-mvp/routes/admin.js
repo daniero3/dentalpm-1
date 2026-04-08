@@ -94,7 +94,7 @@ router.post('/clinics', requireRole('SUPER_ADMIN'), [
     if (existingUser) return res.status(409).json({ error: 'Ce nom d\'utilisateur est déjà pris' });
 
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 14);
+    trialEnd.setDate(trialEnd.getDate() + 7); // Trial 7 jours
 
     const clinic = await Clinic.create({
       name, business_name: business_name || name, email, phone, address,
@@ -355,7 +355,7 @@ router.patch('/payment-requests/:id/approve', requireRole('SUPER_ADMIN'), async 
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
 
     const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setDate(endDate.getDate() + 30); // 30 jours calendaires
 
     await Subscription.create({
       clinic_id: request.clinic_id, plan, status: 'ACTIVE',
