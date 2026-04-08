@@ -226,6 +226,16 @@ const ProtectedRoute = ({ children }) => {
   return user ? children : <Navigate to="/landing" />;
 };
 
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Navigate to="/landing" />;
+  if (!['SUPER_ADMIN', 'ADMIN'].includes(user.role)) return <Navigate to="/" />;
+  return children;
+};
+
+
+
 // ── Page Transition ────────────────────────────────────────────────────────
 const PageTransition = ({ children }) => {
   const location = useLocation();
@@ -308,9 +318,9 @@ function App() {
               <Route path="/settings" element={<ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><LicensingGuard><MainLayout><ReportsManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/settings/billing" element={<ProtectedRoute><LicensingGuard><MainLayout><BillingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><MainLayout><SuperAdminDashboard /></MainLayout></ProtectedRoute>} />
-              <Route path="/admin/clinics" element={<ProtectedRoute><MainLayout><SuperAdminClinics /></MainLayout></ProtectedRoute>} />
-              <Route path="/admin/payments" element={<ProtectedRoute><MainLayout><PaymentValidationPage /></MainLayout></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminRoute><MainLayout><SuperAdminDashboard /></MainLayout></AdminRoute>} />
+              <Route path="/admin/clinics" element={<AdminRoute><MainLayout><SuperAdminClinics /></MainLayout></AdminRoute>} />
+              <Route path="/admin/payments" element={<AdminRoute><MainLayout><PaymentValidationPage /></MainLayout></AdminRoute>} />
               <Route path="/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
               <Route path="/billing/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
               <Route path="/legal" element={<LegalPages />} />
