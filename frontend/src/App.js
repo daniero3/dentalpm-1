@@ -270,21 +270,34 @@ const MainLayout = ({ children }) => {
   const isMobile  = w < 768;
   const isTablet  = w >= 768 && w < 1024;
   const sidebarW  = isMobile ? 0 : (isTablet ? 72 : 264);
-  const padding   = isMobile ? '12px' : '24px';
+  const padding   = isMobile ? '10px 10px 80px' : '20px 24px 64px';
 
   return (
-    <div style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden' }}>
+    <div style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden', position:'relative' }}>
       <ModernSidebar />
-      <div style={{ display:'flex', flexDirection:'column', flex:1, overflow:'hidden', marginLeft:sidebarW, transition:'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)', minWidth:0 }}>
+      <div style={{
+        display:'flex', flexDirection:'column', flex:1,
+        overflow:'hidden', minWidth:0,
+        marginLeft: sidebarW,
+        transition:'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        maxWidth: isMobile ? '100vw' : `calc(100vw - ${sidebarW}px)`,
+      }}>
         <ModernTopbar />
-        <main style={{ flex:1, overflowY:'auto', padding:padding, background:'var(--bg)' }}>
-          <div style={{ maxWidth:1280, margin:'0 auto', paddingBottom:64 }}>
+        <main style={{
+          flex:1, overflowY:'auto', overflowX:'hidden',
+          padding: padding,
+          background:'var(--bg)',
+          WebkitOverflowScrolling:'touch',
+        }}>
+          <div style={{ maxWidth:1280, margin:'0 auto', width:'100%' }}>
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
-        <footer style={{ background:'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', borderTop:'1px solid var(--border)', padding:'12px 24px', textAlign:'center', fontSize:12, color:'var(--text-muted)', fontFamily:'DM Sans,sans-serif', letterSpacing:'0.01em' }}>
-          © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
-        </footer>
+        {!isMobile && (
+          <footer style={{ background:'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', borderTop:'1px solid var(--border)', padding:'10px 24px', textAlign:'center', fontSize:11, color:'var(--text-muted)', fontFamily:'DM Sans,sans-serif' }}>
+            © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
+          </footer>
+        )}
       </div>
     </div>
   );
