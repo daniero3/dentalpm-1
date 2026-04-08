@@ -310,7 +310,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
               {[1,2].map(s=><div key={s} style={{flex:1,height:3,borderRadius:99,background:step>=s?'var(--teal)':'var(--border)',transition:'background .3s'}}/>)}
             </div>
             <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:20,color:'var(--ink)',marginBottom:6}}>
-              {step===1?'🚀 Démarrer votre essai gratuit':'💳 Modalités de paiement'}
+              {step===1?' Démarrer votre essai gratuit':'💳 Modalités de paiement'}
             </h2>
             {plan&&<div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:12,padding:'10px 14px',margin:'10px 0 16px',display:'flex',justifyContent:'space-between'}}>
               <span style={{fontWeight:700,color:'var(--teal)',fontSize:14}}>Plan {plan.name}</span>
@@ -443,7 +443,7 @@ export default function LandingPage() {
                 <a key={href} href={href} className="nav-link" style={{padding:'7px 13px',color:sc?'var(--slate)':'rgba(255,255,255,.8)',fontWeight:500,fontSize:14,borderRadius:9}}>{label}</a>
               ))}
               <button onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
-              <button onClick={()=>open(PLANS[1])} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j 🚀</button>
+              <button onClick={()=>open(PLANS[1])} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j </button>
             </div>
           )}
           {/* Mobile */}
@@ -480,7 +480,7 @@ export default function LandingPage() {
               <span style={{fontSize:isMobile?11:13,color:'rgba(255,255,255,.9)',fontWeight:500}}>🇲🇬 N°1 des logiciels dentaires à Madagascar</span>
             </div>
             <h1 className="au1" style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:fs1,lineHeight:1.1,color:'#fff',marginBottom:12}}>
-              Logiciel de gestion<br/>
+              Logiciel de Gestion<br/>
               <span style={{color:'#7DD3DA'}}>Cabinet Dentaire</span><br/>
               à Madagascar
             </h1>
@@ -491,12 +491,12 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="au2" style={{fontSize:isMobile?14:17,color:'rgba(255,255,255,.68)',lineHeight:1.75,marginBottom:isMobile?22:36,maxWidth:500}}>
-              DPM centralise toute la gestion de votre cabinet — patients, agenda, facturation, ordonnances, laboratoire. Simple, rapide, 100% adapté aux réalités malgaches.
+              DPM centralise toute la gestion de votre cabinet et patients, agenda, facturation, ordonnances, laboratoire. Simple, rapide, 100% adapté aux réalités malgaches.
             </p>
             <div className="au3" style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:isMobile?18:32}}>
               <button onClick={()=>open(PLANS[1])} className="btn-main"
                 style={{padding:isMobile?'13px 18px':'16px 32px',borderRadius:13,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'0 12px 40px rgba(0,0,0,.2)',width:isMobile?'100%':'auto'}}>
-                Essayer gratuitement — 7 jours ✨
+                Essayer gratuitement — 7 jours 
               </button>
               <a href="#tarifs" style={{padding:isMobile?'13px 18px':'16px 28px',borderRadius:13,background:'rgba(255,255,255,.1)',color:'#fff',fontWeight:600,fontSize:isMobile?15:16,border:'1px solid rgba(255,255,255,.22)',textDecoration:'none',display:'inline-flex',alignItems:'center',justifyContent:'center',width:isMobile?'100%':'auto'}}>
                 Voir les tarifs →
@@ -533,20 +533,20 @@ export default function LandingPage() {
         <div style={{maxWidth:1000,margin:'0 auto',display:'grid',gridTemplateColumns:c4,gap:isMobile?10:20}}>
           <Counter end={50} suffix="+" label="+50 cabinets" sub="clients actifs en Madagascar"/>
           <Counter end={98} suffix="%" label="98% satisfaction" sub="notés par nos praticiens"/>
-          <Counter end={3} suffix=" mn" label="construction du facture" sub="rapide, fiable"/>
+          <Counter end={3} suffix=" s" label="construction du facture" sub="rapide, fiable"/>
           <Counter end={24} suffix="/7" label="Support 24/7" sub="Équipe à Antananarivo"/>
         </div>
       </section>
 
       {/* ══ TICKER ══ */}
       <section style={{padding:`${isMobile?'18px':'32px'} 0`,borderBottom:'1px solid var(--border)',overflow:'hidden'}}>
-        <Ticker items={['MVola Telma','Orange Money','Airtel Money','BNI Madagascar','Cabinet Dentaire','Chirurgien-Dentiste','Implantologie','Orthodontie','Pédodontie','Prothèse Dentaire']}/>
+        <Ticker items={['MVola Telma','Orange Money','Airtel Money','Versement Banquière','Cabinet Dentaire','Chirurgien-Dentiste','Implantologie','Orthodontie','Pédodontie','Prothèse Dentaire']}/>
       </section>
 
       {/* ══ HERO CENTRAL ══ */}
       <section style={{padding:`${py} ${px}`,maxWidth:1200,margin:'0 auto'}}>
         <div style={{textAlign:'center',marginBottom:isMobile?32:72,maxWidth:740,margin:`0 auto ${isMobile?32:72}px`}}>
-          <span className="tag tag-teal au0" style={{marginBottom:12,display:'inline-flex'}}>🚀 DPM Madagascar</span>
+          <span className="tag tag-teal au0" style={{marginBottom:12,display:'inline-flex'}}> DPM Madagascar</span>
           <h2 className="au1" style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?26:isTablet?36:48,color:'var(--ink)',lineHeight:1.15,marginBottom:14}}>
             Votre Cabinet Dentaire,<br/>digitalisé et optimisé
           </h2>
@@ -600,7 +600,7 @@ export default function LandingPage() {
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle at 25% 50%,rgba(13,122,135,.2),transparent 50%),radial-gradient(circle at 75% 50%,rgba(13,122,135,.15),transparent 50%)',pointerEvents:'none'}}/>
         <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:c2,gap:isMobile?26:56,alignItems:'center',position:'relative'}}>
           <div className="sr">
-            <span style={{fontSize:11,fontWeight:700,color:'#7DD3DA',letterSpacing:3,textTransform:'uppercase',display:'block',marginBottom:12}}>🚀 REJOIGNEZ DPM</span>
+            <span style={{fontSize:11,fontWeight:700,color:'#7DD3DA',letterSpacing:3,textTransform:'uppercase',display:'block',marginBottom:12}}> REJOIGNEZ DPM</span>
             <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?24:42,color:'#fff',lineHeight:1.15,marginBottom:14}}>Révolutionnez la gestion de votre cabinet</h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.75,marginBottom:18}}>Transformez votre cabinet dentaire en quelques minutes. Interface moderne, fonctionnalités complètes, sécurité maximale.</p>
             {['✓ Démonstration en 7 jours gratuits','✓ Prise en main en 30 minutes','✓ Support technique prioritaire'].map(item=>(
@@ -614,7 +614,7 @@ export default function LandingPage() {
             </button>
             <a href="#tarifs" style={{padding:'15px 32px',borderRadius:13,background:'transparent',color:'rgba(255,255,255,.7)',fontWeight:600,fontSize:isMobile?14:16,border:'1px solid rgba(255,255,255,.2)',textDecoration:'none',textAlign:'center'}}>Voir les tarifs</a>
             <div style={{display:'flex',gap:16,justifyContent:'center',flexWrap:'wrap'}}>
-              {[{v:'⚡',l:'5 minutes'},{v:'🇲🇬',l:'Made in Mada'},{v:'🔒',l:'100% sécurisé'}].map(b=>(
+              {[{v:'⚡',l:'3 secoondes'},{v:'🇲🇬',l:'Made in Mada'},{v:'🔒',l:'100% sécurisé'}].map(b=>(
                 <div key={b.l} style={{textAlign:'center'}}><div style={{fontSize:18}}>{b.v}</div><div style={{fontSize:10,color:'rgba(255,255,255,.45)',marginTop:2}}>{b.l}</div></div>
               ))}
             </div>
@@ -667,8 +667,8 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{display:'grid',gridTemplateColumns:c2,gap:isMobile?10:22}}>
-            <div className="sr"><FadeSlider images={[{src:'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=900&q=85',alt:'Soin',caption:'🦷 Soins de qualité pour chaque patient'},{src:'/salle-dentaire.jpg',alt:'Cabinet',caption:'✨ Cabinet professionnel et équipé'}]} height={isMobile?190:280} interval={4500}/></div>
-            <div className="sr" style={{transitionDelay:'.15s'}}><FadeSlider images={[{src:'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=900&q=85',alt:'Tech',caption:'🏥 Technologie au service du soin'},{src:'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=900&q=85',alt:'Dentiste',caption:'💎 Excellence clinique quotidienne'}]} height={isMobile?190:280} interval={5200}/></div>
+            <div className="sr"><FadeSlider images={[{src:'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=900&q=85',alt:'Soin',caption:'🦷 Soins de qualité pour chaque patient'},{src:'/salle-dentaire.jpg',alt:'Cabinet',caption:' Cabinet professionnel et équipé'}]} height={isMobile?190:280} interval={4500}/></div>
+            <div className="sr" style={{transitionDelay:'.15s'}}><FadeSlider images={[{src:'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=900&q=85',alt:'Tech',caption:'🏥 Technologie au service du soin'},{src:'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=900&q=85',alt:'Dentiste',caption:' Excellence clinique quotidienne'}]} height={isMobile?190:280} interval={5200}/></div>
           </div>
         </div>
       </section>
@@ -708,7 +708,7 @@ export default function LandingPage() {
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div className="sr" style={{textAlign:'center',marginBottom:isMobile?28:60}}>
             <ST tag="💰 Tarifs" title="Simple et transparent" sub="7 jours d'essai gratuit, sans carte bancaire. Résiliable à tout moment."/>
-            <p style={{color:'var(--teal)',fontWeight:600,fontSize:isMobile?12:14,marginTop:-20}}>💳 MVola · Orange Money · Airtel Money · Virement BNI</p>
+            <p style={{color:'var(--teal)',fontWeight:600,fontSize:isMobile?12:14,marginTop:-20}}>💳 MVola · Orange Money · Airtel Money · Virement Banquière</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:c3,gap:isMobile?12:20,alignItems:'start'}}>
             {PLANS.map((plan,i)=>(
@@ -765,7 +765,7 @@ export default function LandingPage() {
             <span style={{fontSize:11,fontWeight:700,color:'#7DD3DA',letterSpacing:3,textTransform:'uppercase',display:'block',marginBottom:12}}>📨 CONTACT</span>
             <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?26:42,color:'#fff',marginBottom:12,lineHeight:1.2}}>Parlons de votre cabinet</h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.78,marginBottom:28}}>Notre équipe à Antananarivo est disponible pour répondre à toutes vos questions.</p>
-            {[{icon:'📧',label:'Email',val:'radisonfrancky@gmail.com',href:'mailto:radisonfrancky@gmail.com'},{icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
+            {[{icon:'📧',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},{icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
               <div key={i} style={{display:'flex',gap:13,alignItems:'flex-start',marginBottom:18}}>
                 <div style={{width:42,height:42,background:'rgba(255,255,255,.08)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{c.icon}</div>
                 <div>
@@ -778,7 +778,7 @@ export default function LandingPage() {
               <p style={{color:'rgba(255,255,255,.5)',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:1.5,marginBottom:10}}>PRÊT À COMMENCER ?</p>
               <button onClick={()=>open(PLANS[1])} className="btn-main"
                 style={{padding:'11px 22px',borderRadius:11,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:14,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
-                Essai gratuit 7 jours ✨
+                Essai gratuit 7 jours 
               </button>
             </div>
           </div>
