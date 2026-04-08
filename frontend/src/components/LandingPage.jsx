@@ -334,7 +334,7 @@ const FAQS = [
   {q:"Mes données patients sont-elles sécurisées ?",a:"Oui. Chiffrement de bout en bout, sauvegarde automatique quotidienne, hébergement sécurisé. Confidentialité médicale respectée, aucune donnée partagée avec des tiers."},
   {q:"Puis-je annuler à tout moment ?",a:"Oui, sans engagement ni pénalité. Annulez depuis votre espace cabinet en un clic. Vos données restent accessibles jusqu'à la fin de la période payée."},
   {q:"Combien de patients avec le plan ESSENTIAL ?",a:"Le plan ESSENTIAL gère jusqu'à 500 patients actifs pour 1 praticien + 1 assistant(e). Le plan PRO offre des patients illimités dès 199 000 Ar/mois."},
-  {q:"Comment fonctionne le paiement mensuel ?",a:"Envoyez votre paiement par MVola (034), Orange Money (032), Airtel Money (033) ou virement BNI. Notre équipe valide sous 24h et votre abonnement est renouvelé automatiquement."},
+  {q:"Comment fonctionne le paiement mensuel ?",a:"Envoyez votre paiement par MVola (034), Orange Money (032), Airtel Money (033) ou virement Banquière. Notre équipe valide sous 24h et votre abonnement est renouvelé automatiquement."},
   {q:"DPM fonctionne-t-il sur mobile ?",a:"Oui, 100% responsive. Fonctionne parfaitement sur ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar."},
   {q:"Puis-je migrer mes données existantes ?",a:"Oui. Notre équipe vous accompagne gratuitement dans la migration de vos données patients et historiques. Contactez-nous sur radisonfrancky@gmail.com."},
   {q:"Y a-t-il une formation pour utiliser DPM ?",a:"Le plan GROUP inclut une formation personnalisée sur site. Pour tous les plans, documentation complète, tutoriels vidéo et support en français inclus."},
@@ -690,7 +690,7 @@ export default function LandingPage() {
               <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
                 <button onClick={()=>open(PLANS[1])} className="btn-main"
                   style={{padding:isMobile?'13px 22px':'14px 32px',borderRadius:12,background:'var(--teal)',color:'#fff',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>
-                  Essayer gratuitement — 7 jours ✨
+                  Essayer gratuitement — 7 jours 
                 </button>
                 <a href="#tarifs" style={{padding:isMobile?'13px 18px':'14px 24px',borderRadius:12,background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontWeight:600,fontSize:isMobile?14:15,border:'1px solid rgba(255,255,255,.18)',textDecoration:'none',display:'inline-flex',alignItems:'center'}}>
                   Voir les tarifs →
@@ -725,7 +725,7 @@ export default function LandingPage() {
             Votre Cabinet Dentaire,<br/>digitalisé et optimisé
           </h2>
           <p className="au2" style={{fontSize:isMobile?14:18,color:'var(--slate)',lineHeight:1.75}}>
-            Une solution complète et intuitive qui centralise tous vos outils — de la planification intelligente des RDV à la génération d'ordonnances PDF, en passant par la gestion du laboratoire.
+            Une solution complète et intuitive qui centralise tous vos outils  de la planification intelligente des RDV à la génération d'ordonnances PDF, en passant par la gestion du laboratoire.
           </p>
         </div>
         <div style={{display:'grid',gridTemplateColumns:c2,gap:isMobile?8:16}}>
