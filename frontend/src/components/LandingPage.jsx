@@ -597,14 +597,12 @@ export default function LandingPage() {
           {/* En-tête */}
           <div className="sr" style={{textAlign:'center',marginBottom:isMobile?36:64}}>
 
-            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?32:isTablet?44:58,color:'#fff',lineHeight:1.1,marginBottom:20,textShadow:'0 2px 24px rgba(0,0,0,.25)',letterSpacing:'-0.02em'}}>
-              <span style={{display:'block',fontSize:isMobile?'0.7em':'0.65em',fontWeight:700,color:'rgba(255,255,255,.55)',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:10,textShadow:'none'}}>
+            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?26:isTablet?34:46,color:'#fff',lineHeight:1.15,marginBottom:16}}>
+              <span style={{display:'block',fontSize:isMobile?'0.65em':'0.55em',fontWeight:700,color:'#FCA5A5',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10}}>
                 ⚠️ Vous reconnaissez-vous ?
               </span>
-              Ces problèmes freinent<br/>
-              <span style={{background:'linear-gradient(90deg,#7DD3DA,#B2F0F7,#7DD3DA)',backgroundSize:'200% auto',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',animation:'shimmerText 3s linear infinite'}}>
-                votre cabinet au quotidien
-              </span>
+              <span style={{color:'#FFFFFF',textShadow:'0 0 40px rgba(255,255,255,.25)'}}>Ces problèmes freinent</span><br/>
+              <span style={{color:'#5EEAD4'}}>votre cabinet au quotidien</span>
             </h2>
             <p style={{fontSize:isMobile?14:17,color:'rgba(255,255,255,.58)',maxWidth:560,margin:'0 auto',lineHeight:1.75}}>
               Des heures perdues en administratif, des factures à refaire, des rendez-vous oubliés... Ça vous parle ?
@@ -774,11 +772,10 @@ export default function LandingPage() {
         <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:c2,gap:isMobile?26:56,alignItems:'center',position:'relative'}}>
           <div className="sr">
             <span style={{fontSize:11,fontWeight:700,color:'#7DD3DA',letterSpacing:3,textTransform:'uppercase',display:'block',marginBottom:12}}> REJOIGNEZ DPM</span>
-            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?28:isTablet?38:50,color:'#fff',lineHeight:1.1,marginBottom:16,letterSpacing:'-0.02em',textShadow:'0 2px 32px rgba(0,0,0,.3)'}}>
-              Révolutionnez<br/>
-              <span style={{background:'linear-gradient(90deg,#7DD3DA,#ffffff,#7DD3DA)',backgroundSize:'200% auto',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',animation:'shimmerText 3.5s linear infinite'}}>
-                la gestion de votre cabinet
-              </span>
+            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?24:42,color:'#fff',lineHeight:1.15,marginBottom:14}}>
+              <span style={{color:'#FACC15'}}>Révolutionnez</span>{' '}
+              <span style={{color:'#fff'}}>la gestion de</span><br/>
+              <span style={{color:'#5EEAD4'}}>votre cabinet</span>
             </h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.75,marginBottom:18}}>Transformez votre cabinet dentaire en quelques minutes. Interface moderne, fonctionnalités complètes, sécurité maximale.</p>
             {['✓ Démonstration en 7 jours gratuits','✓ Prise en main en 30 minutes','✓ Support technique prioritaire'].map(item=>(
@@ -942,11 +939,9 @@ export default function LandingPage() {
         <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:c2,gap:isMobile?30:72,position:'relative',alignItems:'start'}}>
           <div className="sr">
             <span style={{fontSize:11,fontWeight:700,color:'#7DD3DA',letterSpacing:3,textTransform:'uppercase',display:'block',marginBottom:12}}>📨 CONTACT</span>
-            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?30:isTablet?40:52,color:'#fff',marginBottom:16,lineHeight:1.1,letterSpacing:'-0.02em',textShadow:'0 2px 32px rgba(0,0,0,.25)'}}>
-              Parlons de<br/>
-              <span style={{background:'linear-gradient(90deg,#7DD3DA,#B2F0F7,#fff)',backgroundSize:'200% auto',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text',animation:'shimmerText 4s linear infinite'}}>
-                votre cabinet
-              </span>
+            <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?26:42,color:'#fff',marginBottom:12,lineHeight:1.2}}>
+              <span style={{color:'#fff'}}>Parlons de </span>
+              <span style={{color:'#5EEAD4'}}>votre cabinet</span>
             </h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.78,marginBottom:28}}>Notre équipe à Antananarivo est disponible pour répondre à toutes vos questions.</p>
             {[{icon:'📧',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},{icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
@@ -988,7 +983,7 @@ export default function LandingPage() {
                 </div>
                 <button className="btn-main" onClick={()=>{if(contact.nom&&contact.email&&contact.message)setContactSent(true);}}
                   style={{width:'100%',padding:'14px',borderRadius:12,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:15,border:'none',cursor:'pointer'}}>
-                  Envoyer le message 📨
+                  Envoyer le message 
                 </button>
               </div>
             ):(
