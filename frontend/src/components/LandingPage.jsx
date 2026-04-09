@@ -479,7 +479,7 @@ export default function LandingPage() {
   const IMGS_SERVICES = [
     {src:'/2.jpg',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
     {src:'/3.jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
-    {src:'/Cabinet dentaire MAEVA shooting (147).jpg',alt:'Examen',caption:'🔍 Diagnostic précis et professionnel'},
+    {src:'/4.jpg',alt:'Examen',caption:'🔍 Diagnostic précis et professionnel'},
   ];
   const IMGS_ABOUT = [
     {src:'/daniero.jpg',alt:'Équipe DPM',caption:'🤝 Notre équipe à votre service'},
