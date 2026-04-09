@@ -621,7 +621,7 @@ export default function LandingPage() {
               {
                 icon:'🧾',
                 q:'Créer une facture vous prend plus de 10 minutes ?',
-                pain:'Calculs manuels, erreurs fréquentes, format non standard — et le patient qui attend au bureau.',
+                pain:'Calculs manuels, erreurs fréquentes, format non standard  et le patient qui attend au bureau.',
                 color:'#F59E0B',
               },
               {
@@ -679,7 +679,7 @@ export default function LandingPage() {
             <div style={{background:'linear-gradient(135deg,rgba(13,122,135,.2),rgba(13,163,180,.1))',border:'1px solid rgba(13,122,135,.35)',borderRadius:20,padding:isMobile?'28px 20px':'36px 48px',display:'inline-block',width:'100%',maxWidth:640}}>
               <p style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?20:26,color:'#fff',marginBottom:8,lineHeight:1.3}}>
                 ✅ DPM résout tous ces problèmes.<br/>
-                <span style={{color:'#7DD3DA'}}>En 30 minutes, chrono.</span>
+                <span style={{color:'#7DD3DA'}}>En quelque secondes.</span>
               </p>
               <p style={{fontSize:isMobile?13:15,color:'rgba(255,255,255,.6)',marginBottom:22,lineHeight:1.6}}>
                 Rejoignez les cabinets dentaires malgaches qui ont repris le contrôle de leur gestion.
