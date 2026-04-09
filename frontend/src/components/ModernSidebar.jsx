@@ -65,10 +65,33 @@ const useScreenSize = () => {
 }
 
 
-// ── Logo ──
-const DentalLogo = () => (
-  <img src="/logo.jpeg" alt="DPM" width={28} height={28}
-    style={{ borderRadius: 7, objectFit:'cover', display:'block' }}/>
+
+// ── CSS animations logo ──
+const LogoCSS = () => <style>{`
+  @keyframes logoPulse {
+    0%, 100% { transform: scale(1);   opacity: .6; }
+    50%       { transform: scale(1.18); opacity: 0; }
+  }
+  @keyframes logoBadge {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.06); }
+  }
+`}</style>;
+
+// ── Logo animé ──
+const DentalLogo = ({ size=34, pulse=false }) => (
+  <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
+    {pulse && (
+      <div style={{
+        position:'absolute', inset:-3, borderRadius:size*0.32,
+        background:'rgba(255,255,255,.2)',
+        animation:'logoPulse 2.2s ease-in-out infinite',
+      }}/>
+    )}
+    <img src="/logo.jpeg" alt="DPM Madagascar" width={size} height={size}
+      style={{ borderRadius:size*0.26, objectFit:'cover', display:'block', position:'relative', zIndex:1,
+        boxShadow:'0 2px 10px rgba(0,0,0,.25)', border:'1.5px solid rgba(255,255,255,.25)' }}/>
+  </div>
 );
 
 // ── Contenu sidebar (réutilisé desktop + drawer) ──
@@ -118,18 +141,18 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'linear-gradient(180deg,#064E56 0%,#0A6B75 50%,#0D7A87 100%)', boxShadow:'4px 0 24px rgba(0,0,0,0.2)', borderRight:'1px solid rgba(255,255,255,0.1)' }}>
 
       {/* Logo */}
-      <div style={{ padding: collapsed ? '20px 0' : '20px 16px', borderBottom:'1px solid rgba(255,255,255,0.15)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'space-between', gap:12, minHeight:64 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, overflow:'hidden' }}>
-          <div style={{ width:38, height:38, borderRadius:10, flexShrink:0, background:'linear-gradient(135deg,#fff,rgba(255,255,255,0.7))', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 12px rgba(13,122,135,0.4)' }}>
-            <DentalLogo />
-          </div>
-          {!collapsed && (
-            <div style={{ overflow:'hidden' }}>
-              <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, color:'#fff', margin:0, whiteSpace:'nowrap' }}>Dental Practice</p>
-              <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', margin:0 }}>Madagascar</p>
+      <LogoCSS/>
+      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:'1px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64 }}>
+        <DentalLogo size={38} pulse={true}/>
+        {!collapsed && (
+          <div style={{ overflow:'hidden', flex:1 }}>
+            <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, color:'#fff', margin:0, whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>DPM Madagascar</p>
+            <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:'#22C55E', animation:'logoBadge 2s ease-in-out infinite' }}/>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,.55)', margin:0, fontWeight:600 }}>Cabinet dentaire</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Nav */}
