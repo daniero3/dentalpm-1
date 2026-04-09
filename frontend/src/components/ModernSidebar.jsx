@@ -68,30 +68,33 @@ const useScreenSize = () => {
 
 // ── CSS animations logo ──
 const LogoCSS = () => <style>{`
-  @keyframes logoPulse {
-    0%, 100% { transform: scale(1);   opacity: .6; }
-    50%       { transform: scale(1.18); opacity: 0; }
+  @keyframes logoBreathe {
+    0%, 100% { transform: scale(1);    filter: drop-shadow(0 3px 10px rgba(255,255,255,.2)); }
+    50%       { transform: scale(1.06); filter: drop-shadow(0 6px 20px rgba(255,255,255,.4)); }
   }
   @keyframes logoBadge {
     0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.06); }
+    50%       { transform: scale(1.08); }
   }
 `}</style>;
 
-// ── Logo animé ──
-const DentalLogo = ({ size=34, pulse=false }) => (
-  <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
-    {pulse && (
-      <div style={{
-        position:'absolute', inset:-3, borderRadius:size*0.32,
-        background:'rgba(255,255,255,.2)',
-        animation:'logoPulse 2.2s ease-in-out infinite',
-      }}/>
-    )}
-    <img src="/logo.jpeg" alt="DPM Madagascar" width={size} height={size}
-      style={{ borderRadius:size*0.26, objectFit:'cover', display:'block', position:'relative', zIndex:1,
-        boxShadow:'0 2px 10px rgba(0,0,0,.25)', border:'1.5px solid rgba(255,255,255,.25)' }}/>
-  </div>
+// ── Logo sans fond ──
+const DentalLogo = ({ size=36, animate=false }) => (
+  <img
+    src="/logo.jpeg"
+    alt="DPM Madagascar"
+    width={size}
+    height={size}
+    style={{
+      borderRadius: size * 0.26,
+      objectFit: 'cover',
+      display: 'block',
+      flexShrink: 0,
+      filter: 'drop-shadow(0 3px 12px rgba(255,255,255,.2))',
+      animation: animate ? 'logoBreathe 3.5s ease-in-out infinite' : 'none',
+      transition: 'all .3s',
+    }}
+  />
 );
 
 // ── Contenu sidebar (réutilisé desktop + drawer) ──
@@ -143,7 +146,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       {/* Logo */}
       <LogoCSS/>
       <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:'1px solid rgba(255,255,255,0.12)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64 }}>
-        <DentalLogo size={38} pulse={true}/>
+        <DentalLogo size={40} animate={true}/>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
             <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, color:'#fff', margin:0, whiteSpace:'nowrap', letterSpacing:'-0.01em' }}>DPM Madagascar</p>
