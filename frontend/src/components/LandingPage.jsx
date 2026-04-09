@@ -125,18 +125,21 @@ const GlobalCSS = () => (
 );
 
 /* ── Logo ── */
-const Logo = ({ size=36 }) => (
+const Logo = ({ size=36, glow=false }) => (
   <img
     src="/logo.jpeg"
     alt="DPM Madagascar"
     width={size}
     height={size}
     style={{
-      borderRadius: size * 0.22,
+      borderRadius: size * 0.24,
       objectFit: 'cover',
       display: 'block',
       flexShrink: 0,
-      filter: 'drop-shadow(0 2px 8px rgba(0,0,0,.18))',
+      filter: glow
+        ? 'drop-shadow(0 0 14px rgba(13,122,135,.7)) drop-shadow(0 4px 16px rgba(0,0,0,.3))'
+        : 'drop-shadow(0 3px 10px rgba(0,0,0,.25))',
+      transition: 'filter .3s, transform .3s',
     }}
   />
 );
@@ -500,10 +503,15 @@ export default function LandingPage() {
       <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,background:sc?'rgba(255,255,255,.97)':'transparent',backdropFilter:sc?'blur(20px)':'none',borderBottom:sc?'1px solid rgba(232,237,242,.8)':'none',boxShadow:sc?'0 2px 20px rgba(0,0,0,.06)':'none',transition:'all .35s ease'}}>
         <div style={{padding:`0 ${px}`,height:isMobile?58:72,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           {/* Logo */}
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <Logo size={isMobile?32:40}/>
-            <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?18:22,color:sc?'var(--ink)':'#fff'}}>DPM</span>
-            {!isMobile&&<span style={{fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:99,background:sc?'var(--surface)':'rgba(255,255,255,.12)',color:sc?'var(--muted)':'rgba(255,255,255,.7)',border:`1px solid ${sc?'var(--border)':'rgba(255,255,255,.2)'}`}}>Madagascar</span>}
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div className="logo-nav" style={{position:'relative',cursor:'pointer'}}>
+              <Logo size={isMobile?38:48} glow={!sc}/>
+              {!sc && <div style={{position:'absolute',inset:-4,borderRadius:16,border:'1.5px solid rgba(255,255,255,.15)',pointerEvents:'none'}}/>}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+              <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:19,color:sc?'var(--ink)':'#fff',letterSpacing:'-0.01em',lineHeight:1.1}}>Madagascar</span>
+              <span style={{fontSize:isMobile?10:11,fontWeight:600,color:sc?'var(--muted)':'rgba(255,255,255,.55)',letterSpacing:'0.06em',textTransform:'uppercase',marginTop:1}}>Cabinet Dentaire</span>
+            </div>
           </div>
           {/* Desktop */}
           {!isMobile&&(
@@ -1010,7 +1018,13 @@ export default function LandingPage() {
 
       {/* ══ FOOTER ══ */}
       <footer style={{background:'#03080B',padding:isMobile?'18px 16px':'28px 56px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
-        <div style={{display:'flex',alignItems:'center',gap:8}}><Logo size={28}/><span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,color:'rgba(255,255,255,.8)',fontSize:14}}>DPM Madagascar</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <Logo size={36} glow={false}/>
+          <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+            <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,color:'rgba(255,255,255,.85)',fontSize:15,letterSpacing:'-0.01em'}}>Madagascar</span>
+            <span style={{fontSize:10,color:'rgba(255,255,255,.35)',fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',marginTop:2}}>Cabinet Dentaire</span>
+          </div>
+        </div>
         <div style={{display:'flex',gap:isMobile?10:18,flexWrap:'wrap'}}>
           {[['#services','Fonctionnalités'],['#tarifs','Tarifs'],['#faq','FAQ'],['#contact','Contact']].map(([h,l])=>(
             <a key={h} href={h} style={{color:'rgba(255,255,255,.35)',fontSize:12,textDecoration:'none'}}>{l}</a>
