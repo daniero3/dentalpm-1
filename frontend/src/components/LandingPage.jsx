@@ -463,14 +463,14 @@ export default function LandingPage() {
   const sc    = scrolled || mobMenu;
 
   const IMGS_SERVICES = [
-    {src:'/Cabinet dentaire MAEVA shooting (135).jpg',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
-    {src:'/Cabinet dentaire MAEVA shooting (157).jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
+    {src:'/2.jpg',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
+    {src:'/3.jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
     {src:'/Cabinet dentaire MAEVA shooting (147).jpg',alt:'Examen',caption:'🔍 Diagnostic précis et professionnel'},
   ];
   const IMGS_ABOUT = [
     {src:'/daniero.jpg',alt:'Équipe DPM',caption:'🤝 Notre équipe à votre service'},
     {src:'/612314406_2121491475327414_7965256401016505944_n.jpg',alt:'Technologie',caption:'🇲🇬 Fièrement Made in Madagascar'},
-    {src:'/Cabinet dentaire MAEVA shooting (86).jpg',alt:'Équipe',caption:'💎 Excellence et proximité'},
+    {src:'/1.jpg',alt:'Équipe',caption:'💎 Excellence et proximité'},
   ];
 
   const ST = ({tag,title,sub,light=false}) => (
