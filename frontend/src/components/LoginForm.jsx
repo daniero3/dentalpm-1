@@ -7,32 +7,34 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// ── Logo animé ──
+// ── Logo premium sans fond ──
 const LogoAnim = () => (
   <>
     <style>{`
-      @keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-      @keyframes logoRing  { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.22);opacity:0} }
-      @keyframes logoShine { 0%{opacity:0;transform:rotate(-30deg) translateX(-60%)} 60%{opacity:.5} 100%{opacity:0;transform:rotate(-30deg) translateX(60%)} }
+      @keyframes logoFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-7px) scale(1.03)} }
+      @keyframes logoGlow  { 0%,100%{box-shadow:0 8px 28px rgba(13,122,135,.25),0 0 0 0 rgba(13,122,135,.15)} 50%{box-shadow:0 14px 40px rgba(13,122,135,.4),0 0 0 10px rgba(13,122,135,.0)} }
+      @keyframes ringExpand{ 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.7);opacity:0} }
     `}</style>
-    <div style={{ position:'relative', width:80, height:80, margin:'0 auto 16px' }}>
-      {/* Anneau pulsant */}
-      <div style={{ position:'absolute', inset:-8, borderRadius:28, border:'2px solid rgba(13,122,135,.35)', animation:'logoRing 2.4s ease-in-out infinite' }}/>
-      <div style={{ position:'absolute', inset:-4, borderRadius:24, border:'2px solid rgba(13,122,135,.2)', animation:'logoRing 2.4s ease-in-out infinite .4s' }}/>
-      {/* Conteneur logo avec flottement */}
-      <div style={{ width:80, height:80, borderRadius:22, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 12px 32px rgba(13,122,135,.4)', animation:'logoFloat 4s ease-in-out infinite', position:'relative', overflow:'hidden' }}>
-        {/* Effet brillance */}
-        <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, background:'linear-gradient(135deg,rgba(255,255,255,.3),transparent 50%)', borderRadius:22, animation:'logoShine 3.5s ease-in-out infinite 1s' }}/>
-        <img src="/logo.jpeg" alt="DPM Madagascar" width={52} height={52}
-          style={{ borderRadius:14, objectFit:'cover', display:'block', position:'relative', zIndex:1, border:'1.5px solid rgba(255,255,255,.3)', boxShadow:'0 2px 8px rgba(0,0,0,.2)' }}/>
-      </div>
+    <div style={{ position:'relative', width:96, height:96, margin:'0 auto 18px' }}>
+      {/* Cercles d'onde qui s'expandent */}
+      <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'1.5px solid rgba(13,122,135,.4)', animation:'ringExpand 2.2s ease-out infinite' }}/>
+      <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'1.5px solid rgba(13,122,135,.3)', animation:'ringExpand 2.2s ease-out infinite .7s' }}/>
+      {/* Logo pur, sans fond */}
+      <img src="/logo.jpeg" alt="DPM Madagascar" width={96} height={96}
+        style={{
+          display:'block', objectFit:'cover',
+          borderRadius:24,
+          animation:'logoFloat 3.8s ease-in-out infinite, logoGlow 3.8s ease-in-out infinite',
+          position:'relative', zIndex:1,
+          filter:'drop-shadow(0 4px 16px rgba(13,122,135,.3))',
+        }}/>
     </div>
   </>
 );
 
 const DentalLogo = ({ size = 32 }) => (
   <img src="/logo.jpeg" alt="DPM Madagascar" width={size} height={size}
-    style={{ borderRadius: size * 0.22, objectFit:'cover', display:'block', border:'1.5px solid rgba(255,255,255,.3)' }}/>
+    style={{ borderRadius: size * 0.25, objectFit:'cover', display:'block' }}/>
 );
 
 const STEP_LOGIN    = 'login';
@@ -166,11 +168,11 @@ const LoginForm = () => {
   return (
     <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0fdf4 100%)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}>
 
-      {/* Logo animé */}
-      <div style={{ textAlign:'center', marginBottom:28 }}>
+      {/* Logo premium */}
+      <div style={{ textAlign:'center', marginBottom:24 }}>
         <LogoAnim/>
-        <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:26, color:'#0F172A', margin:'0 0 4px', letterSpacing:'-0.02em' }}>DPM Madagascar</h1>
-        <p style={{ color:'#64748B', fontSize:13, margin:0 }}>Logiciel de gestion de cabinet dentaire</p>
+        <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:26, color:'#0F172A', margin:'0 0 3px', letterSpacing:'-0.025em' }}>DPM Madagascar</h1>
+        <p style={{ color:'#64748B', fontSize:13, margin:0, fontWeight:500 }}>Logiciel de gestion de cabinet dentaire</p>
       </div>
 
       {/* Card */}
