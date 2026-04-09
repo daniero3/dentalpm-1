@@ -132,7 +132,7 @@ const Logo = ({ size=36, glow=false }) => (
     width={size}
     height={size}
     style={{
-      borderRadius: size * 0.24,
+      borderRadius: '50%',
       objectFit: 'cover',
       display: 'block',
       flexShrink: 0,
@@ -505,8 +505,8 @@ export default function LandingPage() {
           {/* Logo */}
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <div className="logo-nav" style={{position:'relative',cursor:'pointer'}}>
-              <Logo size={isMobile?38:48} glow={!sc}/>
-              {!sc && <div style={{position:'absolute',inset:-4,borderRadius:16,border:'1.5px solid rgba(255,255,255,.15)',pointerEvents:'none'}}/>}
+              <Logo size={isMobile?46:62} glow={!sc}/>
+              {!sc && <div style={{position:'absolute',inset:-5,borderRadius:'50%',border:'1.5px solid rgba(255,255,255,.18)',pointerEvents:'none'}}/>}
             </div>
             <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
               <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:19,color:sc?'var(--ink)':'#fff',letterSpacing:'-0.01em',lineHeight:1.1}}>Madagascar</span>
@@ -1019,7 +1019,7 @@ export default function LandingPage() {
       {/* ══ FOOTER ══ */}
       <footer style={{background:'#03080B',padding:isMobile?'18px 16px':'28px 56px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <Logo size={36} glow={false}/>
+          <Logo size={46} glow={false}/>
           <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
             <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,color:'rgba(255,255,255,.85)',fontSize:15,letterSpacing:'-0.01em'}}>Madagascar</span>
             <span style={{fontSize:10,color:'rgba(255,255,255,.35)',fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',marginTop:2}}>Cabinet Dentaire</span>
