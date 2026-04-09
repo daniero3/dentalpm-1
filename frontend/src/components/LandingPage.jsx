@@ -126,8 +126,19 @@ const GlobalCSS = () => (
 
 /* ── Logo ── */
 const Logo = ({ size=36 }) => (
-  <img src="/logo.jpeg" alt="DPM Madagascar" width={size} height={size}
-    style={{ borderRadius: size * 0.18, objectFit:'cover', display:'block', flexShrink:0 }}/>
+  <img
+    src="/logo.jpeg"
+    alt="DPM Madagascar"
+    width={size}
+    height={size}
+    style={{
+      borderRadius: size * 0.22,
+      objectFit: 'cover',
+      display: 'block',
+      flexShrink: 0,
+      filter: 'drop-shadow(0 2px 8px rgba(0,0,0,.18))',
+    }}
+  />
 );
 
 /* ── FadeSlider ── */
