@@ -20,7 +20,7 @@ const LogoAnim = () => (
       <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'1.5px solid rgba(13,122,135,.4)', animation:'ringExpand 2.2s ease-out infinite' }}/>
       <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'1.5px solid rgba(13,122,135,.3)', animation:'ringExpand 2.2s ease-out infinite .7s' }}/>
       {/* Logo pur, sans fond */}
-      <img src="/logo.jpeg" alt="DPM Madagascar" width={96} height={96}
+      <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={96} height={96}
         style={{
           display:'block', objectFit:'cover',
           borderRadius:24,
@@ -33,7 +33,7 @@ const LogoAnim = () => (
 );
 
 const DentalLogo = ({ size = 32 }) => (
-  <img src="/logo.jpeg" alt="DPM Madagascar" width={size} height={size}
+  <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={size} height={size}
     style={{ borderRadius: size * 0.25, objectFit:'cover', display:'block' }}/>
 );
 
