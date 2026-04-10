@@ -44,41 +44,51 @@ router.post('/templates', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
-    const clinicId = getClinicId(req);
-    const { key, channel, text } = req.body;
+    const { key, channel, text, is_active } = req.body;
 
-    const existing = await MessageTemplate.findOne({ where: { clinic_id: clinicId, key } });
-    if (existing) return res.status(409).json({ error:'Un template avec cette clé existe déjà' });
-
-    // clinic_id NOT NULL — résoudre depuis toutes les sources
-    let resolvedClinicId = clinicId;
-    if (!resolvedClinicId && req.user) {
+    // Résolution robuste du clinic_id
+    let clinicId = getClinicId(req);
+    if (!clinicId) {
       try {
         const { User, Clinic } = require('../models');
-        // Chercher via User
-        const uid = (req.user?.id || req.user?.dataValues?.id) || req.user.dataValues?.id;
+        const uid = req.user?.id || req.user?.dataValues?.id;
         if (uid) {
           const u = await User.findByPk(uid, { attributes: ['clinic_id'] });
-          resolvedClinicId = u?.clinic_id || null;
+          clinicId = u?.clinic_id || null;
         }
-        // Si toujours null, prendre la première clinique
-        if (!resolvedClinicId) {
-          const firstClinic = await Clinic.findOne({ where: { is_active: true }, attributes: ['id'] });
-          resolvedClinicId = firstClinic?.id || null;
+        if (!clinicId) {
+          const first = await Clinic.findOne({ where: { is_active: true }, attributes: ['id'] });
+          clinicId = first?.id || null;
         }
-      } catch(e) { console.warn('Clinic resolve:', e.message); }
-    }
-    if (!resolvedClinicId) {
-      return res.status(400).json({ error: 'Reconnectez-vous pour obtenir un token avec clinic_id.' });
+      } catch(e) { console.warn('Clinic resolve error:', e.message); }
     }
 
-    const template = await MessageTemplate.create({ clinic_id: resolvedClinicId, key, channel, text, is_active: true });
+    // Vérifier doublon (avec ou sans clinic_id)
+    const whereExisting = clinicId ? { clinic_id: clinicId, key } : { key };
+    const existing = await MessageTemplate.findOne({ where: whereExisting });
+    if (existing) {
+      // Si le template existe, le mettre à jour plutôt que d'échouer
+      await existing.update({ channel, text, is_active: is_active !== undefined ? is_active : existing.is_active });
+      return res.status(200).json({ message:'Template mis à jour', template: existing });
+    }
 
-    try { await AuditLog.create({ user_id: getUserId(req), action:'CREATE', resource_type:'message_template', resource_id: template.id, new_values: { key, channel }, ip_address: req.ip, description:`Template créé: ${key}` }); } catch(e) {}
+    const createData = { key, channel, text, is_active: true };
+    if (clinicId) createData.clinic_id = clinicId;
+
+    const template = await MessageTemplate.create(createData);
+
+    // AuditLog optionnel — ne pas crasher si ça échoue
+    try {
+      await AuditLog.create({
+        user_id: getUserId(req), action:'CREATE',
+        resource_type:'message_template', resource_id: template.id,
+        new_values: { key, channel }, description:`Template créé: ${key}`
+      });
+    } catch(e) {}
 
     res.status(201).json({ message:'Template créé', template });
   } catch (error) {
-    console.error('Create template error:', error);
+    console.error('Create template error:', error.message, error.stack?.split('\n')[1]);
     res.status(500).json({ error:'Erreur serveur', details: error.message });
   }
 });
