@@ -1,4 +1,5 @@
 const express = require('express');
+const { activateSubscriptionAfterPayment } = require('../jobs/subscriptionManager');
 const router = express.Router();
 const { body, param, query, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');
@@ -349,27 +350,11 @@ router.patch('/payment-requests/:id/approve', requireRole('SUPER_ADMIN'), async 
     const request = await PaymentRequest.findByPk(req.params.id);
     if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
 
-    const PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
-    const plan = req.body.plan || request.plan_code || 'ESSENTIAL';
+    const plan = req.body.plan || request.plan_code || 'PRO';
+    const result = await activateSubscriptionAfterPayment(request.clinic_id, plan, request.id);
+    if (!result.success) return res.status(500).json({ error: 'Erreur activation', details: result.error });
     const clinic = await Clinic.findByPk(request.clinic_id);
-    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
-
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30); // 30 jours calendaires
-
-    await Subscription.create({
-      clinic_id: request.clinic_id, plan, status: 'ACTIVE',
-      start_date: new Date(), end_date: endDate,
-      price_mga: PLAN_PRICES[plan] || request.amount_mga || 0,
-      billing_cycle: 'MONTHLY', auto_renew: true,
-      converted_from_trial: clinic.subscription_status === 'TRIAL',
-      discount_percentage: 0, currency: 'MGA'
-    }).catch(() => {});
-
-    await clinic.update({ subscription_status: 'ACTIVE', current_plan: plan });
-    await request.update({ status: 'VERIFIED', verified_by: _getUserId(req), verified_at: new Date() });
-
-    res.json({ message: 'Paiement approuvé — abonnement activé', clinic: clinic.name, plan });
+    res.json({ message: 'Paiement approuvé — abonnement activé automatiquement', clinic: clinic?.name, plan });
   } catch (error) {
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
@@ -427,37 +412,21 @@ router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN')
     if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
     if (request.status !== 'PENDING') return res.status(400).json({ error: 'Demande déjà traitée' });
 
-    await request.update({
-      status: 'VERIFIED',
-      note_admin: req.body.note_admin || null,
-      verified_by: _getUserId(req),
-      verified_at: new Date()
-    });
+    // Activation automatique via subscriptionManager
+    const result = await activateSubscriptionAfterPayment(
+      request.clinic_id,
+      request.plan_code || 'PRO',
+      request.id
+    );
 
-    // Activer l'abonnement de la clinique
-    if (request.clinic_id) {
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
-      await Clinic.update(
-        { subscription_status: 'ACTIVE' },
-        { where: { id: request.clinic_id } }
-      );
-      try {
-        await Subscription.create({
-          clinic_id: request.clinic_id,
-          plan: request.plan_code || 'ESSENTIAL',
-          status: 'ACTIVE',
-          start_date: new Date(),
-          end_date: endDate,
-          duration_months: 1,
-          price_mga: request.amount_mga || 0,
-          notes: `Paiement vérifié le ${new Date().toLocaleDateString('fr-FR')}`,
-          created_by_user_id: _getUserId(req)
-        });
-      } catch (e) { console.log('Subscription creation skipped:', e.message); }
+    // Enregistrer note admin
+    await request.update({ note_admin: req.body.note_admin || null });
+
+    if (!result.success) {
+      return res.status(500).json({ error: 'Erreur activation abonnement', details: result.error });
     }
 
-    res.json({ message: 'Paiement vérifié, abonnement activé', request });
+    res.json({ message: 'Paiement vérifié — abonnement activé automatiquement', request, subscription: result.subscription });
   } catch (error) {
     console.error('Verify payment error:', error);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
