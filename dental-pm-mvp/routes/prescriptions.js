@@ -225,7 +225,7 @@ router.get('/patients/:patientId/prescriptions/:id/print', [
     <h1>ORDONNANCE — ${prescription.number}</h1>
     <p>Date: ${new Date(prescription.issued_at || prescription.created_at).toLocaleDateString('fr-FR')}</p>
     <div class="patient"><strong>Patient:</strong> ${patient?.first_name || ''} ${patient?.last_name || ''}</div>
-    ${items.map(item => `<div class="item"><div class="item-name">${item.medication||item.name||''}</div><div>${item.dosage||''} ${item.frequency||''} ${item.duration||''}</div></div>`).join('')}
+    ${items.map(item => `<div class="item"><div class="item-name">${item.medication||item.name||''}</div><div style="color:#555;font-size:12px;margin-top:3px">${item.dosage?'Dosage: '+item.dosage+' ':''} ${(item.posology||item.frequency)?'Posologie: '+(item.posology||item.frequency)+' ':''} ${item.duration?'Durée: '+item.duration:''}</div></div>`).join('')}
     ${prescription.notes ? `<p><em>Notes: ${prescription.notes}</em></p>` : ''}
     <div style="margin-top:40px;text-align:right"><p>Signature: ____________________</p></div>
     <script>window.print();</script></body></html>`;
@@ -318,11 +318,11 @@ router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
         <div class="item">
           <div class="item-name">${item.medication || item.name || item.drug || ''}</div>
           <div class="item-detail">
-            ${item.dosage    ? `<span>Dosage: ${item.dosage}</span>` : ''}
-            ${item.frequency ? `<span> &bull; ${item.frequency}</span>` : ''}
-            ${item.duration  ? `<span> &bull; Durée: ${item.duration}</span>` : ''}
+            ${item.dosage ? `<span><strong>Dosage:</strong> ${item.dosage}</span>` : ''}
+            ${(item.posology || item.frequency) ? `<span> &bull; <strong>Posologie:</strong> ${item.posology || item.frequency}</span>` : ''}
+            ${item.duration ? `<span> &bull; <strong>Durée:</strong> ${item.duration}</span>` : ''}
           </div>
-          ${item.instructions ? `<div class="item-detail">${item.instructions}</div>` : ''}
+          ${item.instructions ? `<div class="item-detail" style="font-style:italic;color:#444">${item.instructions}</div>` : ''}
         </div>`).join('') : '<p style="color:#999">Aucun médicament prescrit</p>'}
     </div>
     ${prescription.notes ? `<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${prescription.notes}</p>` : ''}
@@ -354,6 +354,43 @@ router.get('/:id/print', [param('id').isUUID()], async (req, res) => {
   const prescription = await Prescription.findOne({ where }).catch(() => null);
   if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
   res.redirect(`/api/prescriptions/${req.params.id}/pdf`);
+});
+
+
+// ── GET /api/prescriptions/medications — liste des médicaments déjà utilisés ──
+router.get('/medications', async (req, res) => {
+  try {
+    const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
+    const Prescription = require('../models/Prescription');
+    const prescriptions = await Prescription.findAll({
+      where: { clinic_id: clinicId },
+      attributes: ['content_json'],
+      limit: 500,
+      order: [['created_at', 'DESC']]
+    });
+
+    const meds = new Map();
+    for (const p of prescriptions) {
+      const items = p.content_json?.items || [];
+      for (const item of items) {
+        const name = (item.medication || item.name || '').trim();
+        if (name) {
+          if (!meds.has(name)) {
+            meds.set(name, { name, dosage: item.dosage || '', posology: item.posology || item.frequency || '', duration: item.duration || '', count: 1 });
+          } else {
+            meds.get(name).count++;
+          }
+        }
+      }
+    }
+
+    // Trier par fréquence d'utilisation
+    const sorted = Array.from(meds.values()).sort((a, b) => b.count - a.count);
+    res.json({ medications: sorted });
+  } catch (error) {
+    console.error('Medications list error:', error);
+    res.status(500).json({ error: 'Erreur serveur', medications: [] });
+  }
 });
 
 module.exports = router;
