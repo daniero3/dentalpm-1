@@ -85,7 +85,7 @@ const DentalLogo = ({ size=36, animate=false }) => (
     width={size}
     height={size}
     style={{
-      borderRadius: size * 0.26,
+      borderRadius: '50%',
       objectFit: 'cover',
       display: 'block',
       flexShrink: 0,

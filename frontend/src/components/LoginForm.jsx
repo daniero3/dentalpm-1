@@ -21,7 +21,7 @@ const LogoAnim = () => (
 
 const DentalLogo = ({ size = 32 }) => (
   <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={size} height={size}
-    style={{ borderRadius: size * 0.25, objectFit:'cover', display:'block' }}/>
+    style={{ borderRadius: '50%', objectFit:'cover', display:'block' }}/>
 );
 
 const STEP_LOGIN    = 'login';
