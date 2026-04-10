@@ -72,10 +72,18 @@ router.post('/templates', [
       return res.status(200).json({ message:'Template mis à jour', template: existing });
     }
 
-    const createData = { key, channel, text, is_active: true };
-    if (clinicId) createData.clinic_id = clinicId;
-
-    const template = await MessageTemplate.create(createData);
+    // Upsert : créer ou mettre à jour si (clinic_id, key) existe déjà
+    const whereClause = clinicId ? { clinic_id: clinicId, key } : { key };
+    const [template, created] = await MessageTemplate.findOrCreate({
+      where: whereClause,
+      defaults: {
+        ...(clinicId ? { clinic_id: clinicId } : {}),
+        key, channel, text, is_active: true
+      }
+    });
+    if (!created) {
+      await template.update({ channel, text });
+    }
 
     // AuditLog optionnel — ne pas crasher si ça échoue
     try {
@@ -88,8 +96,14 @@ router.post('/templates', [
 
     res.status(201).json({ message:'Template créé', template });
   } catch (error) {
-    console.error('Create template error:', error.message, error.stack?.split('\n')[1]);
-    res.status(500).json({ error:'Erreur serveur', details: error.message });
+    console.error('Create template error FULL:', {
+      message: error.message,
+      name: error.name,
+      sql: error?.parent?.sql,
+      detail: error?.parent?.detail,
+      stack: error.stack?.split('\n').slice(0,4).join(' | ')
+    });
+    res.status(500).json({ error:'Erreur serveur', details: error.message, type: error.name });
   }
 });
 
