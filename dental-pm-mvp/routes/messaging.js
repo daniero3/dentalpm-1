@@ -283,4 +283,52 @@ async function createAppointmentReminder(appointment, clinic_id) {
 }
 
 router.createAppointmentReminder = createAppointmentReminder;
+
+// ── POST /send-direct — Envoi manuel vers un numéro ─────────────────────────
+router.post('/send-direct', [
+  body('to').notEmpty().withMessage('Numéro requis'),
+  body('text').notEmpty().withMessage('Message requis'),
+  body('channel').optional().isIn(['SMS','EMAIL'])
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides' });
+
+    const clinicId = getClinicId(req);
+    const { to, text, channel = 'SMS', patient_id } = req.body;
+    const now = new Date();
+
+    // Créer dans message_queue
+    const msg = await MessageQueue.create({
+      clinic_id:    clinicId || null,
+      patient_id:   patient_id || null,
+      channel,
+      to,
+      text,
+      scheduled_at: now,
+      status:       'QUEUED',
+      message_type: 'CUSTOM'
+    });
+
+    // Dispatcher immédiatement
+    const providerResponse = JSON.stringify({ simulated: true, timestamp: now.toISOString() });
+    await MessageLog.create({
+      clinic_id:  clinicId || null,
+      patient_id: patient_id || null,
+      channel, to, text,
+      status:   'SENT',
+      sent_at:  now,
+      provider_response: providerResponse,
+      message_type: 'CUSTOM',
+      queue_id: msg.id
+    });
+    await msg.update({ status: 'SENT' });
+
+    res.json({ message: 'Message envoyé', sent: true, to, channel });
+  } catch (error) {
+    console.error('Send direct error:', error.message);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;

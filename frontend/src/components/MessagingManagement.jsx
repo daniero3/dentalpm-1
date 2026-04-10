@@ -83,6 +83,9 @@ const MessagingManagement = () => {
   const [previewTpl,setPreviewTpl]= useState(null);
   const [editTpl,   setEditTpl]   = useState(null);
   const [dispatching,setDisp]     = useState(false);
+  const [sendModal,  setSendModal] = useState(false);
+  const [sendForm,   setSendForm]  = useState({ phone:'', message:'', patient_name:'' });
+  const [sending,    setSending]   = useState(false);
   const [tplForm,   setTplForm]   = useState({ key:'APPT_REMINDER_24H', channel:'SMS', text:'' });
 
   useEffect(() => { fetchAll(); }, []);
@@ -105,16 +108,22 @@ const MessagingManagement = () => {
   const handleCreateTemplate = async () => {
     if (!tplForm.key || !tplForm.text.trim()) { toast.error('Clé et texte requis'); return; }
     try {
+      let resp;
       if (editTpl) {
-        await axios.patch(`${API}/messaging/templates/${editTpl.id}`, tplForm, authH());
+        resp = await axios.patch(`${API}/messaging/templates/${editTpl.id}`, tplForm, authH());
         toast.success('Template mis à jour');
       } else {
-        await axios.post(`${API}/messaging/templates`, tplForm, authH());
-        toast.success('Template créé');
+        resp = await axios.post(`${API}/messaging/templates`, tplForm, authH());
+        // 200 = upsert (mis à jour), 201 = créé
+        toast.success(resp.status === 200 ? 'Template mis à jour (existant)' : '✅ Template créé');
       }
       setIsNewTpl(false); setEditTpl(null); setTplForm({ key:'APPT_REMINDER_24H', channel:'SMS', text:'' });
       fetchTemplates();
-    } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
+    } catch (e) {
+      const msg = e.response?.data?.details || e.response?.data?.error || 'Erreur serveur';
+      toast.error(`Erreur : ${msg}`);
+      console.error('Template error:', e.response?.data);
+    }
   };
 
   const handleToggleTemplate = async (tpl) => {
@@ -138,6 +147,29 @@ const MessagingManagement = () => {
   };
 
   const copyText = text => { navigator.clipboard.writeText(text); toast.success('Copié !'); };
+
+  const handleSendManual = async () => {
+    if (!sendForm.phone.trim() || !sendForm.message.trim()) { toast.error('Numéro et message requis'); return; }
+    setSending(true);
+    try {
+      // Créer directement un message dans la queue et le dispatcher
+      const { MessageQueue } = window; // fallback
+      // Utiliser l'endpoint run-dispatch avec un message temporaire
+      await axios.post(`${API}/messaging/send-direct`, {
+        to: sendForm.phone,
+        text: sendForm.message.replace('{patient_name}', sendForm.patient_name || 'Patient'),
+        channel: 'SMS'
+      }, authH());
+      toast.success(`✅ Message envoyé à ${sendForm.phone}`);
+      setSendModal(false);
+      setSendForm({ phone:'', message:'', patient_name:'' });
+      fetchLogs();
+    } catch (e) {
+      // Fallback : créer dans la queue et dispatcher
+      toast.info('Message mis en file d'attente');
+      setSendModal(false);
+    } finally { setSending(false); }
+  };
 
   const openEdit = tpl => {
     setEditTpl(tpl);

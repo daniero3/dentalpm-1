@@ -52,14 +52,14 @@ const InventoryManagement = () => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${API}/inventory/products`);
+      const { data } = await axios.get(`${API}/inventory/products`, authH());
       setProducts(data.products || []);
     } catch(e) { console.error('fetchProducts:', e); }
   }, []);
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${API}/inventory/alerts`);
+      const { data } = await axios.get(`${API}/inventory/alerts`, authH());
       setAlerts(data.alerts || []);
     } catch(e) { console.error('fetchAlerts:', e); }
   }, []);
@@ -73,7 +73,7 @@ const InventoryManagement = () => {
     if (!productForm.name || !productForm.sku) { toast.error('Nom et SKU requis'); return; }
     setSaving(true);
     try {
-      await axios.post(`${API}/inventory/products`, productForm);
+      await axios.post(`${API}/inventory/products`, productForm, authH());
       toast.success('Produit ajouté');
       setIsAddOpen(false);
       setProductForm({ name:'', sku:'', category:'CONSUMABLE', unit:'PIECE', unit_cost_mga:0, sale_price_mga:0, current_qty:0, min_qty:5 });

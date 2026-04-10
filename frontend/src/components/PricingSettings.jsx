@@ -31,6 +31,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const PricingSettings = () => {
   const { user } = useAuth();
@@ -62,7 +63,7 @@ const PricingSettings = () => {
 
   const fetchSchedules = async () => {
     try {
-      const response = await axios.get(`${API}/pricing-schedules`);
+      const response = await axios.get(`${API}/pricing-schedules`, authH());
       setSchedules(response.data.schedules || []);
       if (response.data.schedules?.length > 0) {
         const firstSchedule = response.data.schedules[0];
@@ -78,7 +79,7 @@ const PricingSettings = () => {
 
   const fetchFees = async (scheduleId) => {
     try {
-      const response = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`);
+      const response = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`, authH());
       setFees(response.data.fees || []);
     } catch (error) {
       toast.error('Erreur lors du chargement des actes');

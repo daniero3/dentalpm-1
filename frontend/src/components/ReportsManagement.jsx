@@ -12,6 +12,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const METHOD_LABELS = {
   CASH: 'Espèces',
@@ -52,7 +53,7 @@ const ReportsManagement = () => {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/reports/finance?from=${fromDate}&to=${toDate}`);
+      const res = await axios.get(`${API}/reports/finance?from=${fromDate}&to=${toDate}`, authH());
       setReport(res.data);
     } catch (err) {
       toast.error('Erreur chargement rapport');
