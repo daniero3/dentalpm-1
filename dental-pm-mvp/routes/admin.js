@@ -1,5 +1,45 @@
 const express = require('express');
-const { activateSubscriptionAfterPayment } = require('../jobs/subscriptionManager');
+// ── activateSubscriptionAfterPayment inline (dépendance billing.js supprimée) ──
+const { Op: _Op } = require('sequelize');
+const _PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
+
+async function activateSubscriptionAfterPayment(clinicId, planCode, paymentRequestId) {
+  try {
+    const now     = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 30);
+
+    await Subscription.update(
+      { status: 'SUPERSEDED' },
+      { where: { clinic_id: clinicId, status: { [_Op.in]: ['ACTIVE','TRIAL','EXPIRED','TRIAL_EXPIRED'] } } }
+    );
+
+    const newSub = await Subscription.create({
+      clinic_id:         clinicId,
+      plan:              planCode || 'PRO',
+      status:            'ACTIVE',
+      start_date:        now,
+      end_date:          endDate,
+      duration_months:   1,
+      monthly_price_mga: _PLAN_PRICES[planCode] || 199000,
+    });
+
+    await Clinic.update(
+      { subscription_status: 'ACTIVE', current_plan: planCode || 'PRO' },
+      { where: { id: clinicId } }
+    );
+
+    if (paymentRequestId) {
+      await PaymentRequest.update(
+        { status: 'VERIFIED', verified_at: now },
+        { where: { id: paymentRequestId } }
+      );
+    }
+    return { success: true, subscription: newSub };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
 const router = express.Router();
 const { body, param, query, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');

@@ -33,7 +33,6 @@ const onboardingRoutes    = require('./routes/onboarding');
 const dentalChartRoutes   = require('./routes/dental-chart');
 
 const { getSubscriptionStatus } = require('./middleware/licensing');
-const { startSubscriptionCron } = require('./jobs/subscriptionManager');
 const { authenticateToken: requireAuth } = require('./middleware/auth');
 
 const app  = express();
@@ -148,7 +147,8 @@ async function startServer() {
     await sequelize.authenticate();
     console.log('✅ Connexion à PostgreSQL réussie');
     // ── Démarrer le gestionnaire automatique d'abonnements ──────────────────
-startSubscriptionCron();
+// Le cron est intégré dans billing.js et démarre automatiquement au require()
+// startSubscriptionCron() est appelé par billingRoutes à l'initialisation
 
 app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);

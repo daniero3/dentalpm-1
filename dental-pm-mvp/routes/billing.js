@@ -15,13 +15,126 @@ const PDFDocument = require('pdfkit');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
-const {
-  activateSubscriptionAfterPayment,
-  autoVerifyByReference,
-  handleMVolaWebhook,
-  handleOrangeMoneyWebhook,
-  PLAN_PRICES,
-} = require('../jobs/subscriptionManager');
+// ── Fonctions de gestion automatique (inlinées) ─────────────────────────
+const PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
+const PLAN_DAYS   = 30;
+const { Op } = require('sequelize');
+
+async function activateSubscriptionAfterPayment(clinicId, planCode, paymentRequestId) {
+  try {
+    const now     = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + PLAN_DAYS);
+
+    await Subscription.update(
+      { status: 'SUPERSEDED' },
+      { where: { clinic_id: clinicId, status: { [Op.in]: ['ACTIVE','TRIAL','EXPIRED','TRIAL_EXPIRED'] } } }
+    );
+
+    const newSub = await Subscription.create({
+      clinic_id:         clinicId,
+      plan:              planCode || 'PRO',
+      status:            'ACTIVE',
+      start_date:        now,
+      end_date:          endDate,
+      duration_months:   1,
+      monthly_price_mga: PLAN_PRICES[planCode] || PLAN_PRICES.PRO,
+      auto_renew:        false,
+    });
+
+    await Clinic.update(
+      { subscription_status: 'ACTIVE', current_plan: planCode || 'PRO' },
+      { where: { id: clinicId } }
+    );
+
+    if (paymentRequestId) {
+      await PaymentRequest.update(
+        { status: 'VERIFIED', verified_at: now },
+        { where: { id: paymentRequestId } }
+      );
+    }
+    console.log(`[AutoPay] Abonnement activé : clinic=${clinicId} plan=${planCode}`);
+    return { success: true, subscription: newSub };
+  } catch (e) {
+    console.error('[AutoPay] Erreur activation:', e.message);
+    return { success: false, error: e.message };
+  }
+}
+
+async function autoVerifyByReference(reference, clinicId) {
+  try {
+    if (!reference || !clinicId) return { verified: false, reason: 'Données manquantes' };
+    const payReq = await PaymentRequest.findOne({
+      where: { clinic_id: clinicId, reference: reference.trim(), status: 'PENDING' }
+    });
+    if (!payReq) return { verified: false, reason: 'Aucune demande en attente avec cette référence' };
+    if (payReq.amount_mga !== PLAN_PRICES[payReq.plan_code])
+      return { verified: false, reason: 'Montant incohérent' };
+    const result = await activateSubscriptionAfterPayment(clinicId, payReq.plan_code, payReq.id);
+    return result.success
+      ? { verified: true, plan: payReq.plan_code, amount: payReq.amount_mga }
+      : { verified: false, reason: result.error };
+  } catch (e) { return { verified: false, reason: e.message }; }
+}
+
+async function handleMVolaWebhook(payload) {
+  try {
+    const { transactionReference, amount, status, serverCorrelationId } = payload;
+    if (status !== 'COMPLETED') return { processed: false, reason: 'Non complété' };
+    const payReq = await PaymentRequest.findOne({
+      where: {
+        [Op.or]: [{ reference: serverCorrelationId }, { reference: transactionReference }],
+        status: 'PENDING', payment_method: 'MVOLA',
+      }
+    });
+    if (!payReq) return { processed: false, reason: 'Demande non trouvée' };
+    if (parseInt(amount) < payReq.amount_mga) return { processed: false, reason: 'Montant insuffisant' };
+    const result = await activateSubscriptionAfterPayment(payReq.clinic_id, payReq.plan_code, payReq.id);
+    return { processed: result.success };
+  } catch (e) { return { processed: false, error: e.message }; }
+}
+
+async function handleOrangeMoneyWebhook(payload) {
+  try {
+    const { txnid, txnstatus, amount, message } = payload;
+    if (txnstatus !== 'Success' && txnstatus !== 'COMPLETED') return { processed: false };
+    const payReq = await PaymentRequest.findOne({
+      where: {
+        [Op.or]: [{ reference: txnid }, { reference: message }],
+        status: 'PENDING', payment_method: 'ORANGE_MONEY',
+      }
+    });
+    if (!payReq || parseInt(amount) < payReq.amount_mga) return { processed: false };
+    const result = await activateSubscriptionAfterPayment(payReq.clinic_id, payReq.plan_code, payReq.id);
+    return { processed: result.success };
+  } catch (e) { return { processed: false, error: e.message }; }
+}
+
+// ── Cron désabonnement auto (toutes les heures) ──────────────────────────
+function startSubscriptionCron() {
+  async function runChecks() {
+    try {
+      const now = new Date();
+      const expired = await Subscription.findAll({ where: { status: 'ACTIVE', end_date: { [Op.lt]: now } } });
+      for (const s of expired) {
+        await s.update({ status: 'EXPIRED' });
+        await Clinic.update({ subscription_status: 'EXPIRED' }, { where: { id: s.clinic_id } });
+        console.log(`[Cron] Abonnement expiré : clinic=${s.clinic_id}`);
+      }
+      const expTrials = await Subscription.findAll({
+        where: { status: 'TRIAL', [Op.or]: [{ end_date: { [Op.lt]: now } }, { trial_end_date: { [Op.lt]: now } }] }
+      });
+      for (const s of expTrials) {
+        await s.update({ status: 'TRIAL_EXPIRED' });
+        await Clinic.update({ subscription_status: 'TRIAL_EXPIRED' }, { where: { id: s.clinic_id } });
+        console.log(`[Cron] Trial expiré : clinic=${s.clinic_id}`);
+      }
+    } catch (e) { console.error('[Cron] Erreur:', e.message); }
+  }
+  runChecks();
+  setInterval(runChecks, 60 * 60 * 1000);
+  console.log('[Cron] Gestionnaire abonnements démarré (intervalle: 1h)');
+}
 
 const _getUserId = (req) => {
   const v = req.user?.id || req.user?.dataValues?.id || req.user?.userId;
