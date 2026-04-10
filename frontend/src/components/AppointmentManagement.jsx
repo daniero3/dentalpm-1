@@ -269,18 +269,11 @@ const AppointmentManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const r = await axios.get(`${API}/patients?limit=200`, authH());
-      // La route patients peut retourner { patients: [...] } ou { data: [...] } ou [...]
+      const r = await axios.get(`${API}/patients?limit=500`, authH());
       const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
       setPatients(list);
     } catch (e) {
       console.error('fetchPatients error:', e?.response?.data || e.message);
-      // Retry sans limit
-      try {
-        const r2 = await axios.get(`${API}/patients`, authH());
-        const list = r2.data.patients || r2.data.data || (Array.isArray(r2.data) ? r2.data : []);
-        setPatients(list);
-      } catch {}
     }
   };
 
