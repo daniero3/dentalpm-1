@@ -127,7 +127,7 @@ const GlobalCSS = () => (
 /* ── Logo ── */
 const Logo = ({ size=36, glow=false }) => (
   <img
-    src="/logo.jpeg"
+    src="/fix-logo.jpeg"
     alt="DPM Madagascar"
     width={size}
     height={size}
@@ -137,9 +137,8 @@ const Logo = ({ size=36, glow=false }) => (
       display: 'block',
       flexShrink: 0,
       filter: glow
-        ? 'drop-shadow(0 0 14px rgba(13,122,135,.7)) drop-shadow(0 4px 16px rgba(0,0,0,.3))'
-        : 'drop-shadow(0 3px 10px rgba(0,0,0,.25))',
-      transition: 'filter .3s, transform .3s',
+        ? 'drop-shadow(0 0 16px rgba(13,122,135,.6)) drop-shadow(0 4px 14px rgba(0,0,0,.28))'
+        : 'drop-shadow(0 3px 10px rgba(0,0,0,.22))',
     }}
   />
 );
