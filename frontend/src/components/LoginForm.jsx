@@ -7,29 +7,16 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// ── Logo premium sans fond ──
+// ── Logo statique premium ──
 const LogoAnim = () => (
-  <>
-    <style>{`
-      @keyframes logoFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-7px) scale(1.03)} }
-      @keyframes logoGlow  { 0%,100%{box-shadow:0 8px 28px rgba(13,122,135,.25),0 0 0 0 rgba(13,122,135,.15)} 50%{box-shadow:0 14px 40px rgba(13,122,135,.4),0 0 0 10px rgba(13,122,135,.0)} }
-      @keyframes ringExpand{ 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.7);opacity:0} }
-    `}</style>
-    <div style={{ position:'relative', width:96, height:96, margin:'0 auto 18px' }}>
-      {/* Cercles d'onde qui s'expandent */}
-      <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'1.5px solid rgba(13,122,135,.4)', animation:'ringExpand 2.2s ease-out infinite' }}/>
-      <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'1.5px solid rgba(13,122,135,.3)', animation:'ringExpand 2.2s ease-out infinite .7s' }}/>
-      {/* Logo pur, sans fond */}
-      <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={96} height={96}
-        style={{
-          display:'block', objectFit:'cover',
-          borderRadius:24,
-          animation:'logoFloat 3.8s ease-in-out infinite, logoGlow 3.8s ease-in-out infinite',
-          position:'relative', zIndex:1,
-          filter:'drop-shadow(0 4px 16px rgba(13,122,135,.3))',
-        }}/>
-    </div>
-  </>
+  <div style={{ width:96, height:96, margin:'0 auto 18px' }}>
+    <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={96} height={96}
+      style={{
+        display:'block', objectFit:'cover',
+        borderRadius:'50%',
+        boxShadow:'0 0 0 4px rgba(13,122,135,.12), 0 0 0 8px rgba(13,122,135,.06), 0 8px 28px rgba(13,122,135,.25)',
+      }}/>
+  </div>
 );
 
 const DentalLogo = ({ size = 32 }) => (
