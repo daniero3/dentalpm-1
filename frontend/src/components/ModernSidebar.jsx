@@ -68,8 +68,7 @@ const useScreenSize = () => {
 
 // ── CSS animations logo ──
 const LogoCSS = () => <style>{`
-  @keyframes logoBreathe {
-    0%, 100% { transform: scale(1);    filter: drop-shadow(0 3px 10px rgba(255,255,255,.2)); }
+  
     50%       { transform: scale(1.06); filter: drop-shadow(0 6px 20px rgba(255,255,255,.4)); }
   }
   @keyframes logoBadge {
@@ -81,7 +80,7 @@ const LogoCSS = () => <style>{`
 // ── Logo sans fond ──
 const DentalLogo = ({ size=36, animate=false }) => (
   <img
-    src="/logo.jpeg"
+    src="/fix-logo.jpeg"
     alt="DPM Madagascar"
     width={size}
     height={size}
@@ -90,8 +89,8 @@ const DentalLogo = ({ size=36, animate=false }) => (
       objectFit: 'cover',
       display: 'block',
       flexShrink: 0,
-      filter: 'drop-shadow(0 3px 12px rgba(255,255,255,.2))',
-      animation: animate ? 'logoBreathe 3.5s ease-in-out infinite' : 'none',
+      filter: 'drop-shadow(0 2px 10px rgba(255,255,255,.25)) drop-shadow(0 4px 18px rgba(0,0,0,.2))',
+      
       transition: 'all .3s',
     }}
   />
