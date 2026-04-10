@@ -33,6 +33,7 @@ const onboardingRoutes    = require('./routes/onboarding');
 const dentalChartRoutes   = require('./routes/dental-chart');
 
 const { getSubscriptionStatus } = require('./middleware/licensing');
+const { startSubscriptionCron } = require('./jobs/subscriptionManager');
 const { authenticateToken: requireAuth } = require('./middleware/auth');
 
 const app  = express();
@@ -107,6 +108,8 @@ app.use('/api/labs',             requireAuth, labRoutes);
 app.use('/api/mailing',          requireAuth, mailingRoutes);
 app.use('/api/media',            requireAuth, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
+// Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
+app.use('/api/billing/webhook',    billingRoutes);
 app.use('/api/billing',          requireAuth, billingRoutes);
 app.use('/api/admin',            requireAuth, adminRoutes);
 app.use('/api/legal',            legalRoutes);
@@ -144,7 +147,10 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Connexion à PostgreSQL réussie');
-    app.listen(PORT, '0.0.0.0', () => {
+    // ── Démarrer le gestionnaire automatique d'abonnements ──────────────────
+startSubscriptionCron();
+
+app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       console.log(`🌍 FRONTEND_URL: ${process.env.FRONTEND_URL || 'non défini'}`);
     });
