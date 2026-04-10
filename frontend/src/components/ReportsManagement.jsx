@@ -1,275 +1,179 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { toast } from 'sonner';
-import { 
-  BarChart3, RefreshCw, Loader2, TrendingUp, TrendingDown, 
-  DollarSign, AlertCircle, CheckCircle, PieChart
-} from 'lucide-react';
+import { BarChart3, RefreshCw, TrendingUp, TrendingDown, DollarSign, AlertCircle, CheckCircle, PieChart, Calendar, Download } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API  = `${BACKEND_URL}/api`;
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const fmt  = v => new Intl.NumberFormat('fr-MG',{maximumFractionDigits:0}).format(v||0) + ' Ar';
+const fdate = d => new Date(d).toLocaleDateString('fr-FR');
 
-const METHOD_LABELS = {
-  CASH: 'Espèces',
-  BANK_TRANSFER: 'Virement',
-  CHEQUE: 'Chèque',
-  MVOLA: 'Mvola',
-  ORANGE_MONEY: 'Orange Money',
-  AIRTEL_MONEY: 'Airtel Money',
-  CARD: 'Carte'
+const METHODS = {
+  CASH:'Espèces', BANK_TRANSFER:'Virement', CHEQUE:'Chèque',
+  MVOLA:'MVola', ORANGE_MONEY:'Orange Money', AIRTEL_MONEY:'Airtel Money', CARD:'Carte'
+};
+const MCOLORS = {
+  CASH:'#10B981', BANK_TRANSFER:'#3B82F6', CHEQUE:'#F59E0B',
+  MVOLA:'#EF4444', ORANGE_MONEY:'#F97316', AIRTEL_MONEY:'#EC4899', CARD:'#8B5CF6'
 };
 
-const METHOD_COLORS = {
-  CASH: '#22c55e',
-  BANK_TRANSFER: '#3b82f6',
-  CHEQUE: '#f59e0b',
-  MVOLA: '#ef4444',
-  ORANGE_MONEY: '#f97316',
-  AIRTEL_MONEY: '#ec4899',
-  CARD: '#8b5cf6'
-};
+const inp = { padding:'9px 12px',borderRadius:10,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none',transition:'border-color .2s' };
+const fi  = e=>e.target.style.borderColor='#0D7A87', bi=e=>e.target.style.borderColor='#E2E8F0';
 
 const ReportsManagement = () => {
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [fromDate, setFromDate] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-01-01`;
-  });
-  const [toDate, setToDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().split('T')[0];
-  });
+  const [report,   setReport]   = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [fromDate, setFromDate] = useState(() => `${new Date().getFullYear()}-01-01`);
+  const [toDate,   setToDate]   = useState(() => new Date().toISOString().split('T')[0]);
 
-  useEffect(() => {
-    fetchReport();
-  }, []);
+  useEffect(() => { fetchReport(); }, []);
 
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/reports/finance?from=${fromDate}&to=${toDate}`, authH());
-      setReport(res.data);
-    } catch (err) {
-      toast.error('Erreur chargement rapport');
-    } finally {
-      setLoading(false);
-    }
+      const r = await axios.get(`${API}/reports/finance?from=${fromDate}&to=${toDate}`, authH());
+      setReport(r.data);
+    } catch { toast.error('Erreur chargement rapport'); }
+    finally { setLoading(false); }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-MG', { maximumFractionDigits: 0 }).format(amount) + ' MGA';
-  };
+  if (loading) return (
+    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:240 }}>
+      <div style={{ width:36,height:36,border:'4px solid #E2E8F0',borderTopColor:'#3B82F6',borderRadius:'50%',animation:'spin .8s linear infinite' }}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
-  const formatDate = (date) => new Date(date).toLocaleDateString('fr-FR');
-
-  // Simple pie chart using CSS
-  const PieChartSimple = ({ data }) => {
-    const total = Object.values(data).reduce((sum, d) => sum + d.total_mga, 0);
-    if (total === 0) return <p className="text-gray-500 text-center py-8">Aucune donnée</p>;
-
-    let cumulativePercent = 0;
-    const segments = Object.entries(data).map(([method, d]) => {
-      const percent = (d.total_mga / total) * 100;
-      const start = cumulativePercent;
-      cumulativePercent += percent;
-      return { method, percent, start, color: METHOD_COLORS[method] || '#6b7280' };
-    });
-
-    const gradientStops = segments.map(s => 
-      `${s.color} ${s.start}% ${s.start + s.percent}%`
-    ).join(', ');
-
-    return (
-      <div className="flex items-center gap-6">
-        <div 
-          className="w-32 h-32 rounded-full"
-          style={{ background: `conic-gradient(${gradientStops})` }}
-        />
-        <div className="space-y-2">
-          {Object.entries(data).map(([method, d]) => (
-            <div key={method} className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: METHOD_COLORS[method] || '#6b7280' }} />
-              <span>{METHOD_LABELS[method] || method}</span>
-              <span className="font-medium">{formatCurrency(d.total_mga)}</span>
-              <span className="text-gray-400">({d.count})</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  const breakdown = report?.breakdown_by_method || {};
+  const totalMethod = Object.values(breakdown).reduce((s,d)=>s+(d.total_mga||0),0);
 
   return (
-    <div className="space-y-6" data-testid="reports-management">
+    <div style={{ maxWidth:1100,margin:'0 auto',paddingBottom:48 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.rep-anim{animation:fadeUp .3s ease both}`}</style>
+
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-6 w-6 text-indigo-600" />
-            Rapports Financiers
-          </h1>
-          <p className="text-gray-500">Analyse des revenus et paiements</p>
+      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12 }}>
+        <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+          <div style={{ width:44,height:44,borderRadius:13,background:'linear-gradient(135deg,#3B4FD8,#6366F1)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(59,79,216,.3)' }}>
+            <BarChart3 size={22} color="#fff"/>
+          </div>
+          <div>
+            <h1 style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:22,color:'#0F172A',margin:0 }}>Rapports financiers</h1>
+            <p style={{ color:'#64748B',fontSize:13,margin:0 }}>Analyse des revenus et paiements</p>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-4">
-          <div className="flex items-end gap-4">
-            <div className="space-y-2">
-              <Label>Du</Label>
-              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Au</Label>
-              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-            </div>
-            <Button onClick={fetchReport}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Actualiser
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filtres date */}
+      <div style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'14px 18px',marginBottom:20,display:'flex',gap:12,flexWrap:'wrap',alignItems:'flex-end' }}>
+        <div>
+          <label style={{ fontSize:11,fontWeight:600,color:'#64748B',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em' }}>Du</label>
+          <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
+        </div>
+        <div>
+          <label style={{ fontSize:11,fontWeight:600,color:'#64748B',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em' }}>Au</label>
+          <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
+        </div>
+        <button onClick={fetchReport}
+          style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#3B4FD8,#6366F1)',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 12px rgba(59,79,216,.25)' }}>
+          <RefreshCw size={14}/>Actualiser
+        </button>
+      </div>
 
-      {report && (
+      {report&&(
         <>
-          {/* KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total facturé</p>
-                    <p className="text-2xl font-bold">{formatCurrency(report.totals.invoiced_mga)}</p>
-                  </div>
-                  <DollarSign className="h-10 w-10 text-blue-500 opacity-20" />
+          {/* KPIs principaux */}
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginBottom:20 }}>
+            {[
+              {icon:'💰',l:'Total facturé',   v:fmt(report.totals?.invoiced_mga),  c:'#3B82F6', bg:'#EFF6FF', raw:true},
+              {icon:'✅',l:'Total encaissé',  v:fmt(report.totals?.paid_mga),       c:'#10B981', bg:'#DCFCE7', raw:true},
+              {icon:'⏳',l:'Solde impayé',    v:fmt(report.totals?.balance_mga),    c:'#EF4444', bg:'#FEE2E2', raw:true},
+              {icon:'📊',l:'Taux recouvrement',v:`${report.stats?.collection_rate||0}%`, c:'#7C3AED', bg:'#EDE9FE', raw:true},
+            ].map((k,i)=>(
+              <div key={i} className="rep-anim" style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'16px 18px',display:'flex',alignItems:'center',gap:12,animationDelay:`${i*.06}s` }}>
+                <div style={{ width:40,height:40,borderRadius:11,background:k.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20 }}>{k.icon}</div>
+                <div>
+                  <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:16,color:'#0F172A',lineHeight:1 }}>{k.v}</div>
+                  <div style={{ fontSize:11,color:'#64748B',marginTop:3 }}>{k.l}</div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total encaissé</p>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(report.totals.paid_mga)}</p>
-                  </div>
-                  <TrendingUp className="h-10 w-10 text-green-500 opacity-20" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Solde impayé</p>
-                    <p className="text-2xl font-bold text-red-600">{formatCurrency(report.totals.balance_mga)}</p>
-                  </div>
-                  <TrendingDown className="h-10 w-10 text-red-500 opacity-20" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Taux recouvrement</p>
-                    <p className="text-2xl font-bold">{report.stats.collection_rate}%</p>
-                  </div>
-                  <CheckCircle className="h-10 w-10 text-indigo-500 opacity-20" />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            ))}
           </div>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-4 gap-4">
-            <Card className="bg-blue-50">
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-blue-600">{report.stats.invoice_count}</p>
-                <p className="text-sm text-blue-600">Factures</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-green-50">
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-green-600">{report.stats.payment_count}</p>
-                <p className="text-sm text-green-600">Paiements</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-red-50">
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-red-600">{report.stats.unpaid_count}</p>
-                <p className="text-sm text-red-600">Impayées</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-emerald-50">
-              <CardContent className="pt-4 text-center">
-                <p className="text-3xl font-bold text-emerald-600">{report.stats.fully_paid_count}</p>
-                <p className="text-sm text-emerald-600">Soldées</p>
-              </CardContent>
-            </Card>
+          {/* Stats secondaires */}
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:10,marginBottom:20 }}>
+            {[
+              {l:'Factures',       v:report.stats?.invoice_count||0,    c:'#3B82F6', bg:'#EFF6FF'},
+              {l:'Paiements',      v:report.stats?.payment_count||0,    c:'#10B981', bg:'#DCFCE7'},
+              {l:'Impayées',       v:report.stats?.unpaid_count||0,     c:'#EF4444', bg:'#FEE2E2'},
+              {l:'Soldées',        v:report.stats?.fully_paid_count||0, c:'#059669', bg:'#D1FAE5'},
+            ].map((k,i)=>(
+              <div key={i} style={{ background:k.bg,borderRadius:12,padding:'14px',textAlign:'center',border:`1px solid ${k.c}20` }}>
+                <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:26,color:k.c }}>{k.v}</div>
+                <div style={{ fontSize:12,color:k.c,marginTop:2,fontWeight:600 }}>{k.l}</div>
+              </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Payment Methods */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
-                  Répartition par méthode
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PieChartSimple data={report.breakdown_by_method} />
-              </CardContent>
-            </Card>
+          {/* Répartition paiements + Factures impayées */}
+          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:16 }}>
 
-            {/* Top Unpaid */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-red-500" />
-                  Top {report.top_unpaid_invoices.length} factures impayées
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {report.top_unpaid_invoices.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">Aucune facture impayée 🎉</p>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {report.top_unpaid_invoices.map((inv) => (
-                      <div key={inv.id} className="flex items-center justify-between p-2 bg-red-50 rounded text-sm">
-                        <div>
-                          <p className="font-medium">{inv.invoice_number}</p>
-                          <p className="text-gray-500">{inv.patient_name}</p>
+            {/* Méthodes de paiement */}
+            <div style={{ background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'18px 20px' }}>
+              <div style={{ fontSize:14,fontWeight:700,color:'#0F172A',marginBottom:16,display:'flex',alignItems:'center',gap:7 }}>
+                <PieChart size={16} color="#3B82F6"/> Répartition par méthode
+              </div>
+              {Object.keys(breakdown).length===0?(
+                <div style={{ textAlign:'center',padding:'24px',color:'#94A3B8' }}>Aucune donnée</div>
+              ):(
+                <>
+                  {/* Barre de répartition */}
+                  <div style={{ height:12,borderRadius:99,overflow:'hidden',display:'flex',marginBottom:16 }}>
+                    {Object.entries(breakdown).map(([m,d])=>(
+                      <div key={m} style={{ flex:(d.total_mga||0)/totalMethod*100+'%',background:MCOLORS[m]||'#6B7280',minWidth:2 }}/>
+                    ))}
+                  </div>
+                  <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+                    {Object.entries(breakdown).map(([m,d])=>(
+                      <div key={m} style={{ display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+                        <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+                          <div style={{ width:10,height:10,borderRadius:2,background:MCOLORS[m]||'#6B7280',flexShrink:0 }}/>
+                          <span style={{ fontSize:13,color:'#0F172A' }}>{METHODS[m]||m}</span>
+                          <span style={{ fontSize:11,color:'#94A3B8' }}>({d.count||0})</span>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-red-600">{formatCurrency(inv.remaining_mga)}</p>
-                          <p className="text-xs text-gray-400">{formatDate(inv.created_at)}</p>
-                        </div>
+                        <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:700,fontSize:13,color:'#0F172A' }}>{fmt(d.total_mga)}</span>
                       </div>
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </>
+              )}
+            </div>
+
+            {/* Top factures impayées */}
+            <div style={{ background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'18px 20px' }}>
+              <div style={{ fontSize:14,fontWeight:700,color:'#0F172A',marginBottom:16,display:'flex',alignItems:'center',gap:7 }}>
+                <AlertCircle size={16} color="#EF4444"/> Factures impayées ({report.top_unpaid_invoices?.length||0})
+              </div>
+              {!report.top_unpaid_invoices?.length?(
+                <div style={{ textAlign:'center',padding:'24px' }}>
+                  <div style={{ fontSize:36,marginBottom:8 }}>🎉</div>
+                  <p style={{ color:'#10B981',fontWeight:600,fontSize:14,margin:0 }}>Aucune facture impayée</p>
+                </div>
+              ):(
+                <div style={{ display:'flex',flexDirection:'column',gap:8,maxHeight:260,overflowY:'auto' }}>
+                  {report.top_unpaid_invoices.map((inv,i)=>(
+                    <div key={inv.id} style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 12px',background:i%2===0?'#FFF5F5':'#FFF',borderRadius:10,border:'1px solid #FECACA' }}>
+                      <div>
+                        <div style={{ fontSize:13,fontWeight:700,color:'#0F172A' }}>{inv.invoice_number}</div>
+                        <div style={{ fontSize:11,color:'#64748B' }}>{inv.patient_name} · {fdate(inv.created_at)}</div>
+                      </div>
+                      <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:14,color:'#EF4444' }}>{fmt(inv.remaining_mga)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}

@@ -1,341 +1,328 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Button } from './ui/button';
-import { Label } from './ui/label';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { Loader2, Plus, Package, AlertTriangle, ArrowUp, ArrowDown, X, RefreshCw } from 'lucide-react';
+import {
+  Package, AlertTriangle, ArrowUp, ArrowDown, X,
+  RefreshCw, Plus, Search, BarChart2, TrendingUp, Edit2
+} from 'lucide-react';
 
-const API = process.env.REACT_APP_API_URL || 'https://dentalpm-1-production.up.railway.app/api';
+const API  = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const fmt  = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 
-const inputCls = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
+const CATS   = { CONSUMABLE:'Consommable', EQUIPMENT:'Équipement', MEDICATION:'Médicament', OTHER:'Autre' };
+const CATCLR = { CONSUMABLE:['#0D7A87','#F0FDFE'], EQUIPMENT:['#7C3AED','#EDE9FE'], MEDICATION:['#10B981','#DCFCE7'], OTHER:['#64748B','#F1F5F9'] };
 
-// Modal défini HORS du composant principal pour éviter re-renders
-const Modal = ({ open, onClose, title, description, children }) => {
+const Modal = ({ open, onClose, title, children, maxW=520 }) => {
   if (!open) return null;
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth:520, boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', maxHeight:'90vh', overflowY:'auto', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:16, right:16, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
-        <div style={{ marginBottom:20, paddingRight:24 }}>
-          {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:0 }}>{title}</h2>}
-          {description && <p style={{ fontSize:13, color:'#64748B', marginTop:4 }}>{description}</p>}
-        </div>
+    <div onClick={e=>e.target===e.currentTarget&&onClose()}
+      style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'60px 16px 32px' }}>
+      <div style={{ background:'#fff',borderRadius:20,padding:26,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
+        <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',color:'#64748B' }}><X size={15}/></button>
+        {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
     </div>
   );
 };
 
+const inp = { width:'100%',padding:'9px 12px',borderRadius:10,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none',transition:'border-color .2s',boxSizing:'border-box' };
+const fi  = e=>e.target.style.borderColor='#0D7A87', bi=e=>e.target.style.borderColor='#E2E8F0';
+
 const InventoryManagement = () => {
-  const [products, setProducts]     = useState([]);
-  const [alerts, setAlerts]         = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [isAddOpen, setIsAddOpen]   = useState(false);
-  const [isMovementOpen, setIsMovementOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [saving, setSaving]         = useState(false);
-  const [activeTab, setActiveTab]   = useState('products');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [movType, setMovType]       = useState('IN');
+  const [products, setProducts] = useState([]);
+  const [alerts,   setAlerts]   = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState('');
+  const [catF,     setCatF]     = useState('ALL');
+  const [isAdd,    setIsAdd]    = useState(false);
+  const [isMov,    setIsMov]    = useState(false);
+  const [selP,     setSelP]     = useState(null);
+  const [saving,   setSaving]   = useState(false);
+  const [movType,  setMovType]  = useState('IN');
+  const qtyRef    = useRef();
+  const reasonRef = useRef();
 
-  // ✅ REFS — lecture directe au submit, aucun problème de focus
-  const qtyRef    = useRef(null);
-  const reasonRef = useRef(null);
+  const emptyForm = { name:'',sku:'',category:'CONSUMABLE',unit:'PIECE',unit_cost_mga:0,sale_price_mga:0,current_qty:0,min_qty:5 };
+  const [form, setForm] = useState(emptyForm);
 
-  const [productForm, setProductForm] = useState({
-    name:'', sku:'', category:'CONSUMABLE', unit:'PIECE',
-    unit_cost_mga:0, sale_price_mga:0, current_qty:0, min_qty:5
-  });
+  useEffect(() => { fetchAll(); }, []);
+  const fetchAll      = async () => { setLoading(true); await Promise.all([fetchProducts(), fetchAlerts()]); setLoading(false); };
+  const fetchProducts = async () => { try { const r=await axios.get(`${API}/inventory/products`,authH()); setProducts(r.data.products||r.data||[]); } catch {} };
+  const fetchAlerts   = async () => { try { const r=await axios.get(`${API}/inventory/alerts`,authH()); setAlerts(r.data.alerts||r.data||[]); } catch {} };
 
-  const fetchProducts = useCallback(async () => {
+  const handleAdd = async e => {
+    e.preventDefault(); setSaving(true);
     try {
-      const { data } = await axios.get(`${API}/inventory/products`, authH());
-      setProducts(data.products || []);
-    } catch(e) { console.error('fetchProducts:', e); }
-  }, []);
-
-  const fetchAlerts = useCallback(async () => {
-    try {
-      const { data } = await axios.get(`${API}/inventory/alerts`, authH());
-      setAlerts(data.alerts || []);
-    } catch(e) { console.error('fetchAlerts:', e); }
-  }, []);
-
-  useEffect(() => {
-    Promise.all([fetchProducts(), fetchAlerts()]).finally(() => setLoading(false));
-  }, [fetchProducts, fetchAlerts]);
-
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    if (!productForm.name || !productForm.sku) { toast.error('Nom et SKU requis'); return; }
-    setSaving(true);
-    try {
-      await axios.post(`${API}/inventory/products`, productForm, authH());
-      toast.success('Produit ajouté');
-      setIsAddOpen(false);
-      setProductForm({ name:'', sku:'', category:'CONSUMABLE', unit:'PIECE', unit_cost_mga:0, sale_price_mga:0, current_qty:0, min_qty:5 });
-      fetchProducts();
-    } catch(err) { toast.error(err.response?.data?.error || 'Erreur ajout'); }
+      await axios.post(`${API}/inventory/products`, { ...form, unit_cost_mga:parseFloat(form.unit_cost_mga)||0, sale_price_mga:parseFloat(form.sale_price_mga)||0, current_qty:parseInt(form.current_qty)||0, min_qty:parseInt(form.min_qty)||5 }, authH());
+      toast.success('Produit ajouté'); setIsAdd(false); setForm(emptyForm); fetchAll();
+    } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
     finally { setSaving(false); }
   };
 
-  const openMovement = (product) => {
-    setSelectedProduct(product);
-    setMovType('IN');
-    setIsMovementOpen(true);
-    // Reset les refs après ouverture
-    setTimeout(() => {
-      if (qtyRef.current)    qtyRef.current.value    = '';
-      if (reasonRef.current) reasonRef.current.value = '';
-    }, 50);
-  };
-
-  const closeMovement = () => {
-    setIsMovementOpen(false);
-    setTimeout(() => setSelectedProduct(null), 300);
-  };
-
-  // ✅ Lit depuis les REFS — jamais de problème de state
   const handleMovement = async () => {
-    const qty    = qtyRef.current?.value    || '';
-    const reason = reasonRef.current?.value || '';
-    const type   = movType;
-
-    if (!qty || qty === '0' || !reason.trim()) {
-      toast.error('Quantité et motif sont obligatoires');
-      return;
-    }
-
-    const qtyInt = parseInt(qty);
-    if (isNaN(qtyInt) || qtyInt < 1) { toast.error('Quantité invalide'); return; }
-
+    const qty = parseInt(qtyRef.current?.value);
+    const reason = reasonRef.current?.value?.trim();
+    if (!qty || qty<=0) { toast.error('Quantité requise'); return; }
+    if (!reason) { toast.error('Motif requis'); return; }
     setSaving(true);
     try {
-      const { data } = await axios.post(
-        `${API}/inventory/products/${selectedProduct.id}/movements`,
-        { type, quantity: qtyInt, reason: reason.trim() }
-      );
-      toast.success(`Mouvement enregistré — Nouveau stock: ${data.product?.current_qty ?? '?'} ${selectedProduct.unit}`);
-      closeMovement();
-      fetchProducts();
-      fetchAlerts();
-    } catch(err) {
-      toast.error(err.response?.data?.error || 'Erreur mouvement');
-    } finally { setSaving(false); }
+      await axios.post(`${API}/inventory/products/${selP.id}/movement`, { type:movType, quantity:qty, reason }, authH());
+      toast.success('Mouvement enregistré'); setIsMov(false); setSelP(null); fetchAll();
+    } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
+    finally { setSaving(false); }
   };
 
-  const formatCurrency = (v) => new Intl.NumberFormat('fr-MG').format(v || 0) + ' MGA';
-  const filteredProducts = products.filter(p =>
-    (p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.sku  || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const openMov = p => { setSelP(p); setMovType('IN'); setIsMov(true); };
+
+  const filtered = products.filter(p => {
+    const ms = catF==='ALL'||p.category===catF;
+    const mt = !search||(p.name||'').toLowerCase().includes(search.toLowerCase())||(p.sku||'').toLowerCase().includes(search.toLowerCase());
+    return ms&&mt;
+  });
+
+  const totalVal   = products.reduce((s,p)=>s+(p.current_qty||0)*(p.unit_cost_mga||0),0);
+  const alertCount = alerts.length || products.filter(p=>p.current_qty<=p.min_qty).length;
+  const lowStock   = products.filter(p=>p.current_qty<=p.min_qty);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Loader2 className="h-8 w-8 animate-spin" style={{ color:'#0D7A87' }} />
+    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:240 }}>
+      <div style={{ width:36,height:36,border:'4px solid #E2E8F0',borderTopColor:'#0D7A87',borderRadius:'50%',animation:'spin .8s linear infinite' }}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div style={{ maxWidth:1100,margin:'0 auto',paddingBottom:48 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.inv-row{animation:fadeUp .3s ease both}`}</style>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:0 }}>Inventaire</h1>
-          <p style={{ color:'#64748B', fontSize:14, marginTop:4 }}>{products.length} produits · {alerts.length} alertes stock</p>
+      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12 }}>
+        <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+          <div style={{ width:44,height:44,borderRadius:13,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
+            <Package size={22} color="#fff"/>
+          </div>
+          <div>
+            <h1 style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:22,color:'#0F172A',margin:0 }}>Inventaire</h1>
+            <p style={{ color:'#64748B',fontSize:13,margin:0 }}>{products.length} produits · {alertCount} alertes</p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => { fetchProducts(); fetchAlerts(); }}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Actualiser
-          </Button>
-          <Button onClick={() => setIsAddOpen(true)} style={{ background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none' }}>
-            <Plus className="h-4 w-4 mr-2" /> Nouveau produit
-          </Button>
+        <div style={{ display:'flex',gap:8 }}>
+          <button onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
+            <RefreshCw size={13}/>
+          </button>
+          <button onClick={()=>{setForm(emptyForm);setIsAdd(true);}}
+            style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
+            <Plus size={15}/>Nouveau produit
+          </button>
         </div>
       </div>
 
-      {/* Alertes */}
-      {alerts.length > 0 && (
-        <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:12, padding:16 }}>
-          <p style={{ fontWeight:700, color:'#C2410C', fontSize:14, margin:'0 0 8px', display:'flex', alignItems:'center', gap:6 }}>
-            <AlertTriangle size={16} /> {alerts.length} produit(s) en rupture / stock bas
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {alerts.slice(0,5).map(a => (
-              <Badge key={a.id} variant="outline" style={{ borderColor:'#FED7AA', color:'#C2410C', cursor:'pointer' }}
-                onClick={() => openMovement(a)}>
-                {a.name} ({a.current_qty} {a.unit})
-              </Badge>
-            ))}
+      {/* KPIs */}
+      <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:20 }}>
+        {[
+          {icon:'📦',l:'Total produits',  v:products.length,    c:'#0D7A87', bg:'#F0FDFE'},
+          {icon:'⚠️',l:'Stock bas',       v:lowStock.length,    c:'#EF4444', bg:'#FEE2E2'},
+          {icon:'💰',l:'Valeur stock',    v:fmt(totalVal),      c:'#10B981', bg:'#DCFCE7', raw:true},
+          {icon:'📊',l:'Catégories',      v:new Set(products.map(p=>p.category)).size, c:'#7C3AED', bg:'#EDE9FE'},
+        ].map((k,i)=>(
+          <div key={i} style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'14px 16px',display:'flex',alignItems:'center',gap:11 }}>
+            <div style={{ width:36,height:36,borderRadius:10,background:k.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18 }}>{k.icon}</div>
+            <div>
+              <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:k.raw?13:20,color:'#0F172A',lineHeight:1 }}>{k.v}</div>
+              <div style={{ fontSize:11,color:'#64748B',marginTop:2 }}>{k.l}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Alertes stock bas */}
+      {lowStock.length>0&&(
+        <div style={{ background:'#FFF7ED',border:'1px solid #FED7AA',borderRadius:14,padding:'14px 18px',marginBottom:18,display:'flex',gap:12,alignItems:'flex-start' }}>
+          <AlertTriangle size={18} color="#C2410C" style={{ flexShrink:0,marginTop:1 }}/>
+          <div style={{ flex:1 }}>
+            <div style={{ fontWeight:700,color:'#C2410C',fontSize:14,marginBottom:8 }}>
+              {lowStock.length} produit(s) en stock bas ou rupture
+            </div>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
+              {lowStock.map(p=>(
+                <button key={p.id} onClick={()=>openMov(p)}
+                  style={{ padding:'3px 11px',borderRadius:99,border:'1px solid #FED7AA',background:'#fff',color:'#C2410C',cursor:'pointer',fontSize:12,fontWeight:600 }}>
+                  {p.name} — {p.current_qty} {p.unit}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Recherche */}
-      <Input placeholder="Rechercher produit ou SKU..." value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)} className="max-w-sm" />
-
-      {/* Liste produits */}
-      <div className="rounded-xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead style={{ background:'#F8FAFC' }}>
-            <tr>
-              {['Produit','SKU','Catégorie','Stock','Min','Valeur','Actions'].map(h => (
-                <th key={h} className="px-4 py-3 text-left font-semibold text-gray-600">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProducts.map((p, i) => (
-              <tr key={p.id} style={{ background: i%2===0?'#fff':'#FAFAFA', borderTop:'1px solid #F1F5F9' }}>
-                <td className="px-4 py-3 font-medium" style={{ color:'#0F172A' }}>{p.name}</td>
-                <td className="px-4 py-3 text-gray-500 font-mono text-xs">{p.sku}</td>
-                <td className="px-4 py-3">
-                  <Badge variant="outline" style={{ fontSize:11 }}>{p.category}</Badge>
-                </td>
-                <td className="px-4 py-3">
-                  <span style={{ fontWeight:700, color: p.current_qty <= p.min_qty ? '#EF4444' : '#16A34A', fontSize:15 }}>
-                    {p.current_qty}
-                  </span>
-                  <span style={{ color:'#94A3B8', fontSize:12 }}> {p.unit}</span>
-                  {p.current_qty <= p.min_qty && <AlertTriangle size={14} style={{ color:'#EF4444', marginLeft:4, display:'inline' }} />}
-                </td>
-                <td className="px-4 py-3 text-gray-500">{p.min_qty} {p.unit}</td>
-                <td className="px-4 py-3 text-gray-600 text-xs">{formatCurrency(p.current_qty * p.unit_cost_mga)}</td>
-                <td className="px-4 py-3">
-                  <Button variant="outline" size="sm" onClick={() => openMovement(p)}>
-                    <ArrowUp className="h-3 w-3 mr-1" /><ArrowDown className="h-3 w-3 mr-1" /> Mouvement
-                  </Button>
-                </td>
-              </tr>
-            ))}
-            {filteredProducts.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                {searchTerm ? 'Aucun résultat' : 'Aucun produit — cliquez sur "Nouveau produit"'}
-              </td></tr>
-            )}
-          </tbody>
-        </table>
+      {/* Filtres */}
+      <div style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'11px 16px',marginBottom:14,display:'flex',gap:10,flexWrap:'wrap',alignItems:'center' }}>
+        <div style={{ display:'flex',alignItems:'center',gap:7,flex:1,minWidth:200 }}>
+          <Search size={13} color="#94A3B8"/>
+          <input placeholder="Rechercher produit, SKU..." value={search} onChange={e=>setSearch(e.target.value)}
+            style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1 }}/>
+          {search&&<button onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
+        </div>
+        <div style={{ display:'flex',gap:5 }}>
+          {['ALL',...Object.keys(CATS)].map(cat=>(
+            <button key={cat} onClick={()=>setCatF(cat)}
+              style={{ padding:'5px 11px',borderRadius:99,border:'none',cursor:'pointer',fontSize:11,fontWeight:600,background:catF===cat?'#0D7A87':'#F1F5F9',color:catF===cat?'#fff':'#64748B',transition:'all .15s' }}>
+              {cat==='ALL'?'Tous':CATS[cat]}
+            </button>
+          ))}
+        </div>
+        <span style={{ fontSize:11,color:'#94A3B8' }}>{filtered.length} produit(s)</span>
       </div>
 
+      {/* Table produits */}
+      {filtered.length===0?(
+        <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',padding:'52px',textAlign:'center' }}>
+          <Package size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
+          <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucun produit</p>
+          <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre premier produit'}</p>
+          <button onClick={()=>{setForm(emptyForm);setIsAdd(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+            Nouveau produit
+          </button>
+        </div>
+      ):(
+        <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',overflow:'hidden' }}>
+          <table style={{ width:'100%',borderCollapse:'collapse',fontSize:13 }}>
+            <thead>
+              <tr style={{ background:'#F8FAFC' }}>
+                {['Produit','SKU','Catégorie','Stock','Min.','Valeur stock','Actions'].map(h=>(
+                  <th key={h} style={{ padding:'10px 16px',textAlign:'left',fontWeight:600,fontSize:11,color:'#64748B',textTransform:'uppercase',letterSpacing:'.05em',borderBottom:'1px solid #E2E8F0' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p,idx)=>{
+                const isLow = p.current_qty<=p.min_qty;
+                const [cc,cbg] = CATCLR[p.category]||CATCLR.OTHER;
+                return(
+                  <tr key={p.id} className="inv-row" style={{ borderBottom:'1px solid #F8FAFC',transition:'background .12s',animationDelay:`${Math.min(idx,.15)*.03}s` }}
+                    onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                    <td style={{ padding:'12px 16px',fontWeight:700,color:'#0F172A' }}>{p.name}</td>
+                    <td style={{ padding:'12px 16px',fontFamily:'monospace',fontSize:11,color:'#64748B' }}>{p.sku}</td>
+                    <td style={{ padding:'12px 16px' }}>
+                      <span style={{ background:cbg,color:cc,borderRadius:99,padding:'2px 9px',fontSize:11,fontWeight:600 }}>{CATS[p.category]||p.category}</span>
+                    </td>
+                    <td style={{ padding:'12px 16px' }}>
+                      <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                        <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:16,color:isLow?'#EF4444':'#0F172A' }}>{p.current_qty}</span>
+                        <span style={{ fontSize:11,color:'#94A3B8' }}>{p.unit}</span>
+                        {isLow&&<AlertTriangle size={13} color="#EF4444"/>}
+                      </div>
+                    </td>
+                    <td style={{ padding:'12px 16px',color:'#64748B',fontSize:12 }}>{p.min_qty} {p.unit}</td>
+                    <td style={{ padding:'12px 16px',color:'#0D7A87',fontWeight:700,fontSize:12 }}>{fmt((p.current_qty||0)*(p.unit_cost_mga||0))}</td>
+                    <td style={{ padding:'12px 16px' }}>
+                      <button onClick={()=>openMov(p)}
+                        style={{ padding:'6px 12px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#0D7A87',display:'flex',alignItems:'center',gap:4,transition:'all .15s' }}
+                        onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
+                        onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
+                        <ArrowUp size={11}/><ArrowDown size={11}/>Mouvement
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* ── Modal Ajouter produit ── */}
-      <Modal open={isAddOpen} onClose={() => setIsAddOpen(false)} title="Nouveau produit" description="Remplissez les informations du produit">
-        <form onSubmit={handleAddProduct} className="space-y-3">
-          <div><Label>Nom *</Label><Input value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
-          <div><Label>SKU *</Label><Input value={productForm.sku} onChange={e => setProductForm({...productForm, sku: e.target.value})} /></div>
-          <div><Label>Catégorie</Label>
-            <select value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})} className={inputCls}>
-              <option value="CONSUMABLE">Consommable</option>
-              <option value="EQUIPMENT">Équipement</option>
-              <option value="MEDICATION">Médicament</option>
-            </select>
+      <Modal open={isAdd} onClose={()=>setIsAdd(false)} title="📦 Nouveau produit">
+        <form onSubmit={handleAdd} style={{ display:'flex',flexDirection:'column',gap:12 }}>
+          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
+            <div style={{ gridColumn:'1/-1' }}>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Nom *</label>
+              <input style={inp} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} onFocus={fi} onBlur={bi} required placeholder="Ex: Composite A2"/>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>SKU *</label>
+              <input style={inp} value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})} onFocus={fi} onBlur={bi} required placeholder="Ex: CPO-A2"/>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Unité</label>
+              <input style={inp} value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})} onFocus={fi} onBlur={bi} placeholder="PIECE, BOX, ML..."/>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Catégorie</label>
+              <select style={inp} value={form.category} onChange={e=>setForm({...form,category:e.target.value})} onFocus={fi} onBlur={bi}>
+                {Object.entries(CATS).map(([v,l])=><option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix achat (Ar)</label>
+              <input style={inp} type="number" min="0" value={form.unit_cost_mga} onChange={e=>setForm({...form,unit_cost_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix vente (Ar)</label>
+              <input style={inp} type="number" min="0" value={form.sale_price_mga} onChange={e=>setForm({...form,sale_price_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock initial</label>
+              <input style={inp} type="number" min="0" value={form.current_qty} onChange={e=>setForm({...form,current_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
+            </div>
+            <div>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock minimum</label>
+              <input style={inp} type="number" min="0" value={form.min_qty} onChange={e=>setForm({...form,min_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
+            </div>
           </div>
-          <div><Label>Unité</Label><Input value={productForm.unit} onChange={e => setProductForm({...productForm, unit: e.target.value})} placeholder="PIECE, BOX, ML..." /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Prix achat (MGA)</Label><Input type="number" value={productForm.unit_cost_mga} onChange={e => setProductForm({...productForm, unit_cost_mga: e.target.value})} /></div>
-            <div><Label>Prix vente (MGA)</Label><Input type="number" value={productForm.sale_price_mga} onChange={e => setProductForm({...productForm, sale_price_mga: e.target.value})} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Stock initial</Label><Input type="number" value={productForm.current_qty} onChange={e => setProductForm({...productForm, current_qty: e.target.value})} /></div>
-            <div><Label>Stock minimum</Label><Input type="number" value={productForm.min_qty} onChange={e => setProductForm({...productForm, min_qty: e.target.value})} /></div>
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>Annuler</Button>
-            <Button type="submit" disabled={saving} style={{ background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none' }}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+          <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>
+            <button type="button" onClick={()=>setIsAdd(false)} style={{ padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569' }}>Annuler</button>
+            <button type="submit" disabled={saving} style={{ padding:'9px 22px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,display:'flex',alignItems:'center',gap:7,opacity:saving?.7:1 }}>
+              {saving?<div style={{ width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .8s linear infinite' }}/>:<Plus size={14}/>}
               Ajouter
-            </Button>
+            </button>
           </div>
         </form>
       </Modal>
 
       {/* ── Modal Mouvement stock ── */}
-      <Modal
-        open={isMovementOpen}
-        onClose={closeMovement}
-        title={selectedProduct ? `Mouvement — ${selectedProduct.name}` : 'Mouvement stock'}
-        description={selectedProduct ? `Stock actuel : ${selectedProduct.current_qty} ${selectedProduct.unit}` : ''}
-      >
-        {selectedProduct && (
-          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-
-            <div style={{ background:'#F0FDFE', border:'1px solid #0D7A87', borderRadius:10, padding:'12px 16px' }}>
-              <p style={{ margin:0, fontSize:15, color:'#0D7A87', fontWeight:700 }}>
-                Stock actuel : {selectedProduct.current_qty} {selectedProduct.unit}
-              </p>
+      <Modal open={isMov} onClose={()=>{setIsMov(false);setSelP(null);}} title={selP?`📊 Mouvement — ${selP.name}`:'Mouvement stock'}>
+        {selP&&(
+          <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
+            <div style={{ background:'#F0FDFE',border:'1px solid #7DD3DA',borderRadius:12,padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
+              <span style={{ fontWeight:700,color:'#0D7A87',fontSize:14 }}>Stock actuel</span>
+              <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:22,color:'#0D7A87' }}>{selP.current_qty} <span style={{ fontSize:14 }}>{selP.unit}</span></span>
             </div>
-
-            {/* TYPE */}
             <div>
-              <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Type de mouvement *</label>
-              <select
-                value={movType}
-                onChange={e => setMovType(e.target.value)}
-                style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:14, background:'#fff', cursor:'pointer' }}
-              >
-                <option value="IN">📥 Entrée — Ajout de stock (+)</option>
-                <option value="OUT">📤 Sortie — Utilisation stock (-)</option>
-                <option value="ADJUST">🔧 Ajustement — Inventaire physique (=)</option>
-              </select>
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6 }}>Type *</label>
+              <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6 }}>
+                {[['IN','📥 Entrée','#10B981'],['OUT','📤 Sortie','#EF4444'],['ADJUST','🔧 Ajustement','#F59E0B']].map(([v,l,c])=>(
+                  <button key={v} type="button" onClick={()=>setMovType(v)}
+                    style={{ padding:'10px',borderRadius:10,border:`2px solid ${movType===v?c:'#E2E8F0'}`,background:movType===v?`${c}15`:'#fff',cursor:'pointer',fontSize:12,fontWeight:700,color:movType===v?c:'#64748B',transition:'all .15s' }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
-
-            {/* QUANTITÉ — input natif avec ref */}
             <div>
-              <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>
-                Quantité * {movType === 'ADJUST' ? '(nouveau total)' : ''}
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>
+                Quantité * {movType==='ADJUST'?'(nouveau total)':''}
               </label>
-              <input
-                ref={qtyRef}
-                type="number"
-                min="1"
-                defaultValue=""
-                placeholder="Ex: 10"
-                style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:16, fontWeight:600, outline:'none', boxSizing:'border-box', color:'#0F172A' }}
-                onFocus={e => e.target.style.borderColor = '#0D7A87'}
-                onBlur={e => e.target.style.borderColor = '#E2E8F0'}
-              />
+              <input ref={qtyRef} type="number" min="1" placeholder="Ex: 10" style={{ ...inp,fontSize:18,fontWeight:700 }} onFocus={fi} onBlur={bi}/>
             </div>
-
-            {/* MOTIF — input natif avec ref */}
             <div>
-              <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Motif *</label>
-              <input
-                ref={reasonRef}
-                type="text"
-                defaultValue=""
-                placeholder="Ex: Réception commande, Utilisation cabinet..."
-                style={{ width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:14, outline:'none', boxSizing:'border-box', color:'#0F172A' }}
-                onFocus={e => e.target.style.borderColor = '#0D7A87'}
-                onBlur={e => e.target.style.borderColor = '#E2E8F0'}
-              />
+              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Motif *</label>
+              <input ref={reasonRef} type="text" placeholder="Ex: Réception commande, Utilisation cabinet..." style={inp} onFocus={fi} onBlur={bi}/>
             </div>
-
-            {/* Boutons */}
-            <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
-              <Button variant="outline" onClick={closeMovement}>Annuler</Button>
-              <Button
-                onClick={handleMovement}
-                disabled={saving}
-                style={{ background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', minWidth:130 }}
-              >
-                {saving
-                  ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  : movType === 'IN'
-                    ? <ArrowUp className="h-4 w-4 mr-2" />
-                    : <ArrowDown className="h-4 w-4 mr-2" />
-                }
-                {saving ? 'Enregistrement...' : 'Enregistrer'}
-              </Button>
+            <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>
+              <button onClick={()=>{setIsMov(false);setSelP(null);}} style={{ padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569' }}>Annuler</button>
+              <button onClick={handleMovement} disabled={saving}
+                style={{ padding:'9px 22px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,display:'flex',alignItems:'center',gap:7,opacity:saving?.7:1 }}>
+                {saving?<div style={{ width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .8s linear infinite' }}/>:
+                  movType==='IN'?<ArrowUp size={14}/>:movType==='OUT'?<ArrowDown size={14}/>:null}
+                Enregistrer
+              </button>
             </div>
-
           </div>
         )}
       </Modal>
-
     </div>
   );
 };
