@@ -166,7 +166,7 @@ const MessagingManagement = () => {
       fetchLogs();
     } catch (e) {
       // Fallback : créer dans la queue et dispatcher
-      toast.info('Message mis en file d'attente');
+      toast.info("Message mis en file d'attente");
       setSendModal(false);
     } finally { setSending(false); }
   };
