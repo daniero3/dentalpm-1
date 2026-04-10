@@ -31,7 +31,7 @@ const LabOrder = sequelize.define('lab_orders', {
   },
   lab_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'labs',
       key: 'id'
