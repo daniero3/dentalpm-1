@@ -84,7 +84,7 @@ const MessagingManagement = () => {
   const [editTpl,   setEditTpl]   = useState(null);
   const [dispatching,setDisp]     = useState(false);
   const [sendModal,  setSendModal] = useState(false);
-  const [sendForm,   setSendForm]  = useState({ phone:'', message:'', patient_name:'' });
+  const [sendForm,   setSendForm]  = useState({ phone: '', message: '', patient_name: '' });
   const [sending,    setSending]   = useState(false);
   const [tplForm,   setTplForm]   = useState({ key:'APPT_REMINDER_24H', channel:'SMS', text:'' });
 
@@ -149,26 +149,31 @@ const MessagingManagement = () => {
   const copyText = text => { navigator.clipboard.writeText(text); toast.success('Copié !'); };
 
   const handleSendManual = async () => {
-    if (!sendForm.phone.trim() || !sendForm.message.trim()) { toast.error('Numéro et message requis'); return; }
+    if (!sendForm.phone.trim() || !sendForm.message.trim()) {
+      toast.error('Numero et message requis');
+      return;
+    }
     setSending(true);
     try {
-      // Créer directement un message dans la queue et le dispatcher
-      const { MessageQueue } = window; // fallback
-      // Utiliser l'endpoint run-dispatch avec un message temporaire
-      await axios.post(`${API}/messaging/send-direct`, {
-        to: sendForm.phone,
-        text: sendForm.message.replace('{patient_name}', sendForm.patient_name || 'Patient'),
-        channel: 'SMS'
-      }, authH());
-      toast.success(`✅ Message envoyé à ${sendForm.phone}`);
+      await axios.post(
+        API + '/messaging/send-direct',
+        {
+          to: sendForm.phone,
+          text: sendForm.message,
+          channel: 'SMS'
+        },
+        authH()
+      );
+      toast.success('Message envoye');
       setSendModal(false);
-      setSendForm({ phone:'', message:'', patient_name:'' });
+      setSendForm({ phone: '', message: '', patient_name: '' });
       fetchLogs();
-    } catch (e) {
-      // Fallback : créer dans la queue et dispatcher
-      toast.info("Message mis en file d'attente");
+    } catch (err) {
+      toast.info('Erreur envoi');
       setSendModal(false);
-    } finally { setSending(false); }
+    } finally {
+      setSending(false);
+    }
   };
 
   const openEdit = tpl => {
