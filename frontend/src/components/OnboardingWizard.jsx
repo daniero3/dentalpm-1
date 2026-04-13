@@ -22,6 +22,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const steps = [
   { id: 1, title: 'Informations Clinique', icon: Building2 },
@@ -65,7 +66,7 @@ const OnboardingWizard = () => {
 
   const fetchStatus = async () => {
     try {
-      const response = await axios.get(`${API}/onboarding/status`);
+      const response = await axios.get(`${API}/onboarding/status`, authH());
       if (response.data.completed) {
         navigate('/');
       } else {
@@ -104,7 +105,7 @@ const OnboardingWizard = () => {
     }
     setLoading(true);
     try {
-      await axios.post(`${API}/onboarding/step2`, { logo_url: logoUrl });
+      await axios.post(`${API}/onboarding/step2`, authH());
       toast.success('Logo enregistré');
       setCurrentStep(3);
     } catch (error) {
@@ -117,10 +118,7 @@ const OnboardingWizard = () => {
   const handleStep3 = async () => {
     setLoading(true);
     try {
-      await axios.post(`${API}/onboarding/step3`, {
-        mobile_money_merchant: mobileMoneyMerchant,
-        mobile_money_number: mobileMoneyNumber
-      });
+      await axios.post(`${API}/onboarding/step3`, authH());
       toast.success('Configuration Mobile Money enregistrée');
       setCurrentStep(4);
     } catch (error) {
@@ -137,7 +135,7 @@ const OnboardingWizard = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/onboarding/step4`, { csv_data: csvData });
+      const response = await axios.post(`${API}/onboarding/step4`, authH());
       setImportResult(response.data);
       toast.success(`${response.data.imported} actes importés`);
       setCurrentStep(5);
@@ -169,7 +167,7 @@ const OnboardingWizard = () => {
   const handleComplete = async () => {
     setCompleting(true);
     try {
-      const response = await axios.post(`${API}/onboarding/complete`);
+      const response = await axios.post(`${API}/onboarding/complete`, authH());
       toast.success(response.data.message);
       setTimeout(() => navigate('/'), 1500);
     } catch (error) {
