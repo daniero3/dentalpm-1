@@ -49,8 +49,8 @@ const Modal = ({ open, onClose, title, children, maxW=680 }) => {
   if (!open) return null;
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()}
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.6)', overflowY:'auto', padding:'40px 16px 32px' }}>
-      <div style={{ background:'#fff', borderRadius:20, padding:'26px 28px', width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 32px 80px rgba(15,23,42,.25)', border:'1px solid #E2E8F0', position:'relative' }}>
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.6)', overflowY:'auto', padding:'24px 16px 24px' }}>
+      <div style={{ background:'#fff', borderRadius:20, padding:'24px 30px', width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 32px 80px rgba(15,23,42,.25)', border:'1px solid #E2E8F0', position:'relative' }}>
         <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', color:'#64748B' }}>
           <X size={15}/>
         </button>
@@ -536,13 +536,13 @@ const PatientPrescriptions = () => {
       </Card>
 
       {/* Modal Creer */}
-      <Modal open={isCreateOpen} onClose={() => { setIsCreateOpen(false); setForm(emptyForm); }} title="Nouvelle ordonnance" maxW={700}>
+      <Modal open={isCreateOpen} onClose={() => { setIsCreateOpen(false); setForm(emptyForm); }} title="Nouvelle ordonnance" maxW={900}>
         <PrescriptionForm formData={form} setFormData={setForm} saving={saving} onSubmit={handleCreate}
           submitLabel="Creer l'ordonnance" onCancel={() => { setIsCreateOpen(false); setForm(emptyForm); }} suggestions={suggestions}/>
       </Modal>
 
       {/* Modal Modifier */}
-      <Modal open={isEditOpen} onClose={() => { setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); }} title={`Modifier ${selPresc?.number || ''}`} maxW={700}>
+      <Modal open={isEditOpen} onClose={() => { setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); }} title={`Modifier ${selPresc?.number || ''}`} maxW={900}>
         <PrescriptionForm formData={form} setFormData={setForm} saving={saving} onSubmit={handleUpdate}
           submitLabel="Enregistrer" onCancel={() => { setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); }} suggestions={suggestions}/>
       </Modal>
