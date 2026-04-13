@@ -109,7 +109,7 @@ const LicensingGuard = ({ children }) => {
             <span style={{ fontSize: 16 }}>{daysLeft <= 2 ? '🔴' : '⚠️'}</span>
             <span style={{ fontWeight: 700, color: daysLeft <= 2 ? '#991B1B' : '#C2410C' }}>
               {daysLeft === 0
-                ? 'Votre abonnement expire aujourd'hui !'
+                ? `Votre abonnement expire aujourd'hui !`
                 : `Votre abonnement expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`}
             </span>
             <span style={{ color: daysLeft <= 2 ? '#B91C1C' : '#92400E' }}>
@@ -152,7 +152,7 @@ const LicensingGuard = ({ children }) => {
             <span style={{ fontSize: 16 }}>{daysLeft <= 2 ? '🔴' : '⚠️'}</span>
             <span style={{ fontWeight: 700, color: daysLeft <= 2 ? '#991B1B' : '#C2410C' }}>
               {daysLeft === 0
-                ? 'Votre abonnement expire aujourd'hui !'
+                ? `Votre abonnement expire aujourd'hui !`
                 : `Votre abonnement expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`}
             </span>
             <span style={{ color: daysLeft <= 2 ? '#B91C1C' : '#92400E' }}>
