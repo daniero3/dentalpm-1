@@ -20,6 +20,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const BillingRenew = () => {
   const [billingStatus, setBillingStatus] = useState(null);
@@ -39,8 +40,8 @@ const BillingRenew = () => {
     setLoading(true);
     try {
       const [statusRes, paymentsRes] = await Promise.all([
-        axios.get(`${API}/billing/status`),
-        axios.get(`${API}/billing/payments`)
+        axios.get(`${API}/billing/status`, authH()),
+        axios.get(`${API}/billing/payments`, authH())
       ]);
       setBillingStatus(statusRes.data);
       setPayments(paymentsRes.data.payments || []);
@@ -58,7 +59,7 @@ const BillingRenew = () => {
         payment_method: paymentMethod,
         months,
         reference
-      });
+      }, authH());
       toast.success('Demande de paiement soumise. En attente de validation.');
       setReference('');
       fetchData();
