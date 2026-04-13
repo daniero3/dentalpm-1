@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 const API = process.env.REACT_APP_API_URL || 'https://dentalpm-1-production.up.railway.app/api';
 
 const fmt = (n) => new Intl.NumberFormat('fr-MG').format(n || 0);
+const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const PLAN_COLORS = {
   ESSENTIAL: { bg:'#DBEAFE', text:'#1D4ED8', border:'#93C5FD' },
@@ -45,7 +46,7 @@ export default function SuperAdminDashboard() {
 
   const fetchRevenue = useCallback(async () => {
     try {
-      const { data: d } = await axios.get(`${API}/admin/revenue`);
+      const { data: d } = await axios.get(`${API}/admin/revenue`, authH());
       setData(d);
     } catch(e) {
       toast.error('Erreur chargement dashboard');
@@ -57,7 +58,7 @@ export default function SuperAdminDashboard() {
   const approvePayment = async (id, plan) => {
     setProcessing(id);
     try {
-      await axios.patch(`${API}/admin/payment-requests/${id}/approve`, { plan });
+      await axios.patch(`${API}/admin/payment-requests/${id}/approve`,, { plan });
       toast.success('✅ Paiement approuvé — abonnement activé !');
       fetchRevenue();
     } catch(e) { toast.error('Erreur approbation'); }
@@ -67,7 +68,7 @@ export default function SuperAdminDashboard() {
   const rejectPayment = async (id) => {
     setProcessing(id);
     try {
-      await axios.patch(`${API}/admin/payment-requests/${id}/reject`, { reason: 'Paiement non confirmé' });
+      await axios.patch(`${API}/admin/payment-requests/${id}/reject`,, { reason: 'Paiement non confirmé' });
       toast.success('Paiement rejeté');
       fetchRevenue();
     } catch(e) { toast.error('Erreur rejet'); }
@@ -130,7 +131,7 @@ export default function SuperAdminDashboard() {
                 <span style={{ fontSize:12, color:'#64748B' }}>cabinet{count > 1 ? 's' : ''}</span>
                 {plan !== 'TRIAL' && (
                   <span style={{ fontSize:11, color:'#0D7A87', fontWeight:600 }}>
-                    {fmt({ ESSENTIAL:150000, PRO:300000, GROUP:500000 }[plan] * count)} Ar/mois
+                    {fmt({ ESSENTIAL:149000, PRO:199000, GROUP:299000 }[plan] * count)} Ar/mois
                   </span>
                 )}
               </div>
