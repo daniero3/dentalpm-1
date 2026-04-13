@@ -58,7 +58,7 @@ export default function SuperAdminDashboard() {
   const approvePayment = async (id, plan) => {
     setProcessing(id);
     try {
-      await axios.patch(`${API}/admin/payment-requests/${id}/approve`,, { plan });
+      await axios.patch(`${API}/admin/payment-requests/${id}/approve`, { plan }, authH());
       toast.success('✅ Paiement approuvé — abonnement activé !');
       fetchRevenue();
     } catch(e) { toast.error('Erreur approbation'); }
@@ -68,7 +68,7 @@ export default function SuperAdminDashboard() {
   const rejectPayment = async (id) => {
     setProcessing(id);
     try {
-      await axios.patch(`${API}/admin/payment-requests/${id}/reject`,, { reason: 'Paiement non confirmé' });
+      await axios.patch(`${API}/admin/payment-requests/${id}/reject`, { reason: 'Paiement non confirme' }, authH());
       toast.success('Paiement rejeté');
       fetchRevenue();
     } catch(e) { toast.error('Erreur rejet'); }
