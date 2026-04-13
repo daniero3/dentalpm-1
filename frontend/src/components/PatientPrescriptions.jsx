@@ -1,83 +1,85 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'sonner';
 import {
-  FileText, Plus, Download, ArrowLeft, User, Loader2,
-  Send, XCircle, Trash2, Edit2, CheckCircle, X, Printer,
-  Search, Pill, ChevronRight, Stethoscope, Calendar
+  X, Plus, Trash2, Search, ChevronRight, Stethoscope,
+  Pill, Calendar, CheckCircle, Loader2, AlertCircle, Sparkles
 } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API   = `${BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const T      = '#0D7A87';
+const T_DARK = '#0A5F6A';
+const T_LIGHT = '#E0F7FA';
 
-const STATUS_COLORS = { DRAFT:'bg-yellow-100 text-yellow-800', ISSUED:'bg-green-100 text-green-800', CANCELLED:'bg-red-100 text-red-800' };
-const STATUS_LABELS = { DRAFT:'Brouillon', ISSUED:'Emise', CANCELLED:'Annulee' };
-const fdate = d => new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+const POSOLOGY = ['1×/jour','2×/jour','3×/jour','Matin & soir','Matin, midi, soir','Avant repas','Après repas'];
+const DURATION = ['3 j','5 j','7 j','10 j','14 j','21 j','1 mois','3 mois'];
+const DOSAGES  = ['100mg','250mg','500mg','1g','5ml','10ml','25mg','50mg'];
 
-const POSOLOGY = ['1 fois/jour', '2 fois/jour', '3 fois/jour', 'Matin et soir', 'Matin, midi, soir', 'Avant les repas', 'Apres les repas'];
-const DURATION = ['3 jours', '5 jours', '7 jours', '10 jours', '14 jours', '21 jours', '1 mois', '3 mois'];
-const DOSAGES  = ['100mg', '250mg', '500mg', '1000mg', '5ml', '10ml', '25mg', '50mg'];
+const MOCK_SUGGESTIONS = [
+  { name:'Amoxicilline', dosage:'500mg', posology:'3×/jour', duration:'7 j', count:12 },
+  { name:'Ibuprofène', dosage:'400mg', posology:'3×/jour', duration:'5 j', count:8 },
+  { name:'Paracétamol', dosage:'1g', posology:'3×/jour', duration:'5 j', count:15 },
+  { name:'Métronidazole', dosage:'500mg', posology:'3×/jour', duration:'7 j', count:6 },
+  { name:'Clindamycine', dosage:'300mg', posology:'3×/jour', duration:'7 j', count:4 },
+  { name:'Diclofénac', dosage:'50mg', posology:'2×/jour', duration:'5 j', count:5 },
+  { name:'Codéine phosphate', dosage:'30mg', posology:'3×/jour', duration:'3 j', count:3 },
+];
 
-const T = '#0D7A87';
+const emptyItem = () => ({ medication:'', dosage:'', posology:'', duration:'' });
 
-const MedInput = ({ value, onChange, suggestions, onPick }) => {
+/* ── Autocomplete ─────────────────────────── */
+const MedSearch = ({ value, onChange, suggestions, onPick }) => {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState([]);
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!value.trim()) { setList(suggestions.slice(0,5)); return; }
-    const q = value.toLowerCase();
-    setList(suggestions.filter(s => s.name.toLowerCase().includes(q)).slice(0,7));
+    const q = value.toLowerCase().trim();
+    setList(q ? suggestions.filter(s => s.name.toLowerCase().includes(q)).slice(0,6)
+               : suggestions.slice(0,5));
   }, [value, suggestions]);
 
   useEffect(() => {
-    const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
+    const fn = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
   }, []);
 
   return (
     <div ref={ref} style={{ position:'relative' }}>
       <div style={{ position:'relative' }}>
         <Search size={13} style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)', color:'#94A3B8', pointerEvents:'none' }}/>
-        <input value={value}
-          onChange={e => { onChange(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          placeholder="Nom du medicament"
+        <input
+          value={value}
           autoComplete="off"
-          style={{ width:'100%', padding:'10px 32px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:14, fontWeight:500, fontFamily:'inherit', background:'#fff', outline:'none', boxSizing:'border-box', transition:'border-color .15s' }}
-          onFocus={e => { setOpen(true); e.target.style.borderColor=T; }}
-          onBlur={e => e.target.style.borderColor='#E2E8F0'}
+          placeholder="Nom du médicament…"
+          onChange={e => { onChange(e.target.value); setOpen(true); }}
+          onFocus={e => { setOpen(true); e.target.style.borderColor = T; e.target.style.boxShadow = `0 0 0 3px ${T}18`; }}
+          onBlur={e  => { e.target.style.borderColor = '#E2E8F0'; e.target.style.boxShadow = 'none'; }}
+          style={{ width:'100%', padding:'9px 32px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:14, fontWeight:600, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'all .15s', background:'#fff' }}
         />
         {value && (
-          <button type="button" onMouseDown={() => onChange('')}
-            style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8', display:'flex', padding:2 }}>
+          <button type="button" onMouseDown={() => onChange('')} style={{ position:'absolute', right:9, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8', display:'flex', padding:3 }}>
             <X size={12}/>
           </button>
         )}
       </div>
+
       {open && list.length > 0 && (
-        <div style={{ position:'absolute', top:'calc(100% + 3px)', left:0, right:0, zIndex:500, background:'#fff', border:`1.5px solid ${T}`, borderRadius:11, boxShadow:'0 8px 24px rgba(0,0,0,.14)', overflow:'hidden' }}>
-          <div style={{ padding:'5px 12px', background:'#F0FDFE', fontSize:10, fontWeight:700, color:T, textTransform:'uppercase', letterSpacing:'.08em' }}>
-            {value ? 'Suggestions' : 'Recemment utilises'}
+        <div style={{ position:'absolute', top:'calc(100% + 4px)', left:0, right:0, zIndex:600, background:'#fff', border:`1.5px solid ${T}`, borderRadius:12, boxShadow:`0 12px 32px rgba(13,122,135,.16)`, overflow:'hidden' }}>
+          <div style={{ padding:'5px 12px 4px', background:'#F0FDFE', fontSize:10, fontWeight:700, color:T, textTransform:'uppercase', letterSpacing:'.08em' }}>
+            {value.trim() ? 'Résultats' : 'Fréquents'}
           </div>
           {list.map((m, i) => (
-            <div key={i} onMouseDown={() => { onPick(m); setOpen(false); }}
-              style={{ padding:'9px 14px', cursor:'pointer', borderBottom:i<list.length-1?'1px solid #F8FAFC':'none', transition:'background .1s' }}
+            <div key={i}
+              onMouseDown={() => { onPick(m); setOpen(false); }}
+              style={{ padding:'9px 14px', cursor:'pointer', borderBottom: i < list.length-1 ? '1px solid #F8FAFC' : 'none', transition:'background .1s' }}
               onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
               onMouseOut={e=>e.currentTarget.style.background='transparent'}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{m.name}</span>
-                {m.count>0 && <span style={{ fontSize:10, color:'#94A3B8', background:'#F1F5F9', padding:'1px 6px', borderRadius:99 }}>x{m.count}</span>}
+                {m.count > 0 && <span style={{ fontSize:10, color:'#94A3B8', background:'#F1F5F9', padding:'1px 7px', borderRadius:99 }}>×{m.count}</span>}
               </div>
-              {(m.dosage||m.posology||m.duration) && (
+              {(m.dosage || m.posology || m.duration) && (
                 <div style={{ fontSize:11, color:'#64748B', marginTop:2, display:'flex', gap:8 }}>
-                  {m.dosage   && <span style={{ color:T }}>{m.dosage}</span>}
+                  {m.dosage   && <span style={{ color:T, fontWeight:600 }}>{m.dosage}</span>}
                   {m.posology && <span>{m.posology}</span>}
                   {m.duration && <span>{m.duration}</span>}
                 </div>
@@ -90,259 +92,406 @@ const MedInput = ({ value, onChange, suggestions, onPick }) => {
   );
 };
 
-const Chips = ({ items, value, onSelect }) => (
-  <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginTop:6 }}>
-    {items.map(p => {
-      const sel = value === p;
-      return (
-        <button key={p} type="button" onMouseDown={() => onSelect(p)}
-          style={{ padding:'3px 9px', borderRadius:99, border:`1px solid ${sel?T:'#E2E8F0'}`, background:sel?T:'#F8FAFC', color:sel?'#fff':'#475569', fontSize:11, fontWeight:600, cursor:'pointer', transition:'all .12s', whiteSpace:'nowrap' }}>
-          {p}
-        </button>
-      );
-    })}
-  </div>
+/* ── Chips ─────────────────────────────────── */
+const Chip = ({ label, selected, onSelect }) => (
+  <button type="button" onMouseDown={() => onSelect(label)}
+    style={{ padding:'3px 10px', borderRadius:99, border:`1.5px solid ${selected ? T : '#E2E8F0'}`, background:selected ? T : '#fff', color:selected ? '#fff' : '#64748B', fontSize:11, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', transition:'all .12s', lineHeight:'18px' }}>
+    {label}
+  </button>
 );
 
-const MedCard = ({ item, index, total, onUpdate, onRemove, suggestions, isActive, onActivate }) => (
-  <div onMouseDown={onActivate}
-    style={{ border:`2px solid ${isActive?T:'#E2E8F0'}`, borderRadius:13, overflow:'hidden', marginBottom:8, background:'#fff', transition:'all .15s', boxShadow:isActive?`0 0 0 3px ${T}20`:'none', cursor:'pointer' }}>
-    <div style={{ background:isActive?'#F0FDFE':'#F8FAFC', padding:'8px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:`1px solid ${isActive?T+'30':'#F1F5F9'}` }}>
-      <div style={{ display:'flex', alignItems:'center', gap:8, minWidth:0, flex:1 }}>
-        <div style={{ width:20, height:20, borderRadius:'50%', background:isActive?T:'#94A3B8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background .15s' }}>
-          <span style={{ fontSize:10, fontWeight:800, color:'#fff' }}>{index+1}</span>
+/* ── MedCard (item row) ─────────────────────── */
+const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove, suggestions }) => {
+  const filled = item.medication.trim();
+  const complete = filled && item.dosage && item.posology && item.duration;
+
+  return (
+    <div
+      onMouseDown={onActivate}
+      style={{
+        border:`2px solid ${isActive ? T : complete ? `${T}45` : '#E2E8F0'}`,
+        borderRadius:13,
+        marginBottom:8,
+        background: isActive ? '#fff' : complete ? '#FAFFFE' : '#FAFAFA',
+        transition:'all .18s',
+        boxShadow: isActive ? `0 4px 20px ${T}20` : 'none',
+        overflow:'hidden',
+        cursor:'pointer'
+      }}>
+
+      {/* Header strip */}
+      <div style={{
+        padding:'10px 14px',
+        background: isActive ? '#F0FDFE' : complete ? '#F0FDFE80' : '#F8FAFC',
+        borderBottom: isActive ? `1px solid ${T}30` : '1px solid #F1F5F9',
+        display:'flex', alignItems:'center', justifyContent:'space-between'
+      }}>
+        <div style={{ display:'flex', alignItems:'center', gap:9, minWidth:0, flex:1 }}>
+          <div style={{ width:22, height:22, borderRadius:'50%', background: complete ? T : isActive ? T : '#CBD5E1', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background .18s' }}>
+            {complete
+              ? <CheckCircle size={13} color="#fff"/>
+              : <span style={{ fontSize:10, fontWeight:800, color:'#fff' }}>{index+1}</span>}
+          </div>
+          <span style={{ fontSize:13, fontWeight:700, color: isActive ? T : filled ? '#1E293B' : '#94A3B8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>
+            {filled ? item.medication : `Médicament ${index+1}`}
+          </span>
+          {filled && !isActive && (
+            <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+              {item.dosage   && <span style={{ fontSize:10, background:'#E0F2FE', color:'#0369A1', padding:'2px 7px', borderRadius:99, fontWeight:600 }}>{item.dosage}</span>}
+              {item.duration && <span style={{ fontSize:10, background:'#DCFCE7', color:'#166534', padding:'2px 7px', borderRadius:99, fontWeight:600 }}>{item.duration}</span>}
+            </div>
+          )}
         </div>
-        <span style={{ fontSize:13, fontWeight:700, color:isActive?T:'#64748B', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, transition:'color .15s' }}>
-          {item.medication || `Medicament ${index+1}`}
-        </span>
-        {item.medication && !isActive && (
-          <div style={{ display:'flex', gap:4, flexShrink:0 }}>
-            {item.dosage   && <span style={{ fontSize:10, background:'#E0F2FE', color:'#0369A1', padding:'1px 6px', borderRadius:99, fontWeight:600 }}>{item.dosage}</span>}
-            {item.duration && <span style={{ fontSize:10, background:'#F0FDF4', color:'#166534', padding:'1px 6px', borderRadius:99, fontWeight:600 }}>{item.duration}</span>}
+        {total > 1 && (
+          <button type="button" onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
+            style={{ background:'none', border:'none', cursor:'pointer', color:'#CBD5E1', display:'flex', alignItems:'center', padding:'3px 6px', borderRadius:6, transition:'all .15s', flexShrink:0 }}
+            onMouseOver={e=>{e.currentTarget.style.background='#FEE2E2';e.currentTarget.style.color='#EF4444';}}
+            onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='#CBD5E1';}}>
+            <Trash2 size={12}/>
+          </button>
+        )}
+      </div>
+
+      {/* Expanded form */}
+      {isActive && (
+        <div style={{ padding:'14px 16px' }}>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:6 }}>Médicament *</label>
+            <MedSearch
+              value={item.medication}
+              onChange={v => onUpdate(index,'medication',v)}
+              suggestions={suggestions}
+              onPick={m => {
+                onUpdate(index,'medication',m.name);
+                if(m.dosage)   onUpdate(index,'dosage',m.dosage);
+                if(m.posology) onUpdate(index,'posology',m.posology);
+                if(m.duration) onUpdate(index,'duration',m.duration);
+              }}
+            />
+          </div>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
+            {[
+              { field:'dosage',   label:'Dosage',    chips:DOSAGES,  placeholder:'500mg' },
+              { field:'posology', label:'Posologie', chips:POSOLOGY, placeholder:'2×/jour' },
+              { field:'duration', label:'Durée',     chips:DURATION, placeholder:'7 j' },
+            ].map(({ field, label, chips, placeholder }) => (
+              <div key={field}>
+                <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>{label}</label>
+                <input
+                  value={item[field]} placeholder={placeholder}
+                  onChange={e => onUpdate(index, field, e.target.value)}
+                  onFocus={e => { e.target.style.borderColor = T; e.target.style.boxShadow = `0 0 0 3px ${T}18`; }}
+                  onBlur={e  => { e.target.style.borderColor = '#E2E8F0'; e.target.style.boxShadow = 'none'; }}
+                  style={{ width:'100%', padding:'8px 10px', border:'1.5px solid #E2E8F0', borderRadius:9, fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'all .15s' }}
+                />
+                <div style={{ display:'flex', flexWrap:'wrap', gap:3, marginTop:6 }}>
+                  {chips.map(c => <Chip key={c} label={c} selected={item[field]===c} onSelect={v => onUpdate(index, field, v)}/>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── Prescription Preview ────────────────── */
+const PrescriptionPreview = ({ items, notes, patient }) => {
+  const filled = items.filter(i => i.medication.trim());
+  const today  = new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+
+  return (
+    <div style={{ background:'#fff', borderRadius:12, overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.10)', fontFamily:'Georgia, serif', border:'1px solid #E2E8F0' }}>
+
+      {/* En-tête ordonnance */}
+      <div style={{ background:`linear-gradient(135deg,${T},${T_DARK})`, padding:'16px 20px', position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:-18, right:-18, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,.06)' }}/>
+        <div style={{ position:'absolute', bottom:-28, right:20, width:60, height:60, borderRadius:'50%', background:'rgba(255,255,255,.04)' }}/>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', position:'relative' }}>
+          <div>
+            <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:800, fontSize:16, color:'#fff', letterSpacing:1.2 }}>ORDONNANCE</div>
+            <div style={{ fontSize:10, color:'rgba(255,255,255,.65)', marginTop:3 }}>Cabinet Dentaire · DentalPM Madagascar</div>
+          </div>
+          <div style={{ textAlign:'right', fontSize:10, color:'rgba(255,255,255,.70)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:4, justifyContent:'flex-end' }}>
+              <Calendar size={9}/> {today}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Patient */}
+      <div style={{ padding:'10px 18px', background:'#F8FAFC', borderBottom:'1px solid #F1F5F9', display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ width:30, height:30, borderRadius:'50%', background:`${T}22`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          <span style={{ fontSize:11, fontWeight:800, color:T, fontFamily:'sans-serif' }}>
+            {patient ? `${patient.first_name[0]}${patient.last_name[0]}` : 'P'}
+          </span>
+        </div>
+        <div>
+          <div style={{ fontSize:12, fontWeight:700, color:'#0F172A', fontFamily:'sans-serif' }}>
+            {patient ? `${patient.first_name} ${patient.last_name}` : 'Patient'}
+          </div>
+          {patient?.date_of_birth && (
+            <div style={{ fontSize:10, color:'#94A3B8', fontFamily:'sans-serif' }}>
+              {Math.floor((Date.now()-new Date(patient.date_of_birth))/31557600000)} ans
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Corps */}
+      <div style={{ padding:'14px 18px', minHeight:180 }}>
+        {filled.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'32px 0', color:'#CBD5E1' }}>
+            <Pill size={28} style={{ margin:'0 auto 8px', display:'block', opacity:.35 }}/>
+            <p style={{ fontSize:11, margin:0, fontFamily:'sans-serif', color:'#94A3B8' }}>Saisissez un médicament<br/>pour voir l'aperçu</p>
+          </div>
+        ) : filled.map((item, i) => (
+          <div key={i} style={{ marginBottom:12, paddingBottom:12, borderBottom: i<filled.length-1 ? '1px dashed #E2E8F0' : 'none' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:4 }}>
+              <div style={{ width:18, height:18, borderRadius:'50%', background:T, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 }}>
+                <span style={{ fontSize:9, fontWeight:700, color:'#fff', fontFamily:'sans-serif' }}>{i+1}</span>
+              </div>
+              <div style={{ fontWeight:700, fontSize:13, color:'#0F172A', fontFamily:'sans-serif', lineHeight:1.4 }}>{item.medication}</div>
+            </div>
+            <div style={{ paddingLeft:26, display:'flex', flexDirection:'column', gap:2 }}>
+              {item.dosage   && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:5, fontFamily:'sans-serif' }}><ChevronRight size={9} color={T}/><span><strong>Dosage :</strong> {item.dosage}</span></div>}
+              {item.posology && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:5, fontFamily:'sans-serif' }}><ChevronRight size={9} color={T}/><span><strong>Posologie :</strong> {item.posology}</span></div>}
+              {item.duration && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:5, fontFamily:'sans-serif' }}><ChevronRight size={9} color={T}/><span><strong>Durée :</strong> {item.duration}</span></div>}
+            </div>
+          </div>
+        ))}
+
+        {notes && (
+          <div style={{ marginTop:6, padding:'8px 11px', background:'#FFF8E7', borderRadius:8, borderLeft:`3px solid #F59E0B`, fontSize:11, color:'#92400E', fontStyle:'italic', fontFamily:'sans-serif' }}>
+            {notes}
           </div>
         )}
       </div>
-      {total > 1 && (
-        <button type="button" onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
-          style={{ background:'none', border:'none', cursor:'pointer', color:'#CBD5E1', display:'flex', alignItems:'center', gap:3, fontSize:11, padding:'2px 6px', borderRadius:6, transition:'all .15s', flexShrink:0 }}
-          onMouseOver={e=>{e.currentTarget.style.background='#FEE2E2';e.currentTarget.style.color='#EF4444';}}
-          onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='#CBD5E1';}}>
-          <Trash2 size={11}/>
-        </button>
-      )}
-    </div>
 
-    {isActive && (
-      <div style={{ padding:'14px' }}>
-        <div style={{ marginBottom:12 }}>
-          <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>Medicament *</label>
-          <MedInput value={item.medication} onChange={v => onUpdate(index,'medication',v)} suggestions={suggestions}
-            onPick={m => { onUpdate(index,'medication',m.name); if(m.dosage) onUpdate(index,'dosage',m.dosage); if(m.posology) onUpdate(index,'posology',m.posology); if(m.duration) onUpdate(index,'duration',m.duration); }}/>
-        </div>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
-          <div>
-            <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:4 }}>Dosage</label>
-            <input value={item.dosage} onChange={e=>onUpdate(index,'dosage',e.target.value)} placeholder="500mg"
-              style={{ width:'100%', padding:'8px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color .15s' }}
-              onFocus={e=>e.target.style.borderColor=T} onBlur={e=>e.target.style.borderColor='#E2E8F0'}/>
-            <Chips items={DOSAGES} value={item.dosage} onSelect={v=>onUpdate(index,'dosage',v)}/>
-          </div>
-          <div>
-            <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:4 }}>Posologie</label>
-            <input value={item.posology} onChange={e=>onUpdate(index,'posology',e.target.value)} placeholder="2 fois/jour"
-              style={{ width:'100%', padding:'8px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color .15s' }}
-              onFocus={e=>e.target.style.borderColor=T} onBlur={e=>e.target.style.borderColor='#E2E8F0'}/>
-            <Chips items={POSOLOGY} value={item.posology} onSelect={v=>onUpdate(index,'posology',v)}/>
-          </div>
-          <div>
-            <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:4 }}>Duree</label>
-            <input value={item.duration} onChange={e=>onUpdate(index,'duration',e.target.value)} placeholder="7 jours"
-              style={{ width:'100%', padding:'8px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color .15s' }}
-              onFocus={e=>e.target.style.borderColor=T} onBlur={e=>e.target.style.borderColor='#E2E8F0'}/>
-            <Chips items={DURATION} value={item.duration} onSelect={v=>onUpdate(index,'duration',v)}/>
-          </div>
+      {/* Signature */}
+      <div style={{ padding:'10px 18px 14px', borderTop:'1px solid #F1F5F9', display:'flex', justifyContent:'flex-end' }}>
+        <div style={{ textAlign:'center', width:120 }}>
+          <div style={{ height:28, borderBottom:'1px solid #334155', marginBottom:4 }}/>
+          <div style={{ fontSize:9, color:'#94A3B8', fontFamily:'sans-serif', letterSpacing:.5 }}>Signature du praticien</div>
         </div>
       </div>
-    )}
-  </div>
-);
+    </div>
+  );
+};
 
-const PrescriptionModal = ({ open, onClose, title, formData, setFormData, saving, onSubmit, submitLabel, suggestions, patient }) => {
+/* ══════════════════════════════════════════
+   MAIN MODAL
+══════════════════════════════════════════ */
+const PrescriptionModal = ({
+  open, onClose,
+  title = 'Nouvelle ordonnance',
+  patient,
+  suggestions = MOCK_SUGGESTIONS,
+  saving = false,
+  onSubmit,
+  submitLabel = "Créer l'ordonnance",
+  formData,
+  setFormData,
+}) => {
   const [activeIdx, setActiveIdx] = useState(0);
 
   const addItem = () => {
-    setFormData(f => ({ ...f, items:[...f.items, { medication:'', dosage:'', posology:'', duration:'' }] }));
+    setFormData(f => ({ ...f, items:[...f.items, emptyItem()] }));
     setTimeout(() => setActiveIdx(formData.items.length), 10);
   };
-  const removeItem = i => {
-    setFormData(f => ({ ...f, items:f.items.length>1?f.items.filter((_,idx)=>idx!==i):[{ medication:'', dosage:'', posology:'', duration:'' }] }));
-    setActiveIdx(Math.max(0,i-1));
-  };
-  const updateItem = (i, field, val) => setFormData(f => { const it=[...f.items]; it[i]={...it[i],[field]:val}; return {...f,items:it}; });
 
-  const filled = formData.items.filter(i=>i.medication.trim()).length;
-  const today  = new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  const removeItem = i => {
+    setFormData(f => ({
+      ...f,
+      items: f.items.length > 1 ? f.items.filter((_,idx) => idx !== i) : [emptyItem()]
+    }));
+    setActiveIdx(Math.max(0, i - 1));
+  };
+
+  const updateItem = (i, field, val) => {
+    setFormData(f => {
+      const it = [...f.items];
+      it[i] = { ...it[i], [field]:val };
+      return { ...f, items:it };
+    });
+  };
+
+  const filled = formData.items.filter(i => i.medication.trim());
+  const complete = filled.filter(i => i.medication && i.dosage && i.posology && i.duration);
+  const progress = filled.length === 0 ? 0 : Math.round((complete.length / Math.max(filled.length, 1)) * 100);
 
   if (!open) return null;
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.72)', display:'flex', alignItems:'stretch', justifyContent:'center', padding:'16px' }}
-      onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <style>{`@keyframes dpm-spin{to{transform:rotate(360deg)}}`}</style>
-      <div style={{ background:'#F8FAFC', width:'100%', maxWidth:1080, borderRadius:20, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,.32)', border:'1px solid #E2E8F0' }}>
+    <div
+      onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(8,20,40,.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}>
 
-        {/* Header */}
-        <div style={{ background:'linear-gradient(135deg,#0D7A87,#0A5F6A)', padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ width:38, height:38, borderRadius:11, background:'rgba(255,255,255,.18)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <Stethoscope size={18} color="#fff"/>
+      <style>{`
+        @keyframes dpm-slide-up { from { opacity:0; transform:translateY(20px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes dpm-spin { to { transform:rotate(360deg); } }
+        .dpm-scroll::-webkit-scrollbar { width:4px; }
+        .dpm-scroll::-webkit-scrollbar-track { background:transparent; }
+        .dpm-scroll::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:99px; }
+      `}</style>
+
+      <div style={{
+        background:'#F1F5F9',
+        width:'100%', maxWidth:1060,
+        borderRadius:20,
+        display:'flex', flexDirection:'column',
+        overflow:'hidden',
+        boxShadow:'0 40px 80px rgba(0,0,0,.38)',
+        border:'1px solid rgba(255,255,255,.1)',
+        animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)',
+        maxHeight:'calc(100vh - 32px)'
+      }}>
+
+        {/* ── HEADER ────────────────────────────── */}
+        <div style={{ background:`linear-gradient(135deg,${T} 0%,${T_DARK} 100%)`, padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:-30, right:100, width:120, height:120, borderRadius:'50%', background:'rgba(255,255,255,.06)', pointerEvents:'none' }}/>
+          <div style={{ position:'absolute', bottom:-40, right:-20, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,.04)', pointerEvents:'none' }}/>
+
+          <div style={{ display:'flex', alignItems:'center', gap:14, position:'relative' }}>
+            <div style={{ width:42, height:42, borderRadius:13, background:'rgba(255,255,255,.18)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, backdropFilter:'blur(6px)', border:'1px solid rgba(255,255,255,.25)' }}>
+              <Stethoscope size={19} color="#fff"/>
             </div>
             <div>
-              <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff', margin:0 }}>{title}</h2>
+              <h2 style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:800, fontSize:17, color:'#fff', margin:0, lineHeight:1.2 }}>{title}</h2>
               {patient && (
-                <p style={{ fontSize:12, color:'rgba(255,255,255,.72)', margin:0 }}>
-                  {patient.first_name} {patient.last_name}
-                  {patient.date_of_birth && ` — ${Math.floor((Date.now()-new Date(patient.date_of_birth))/31557600000)} ans`}
-                </p>
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:3 }}>
+                  <div style={{ width:16, height:16, borderRadius:'50%', background:'rgba(255,255,255,.28)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <span style={{ fontSize:8, fontWeight:800, color:'#fff' }}>
+                      {patient.first_name[0]}{patient.last_name[0]}
+                    </span>
+                  </div>
+                  <p style={{ fontSize:12, color:'rgba(255,255,255,.8)', margin:0 }}>
+                    {patient.first_name} {patient.last_name}
+                    {patient.date_of_birth && ` — ${Math.floor((Date.now()-new Date(patient.date_of_birth))/31557600000)} ans`}
+                  </p>
+                </div>
               )}
             </div>
           </div>
+
           <button onClick={onClose}
-            style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,.8)' }}
+            style={{ width:34, height:34, borderRadius:9, background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,.85)', flexShrink:0, position:'relative', transition:'all .15s' }}
             onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
             onMouseOut={e=>e.currentTarget.style.background='rgba(255,255,255,.15)'}>
             <X size={15}/>
           </button>
         </div>
 
-        {/* Split body */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 360px', flex:1, overflow:'hidden', minHeight:0 }}>
+        {/* Progress bar */}
+        {filled.length > 0 && (
+          <div style={{ height:3, background:'#E2E8F0', flexShrink:0 }}>
+            <div style={{ height:'100%', width:`${progress}%`, background:`linear-gradient(90deg,${T},#13A3B4)`, transition:'width .4s ease', borderRadius:'0 99px 99px 0' }}/>
+          </div>
+        )}
 
-          {/* Gauche — formulaire */}
+        {/* ── BODY ──────────────────────────────── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', flex:1, overflow:'hidden', minHeight:0 }}>
+
+          {/* Gauche : formulaire */}
           <div style={{ display:'flex', flexDirection:'column', overflow:'hidden', borderRight:'1px solid #E2E8F0' }}>
-            {/* Sous-header */}
-            <div style={{ padding:'12px 18px', borderBottom:'1px solid #E2E8F0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                <Pill size={14} color={T}/>
-                <span style={{ fontWeight:700, fontSize:14, color:'#0F172A' }}>Medicaments</span>
-                {filled>0 && <span style={{ background:'#F0FDFE', color:T, fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:99, border:`1px solid ${T}25` }}>{filled}</span>}
+
+            {/* Sub-header */}
+            <div style={{ padding:'11px 18px', borderBottom:'1px solid #E2E8F0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <Pill size={15} color={T}/>
+                <span style={{ fontWeight:700, fontSize:14, color:'#0F172A' }}>Médicaments</span>
+                {filled.length > 0 && (
+                  <span style={{ background:`${T}15`, color:T, fontSize:11, fontWeight:700, padding:'2px 9px', borderRadius:99 }}>
+                    {filled.length}/{formData.items.length}
+                  </span>
+                )}
               </div>
               <button type="button" onClick={addItem}
-                style={{ padding:'5px 13px', borderRadius:9, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
+                style={{ padding:'6px 14px', borderRadius:9, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5, boxShadow:`0 2px 8px ${T}40`, transition:'all .15s' }}
+                onMouseOver={e=>e.currentTarget.style.filter='brightness(1.1)'}
+                onMouseOut={e=>e.currentTarget.style.filter='none'}>
                 <Plus size={12}/> Ajouter
               </button>
             </div>
 
-            {/* Liste scrollable */}
-            <div style={{ flex:1, overflowY:'auto', padding:'12px 16px' }}>
+            {/* Scrollable list */}
+            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', padding:'12px 14px' }}>
               {formData.items.map((item, i) => (
                 <MedCard key={i} item={item} index={i} total={formData.items.length}
-                  isActive={activeIdx===i} onActivate={()=>setActiveIdx(i)}
+                  isActive={activeIdx === i} onActivate={() => setActiveIdx(i)}
                   onUpdate={updateItem} onRemove={removeItem} suggestions={suggestions}/>
               ))}
             </div>
 
-            {/* Notes en bas */}
+            {/* Notes */}
             <div style={{ padding:'12px 18px', background:'#fff', borderTop:'1px solid #E2E8F0', flexShrink:0 }}>
-              <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>Notes / Instructions</label>
+              <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>Notes / Instructions complémentaires</label>
               <textarea
                 value={formData.notes}
-                onChange={e=>setFormData({...formData,notes:e.target.value})}
-                placeholder="Prendre avec de la nourriture, eviter l'alcool..."
+                onChange={e => setFormData({...formData, notes:e.target.value})}
+                placeholder="Ex : Prendre avec de la nourriture, éviter l'alcool…"
                 rows={2}
-                style={{ width:'100%', padding:'8px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', resize:'none', outline:'none', boxSizing:'border-box', lineHeight:1.5, transition:'border-color .15s' }}
-                onFocus={e=>e.target.style.borderColor=T} onBlur={e=>e.target.style.borderColor='#E2E8F0'}
+                onFocus={e=>{ e.target.style.borderColor=T; e.target.style.boxShadow=`0 0 0 3px ${T}18`; }}
+                onBlur={e=>{ e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none'; }}
+                style={{ width:'100%', padding:'9px 12px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:13, fontFamily:'inherit', resize:'none', outline:'none', boxSizing:'border-box', lineHeight:1.6, transition:'all .15s' }}
               />
             </div>
           </div>
 
-          {/* Droite — aperçu */}
+          {/* Droite : preview */}
           <div style={{ display:'flex', flexDirection:'column', background:'#E8EDF5', overflow:'hidden' }}>
-            <div style={{ padding:'10px 16px', borderBottom:'1px solid #D4DAE8', background:'#DDE4EF', flexShrink:0 }}>
-              <span style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.1em' }}>Apercu en temps reel</span>
+            <div style={{ padding:'9px 14px', borderBottom:'1px solid #D4DAE8', background:'#DDE4EF', flexShrink:0, display:'flex', alignItems:'center', gap:6 }}>
+              <Sparkles size={12} color={T}/>
+              <span style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.1em' }}>Aperçu en temps réel</span>
             </div>
-            <div style={{ flex:1, overflowY:'auto', padding:'14px' }}>
-              {/* Feuille ordonnance */}
-              <div style={{ background:'#fff', borderRadius:10, boxShadow:'0 4px 20px rgba(0,0,0,.12)', overflow:'hidden', fontFamily:'Georgia,serif' }}>
-                {/* En-tete */}
-                <div style={{ background:`linear-gradient(135deg,${T},#0A5F6A)`, padding:'14px 18px', color:'#fff' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-                    <div>
-                      <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, letterSpacing:.8 }}>ORDONNANCE</div>
-                      <div style={{ fontSize:10, opacity:.7, marginTop:2 }}>Cabinet Dentaire — DPM Madagascar</div>
-                    </div>
-                    <div style={{ fontSize:10, opacity:.75, textAlign:'right' }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:3, justifyContent:'flex-end' }}>
-                        <Calendar size={9}/> {today}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* Patient */}
-                <div style={{ padding:'10px 16px', borderBottom:'1px solid #F1F5F9', background:'#F8FAFC' }}>
-                  <div style={{ fontSize:9, color:'#94A3B8', textTransform:'uppercase', letterSpacing:.8, marginBottom:2 }}>Patient</div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>
-                    {patient ? `${patient.first_name} ${patient.last_name}` : '—'}
-                  </div>
-                </div>
-                {/* Corps */}
-                <div style={{ padding:'12px 16px', minHeight:160 }}>
-                  {filled===0 ? (
-                    <div style={{ textAlign:'center', padding:'24px 0', color:'#CBD5E1' }}>
-                      <Pill size={24} style={{ margin:'0 auto 6px', display:'block' }}/>
-                      <p style={{ fontSize:11, margin:0, fontFamily:'sans-serif' }}>Saisissez un medicament</p>
-                    </div>
-                  ) : (
-                    formData.items.filter(i=>i.medication).map((item, i) => (
-                      <div key={i} style={{ marginBottom:12, paddingBottom:12, borderBottom:i<filled-1?'1px dashed #E2E8F0':'none' }}>
-                        <div style={{ display:'flex', gap:7, alignItems:'flex-start', marginBottom:3 }}>
-                          <div style={{ width:18, height:18, borderRadius:'50%', background:T, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
-                            <span style={{ fontSize:9, fontWeight:700, color:'#fff', fontFamily:'sans-serif' }}>{i+1}</span>
-                          </div>
-                          <div style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{item.medication}</div>
-                        </div>
-                        <div style={{ paddingLeft:25 }}>
-                          {item.dosage   && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:4, marginBottom:1 }}><ChevronRight size={9} color={T}/><span><strong>Dosage :</strong> {item.dosage}</span></div>}
-                          {item.posology && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:4, marginBottom:1 }}><ChevronRight size={9} color={T}/><span><strong>Posologie :</strong> {item.posology}</span></div>}
-                          {item.duration && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:4 }}><ChevronRight size={9} color={T}/><span><strong>Duree :</strong> {item.duration}</span></div>}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  {formData.notes && (
-                    <div style={{ marginTop:8, padding:'7px 10px', background:'#FFF8E7', borderRadius:7, borderLeft:`3px solid #F59E0B`, fontSize:11, color:'#92400E', fontStyle:'italic' }}>
-                      {formData.notes}
-                    </div>
-                  )}
-                </div>
-                {/* Signature */}
-                <div style={{ padding:'10px 16px', borderTop:'1px solid #F1F5F9', display:'flex', justifyContent:'flex-end' }}>
-                  <div style={{ textAlign:'center', width:130 }}>
-                    <div style={{ height:28, borderBottom:'1px solid #0F172A', marginBottom:3 }}/>
-                    <div style={{ fontSize:9, color:'#64748B', fontFamily:'sans-serif' }}>Signature du praticien</div>
-                  </div>
-                </div>
-              </div>
+            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', padding:'14px 12px' }}>
+              <PrescriptionPreview items={formData.items} notes={formData.notes} patient={patient}/>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
+        {/* ── FOOTER ───────────────────────────── */}
         <div style={{ padding:'12px 24px', background:'#fff', borderTop:'1px solid #E2E8F0', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
-          <span style={{ fontSize:12, color:'#94A3B8' }}>
-            {filled===0 ? 'Ajoutez au moins un medicament pour continuer' : `${filled} medicament${filled>1?'s':''} saisi${filled>1?'s':''}`}
-          </span>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            {filled.length === 0 ? (
+              <div style={{ display:'flex', alignItems:'center', gap:5, color:'#94A3B8', fontSize:12 }}>
+                <AlertCircle size={13}/>
+                Ajoutez au moins un médicament pour continuer
+              </div>
+            ) : (
+              <div style={{ display:'flex', alignItems:'center', gap:5, color: complete.length === filled.length ? '#059669' : '#F59E0B', fontSize:12, fontWeight:600 }}>
+                <CheckCircle size={13}/>
+                {filled.length} médicament{filled.length > 1 ? 's' : ''} · {progress}% complété
+              </div>
+            )}
+          </div>
+
           <div style={{ display:'flex', gap:8 }}>
             <button type="button" onClick={onClose}
-              style={{ padding:'9px 20px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}
+              style={{ padding:'9px 20px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569', transition:'all .15s' }}
               onMouseOver={e=>e.currentTarget.style.borderColor='#94A3B8'}
               onMouseOut={e=>e.currentTarget.style.borderColor='#E2E8F0'}>
               Annuler
             </button>
-            <button type="button" onClick={onSubmit} disabled={saving||filled===0}
-              style={{ padding:'9px 24px', borderRadius:10, background:filled>0?`linear-gradient(135deg,${T},#13A3B4)`:'#E2E8F0', color:filled>0?'#fff':'#94A3B8', border:'none', cursor:filled>0?'pointer':'not-allowed', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:8, boxShadow:filled>0?'0 4px 14px rgba(13,122,135,.28)':'none', transition:'all .2s' }}>
-              {saving ? <Loader2 size={15} style={{ animation:'dpm-spin .8s linear infinite' }}/> : <CheckCircle size={15}/>}
-              {saving ? 'Enregistrement...' : submitLabel}
+            <button type="button" onClick={onSubmit} disabled={saving || filled.length === 0}
+              style={{
+                padding:'9px 24px', borderRadius:10,
+                background: filled.length > 0 ? `linear-gradient(135deg,${T},#13A3B4)` : '#E2E8F0',
+                color: filled.length > 0 ? '#fff' : '#94A3B8',
+                border:'none', cursor: filled.length > 0 ? 'pointer' : 'not-allowed',
+                fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:8,
+                boxShadow: filled.length > 0 ? `0 4px 16px ${T}40` : 'none',
+                transition:'all .2s',
+                opacity: saving ? .8 : 1
+              }}
+              onMouseOver={e=>{ if(filled.length>0) e.currentTarget.style.filter='brightness(1.08)'; }}
+              onMouseOut={e=>e.currentTarget.style.filter='none'}>
+              {saving
+                ? <><Loader2 size={15} style={{ animation:'dpm-spin .8s linear infinite' }}/> Enregistrement…</>
+                : <><CheckCircle size={15}/> {submitLabel}</>}
             </button>
           </div>
         </div>
@@ -351,181 +500,48 @@ const PrescriptionModal = ({ open, onClose, title, formData, setFormData, saving
   );
 };
 
-/* ════════════════════════════════════════════════ */
-const PatientPrescriptions = () => {
-  const { patientId } = useParams();
-  const [patient, setPatient]             = useState(null);
-  const [prescriptions, setPrescriptions] = useState([]);
-  const [suggestions, setSuggestions]     = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const [isCreateOpen, setIsCreateOpen]   = useState(false);
-  const [isEditOpen, setIsEditOpen]       = useState(false);
-  const [selPresc, setSelPresc]           = useState(null);
-  const [saving, setSaving]               = useState(false);
+/* ══════════════════════════════════════════
+   DEMO WRAPPER
+══════════════════════════════════════════ */
+const emptyForm = () => ({ items:[emptyItem()], notes:'' });
 
-  const emptyForm = { items:[{ medication:'', dosage:'', posology:'', duration:'' }], notes:'' };
-  const [form, setForm] = useState(emptyForm);
+export default function App() {
+  const [open, setOpen] = useState(true);
+  const [form, setForm] = useState(emptyForm());
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!patientId || patientId === 'undefined') { setLoading(false); return; }
-    fetchPatient(); fetchPrescriptions(); fetchSuggestions();
-  }, [patientId]);
-
-  const fetchPatient = async () => {
-    try { const r = await axios.get(`${API}/patients/${patientId}`, authH()); setPatient(r.data); } catch {}
-  };
-  const fetchSuggestions = async () => {
-    try { const r = await axios.get(`${API}/prescriptions/medications`, authH()); setSuggestions(r.data.medications||[]); } catch { setSuggestions([]); }
-  };
-  const fetchPrescriptions = async () => {
-    try { const r = await axios.get(`${API}/patients/${patientId}/prescriptions`, authH()); setPrescriptions(r.data.prescriptions||[]); }
-    catch { toast.error('Erreur chargement'); }
-    finally { setLoading(false); }
+  const mockPatient = {
+    first_name:'Marie', last_name:'Ange',
+    date_of_birth:'1995-06-15'
   };
 
-  const handleCreate = async () => {
-    const valid = form.items.filter(i=>i.medication.trim());
-    if (!valid.length) { toast.error('Ajoutez au moins un medicament'); return; }
+  const handleSubmit = () => {
     setSaving(true);
-    try {
-      const r = await axios.post(`${API}/patients/${patientId}/prescriptions`, { content:{ items:valid, notes:form.notes } }, authH());
-      toast.success('Ordonnance creee');
-      setIsCreateOpen(false); setForm(emptyForm); fetchPrescriptions(); fetchSuggestions();
-      const id = r.data.prescription?.id;
-      if (id && window.confirm('Imprimer maintenant ?')) handlePrintById(id);
-    } catch (e) { toast.error(e.response?.data?.error||'Erreur'); }
-    finally { setSaving(false); }
+    setTimeout(() => { setSaving(false); setOpen(false); }, 1800);
   };
-
-  const handleUpdate = async () => {
-    setSaving(true);
-    try {
-      await axios.put(`${API}/prescriptions/${selPresc.id}`, { content:{ items:form.items.filter(i=>i.medication.trim()), notes:form.notes } }, authH());
-      toast.success('Mise a jour');
-      setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); fetchPrescriptions();
-    } catch (e) { toast.error(e.response?.data?.error==='PRESCRIPTION_LOCKED'?'Ordonnance verrouillee':'Erreur'); }
-    finally { setSaving(false); }
-  };
-
-  const handleIssue = async p => {
-    if (!window.confirm('Emettre ? Action irreversible.')) return;
-    try { await axios.post(`${API}/prescriptions/${p.id}/issue`, {}, authH()); toast.success('Emise'); fetchPrescriptions(); }
-    catch (e) { toast.error(e.response?.data?.error||'Erreur'); }
-  };
-
-  const handleCancel = async p => {
-    if (!window.confirm('Annuler ?')) return;
-    try { await axios.post(`${API}/prescriptions/${p.id}/cancel`, {}, authH()); toast.success('Annulee'); fetchPrescriptions(); }
-    catch (e) { toast.error(e.response?.data?.error||'Erreur'); }
-  };
-
-  const handlePrintById = id => {
-    fetch(`${API}/prescriptions/${id}/pdf`, { headers:{ Authorization:`Bearer ${localStorage.getItem('token')}` } })
-      .then(r=>{ if(!r.ok) throw new Error(); return r.blob(); })
-      .then(blob=>{ const url=window.URL.createObjectURL(blob); window.open(url,'_blank'); setTimeout(()=>window.URL.revokeObjectURL(url),60000); })
-      .catch(()=>toast.error('Erreur impression'));
-  };
-
-  const handleDownload = async p => {
-    try {
-      const r = await fetch(`${API}/prescriptions/${p.id}/pdf`, { headers:{ Authorization:`Bearer ${localStorage.getItem('token')}` } });
-      if (!r.ok) throw new Error();
-      const blob=await r.blob(), url=window.URL.createObjectURL(blob), a=document.createElement('a');
-      a.href=url; a.download=`${p.number}.pdf`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      window.URL.revokeObjectURL(url); toast.success('PDF telecharge');
-    } catch { toast.error('Erreur PDF'); }
-  };
-
-  const openEdit = p => {
-    setSelPresc(p);
-    setForm({ items:p.content?.items?.length?p.content.items:[{ medication:'', dosage:'', posology:'', duration:'' }], notes:p.content?.notes||'' });
-    setIsEditOpen(true);
-  };
-
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Loader2 className="h-8 w-8 animate-spin" style={{ color:T }}/>
-    </div>
-  );
 
   return (
-    <div className="space-y-6" data-testid="patient-prescriptions">
-
-      {/* Header page */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/patients"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2"/>Retour</Button></Link>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <FileText className="h-6 w-6" style={{ color:T }}/>Ordonnances
-            </h1>
-            {patient && <p className="text-gray-500 flex items-center gap-1 text-sm"><User className="h-4 w-4"/>{patient.first_name} {patient.last_name}</p>}
-          </div>
+    <div style={{ minHeight:'100vh', background:'#0F172A', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, fontFamily:'Plus Jakarta Sans, sans-serif' }}>
+      {!open && (
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
+          <p style={{ color:'#94A3B8', fontSize:14, marginBottom:20 }}>Ordonnance créée avec succès</p>
+          <button onClick={() => { setForm(emptyForm()); setOpen(true); }}
+            style={{ padding:'10px 24px', borderRadius:10, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700 }}>
+            Rouvrir la modale
+          </button>
         </div>
-        <Button data-testid="new-prescription-btn" onClick={()=>{ setForm(emptyForm); setIsCreateOpen(true); }}
-          style={{ background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', border:'none', boxShadow:'0 4px 14px rgba(13,122,135,.28)' }}>
-          <Plus className="h-4 w-4 mr-2"/>Nouvelle ordonnance
-        </Button>
-      </div>
-
-      {/* Liste */}
-      <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', overflow:'hidden' }}>
-        <div style={{ padding:'14px 20px', borderBottom:'1px solid #F1F5F9' }}>
-          <span style={{ fontWeight:700, fontSize:15, color:'#0F172A' }}>{prescriptions.length} ordonnance{prescriptions.length!==1?'s':''}</span>
-        </div>
-        <div style={{ padding:'0 16px' }}>
-          {prescriptions.length===0 ? (
-            <div style={{ textAlign:'center', padding:'48px 0', color:'#94A3B8' }}>
-              <FileText size={38} style={{ margin:'0 auto 12px', display:'block', opacity:.25 }}/>
-              <p style={{ margin:0, fontSize:14 }}>Aucune ordonnance pour ce patient</p>
-            </div>
-          ) : prescriptions.map(p => (
-            <div key={p.id} style={{ padding:'14px 4px', borderBottom:'1px solid #F8FAFC', display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
-                  <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A' }}>{p.number}</span>
-                  <Badge className={STATUS_COLORS[p.status]}>{STATUS_LABELS[p.status]}</Badge>
-                  <span style={{ fontSize:11, color:'#94A3B8' }}>{fdate(p.created_at)}</span>
-                </div>
-                {p.content?.items?.length>0 && (
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-                    {p.content.items.filter(i=>i.medication).map((item,idx)=>(
-                      <span key={idx} style={{ fontSize:11, background:'#F0FDFE', color:T, padding:'2px 9px', borderRadius:99, border:`1px solid ${T}25`, fontWeight:600 }}>
-                        {item.medication}{item.dosage?` ${item.dosage}`:''}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {p.content?.notes && <div style={{ fontSize:12, color:'#64748B', fontStyle:'italic', marginTop:4 }}>{p.content.notes}</div>}
-              </div>
-              <div style={{ display:'flex', gap:2, flexShrink:0 }}>
-                {p.status==='DRAFT' && <>
-                  <Button variant="ghost" size="sm" onClick={()=>openEdit(p)} title="Modifier"><Edit2 className="h-4 w-4"/></Button>
-                  <Button variant="ghost" size="sm" onClick={()=>handleIssue(p)} className="text-green-600" title="Emettre"><Send className="h-4 w-4"/></Button>
-                </>}
-                <Button variant="ghost" size="sm" onClick={()=>handlePrintById(p.id)} title="Imprimer"><Printer className="h-4 w-4"/></Button>
-                {p.status!=='CANCELLED' && <Button variant="ghost" size="sm" onClick={()=>handleDownload(p)} title="PDF"><Download className="h-4 w-4"/></Button>}
-                {p.status!=='CANCELLED' && <Button variant="ghost" size="sm" onClick={()=>handleCancel(p)} className="text-red-600" title="Annuler"><XCircle className="h-4 w-4"/></Button>}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       <PrescriptionModal
-        open={isCreateOpen} onClose={()=>{ setIsCreateOpen(false); setForm(emptyForm); }}
-        title="Nouvelle ordonnance" formData={form} setFormData={setForm}
-        saving={saving} onSubmit={handleCreate} submitLabel="Creer l'ordonnance"
-        suggestions={suggestions} patient={patient}/>
-
-      <PrescriptionModal
-        open={isEditOpen} onClose={()=>{ setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); }}
-        title={`Modifier ${selPresc?.number||''}`} formData={form} setFormData={setForm}
-        saving={saving} onSubmit={handleUpdate} submitLabel="Enregistrer"
-        suggestions={suggestions} patient={patient}/>
+        open={open} onClose={() => setOpen(false)}
+        title="Nouvelle ordonnance"
+        patient={mockPatient}
+        suggestions={MOCK_SUGGESTIONS}
+        formData={form} setFormData={setForm}
+        saving={saving} onSubmit={handleSubmit}
+        submitLabel="Créer l'ordonnance"
+      />
     </div>
   );
-};
-
-export default PatientPrescriptions;
+}
