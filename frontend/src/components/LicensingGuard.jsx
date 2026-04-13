@@ -90,12 +90,88 @@ const LicensingGuard = ({ children }) => {
   };
 
   if (loading) {
-    return children;
+    // Avertissement expiration proche (7 jours ou moins)
+  const daysLeft = subscriptionStatus?.days_remaining ?? null;
+  const showWarning = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0 &&
+                      ['ACTIVE', 'TRIAL'].includes(subscriptionStatus?.status);
+
+  return (
+    <>
+      {showWarning && (
+        <div style={{
+          background: daysLeft <= 2 ? '#FEE2E2' : '#FFF7ED',
+          borderBottom: `1px solid ${daysLeft <= 2 ? '#FECACA' : '#FED7AA'}`,
+          padding: '8px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 12, fontSize: 13, zIndex: 50, flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>{daysLeft <= 2 ? '🔴' : '⚠️'}</span>
+            <span style={{ fontWeight: 700, color: daysLeft <= 2 ? '#991B1B' : '#C2410C' }}>
+              {daysLeft === 0
+                ? 'Votre abonnement expire aujourd'hui !'
+                : `Votre abonnement expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`}
+            </span>
+            <span style={{ color: daysLeft <= 2 ? '#B91C1C' : '#92400E' }}>
+              — Renouvelez maintenant pour continuer à utiliser DPM Madagascar.
+            </span>
+          </div>
+          <a href="/payment" style={{
+            padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            background: daysLeft <= 2 ? '#EF4444' : '#F59E0B',
+            color: '#fff', textDecoration: 'none', flexShrink: 0,
+            transition: 'opacity .15s'
+          }}>
+            Renouveler
+          </a>
+        </div>
+      )}
+      {children}
+    </>
+  );
   }
 
   // Super admin bypasses all licensing
   if (subscriptionStatus?.status === 'SUPER_ADMIN') {
-    return children;
+    // Avertissement expiration proche (7 jours ou moins)
+  const daysLeft = subscriptionStatus?.days_remaining ?? null;
+  const showWarning = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0 &&
+                      ['ACTIVE', 'TRIAL'].includes(subscriptionStatus?.status);
+
+  return (
+    <>
+      {showWarning && (
+        <div style={{
+          background: daysLeft <= 2 ? '#FEE2E2' : '#FFF7ED',
+          borderBottom: `1px solid ${daysLeft <= 2 ? '#FECACA' : '#FED7AA'}`,
+          padding: '8px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 12, fontSize: 13, zIndex: 50, flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>{daysLeft <= 2 ? '🔴' : '⚠️'}</span>
+            <span style={{ fontWeight: 700, color: daysLeft <= 2 ? '#991B1B' : '#C2410C' }}>
+              {daysLeft === 0
+                ? 'Votre abonnement expire aujourd'hui !'
+                : `Votre abonnement expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`}
+            </span>
+            <span style={{ color: daysLeft <= 2 ? '#B91C1C' : '#92400E' }}>
+              — Renouvelez maintenant pour continuer à utiliser DPM Madagascar.
+            </span>
+          </div>
+          <a href="/payment" style={{
+            padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            background: daysLeft <= 2 ? '#EF4444' : '#F59E0B',
+            color: '#fff', textDecoration: 'none', flexShrink: 0,
+            transition: 'opacity .15s'
+          }}>
+            Renouveler
+          </a>
+        </div>
+      )}
+      {children}
+    </>
+  );
   }
 
   // No subscription or clinic
