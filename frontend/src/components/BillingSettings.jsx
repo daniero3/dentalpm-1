@@ -35,9 +35,9 @@ const PLAN_FEATURES = {
 };
 
 const PLAN_PRICES = {
-  ESSENTIAL: { monthly: 50000,  label: 'Essential' },
-  PRO:       { monthly: 100000, label: 'Pro' },
-  GROUP:     { monthly: 200000, label: 'Group' },
+  ESSENTIAL: { monthly: 149000, label: 'Essential' },
+  PRO:       { monthly: 199000, label: 'Pro' },
+  GROUP:     { monthly: 299000, label: 'Group' },
 };
 
 const STATUS_CONFIG = {
