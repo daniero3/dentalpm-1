@@ -256,7 +256,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
       const isEdit = formData.items.some(i => i.medication?.trim());
       setActiveIdx(isEdit ? null : 0);
     }
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open]); // eslint-disable-line
 
   const addItem = () => {
     setFormData(f => ({ ...f, items:[...f.items, emptyItem()] }));
