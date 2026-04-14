@@ -12,6 +12,7 @@ import { ThemeProvider } from "./components/theme-provider";
 // Components
 import LoginForm from "./components/LoginForm";
 import LandingPage from "./components/LandingPage";
+import SubscriptionManagement from './components/SubscriptionManagement'; // Le chemin doit être correct
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import Dashboard from "./components/Dashboard";
 import PatientManagement from "./components/PatientManagement";
