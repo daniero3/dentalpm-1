@@ -321,11 +321,11 @@ const useTyping = (words, speed=72, pause=1900) => {
 
 /* ── Data (contenu original intact) ── */
 const PLANS = [
-  { name:'ESSENTIAL', price:'149 000', popular:false, desc:'Idéal pour les cabinets solo',
+  { name:'ESSENTIAL', price:'149 000', popular:false, stripe:'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01', desc:'Idéal pour les cabinets solo',
     features:["1 praticien + 1 assistant(e)","Jusqu'à 500 patients","Agenda & rendez-vous","Facturation de base","Ordonnances PDF","Odontogramme FDI","Support email"] },
-  { name:'PRO', price:'199 000', popular:true, desc:'Le plus choisi par nos clients',
+  { name:'PRO', price:'199 000', popular:true, stripe:'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00', desc:'Le plus choisi par nos clients',
     features:['5 praticiens','Patients illimités','Agenda avancé + rappels SMS','Facturation complète','Laboratoire dentaire','Inventaire & stock','Rapports financiers','SMS automatiques','Support prioritaire'] },
-  { name:'GROUP', price:'299 000', popular:false, desc:'Pour les groupes et multi-sites',
+  { name:'GROUP', price:'299 000', popular:false, stripe:'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02', desc:'Pour les groupes et multi-sites',
     features:['Praticiens illimités','Multi-sites','Patients illimités','Tout le plan PRO','API dédiée','Dashboard groupe','Gestionnaire dédié','Formation sur site incluse'] },
 ];
 const FEATURES_LIST = [
@@ -416,9 +416,18 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
                     <span style={{color:'var(--muted)',fontSize:13}}>{p.num}</span>
                   </div>
                 ))}
+                {plan?.stripe && (
+                  <a href={plan.stripe} target="_blank" rel="noopener noreferrer"
+                    style={{display:'block',width:'100%',marginTop:14,padding:'14px',borderRadius:13,background:'#635BFF',color:'#fff',fontWeight:700,fontSize:15,textDecoration:'none',textAlign:'center',boxSizing:'border-box'}}>
+                    💳 Payer directement avec Stripe →
+                  </a>
+                )}
+                <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0',color:'var(--muted)',fontSize:12}}>
+                  <div style={{flex:1,height:1,background:'var(--border)'}}/><span>ou</span><div style={{flex:1,height:1,background:'var(--border)'}}/>
+                </div>
                 <button className="btn-main" onClick={submit} disabled={loading}
-                  style={{width:'100%',marginTop:14,padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
-                  {loading?'⏳ Création...':'✓ Confirmer mon inscription'}
+                  style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
+                  {loading?'⏳ Création...':'✓ Confirmer mon inscription (paiement Mobile Money)'}
                 </button>
                 <button onClick={()=>setStep(1)} style={{width:'100%',marginTop:8,padding:9,background:'none',color:'var(--muted)',border:'none',cursor:'pointer',fontSize:13}}>← Retour</button>
               </div>
@@ -824,7 +833,7 @@ export default function LandingPage() {
           {[
             {icon:'🇲🇬',t:'100% Madagascar',d:"Ariary, MVola, Orange Money, langue française, normes malgaches. Conçu par des Malgaches pour les Malgaches.",c:'#0D7A87'},
             {icon:'💰',t:'Prix accessible',d:"À partir de 149 000 Ar/mois soit 4 900 Ar par jour. Le meilleur rapport qualité / prix du marché.",c:'#10B981'},
-            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 3 secondes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
+            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 30 minutes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
             {icon:'🔒',t:'Données sécurisées',d:"Chiffrement de bout en bout, sauvegarde quotidienne automatique, hébergement sécurisé.",c:'#7C3AED'},
             {icon:'📱',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
             {icon:'🤝',t:'Support réactif',d:"Équipe basée à Antananarivo, réponse sous 24h. En français, par des Malgaches.",c:'#0D7A87'},
@@ -922,10 +931,15 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <button onClick={()=>open(plan)} className="btn-main"
-                  style={{width:'100%',padding:'12px',borderRadius:11,background:plan.popular?'var(--teal)':'transparent',color:plan.popular?'#fff':'var(--teal)',fontWeight:700,fontSize:14,border:`2px solid var(--teal)`,cursor:'pointer'}}>
-                  Démarrer — 7 jours gratuits
-                </button>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  <a href={plan.stripe} target="_blank" rel="noopener noreferrer"
+                    style={{display:'block',width:'100%',padding:'12px',borderRadius:11,background:plan.popular?'var(--teal)':'transparent',color:plan.popular?'#fff':'var(--teal)',fontWeight:700,fontSize:14,border:'2px solid var(--teal)',cursor:'pointer',textDecoration:'none',textAlign:'center',boxSizing:'border-box'}}>
+                    Payer avec Stripe →
+                  </a>
+                  <button onClick={()=>open(plan)} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
+                    Essai gratuit 7 jours
+                  </button>
+                </div>
               </div>
             ))}
           </div>
