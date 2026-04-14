@@ -644,7 +644,11 @@ const PatientPrescriptions = () => {
   const handleUpdate = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/prescriptions/${selPresc.id}`, { content:{ items:form.items.filter(i=>i.medication.trim()), notes:form.notes } }, authH());
+      await axios.put(
+        `${API}/patients/${patientId}/prescriptions/${selPresc.id}`,
+        { content:{ items:form.items.filter(i=>i.medication.trim()), notes:form.notes } },
+        authH()
+      );
       toast.success('Mise à jour'); setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); fetchPrescriptions();
     } catch(e) { toast.error(e.response?.data?.error==='PRESCRIPTION_LOCKED'?'Ordonnance verrouillée':'Erreur'); }
     finally { setSaving(false); }
