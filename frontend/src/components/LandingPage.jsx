@@ -881,7 +881,7 @@ export default function LandingPage() {
           <div className="sr">
             <ST tag="🏥 À propos" title="Notre mission : simplifier votre quotidien" sub={null}/>
             <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:13}}>
-              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité. <br />
+              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité.  <br />
               Nous avons créé la solution qu'aucun éditeur international ne pouvait offrir.
             </p>
             <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:26}}>
