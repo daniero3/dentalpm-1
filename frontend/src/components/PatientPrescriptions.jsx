@@ -121,8 +121,9 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
             {filled ? item.medication : `Médicament ${index+1}`}
           </span>
           {filled && !isActive && (
-            <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+            <div style={{ display:'flex', gap:4, flexShrink:0, flexWrap:'wrap' }}>
               {item.dosage   && <span style={{ fontSize:10, background:'#E0F2FE', color:'#0369A1', padding:'2px 7px', borderRadius:99, fontWeight:600 }}>{item.dosage}</span>}
+              {item.posology && <span style={{ fontSize:10, background:'#F0FDFE', color:T,         padding:'2px 7px', borderRadius:99, fontWeight:600 }}>{item.posology}</span>}
               {item.duration && <span style={{ fontSize:10, background:'#DCFCE7', color:'#166534', padding:'2px 7px', borderRadius:99, fontWeight:600 }}>{item.duration}</span>}
             </div>
           )}
@@ -245,7 +246,17 @@ const PrescriptionPreview = ({ items, notes, patient }) => {
    PRESCRIPTION MODAL
 ══════════════════════════════════════════════════════ */
 const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving, onSubmit, submitLabel, formData, setFormData }) => {
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(null);
+
+  // Réinitialise activeIdx à chaque ouverture :
+  // – CREATE : card 0 expanded (prêt à saisir)
+  // – EDIT   : toutes collapsed (l'utilisateur voit d'abord la liste complète)
+  useEffect(() => {
+    if (open) {
+      const isEdit = formData.items.some(i => i.medication?.trim());
+      setActiveIdx(isEdit ? null : 0);
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addItem = () => {
     setFormData(f => ({ ...f, items:[...f.items, emptyItem()] }));
@@ -312,9 +323,9 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
         )}
 
         {/* Body split */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', flex:1, overflow:'hidden', minHeight:0 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', flex:1, minHeight:0 }}>
           {/* Left — form */}
-          <div style={{ display:'flex', flexDirection:'column', overflow:'hidden', borderRight:'1px solid #E2E8F0' }}>
+          <div style={{ display:'flex', flexDirection:'column', minHeight:0, borderRight:'1px solid #E2E8F0' }}>
             <div style={{ padding:'11px 18px', borderBottom:'1px solid #E2E8F0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <Pill size={15} color={T}/>
@@ -328,7 +339,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
                 <Plus size={12}/> Ajouter
               </button>
             </div>
-            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', padding:'12px 14px' }}>
+            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:'12px 14px' }}>
               {formData.items.map((item, i) => (
                 <MedCard key={i} item={item} index={i} total={formData.items.length}
                   isActive={activeIdx===i} onActivate={() => setActiveIdx(i)}
@@ -346,12 +357,12 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
           </div>
 
           {/* Right — preview */}
-          <div style={{ display:'flex', flexDirection:'column', background:'#E8EDF5', overflow:'hidden' }}>
+          <div style={{ display:'flex', flexDirection:'column', background:'#E8EDF5', minHeight:0 }}>
             <div style={{ padding:'9px 14px', borderBottom:'1px solid #D4DAE8', background:'#DDE4EF', flexShrink:0, display:'flex', alignItems:'center', gap:6 }}>
               <Sparkles size={12} color={T}/>
               <span style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.1em' }}>Aperçu en temps réel</span>
             </div>
-            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', padding:'14px 12px' }}>
+            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:'14px 12px' }}>
               <PrescriptionPreview items={formData.items} notes={formData.notes} patient={patient}/>
             </div>
           </div>
@@ -483,7 +494,7 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
         ) : visible.map((p, idx) => {
           const isExp = expanded === p.id;
           const sc = STATUS_COLORS[p.status] || STATUS_COLORS.DRAFT;
-          const meds = p.content?.items?.filter(i => i.medication) || [];
+          const meds = ((p.content || p.content_json)?.items || []).filter(i => i.medication);
           return (
             <div key={p.id} style={{ position:'relative' }}>
               {/* Timeline line */}
@@ -565,9 +576,9 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
                           </div>
                         </div>
                       ))}
-                      {p.content?.notes && (
+                      {(p.content || p.content_json)?.notes && (
                         <div style={{ marginTop:8, padding:'6px 10px', background:'#FFF8E7', borderRadius:7, borderLeft:'3px solid #F59E0B', fontSize:11, color:'#92400E', fontStyle:'italic' }}>
-                          {p.content.notes}
+                          {(p.content || p.content_json).notes}
                         </div>
                       )}
                     </div>
@@ -685,8 +696,13 @@ const PatientPrescriptions = () => {
   };
 
   const openEdit = p => {
+    // Le backend peut renvoyer 'content' ou 'content_json' selon la version
+    const content = p.content || p.content_json || {};
+    const items   = Array.isArray(content.items) && content.items.length
+      ? content.items
+      : [emptyItem()];
     setSelPresc(p);
-    setForm({ items:p.content?.items?.length?p.content.items:[emptyItem()], notes:p.content?.notes||'' });
+    setForm({ items, notes: content.notes || '' });
     setIsEditOpen(true);
   };
 
