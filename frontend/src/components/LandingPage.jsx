@@ -833,9 +833,9 @@ export default function LandingPage() {
           {[
             {icon:'🇲🇬',t:'100% Madagascar',d:"Ariary, MVola, Orange Money, langue française, normes malgaches. Conçu par des Malgaches pour les Malgaches.",c:'#0D7A87'},
             {icon:'💰',t:'Prix accessible',d:"À partir de 149 000 Ar/mois soit 4 900 Ar par jour. Le meilleur rapport qualité / prix du marché.",c:'#10B981'},
-            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 30 minutes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
+            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 3 secondes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
             {icon:'🔒',t:'Données sécurisées',d:"Chiffrement de bout en bout, sauvegarde quotidienne automatique, hébergement sécurisé.",c:'#7C3AED'},
-            {icon:'📱',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
+            {icon:'💻',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
             {icon:'🤝',t:'Support réactif',d:"Équipe basée à Antananarivo, réponse sous 24h. En français, par des Malgaches.",c:'#0D7A87'},
           ].map((a,i)=>(
             <div key={i} className="sr glow-card" style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,padding:isMobile?'18px 16px':'28px 24px',transitionDelay:`${i*.07}s`}}>
@@ -881,7 +881,8 @@ export default function LandingPage() {
           <div className="sr">
             <ST tag="🏥 À propos" title="Notre mission : simplifier votre quotidien" sub={null}/>
             <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:13}}>
-              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité. Nous avons créé la solution qu'aucun éditeur international ne pouvait offrir.
+              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité.<br />
+              Nous avons créé la solution qu'aucun éditeur international ne pouvait offrir.
             </p>
             <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:26}}>
               Notre équipe basée à Antananarivo améliore continuellement la plateforme avec les retours directs des praticiens. Nous comprenons vos défis parce que nous sommes malgaches.
@@ -976,7 +977,7 @@ export default function LandingPage() {
               <span style={{color:'#5EEAD4'}}>votre cabinet</span>
             </h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.78,marginBottom:28}}>Notre équipe à Antananarivo est disponible pour répondre à toutes vos questions.</p>
-            {[{icon:'📧',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},{icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
+            {[{icon:'✉️',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},{icon:'📞',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'🗺️',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
               <div key={i} style={{display:'flex',gap:13,alignItems:'flex-start',marginBottom:18}}>
                 <div style={{width:42,height:42,background:'rgba(255,255,255,.08)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{c.icon}</div>
                 <div>
