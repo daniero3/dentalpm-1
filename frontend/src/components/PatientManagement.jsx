@@ -163,8 +163,9 @@ const ActionBtn = ({ icon: Icon, label, to, onClick, color='#0D7A87' }) => {
   const btn = (
     <button title={label} onClick={onClick}
       onMouseOver={() => setHover(true)} onMouseOut={() => setHover(false)}
-      style={{ width:32, height:32, borderRadius:9, border:`1.5px solid ${hover?color:'#E2E8F0'}`, background:hover?`${color}10`:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:hover?color:'#94A3B8', transition:'all .15s', flexShrink:0 }}>
-      <Icon size={14}/>
+      style={{ width:44, height:44, borderRadius:12, border:`1.5px solid ${hover?color:'#E2E8F0'}`, background:hover?`${color}12`:'#fff', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:3, color:hover?color:'#94A3B8', transition:'all .18s', flexShrink:0, padding:'4px 2px' }}>
+      <Icon size={18}/>
+      <span style={{ fontSize:9, fontWeight:700, color:hover?color:'#94A3B8', lineHeight:1, textAlign:'center', whiteSpace:'nowrap' }}>{label.length > 8 ? label.slice(0,8) : label}</span>
     </button>
   );
   return to ? <Link to={to} style={{ textDecoration:'none' }}>{btn}</Link> : btn;
@@ -462,7 +463,7 @@ const PatientManagement = () => {
               </div>
             )}
             {/* Accès rapides */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginTop:18 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginTop:18 }}>
               {[
                 { icon:Activity,      l:'Odontogramme', to:`/patients/${detail.id}/odontogram`,    c:'#7C3AED' },
                 { icon:FileText,      l:'Documents',    to:`/patients/${detail.id}/documents`,     c:'#3B82F6' },
@@ -473,11 +474,13 @@ const PatientManagement = () => {
               ].map((a,i) => {
                 const btn = (
                   <button key={i} onClick={a.onClick}
-                    style={{ padding:'10px 6px', borderRadius:11, border:`1.5px solid ${a.c}22`, background:`${a.c}08`, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5, transition:'all .2s' }}
-                    onMouseOver={e=>{e.currentTarget.style.background=`${a.c}15`;e.currentTarget.style.borderColor=`${a.c}44`;}}
-                    onMouseOut={e=>{e.currentTarget.style.background=`${a.c}08`;e.currentTarget.style.borderColor=`${a.c}22`;}}>
-                    <a.icon size={16} color={a.c}/>
-                    <span style={{ fontSize:11, fontWeight:600, color:a.c }}>{a.l}</span>
+                    style={{ padding:'14px 8px', borderRadius:14, border:`1.5px solid ${a.c}22`, background:`${a.c}08`, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:7, transition:'all .2s' }}
+                    onMouseOver={e=>{e.currentTarget.style.background=`${a.c}18`;e.currentTarget.style.borderColor=a.c;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 6px 16px ${a.c}25`;}}
+                    onMouseOut={e=>{e.currentTarget.style.background=`${a.c}08`;e.currentTarget.style.borderColor=`${a.c}22`;e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
+                    <div style={{ width:40, height:40, borderRadius:12, background:`${a.c}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <a.icon size={22} color={a.c}/>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:700, color:a.c, textAlign:'center', lineHeight:1.2 }}>{a.l}</span>
                   </button>
                 );
                 return a.to ? <Link key={i} to={a.to} style={{ textDecoration:'none' }} onClick={()=>setDetail(null)}>{btn}</Link> : btn;
