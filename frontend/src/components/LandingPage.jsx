@@ -824,7 +824,7 @@ export default function LandingPage() {
           {[
             {icon:'🇲🇬',t:'100% Madagascar',d:"Ariary, MVola, Orange Money, langue française, normes malgaches. Conçu par des Malgaches pour les Malgaches.",c:'#0D7A87'},
             {icon:'💰',t:'Prix accessible',d:"À partir de 149 000 Ar/mois soit 4 900 Ar par jour. Le meilleur rapport qualité / prix du marché.",c:'#10B981'},
-            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 30 minutes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
+            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 3 secondes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
             {icon:'🔒',t:'Données sécurisées',d:"Chiffrement de bout en bout, sauvegarde quotidienne automatique, hébergement sécurisé.",c:'#7C3AED'},
             {icon:'📱',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
             {icon:'🤝',t:'Support réactif',d:"Équipe basée à Antananarivo, réponse sous 24h. En français, par des Malgaches.",c:'#0D7A87'},
