@@ -343,6 +343,7 @@ function App() {
               <Route path="/legal/mentions" element={<LegalPages />} />
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
               <Route path="/billing/renew" element={<ProtectedRoute><MainLayout><BillingRenew /></MainLayout></ProtectedRoute>} />
+              <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
             </Routes>
           </BrowserRouter>
           <Toaster
