@@ -833,9 +833,9 @@ export default function LandingPage() {
           {[
             {icon:'🇲🇬',t:'100% Madagascar',d:"Ariary, MVola, Orange Money, langue française, normes malgaches. Conçu par des Malgaches pour les Malgaches.",c:'#0D7A87'},
             {icon:'💰',t:'Prix accessible',d:"À partir de 149 000 Ar/mois soit 4 900 Ar par jour. Le meilleur rapport qualité / prix du marché.",c:'#10B981'},
-            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 3 secondes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
+            {icon:'⚡',t:'Simple et rapide',d:"Opérationnel en 30 minutes. Interface intuitive, pas besoin d'informaticien. Formation incluse.",c:'#F59E0B'},
             {icon:'🔒',t:'Données sécurisées',d:"Chiffrement de bout en bout, sauvegarde quotidienne automatique, hébergement sécurisé.",c:'#7C3AED'},
-            {icon:'💻',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
+            {icon:'📱',t:'Multi-appareils',d:"Ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar.",c:'#EF4444'},
             {icon:'🤝',t:'Support réactif',d:"Équipe basée à Antananarivo, réponse sous 24h. En français, par des Malgaches.",c:'#0D7A87'},
           ].map((a,i)=>(
             <div key={i} className="sr glow-card" style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:18,padding:isMobile?'18px 16px':'28px 24px',transitionDelay:`${i*.07}s`}}>
@@ -881,8 +881,7 @@ export default function LandingPage() {
           <div className="sr">
             <ST tag="🏥 À propos" title="Notre mission : simplifier votre quotidien" sub={null}/>
             <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:13}}>
-              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité.<br />
-              Nous avons créé la solution qu'aucun éditeur international ne pouvait offrir.
+              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité. Nous avons créé la solution qu'aucun éditeur international ne pouvait offrir.
             </p>
             <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:26}}>
               Notre équipe basée à Antananarivo améliore continuellement la plateforme avec les retours directs des praticiens. Nous comprenons vos défis parce que nous sommes malgaches.
@@ -977,7 +976,7 @@ export default function LandingPage() {
               <span style={{color:'#5EEAD4'}}>votre cabinet</span>
             </h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.78,marginBottom:28}}>Notre équipe à Antananarivo est disponible pour répondre à toutes vos questions.</p>
-            {[{icon:'✉️',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},{icon:'📞',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'🗺️',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
+            {[{icon:'📧',label:'Email',val:'contact@dentalpracticemada.com',href:'mailto:contact@dentalpracticemada.com'},{icon:'📱',label:'Téléphone',val:'034 84 712 56',href:'tel:+261348471256'},{icon:'📍',label:'Adresse',val:'Tsiadana Ampasanimalo, Antananarivo'}].map((c,i)=>(
               <div key={i} style={{display:'flex',gap:13,alignItems:'flex-start',marginBottom:18}}>
                 <div style={{width:42,height:42,background:'rgba(255,255,255,.08)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,flexShrink:0}}>{c.icon}</div>
                 <div>
@@ -1031,22 +1030,75 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FOOTER ══ */}
-      <footer style={{background:'#03080B',padding:isMobile?'18px 16px':'28px 56px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
-        <div style={{display:'flex',alignItems:'center',gap:10}}>
-          <Logo size={46} glow={false}/>
-          <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
-            <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,color:'rgba(255,255,255,.85)',fontSize:15,letterSpacing:'-0.01em'}}>Madagascar</span>
-            <span style={{fontSize:10,color:'rgba(255,255,255,.35)',fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',marginTop:2}}>Cabinet Dentaire</span>
+      <footer style={{background:'#03080B',padding:isMobile?'24px 16px 20px':'36px 56px 28px',display:'flex',flexDirection:'column',gap:20}}>
+        {/* Ligne principale */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:14}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <Logo size={46} glow={false}/>
+            <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+              <span style={{fontFamily:'Bricolage Grotesque',fontWeight:800,color:'rgba(255,255,255,.85)',fontSize:15,letterSpacing:'-0.01em'}}>Madagascar</span>
+              <span style={{fontSize:10,color:'rgba(255,255,255,.35)',fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',marginTop:2}}>Cabinet Dentaire</span>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:isMobile?10:18,flexWrap:'wrap'}}>
+            {[['#services','Fonctionnalités'],['#tarifs','Tarifs'],['#faq','FAQ'],['#contact','Contact']].map(([h,l])=>(
+              <a key={h} href={h} style={{color:'rgba(255,255,255,.35)',fontSize:12,textDecoration:'none'}}>{l}</a>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:9,alignItems:'center'}}>
+            <span style={{color:'rgba(255,255,255,.28)',fontSize:11}}>© {new Date().getFullYear()} DPM Madagascar</span>
+            <button onClick={()=>navigate('/login')} style={{padding:'5px 11px',borderRadius:7,border:'1px solid rgba(255,255,255,.15)',background:'transparent',color:'rgba(255,255,255,.5)',cursor:'pointer',fontSize:12,fontWeight:600}}>Connexion</button>
           </div>
         </div>
-        <div style={{display:'flex',gap:isMobile?10:18,flexWrap:'wrap'}}>
-          {[['#services','Fonctionnalités'],['#tarifs','Tarifs'],['#faq','FAQ'],['#contact','Contact']].map(([h,l])=>(
-            <a key={h} href={h} style={{color:'rgba(255,255,255,.35)',fontSize:12,textDecoration:'none'}}>{l}</a>
-          ))}
-        </div>
-        <div style={{display:'flex',gap:9,alignItems:'center'}}>
-          <span style={{color:'rgba(255,255,255,.28)',fontSize:11}}>© {new Date().getFullYear()} DPM Madagascar</span>
-          <button onClick={()=>navigate('/login')} style={{padding:'5px 11px',borderRadius:7,border:'1px solid rgba(255,255,255,.15)',background:'transparent',color:'rgba(255,255,255,.5)',cursor:'pointer',fontSize:12,fontWeight:600}}>Connexion</button>
+
+        {/* Séparateur */}
+        <div style={{height:1,background:'rgba(255,255,255,.07)'}}/>
+
+        {/* Ligne réseaux sociaux */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:14}}>
+          <span style={{color:'rgba(255,255,255,.25)',fontSize:11}}>Suivez-nous sur les réseaux</span>
+          <div style={{display:'flex',gap:10}}>
+            {[
+              {
+                href:'https://www.facebook.com/profile.php?id=61575985702570',
+                label:'Facebook',
+                color:'#1877F2',
+                icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              },
+              {
+                href:'https://wa.me/261348471256',
+                label:'WhatsApp',
+                color:'#25D366',
+                icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              },
+              {
+                href:'https://www.tiktok.com/@dentalpm.madagascar',
+                label:'TikTok',
+                color:'#fff',
+                icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.2 8.2 0 004.79 1.53V6.75a4.85 4.85 0 01-1.02-.06z"/></svg>
+              },
+              {
+                href:'mailto:contact@dentalpracticemada.com',
+                label:'Email',
+                color:'#EA4335',
+                icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/></svg>
+              },
+              {
+                href:'tel:+261348471256',
+                label:'Telephone',
+                color:'#10B981',
+                icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+              },
+            ].map(s=>(
+              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" title={s.label}
+                style={{width:36,height:36,borderRadius:10,background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.1)',display:'flex',alignItems:'center',justifyContent:'center',color:s.color,textDecoration:'none',transition:'all .2s',flexShrink:0}}
+                onMouseOver={e=>{e.currentTarget.style.background=`${s.color}22`;e.currentTarget.style.borderColor=`${s.color}44`;e.currentTarget.style.transform='translateY(-2px)';}}
+                onMouseOut={e=>{e.currentTarget.style.background='rgba(255,255,255,.07)';e.currentTarget.style.borderColor='rgba(255,255,255,.1)';e.currentTarget.style.transform='translateY(0)';}}>
+                {s.icon}
+              </a>
+            ))}
+          </div>
+          <span style={{color:'rgba(255,255,255,.18)',fontSize:10}}>Made with ❤️ in Madagascar</span>
         </div>
       </footer>
 
