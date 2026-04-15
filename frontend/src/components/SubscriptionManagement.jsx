@@ -11,6 +11,11 @@ const fmt   = n => new Intl.NumberFormat('fr-MG').format(n || 0);
 const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' }) : '—';
 
 const PLAN_PRICES   = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
+const STRIPE_LINKS  = {
+  ESSENTIAL: 'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01',
+  PRO:       'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00',
+  GROUP:     'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02',
+};
 const PLAN_PATIENTS = { ESSENTIAL:500, PRO:null, GROUP:null };
 const MONTHS_FR     = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 const PIE_COLORS    = ['#0D7A87','#8B5CF6','#3B82F6','#F59E0B'];
@@ -242,6 +247,24 @@ function UserView({ user }) {
           </div>
         )}
 
+        {sideTab==='overview' && (
+          <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'14px 18px', display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:36, height:36, borderRadius:10, background:'#635BFF18', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <CreditCard size={16} color="#635BFF"/>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>Renouveler avec Mastercard / Stripe</div>
+              <div style={{ fontSize:11, color:'#64748B' }}>Paiement sécurisé — Plan actuel : {plan} ({fmt(PLAN_PRICES[plan]||199000)} Ar/mois)</div>
+            </div>
+            <a href={STRIPE_LINKS[plan] || STRIPE_LINKS.PRO} target="_blank" rel="noopener noreferrer"
+              style={{ padding:'9px 18px', borderRadius:10, background:'#635BFF', color:'#fff', fontWeight:700, fontSize:13, textDecoration:'none', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(99,91,255,.3)' }}
+              onMouseOver={e=>{e.currentTarget.style.background='#4F46E5';}}
+              onMouseOut={e=>{e.currentTarget.style.background='#635BFF';}}>
+              💳 Payer avec Stripe
+            </a>
+          </div>
+        )}
+
         {(sideTab==='overview'||sideTab==='usage') && (
           <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'20px 22px' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
@@ -314,8 +337,36 @@ function UserView({ user }) {
                 </div>
               ))}
             </div>
+            {/* Boutons Stripe par plan */}
+            <div style={{ fontSize:12, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10, marginTop:4 }}>Payer maintenant avec Stripe</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12 }}>
+              {['ESSENTIAL','PRO','GROUP'].map(pl => {
+                const pc4 = PLAN_CFG[pl] || PLAN_CFG.PRO;
+                const Ico4 = pc4.icon;
+                const isCurrent = plan === pl;
+                return (
+                  <a key={pl} href={STRIPE_LINKS[pl]} target="_blank" rel="noopener noreferrer"
+                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'12px 8px', borderRadius:12, border:`1.5px solid ${isCurrent?'#635BFF':pc4.border}`, background:isCurrent?'#635BFF':pc4.bg, textDecoration:'none', transition:'all .15s' }}
+                    onMouseOver={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 16px rgba(99,91,255,.25)';}}
+                    onMouseOut={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
+                    <div style={{ width:32, height:32, borderRadius:9, background:isCurrent?'rgba(255,255,255,.2)':pc4.text+'18', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <Ico4 size={16} color={isCurrent?'#fff':pc4.text}/>
+                    </div>
+                    <span style={{ fontSize:11, fontWeight:700, color:isCurrent?'#fff':pc4.text }}>{pl}</span>
+                    <span style={{ fontSize:10, color:isCurrent?'rgba(255,255,255,.75)':'#94A3B8' }}>{fmt(PLAN_PRICES[pl])} Ar</span>
+                    {isCurrent && <span style={{ fontSize:9, background:'rgba(255,255,255,.2)', color:'#fff', padding:'1px 6px', borderRadius:99, fontWeight:700 }}>Actuel</span>}
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Séparateur */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, margin:'8px 0 12px', color:'#94A3B8', fontSize:12 }}>
+              <div style={{ flex:1, height:1, background:'#E2E8F0' }}/><span>ou payer via Mobile Money</span><div style={{ flex:1, height:1, background:'#E2E8F0' }}/>
+            </div>
+
             <a href="/payment" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'12px', borderRadius:12, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 4px 14px rgba(13,122,135,.28)' }}>
-              <CreditCard size={16}/> Renouveler mon abonnement
+              <CreditCard size={16}/> Payer via Mobile Money
             </a>
           </div>
         )}
