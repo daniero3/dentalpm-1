@@ -202,11 +202,22 @@ const LoginForm = () => {
               </button>
             </form>
             <div style={{ textAlign:'center', marginTop:20, paddingTop:20, borderTop:'1px solid #F1F5F9' }}>
-              <span style={{ fontSize:13, color:'#64748B' }}>Pas encore de compte ? </span>
-              <button onClick={() => navigate('/landing')}
-                style={{ fontSize:13, color:'#0D7A87', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
-                S'inscrire
-              </button>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <div>
+                  <span style={{ fontSize:13, color:'#64748B' }}>Nouveau praticien / assistant ? </span>
+                  <button onClick={() => { setStep(STEP_REGISTER); setError(''); }}
+                    style={{ fontSize:13, color:'#0D7A87', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
+                    Créer un compte
+                  </button>
+                </div>
+                <div>
+                  <span style={{ fontSize:13, color:'#64748B' }}>Vous souhaitez créer un cabinet ? </span>
+                  <button onClick={() => navigate('/landing')}
+                    style={{ fontSize:13, color:'#7C3AED', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
+                    S&apos;abonner →
+                  </button>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -256,8 +267,8 @@ const LoginForm = () => {
                 <ArrowLeft size={18}/>
               </button>
               <div>
-                <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:18, color:'#0F172A', margin:0 }}>Inscription</h2>
-                <p style={{ color:'#64748B', fontSize:12, margin:'2px 0 0' }}>Créer un nouveau compte</p>
+                <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:18, color:'#0F172A', margin:0 }}>Nouveau compte</h2>
+                <p style={{ color:'#64748B', fontSize:12, margin:'2px 0 0' }}>Praticien · Assistant(e) · Comptable</p>
               </div>
             </div>
             <ErrorBox msg={error} />
@@ -305,19 +316,26 @@ const LoginForm = () => {
               {/* ✅ Sélection Cabinet */}
               <div>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>
-                  Cabinet *
-                  {loadingClinics && <span style={{ color:'#94A3B8', fontWeight:400, marginLeft:8 }}>Chargement...</span>}
+                  Cabinet * {loadingClinics && <span style={{ color:'#94A3B8', fontWeight:400, marginLeft:8 }}>Chargement...</span>}
                 </label>
                 <select style={{ ...inputStyle, paddingLeft:14 }} value={registerData.clinic_id}
                   onChange={e => setRegisterData({...registerData, clinic_id:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required>
                   <option value="">Sélectionnez votre cabinet</option>
-                  {allClinics.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}{c.city ? ` — ${c.city}` : ''}</option>
+                  {allClinics.map(cl => (
+                    <option key={cl.id} value={cl.id}>
+                      {cl.name}{cl.city ? ` — ${cl.city}` : ''}{cl.current_plan ? ` (${cl.current_plan})` : ''}
+                    </option>
                   ))}
                 </select>
                 {allClinics.length === 0 && !loadingClinics && (
-                  <p style={{ fontSize:11, color:'#94A3B8', marginTop:4 }}>Aucun cabinet disponible — contactez l'administrateur</p>
+                  <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:9, padding:'10px 12px', marginTop:6 }}>
+                    <p style={{ fontSize:12, color:'#B45309', margin:0, fontWeight:600 }}>⚠️ Aucun cabinet abonné disponible</p>
+                    <p style={{ fontSize:11, color:'#B45309', margin:'3px 0 0' }}>Votre cabinet doit avoir un abonnement actif pour vous ajouter.</p>
+                  </div>
+                )}
+                {allClinics.length > 0 && (
+                  <p style={{ fontSize:11, color:'#94A3B8', marginTop:4 }}>Seuls les cabinets avec un abonnement actif apparaissent dans la liste.</p>
                 )}
               </div>
 

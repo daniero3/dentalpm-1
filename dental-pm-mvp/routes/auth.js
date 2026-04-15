@@ -55,9 +55,13 @@ router.post('/register', [
 // ── GET /clinics-list — liste des cabinets pour inscription ──────────────────
 router.get('/clinics-list', async (req, res) => {
   try {
+    // Uniquement les cabinets avec abonnement actif (ACTIVE ou TRIAL)
     const clinics = await Clinic.findAll({
-      where: { is_active: true },
-      attributes: ['id', 'name', 'city', 'phone'],
+      where: {
+        is_active: true,
+        subscription_status: { [require('sequelize').Op.in]: ['ACTIVE', 'TRIAL'] }
+      },
+      attributes: ['id', 'name', 'city', 'phone', 'subscription_status', 'current_plan'],
       order: [['name', 'ASC']]
     });
     res.json({ clinics });
