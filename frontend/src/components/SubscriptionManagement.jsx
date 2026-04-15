@@ -507,6 +507,7 @@ const AdminView = () => {
   if (loading) return <Spin/>;
 
   return (
+    <>
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
       {/* Header */}
@@ -852,6 +853,7 @@ const AdminView = () => {
     </div>
     </div>
     </div>
+    </>
   );
 };
 
