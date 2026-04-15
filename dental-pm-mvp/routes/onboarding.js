@@ -228,7 +228,7 @@ router.post('/complete', async (req, res) => {
         trial_end_date: trialEnd,
         end_date: trialEnd,
         max_practitioners: 5,
-        price_mga: 245000
+        price_mga: { ESSENTIAL:149000, PRO:199000, GROUP:299000 }[req.body?.plan || 'PRO'] || 199000
       });
     }
 

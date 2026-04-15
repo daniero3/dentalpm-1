@@ -87,7 +87,8 @@ const BillingRenew = () => {
 
   const isExpired = billingStatus?.is_expired;
   const isTrial = billingStatus?.is_trial;
-  const price = billingStatus?.price_mga || 245000;
+  const PLAN_PRICES_MAP = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
+  const price = PLAN_PRICES_MAP[billingStatus?.plan] || billingStatus?.price_mga || 199000;
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
