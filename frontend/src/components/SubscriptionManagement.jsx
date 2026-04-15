@@ -94,6 +94,35 @@ function Kpi({ label, value, sub, trend, icon:Icon, color='#0D7A87' }) {
 /* ══════════════════════════════════════════════════
    VUE UTILISATEUR
 ══════════════════════════════════════════════════ */
+async function downloadInvoicePDF(payment) {
+  try {
+    const date = new Date(payment.created_at);
+    const year  = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const url = `${API}/billing/invoice/${year}/${month}`;
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (!response.ok) {
+      // Fallback: télécharger un PDF basique avec les infos du paiement
+      toast.error('Erreur téléchargement PDF');
+      return;
+    }
+    const blob = await response.blob();
+    const link = document.createElement('a');
+    link.href  = window.URL.createObjectURL(blob);
+    link.download = `facture-${payment.reference || payment.id?.slice(-6) || 'dpm'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(link.href);
+    toast.success('PDF téléchargé');
+  } catch (err) {
+    console.error(err);
+    toast.error('Erreur téléchargement');
+  }
+}
+
 function UserView({ user }) {
   const [status,   setStatus]   = useState(null);
   const [payments, setPayments] = useState([]);
@@ -323,7 +352,8 @@ function UserView({ user }) {
                         <td style={{ padding:'11px 12px', fontSize:11, color:'#64748B' }}>{fdate(p.created_at)}</td>
                         <td style={{ padding:'11px 12px' }}><SBadge status={p.status}/></td>
                         <td style={{ padding:'11px 12px' }}>
-                          <button style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:7, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#475569' }}
+                          <button onClick={()=>downloadInvoicePDF(p)}
+                            style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:7, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#475569' }}
                             onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
                             onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';}}>
                             <Download size={11}/> PDF
