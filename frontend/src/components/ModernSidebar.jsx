@@ -8,19 +8,20 @@ import {
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../App"
 
-const navigation = [
-  { name:"Tableau de bord", href:"/",            icon:Home },
-  { name:"Patients",        href:"/patients",     icon:Users },
-  { name:"Rendez-vous",     href:"/appointments", icon:Calendar },
-  { name:"Devis",           href:"/quotes",       icon:FileText },
-  { name:"Factures",        href:"/invoices",     icon:FileText },
-  { name:"Rapports",        href:"/reports",      icon:BarChart3 },
-  { name:"Inventaire",      href:"/inventory",    icon:Package },
-  { name:"Achats",          href:"/purchases",    icon:ShoppingCart },
-  { name:"Fournisseurs",    href:"/suppliers",    icon:Truck },
-  { name:"Laboratoire",     href:"/lab",          icon:FlaskConical },
-  { name:"Mailing",         href:"/mailing",      icon:Mail },
-  { name:"Paramètres",      href:"/settings",     icon:Settings },
+// Tous les items avec leur plan minimum requis
+const ALL_NAV = [
+  { name:"Tableau de bord", href:"/",            icon:Home,         plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Patients",        href:"/patients",    icon:Users,        plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Rendez-vous",     href:"/appointments",icon:Calendar,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Devis",           href:"/quotes",      icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Factures",        href:"/invoices",    icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Rapports",        href:"/reports",     icon:BarChart3,    plans:['PRO','GROUP'] },
+  { name:"Inventaire",      href:"/inventory",   icon:Package,      plans:['PRO','GROUP'] },
+  { name:"Achats",          href:"/purchases",   icon:ShoppingCart, plans:['PRO','GROUP'] },
+  { name:"Fournisseurs",    href:"/suppliers",   icon:Truck,        plans:['PRO','GROUP'] },
+  { name:"Laboratoire",     href:"/lab",         icon:FlaskConical, plans:['PRO','GROUP'] },
+  { name:"Mailing",         href:"/mailing",     icon:Mail,         plans:['PRO','GROUP'] },
+  { name:"Paramètres",      href:"/settings",    icon:Settings,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
 ]
 
 const adminNavigation = [
@@ -97,9 +98,28 @@ const DentalLogo = ({ size=36, animate=false }) => (
 );
 
 // ── Contenu sidebar (réutilisé desktop + drawer) ──
+const BACKEND = process.env.REACT_APP_BACKEND_URL || 'https://dentalpm-1-production.up.railway.app'
+
 const SidebarContent = ({ collapsed, onNavClick }) => {
   const location = useLocation()
   const { user } = useAuth()
+  const [userPlan, setUserPlan] = React.useState(null)
+
+  React.useEffect(() => {
+    if (!user || user.role === 'SUPER_ADMIN') return
+    const token = localStorage.getItem('token')
+    fetch(`${BACKEND}/api/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.plan) setUserPlan(d.plan) })
+      .catch(() => {})
+  }, [user])
+
+  // Filtrer la navigation selon le plan
+  const navigation = ALL_NAV.filter(item => {
+    if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return true
+    if (!userPlan) return item.plans.includes('ESSENTIAL') // défaut conservative
+    return item.plans.includes(userPlan)
+  })
 
   const isActive = (href) =>
     href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
@@ -162,6 +182,28 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
         {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 8px 8px', margin:0 }}>Navigation</p>}
         {navigation.map(item => <NavItem key={item.href} item={item} />)}
 
+        {/* Items verrouillés — visible si plan ESSENTIAL */}
+        {userPlan === 'ESSENTIAL' && !collapsed && (
+          <div style={{ marginTop:8, padding:'8px 10px', borderRadius:10, background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.08)' }}>
+            <p style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,.35)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 6px' }}>Disponible en PRO</p>
+            {ALL_NAV.filter(i=>!i.plans.includes('ESSENTIAL')).map(item => {
+              const Icon = item.icon
+              return (
+                <div key={item.href} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 6px', borderRadius:8, opacity:.45, cursor:'not-allowed', marginBottom:2 }}>
+                  <div style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.06)', flexShrink:0 }}>
+                    <Icon size={14} color='rgba(255,255,255,.4)'/>
+                  </div>
+                  <span style={{ fontSize:12, color:'rgba(255,255,255,.4)', flex:1 }}>{item.name}</span>
+                  <span style={{ fontSize:8, fontWeight:700, background:'rgba(255,165,0,.2)', color:'#F59E0B', padding:'1px 5px', borderRadius:99 }}>PRO</span>
+                </div>
+              )
+            })}
+            <a href='/subscription' style={{ display:'block', marginTop:8, padding:'6px 8px', borderRadius:8, background:'rgba(99,91,255,.25)', color:'rgba(255,255,255,.8)', fontSize:11, fontWeight:700, textDecoration:'none', textAlign:'center' }}>
+              ↑ Passer au plan PRO
+            </a>
+          </div>
+        )}
+
         {user?.role !== 'SUPER_ADMIN' && (
           <>
             <div style={{ height:1, background:'rgba(255,255,255,0.12)', margin:'10px 0' }} />
@@ -193,6 +235,11 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           <div style={{ overflow:'hidden', flex:1 }}>
             <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:13, color:'#fff', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
             <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', margin:0 }}>{user?.role}</p>
+              {userPlan && user?.role !== 'SUPER_ADMIN' && (
+                <span style={{ fontSize:9, fontWeight:700, background:'rgba(255,255,255,.15)', color:'rgba(255,255,255,.7)', padding:'1px 6px', borderRadius:99, marginTop:2, display:'inline-block' }}>
+                  {userPlan}
+                </span>
+              )}
           </div>
         )}
         <div style={{ width:8, height:8, borderRadius:'50%', background:'#22C55E', flexShrink:0, boxShadow:'0 0 0 2px rgba(255,255,255,0.3)' }} />
