@@ -100,7 +100,7 @@ app.use('/api/appointments',     appointmentRoutes);
 app.use('/api/invoices',         invoiceRoutes);
 app.use('/api/quotes',           requireAuth, quoteRoutes);
 app.use('/api/integrations',     integrationRoutes);
-app.use('/api/dashboard',        dashboardRoutes);
+app.use('/api/dashboard',        requireAuth, dashboardRoutes);
 app.use('/api/inventory',        inventoryRoutes);
 app.use('/api/suppliers',        supplierRoutes);
 app.use('/api/labs',             requireAuth, labRoutes);
