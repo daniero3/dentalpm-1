@@ -30,7 +30,7 @@ const adminNavigation = [
 ]
 
 const billingNavigation = [
-  { name:"Paiement/Abonnement", href:"/payment", icon:CreditCard },
+  { name:"Mon Abonnement", href:"/subscription", icon:CreditCard },
 ]
 
 const NAV_COLORS = {
