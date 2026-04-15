@@ -671,7 +671,6 @@ const AdminView = () => {
           </div>
         )}
       </div>
-    </div>
 
       {/* ══ LISTE TOUS LES CABINETS ══ */}
       {(data?.allClinics||[]).length > 0 && (
@@ -850,6 +849,8 @@ const AdminView = () => {
           </div>
         </div>
       )}
+    </div>
+    </div>
     </div>
   );
 };
