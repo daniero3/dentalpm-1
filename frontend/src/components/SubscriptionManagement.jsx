@@ -139,6 +139,14 @@ const UserView = ({ user }) => {
   const Icon    = PLAN_ICONS[plan] || Zap;
   const sc      = STATUS_CFG[status?.status] || STATUS_CFG.ACTIVE;
   const daysLeft = status?.days_remaining ?? null;
+  const formatDaysLeft = (d) => {
+    if (d === null) return '—';
+    if (d === 0) return 'Aujourd\'hui';
+    if (d <= 30) return `${d} j`;
+    const months = Math.floor(d / 30);
+    const days   = d % 30;
+    return days > 0 ? `${months} mois ${days}j` : `${months} mois`;
+  };
 
   const SIDEBAR_ITEMS = [
     { id:'overview',  label:'Vue d\'ensemble',  icon:BarChart2 },
@@ -186,7 +194,7 @@ const UserView = ({ user }) => {
         {/* Lien renouvellement */}
         <div style={{ marginTop:12, padding:'10px 12px', borderRadius:10, background:'#FFF7ED', border:'1px solid #FED7AA' }}>
           <div style={{ fontSize:11, fontWeight:700, color:'#C2410C', marginBottom:4 }}>
-            {daysLeft !== null ? `Expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}` : 'Abonnement actif'}
+            {daysLeft !== null ? (daysLeft <= 7 ? `⚠️ Expire dans ${daysLeft}j` : `Expire dans ${formatDaysLeft(daysLeft)}`) : 'Abonnement actif'}
           </div>
           <a href="/payment" style={{ fontSize:11, fontWeight:700, color:'#EA580C', textDecoration:'none', display:'flex', alignItems:'center', gap:3 }}>
             Renouveler <ChevronRight size={10}/>
@@ -223,7 +231,7 @@ const UserView = ({ user }) => {
                 {[
                   { label:'Praticiens',  value: plan==='GROUP'?'Illimités': plan==='PRO'?'5':'1' },
                   { label:'Patients',    value: plan==='ESSENTIAL'?'500':'Illimités' },
-                  { label:'Jours rest.', value: daysLeft !== null ? `${daysLeft} j` : '—' },
+                  { label:'Durée rest.', value: formatDaysLeft(daysLeft) },
                 ].map((s,i) => (
                   <div key={i} style={{ textAlign:'center', borderRight:i<2?'1px solid #E2E8F0':'none' }}>
                     <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:18, color:pc.icon }}>{s.value}</div>
