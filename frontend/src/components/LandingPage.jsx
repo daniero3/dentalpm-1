@@ -339,7 +339,7 @@ const FEATURES_LIST = [
   {tag:'SMS',icon:'💬',title:'SMS automatiques',desc:"Rappels 24h avant RDV, messages d'anniversaire, relances patients inactifs. Zéro appel manuel inutile.",color:'#10B981'},
 ];
 const FAQS = [
-  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes, sans carte bancaire. Accès immédiat à toutes les fonctionnalités PRO. À la fin, choisissez votre plan et payez via MVola, Orange Money ou virement BNI."},
+  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes, sans carte bancaire. Accès immédiat à toutes les fonctionnalités PRO. À la fin, choisissez votre plan et payez via MVola, Orange Money ou carte Mastercard."},
   {q:"Mes données patients sont-elles sécurisées ?",a:"Oui. Chiffrement de bout en bout, sauvegarde automatique quotidienne, hébergement sécurisé. Confidentialité médicale respectée, aucune donnée partagée avec des tiers."},
   {q:"Puis-je annuler à tout moment ?",a:"Oui, sans engagement ni pénalité. Annulez depuis votre espace cabinet en un clic. Vos données restent accessibles jusqu'à la fin de la période payée."},
   {q:"Combien de patients avec le plan ESSENTIAL ?",a:"Le plan ESSENTIAL gère jusqu'à 500 patients actifs pour 1 praticien + 1 assistant(e). Le plan PRO offre des patients illimités dès 199 000 Ar/mois."},
@@ -410,7 +410,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
             {step===2&&(
               <div>
                 <p style={{color:'var(--slate)',fontSize:14,lineHeight:1.7,marginBottom:14}}>Votre <strong>essai de 7 jours</strong> commence immédiatement. À la fin, payez par :</p>
-                {[{n:'MVola',num:'034 XX XXX XX',c:'#E30613'},{n:'Orange Money',num:'032 XX XXX XX',c:'#FF6600'},{n:'Airtel Money',num:'033 XX XXX XX',c:'#E4002B'},{n:'Virement Banquière',num:'RIB sur demande',c:'#1A3A5C'}].map(p=>(
+                {[{n:'MVola',num:'034 XX XXX XX',c:'#E30613'},{n:'Orange Money',num:'032 XX XXX XX',c:'#FF6600'},{n:'Airtel Money',num:'033 XX XXX XX',c:'#E4002B'},{n:'Virement Banquière',num:'Carte Mastercard',c:'#EB001B'}].map(p=>(
                   <div key={p.n} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:11,padding:'10px 14px',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <span style={{fontWeight:700,color:p.c,fontSize:14}}>{p.n}</span>
                     <span style={{color:'var(--muted)',fontSize:13}}>{p.num}</span>

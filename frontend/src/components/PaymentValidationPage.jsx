@@ -14,7 +14,7 @@ const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR',{day:'numeric',mon
 
 const METHODS = {
   MVOLA:'MVola 📱', ORANGE_MONEY:'Orange Money 📱',
-  AIRTEL_MONEY:'Airtel Money 📱', BANK_TRANSFER:'Virement BNI 🏦', CASH:'Espèces 💵',
+  AIRTEL_MONEY:'Airtel Money 📱', BANK_TRANSFER:'Mastercard 💳', CASH:'Espèces 💵',
 };
 
 const ST_TABS = [

@@ -28,7 +28,7 @@ const METHODS = [
   { code:'MVOLA',         name:'MVola (Telma)',  color:'#E30613', bg:'#FFF0F0', emoji:'📱', auto:true,  delay:'~5 min' },
   { code:'ORANGE_MONEY',  name:'Orange Money',   color:'#FF6600', bg:'#FFF5F0', emoji:'🟠', auto:true,  delay:'~5 min' },
   { code:'AIRTEL_MONEY',  name:'Airtel Money',   color:'#CC0000', bg:'#FFF0F0', emoji:'🔴', auto:false, delay:'Référence requise' },
-  { code:'BANK_TRANSFER', name:'Virement BNI',   color:'#1E3A5F', bg:'#F0F4FF', emoji:'🏦', auto:false, delay:'~2h' },
+  { code:'BANK_TRANSFER', name:'Mastercard',   color:'#EB001B', bg:'#F0F4FF', emoji:'🏦', auto:false, delay:'~2h' },
   { code:'CASH',          name:'Espèces (bureau)',color:'#166534', bg:'#F0FFF4', emoji:'💵', auto:false, delay:'Sur place' },
 ];
 

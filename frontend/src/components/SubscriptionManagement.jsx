@@ -329,7 +329,7 @@ const UserView = ({ user }) => {
                 { name:'MVola',        color:'#E30613', num:'034 XX XXX XX', logo:'M' },
                 { name:'Orange Money', color:'#FF6600', num:'032 XX XXX XX', logo:'O' },
                 { name:'Airtel Money', color:'#E4002B', num:'033 XX XXX XX', logo:'A' },
-                { name:'Virement BNI', color:'#1A3A5C', num:'RIB sur demande', logo:'B' },
+                { name:'Mastercard', color:'#EB001B', num:'Carte Mastercard', logo:'M' },
               ].map(p => (
                 <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'#F8FAFC', borderRadius:11, border:'1px solid #E2E8F0' }}>
                   <div style={{ width:30, height:30, borderRadius:8, background:p.color, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:13, color:'#fff', flexShrink:0 }}>{p.logo}</div>
