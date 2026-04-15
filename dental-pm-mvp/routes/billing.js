@@ -151,7 +151,7 @@ const getClinicId = (req) =>
 
 const router = express.Router();
 
-const MONTHLY_PRICE_MGA = 245000;
+const MONTHLY_PRICE_MGA = 199000; // Défaut PRO — remplacé dynamiquement selon le plan
 
 // ── Générer une référence unique DPM ─────────────────────────────────────
 function generateRef(clinicId) {
@@ -196,7 +196,7 @@ router.get('/status', async (req, res) => {
       days_remaining: daysRemaining,
       end_date:       subscription.end_date,
       trial_end_date: subscription.trial_end_date,
-      price_mga:      MONTHLY_PRICE_MGA,
+      price_mga:      PLAN_PRICES[subscription.plan] || MONTHLY_PRICE_MGA,
       needs_payment:  isExpired || isTrialExp || ['EXPIRED','TRIAL_EXPIRED','SUPERSEDED'].includes(subscription.status),
     });
   } catch (error) {
@@ -495,14 +495,19 @@ router.get('/invoice/:year/:month', async (req, res) => {
     doc.moveTo(50, tableTop+20).lineTo(550, tableTop+20).stroke();
     doc.font('Helvetica');
     const iY = tableTop + 30;
-    doc.text(`Abonnement DentalPM PRO - ${monthName} ${year}`, 50, iY, { width:300 });
-    doc.text(`${new Intl.NumberFormat('fr-MG').format(MONTHLY_PRICE_MGA)} Ar`, 400, iY, { width:100, align:'right' });
+    // description remplacée par le bloc dynamique ci-dessous
+    // Prix selon le plan actif de la clinique
+    const clinicPlan  = clinic.current_plan || 'PRO';
+    const planAmount  = PLAN_PRICES[clinicPlan] || MONTHLY_PRICE_MGA;
+    const fmtAmt      = new Intl.NumberFormat('fr-MG').format(planAmount);
+    doc.text(`Plan ${clinicPlan} — Abonnement DentalPM`, 50, iY, { width:300 });
+    doc.text(`${fmtAmt} Ar`, 400, iY, { width:100, align:'right' });
     doc.moveTo(50, iY+30).lineTo(550, iY+30).stroke();
     doc.font('Helvetica-Bold').text('TOTAL:', 300, iY+45, { width:100 });
-    doc.text(`${new Intl.NumberFormat('fr-MG').format(MONTHLY_PRICE_MGA)} Ar`, 400, iY+45, { width:100, align:'right' });
+    doc.text(`${fmtAmt} Ar`, 400, iY+45, { width:100, align:'right' });
     // QR Code
     try {
-      const qrData = `DPM-ABO:${year}-${month} | ${clinic.name} | ${new Intl.NumberFormat('fr-MG').format(MONTHLY_PRICE_MGA)} Ar`;
+      const qrData = `DPM-ABO:${year}-${month} | ${clinic.name} | Plan ${clinic.current_plan||'PRO'} | ${new Intl.NumberFormat('fr-MG').format(PLAN_PRICES[clinic.current_plan]||MONTHLY_PRICE_MGA)} Ar`;
       const qrBuffer = await QRCode.toBuffer(qrData, { width: 80 });
       const qrY = doc.y + 20;
       doc.save()

@@ -16,12 +16,12 @@ const API = process.env.REACT_APP_BACKEND_URL
 const fmt = n => new Intl.NumberFormat('fr-MG').format(n || 0);
 
 const PLANS = [
-  { code:'ESSENTIAL', label:'ESSENTIAL', price:149000, popular:false, desc:'Cabinet solo', stripe:'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01',
-    features:['1 praticien + 1 assistant','500 patients','Agenda & RDV','Facturation de base','Support email'] },
-  { code:'PRO', label:'PRO', price:199000, popular:true, desc:'Le plus populaire', stripe:'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00',
-    features:['5 praticiens','Patients illimités','Rappels SMS','Laboratoire','Inventaire','Rapports','Support prioritaire'] },
-  { code:'GROUP', label:'GROUP', price:299000, popular:false, desc:'Multi-sites', stripe:'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02',
-    features:['Praticiens illimités','Multi-sites','Tout PRO','API dédiée','Formation incluse'] },
+  { code:'ESSENTIAL', label:'ESSENTIAL', price:149000, popular:false, desc:'Idéal pour les cabinets solo', stripe:'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01',
+    features:['1 praticien + 1 assistant(e)','Jusqu\u2019à 500 patients','Agenda & rendez-vous','Facturation de base','Ordonnances PDF','Odontogramme FDI','Support email'] },
+  { code:'PRO', label:'PRO', price:199000, popular:true, desc:'Le plus choisi par nos clients', stripe:'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00',
+    features:['5 praticiens','Patients illimités','Rappels SMS automatiques','Laboratoire dentaire','Inventaire & stock','Rapports financiers','Mailing patients','Support prioritaire'] },
+  { code:'GROUP', label:'GROUP', price:299000, popular:false, desc:'Pour les groupes et multi-sites', stripe:'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02',
+    features:['Praticiens illimités','Multi-sites','Patients illimités','Tout le plan PRO','API dédiée','Dashboard groupe','Formation sur site incluse'] },
 ];
 
 const METHODS = [
