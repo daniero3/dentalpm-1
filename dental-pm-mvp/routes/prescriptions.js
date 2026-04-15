@@ -326,7 +326,13 @@ router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
         </div>`).join('') : '<p style="color:#999">Aucun médicament prescrit</p>'}
     </div>
     ${prescription.notes ? `<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${prescription.notes}</p>` : ''}
-    <div class="footer">
+    <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-end">
+      <div style="text-align:center">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent('DPM-ORD:'+prescription.number+' | Patient:'+((patient?.first_name||'')+' '+(patient?.last_name||'')).trim()+' | Date:'+new Date(prescription.created_at).toLocaleDateString('fr-FR'))}" 
+             alt="QR" style="width:90px;height:90px;border:1px solid #eee;border-radius:6px;padding:4px"/>
+        <div style="font-size:9px;color:#999;margin-top:3px">${prescription.number}</div>
+        <div style="font-size:8px;color:#bbb">DPM Madagascar</div>
+      </div>
       <div class="sign">
         <div style="height:48px"></div>
         <div>Signature du praticien</div>

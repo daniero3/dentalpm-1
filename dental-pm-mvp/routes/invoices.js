@@ -341,7 +341,18 @@ th,td{padding:8px;text-align:left;border-bottom:1px solid #eee}th{background:#f8
 </table></div>
 ${payments.length>0?`<div style="margin-top:16px"><h3 style="color:#0D7A87;margin-bottom:8px">Paiements</h3><table><thead><tr><th>Date</th><th>Méthode</th><th class="amount">Montant</th></tr></thead><tbody>${payments.map(p=>`<tr><td>${fmtDt(p.payment_date)}</td><td>${pmLabels[p.payment_method]||p.payment_method}</td><td class="amount">${fmt(p.amount_mga)}</td></tr>`).join('')}</tbody></table></div>`:''}
 ${invoice.notes?`<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${invoice.notes}</p>`:''}
-<div style="margin-top:40px;text-align:center;color:#666;font-size:11px;border-top:1px solid #eee;padding-top:12px">Merci de votre confiance</div>
+<div style="margin-top:30px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eee;padding-top:16px">
+  <div style="text-align:center">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent('DPM-FACT:'+invoice.invoice_number+' | Montant:'+invoice.total_mga+' Ar | Date:'+new Date(invoice.invoice_date||invoice.created_at).toLocaleDateString('fr-FR'))}" 
+         alt="QR" style="width:90px;height:90px;border:1px solid #eee;border-radius:6px;padding:4px"/>
+    <div style="font-size:9px;color:#999;margin-top:3px">${invoice.invoice_number}</div>
+    <div style="font-size:8px;color:#bbb">DPM Madagascar</div>
+  </div>
+  <div style="text-align:center;color:#666;font-size:11px">
+    <div>Merci de votre confiance</div>
+    <div style="margin-top:4px;font-size:9px;color:#bbb">DentalPM Madagascar — dentalpracticemada.com</div>
+  </div>
+</div>
 <script>if(window.opener||window.print)window.print();</script>
 </body></html>`;
 

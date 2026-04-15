@@ -618,8 +618,28 @@ async function generateQuotePDF(quote, clinic) {
       doc.moveTo(360, 730).lineTo(530, 730).stroke();
       doc.text('Cachet et signature du praticien', 360, 735, { width: 170, align: 'center' });
       
+      // ===== QR CODE DEVIS =====
+      try {
+        const qrDataDevis = `DPM-DEVIS:${quote.invoice_number} | Total:${quote.total_mga} Ar | ${clinic?.name || ''}`;
+        const qrBufDevis = await generateQRBuffer(qrDataDevis);
+        if (qrBufDevis) {
+          doc.save()
+             .roundedRect(50, 720, 80, 80, 6)
+             .fillColor('#f9fafb')
+             .fill()
+             .strokeColor('#d1fae5')
+             .stroke();
+          doc.restore();
+          doc.image(qrBufDevis, 55, 725, { width: 70, height: 70 });
+          doc.fillColor('#9ca3af').fontSize(7).font('Helvetica')
+             .text('Ref: ' + (quote.invoice_number || ''), 50, 797, { width: 80, align: 'center' });
+          doc.fillColor('#9ca3af').fontSize(6)
+             .text('DPM Madagascar', 50, 806, { width: 80, align: 'center' });
+        }
+      } catch(e) {}
+
       doc.fillColor(COLORS.success).fontSize(11).font('Helvetica-Bold')
-         .text('Merci pour votre confiance !', 50, 760, { width: 495, align: 'center' });
+         .text('Merci pour votre confiance !', 140, 760, { width: 355, align: 'center' });
       
       doc.fillColor('#9ca3af').fontSize(8).font('Helvetica')
          .text(`${clinic?.name || ''} - ${clinic?.address || ''} - ${clinic?.phone || ''}`, 50, 778, { width: 495, align: 'center' });

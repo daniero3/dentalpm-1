@@ -12,6 +12,7 @@ const { body, validationResult } = require('express-validator');
 const { Clinic, Subscription, PaymentRequest, AuditLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
 const PDFDocument = require('pdfkit');
+const QRCode = require('qrcode');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
@@ -499,6 +500,24 @@ router.get('/invoice/:year/:month', async (req, res) => {
     doc.moveTo(50, iY+30).lineTo(550, iY+30).stroke();
     doc.font('Helvetica-Bold').text('TOTAL:', 300, iY+45, { width:100 });
     doc.text(`${new Intl.NumberFormat('fr-MG').format(MONTHLY_PRICE_MGA)} Ar`, 400, iY+45, { width:100, align:'right' });
+    // QR Code
+    try {
+      const qrData = `DPM-ABO:${year}-${month} | ${clinic.name} | ${new Intl.NumberFormat('fr-MG').format(MONTHLY_PRICE_MGA)} Ar`;
+      const qrBuffer = await QRCode.toBuffer(qrData, { width: 80 });
+      const qrY = doc.y + 20;
+      doc.save()
+         .roundedRect(50, qrY, 90, 90, 6)
+         .fillColor('#f0fdfe')
+         .fill()
+         .strokeColor('#7dd3da')
+         .stroke();
+      doc.restore();
+      doc.image(qrBuffer, 55, qrY + 5, { width: 80, height: 80 });
+      doc.fillColor('#64748b').fontSize(8).font('Helvetica')
+         .text('QR Vérification', 50, qrY + 88, { width: 90, align: 'center' });
+      doc.fillColor('#94a3b8').fontSize(7)
+         .text('DPM Madagascar', 50, qrY + 98, { width: 90, align: 'center' });
+    } catch(e) {}
     doc.end();
   } catch (error) {
     res.status(500).json({ error: 'Erreur génération facture' });
