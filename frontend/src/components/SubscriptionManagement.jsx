@@ -424,9 +424,13 @@ const UserView = ({ user }) => {
    VUE ADMINISTRATEUR
 ══════════════════════════════════════════════════ */
 const AdminView = () => {
-  const [data,    setData]    = useState(null);
-  const [txs,     setTxs]     = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data,       setData]       = useState(null);
+  const [txs,        setTxs]        = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [selClinic,  setSelClinic]  = useState(null);  // cabinet sélectionné
+  const [clinicData, setClinicData] = useState(null);  // données détail
+  const [clinicLoad, setClinicLoad] = useState(false);
+  const [actionLoad, setActionLoad] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -450,6 +454,42 @@ const AdminView = () => {
   const reject = async id => {
     try { await axios.patch(`${API}/admin/payment-requests/${id}/reject`, { reason:'Rejeté' }, authH()); toast.success('Rejeté'); load(); }
     catch { toast.error('Erreur rejet'); }
+  };
+
+  const openClinic = async (clinicId, clinicName) => {
+    setSelClinic({ id: clinicId, name: clinicName });
+    setClinicLoad(true);
+    try {
+      const r = await axios.get(`${API}/admin/clinics/${clinicId}`, authH());
+      setClinicData(r.data);
+    } catch { toast.error('Erreur chargement cabinet'); setSelClinic(null); }
+    finally { setClinicLoad(false); }
+  };
+
+  const activateClinic = async (clinicId, plan = 'PRO') => {
+    setActionLoad(true);
+    try {
+      await axios.patch(`${API}/admin/clinics/${clinicId}/activate`, { plan, days: 30 }, authH());
+      toast.success('Abonnement activé — 30 jours');
+      // Recharger les données du cabinet
+      const r = await axios.get(`${API}/admin/clinics/${clinicId}`, authH());
+      setClinicData(r.data);
+      load();
+    } catch { toast.error('Erreur activation'); }
+    finally { setActionLoad(false); }
+  };
+
+  const deactivateClinic = async (clinicId) => {
+    if (!window.confirm('Désactiver cet abonnement ? Le cabinet perdra accès.')) return;
+    setActionLoad(true);
+    try {
+      await axios.patch(`${API}/admin/clinics/${clinicId}/deactivate`, {}, authH());
+      toast.success('Abonnement désactivé');
+      const r = await axios.get(`${API}/admin/clinics/${clinicId}`, authH());
+      setClinicData(r.data);
+      load();
+    } catch { toast.error('Erreur désactivation'); }
+    finally { setActionLoad(false); }
   };
 
   const revenueData = (() => {
@@ -554,10 +594,12 @@ const AdminView = () => {
           </div>
           {data.pendingPayments.map(p => (
             <div key={p.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#FFFBEB', borderRadius:12, border:'1px solid #FDE68A', marginBottom:8, flexWrap:'wrap' }}>
-              <Avatar name={p.clinic_name||'Cabinet'} size={36}/>
-              <div style={{ flex:1, minWidth:120 }}>
-                <div style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{p.clinic_name||'Cabinet inconnu'}</div>
-                <div style={{ fontSize:11, color:'#64748B' }}>{p.payment_method} — {fmt(p.amount_mga)} Ar — {fdate(p.created_at)}</div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer', flex:1 }} onClick={()=>p.clinic_id && openClinic(p.clinic_id, p.clinic_name||'Cabinet')}>
+                <Avatar name={p.clinic_name||'Cabinet'} size={36}/>
+                <div style={{ flex:1, minWidth:120 }}>
+                  <div style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{p.clinic_name||'Cabinet inconnu'} <span style={{fontSize:10,color:'#0D7A87'}}>→ voir détails</span></div>
+                  <div style={{ fontSize:11, color:'#64748B' }}>{p.payment_method} — {fmt(p.amount_mga)} Ar — {fdate(p.created_at)}</div>
+                </div>
               </div>
               <span style={{ background:PLAN_CFG[p.plan_code]?.bg||'#F1F5F9', color:PLAN_CFG[p.plan_code]?.text||'#475569', padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{p.plan_code||'—'}</span>
               <div style={{ display:'flex', gap:8 }}>
@@ -593,8 +635,9 @@ const AdminView = () => {
               </thead>
               <tbody>
                 {txs.slice(0,15).map((tx,i)=>(
-                  <tr key={tx.id} style={{ borderBottom:i<Math.min(txs.length,15)-1?'1px solid #F8FAFC':'none' }}
-                    onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'}
+                  <tr key={tx.id} style={{ borderBottom:i<Math.min(txs.length,15)-1?'1px solid #F8FAFC':'none', cursor:'pointer' }}
+                    onClick={()=>tx.clinic_id && openClinic(tx.clinic_id, tx.clinic_name||'Cabinet')}
+                    onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
                     onMouseOut={e=>e.currentTarget.style.background='transparent'}>
                     <td style={{ padding:'10px 12px', fontFamily:'monospace', fontSize:11, color:'#94A3B8' }}>#{(tx.id||'').slice(-6)}</td>
                     <td style={{ padding:'10px 12px' }}>
@@ -628,6 +671,185 @@ const AdminView = () => {
           </div>
         )}
       </div>
+    </div>
+
+      {/* ══ LISTE TOUS LES CABINETS ══ */}
+      {(data?.allClinics||[]).length > 0 && (
+        <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'20px 22px' }}>
+          <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A', marginBottom:4 }}>Tous les cabinets</div>
+          <div style={{ fontSize:12, color:'#94A3B8', marginBottom:16 }}>{data.allClinics.length} cabinet{data.allClinics.length>1?'s':''} enregistrés — cliquez pour voir les détails</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {data.allClinics.map(cl => {
+              const sc = { ACTIVE:{bg:'#DCFCE7',c:'#166534',l:'Actif'}, TRIAL:{bg:'#DBEAFE',c:'#1E40AF',l:'Essai'}, EXPIRED:{bg:'#FEE2E2',c:'#991B1B',l:'Expiré'}, CANCELLED:{bg:'#F1F5F9',c:'#475569',l:'Annulé'} }[cl.status] || {bg:'#F1F5F9',c:'#475569',l:cl.status};
+              const pc2 = PLAN_CFG[cl.plan] || PLAN_CFG.PRO;
+              return (
+                <div key={cl.id}
+                  onClick={()=>openClinic(cl.id, cl.name)}
+                  style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#F8FAFC', borderRadius:12, border:'1px solid #E2E8F0', cursor:'pointer', transition:'all .15s' }}
+                  onMouseOver={e=>{e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.borderColor='#7DD3DA';}}
+                  onMouseOut={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}>
+                  <Avatar name={cl.name||'C'} size={38}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{cl.name||'Cabinet'}</div>
+                    <div style={{ fontSize:11, color:'#94A3B8' }}>{cl.email} {cl.city?`· ${cl.city}`:''}</div>
+                  </div>
+                  <span style={{ background:pc2.bg, color:pc2.text, padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{cl.plan||'—'}</span>
+                  <span style={{ background:sc.bg, color:sc.c, padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{sc.l}</span>
+                  <ChevronRight size={14} color="#94A3B8"/>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL DÉTAIL CABINET ══ */}
+      {selClinic && (
+        <div onClick={e=>e.target===e.currentTarget&&setSelClinic(null)}
+          style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+          <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:560, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)', border:'1px solid #E2E8F0' }}>
+            {/* Header modal */}
+            <div style={{ padding:'18px 22px', borderBottom:'1px solid #F1F5F9', display:'flex', justifyContent:'space-between', alignItems:'center', background:'linear-gradient(135deg,#0D7A87,#0A5F6A)', borderRadius:'20px 20px 0 0' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <Avatar name={selClinic.name} size={40}/>
+                <div>
+                  <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff' }}>{selClinic.name}</div>
+                  <div style={{ fontSize:12, color:'rgba(255,255,255,.7)' }}>Détails abonnement</div>
+                </div>
+              </div>
+              <button onClick={()=>setSelClinic(null)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+                <X size={15}/>
+              </button>
+            </div>
+
+            {clinicLoad ? (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:200 }}>
+                <div style={{ width:32, height:32, border:'3px solid #E2E8F0', borderTopColor:'#0D7A87', borderRadius:'50%', animation:'_spin .8s linear infinite' }}/>
+              </div>
+            ) : clinicData && (
+              <div style={{ padding:'20px 22px' }}>
+                {/* Infos cabinet */}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:18 }}>
+                  {[
+                    { l:'Email',   v: clinicData.clinic?.email||'—' },
+                    { l:'Téléphone', v: clinicData.clinic?.phone||'—' },
+                    { l:'Ville',   v: clinicData.clinic?.city||'—' },
+                    { l:'Membres', v: `${clinicData.users?.length||0} utilisateur${(clinicData.users?.length||0)>1?'s':''}` },
+                  ].map(r => (
+                    <div key={r.l} style={{ padding:'10px 12px', background:'#F8FAFC', borderRadius:10, border:'1px solid #E2E8F0' }}>
+                      <div style={{ fontSize:10, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:3 }}>{r.l}</div>
+                      <div style={{ fontSize:13, fontWeight:600, color:'#0F172A' }}>{r.v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Abonnement actif */}
+                {(() => {
+                  const activeSub = clinicData.subscriptions?.find(s=>s.status==='ACTIVE'||s.status==='TRIAL');
+                  const plan2     = activeSub?.plan || clinicData.clinic?.current_plan || 'PRO';
+                  const pc3       = PLAN_CFG[plan2] || PLAN_CFG.PRO;
+                  const IconP     = pc3.icon;
+                  const endD      = activeSub?.end_date;
+                  const daysRem   = endD ? Math.max(0, Math.ceil((new Date(endD)-new Date())/(1000*60*60*24))) : null;
+                  const status2   = clinicData.clinic?.subscription_status||'EXPIRED';
+
+                  return (
+                    <div style={{ marginBottom:18 }}>
+                      <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A', marginBottom:12 }}>Abonnement actuel</div>
+
+                      {/* Carte plan */}
+                      <div style={{ borderRadius:16, padding:'16px 18px', background:`linear-gradient(${pc3.grad})`, marginBottom:12 }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                            <div style={{ width:38, height:38, borderRadius:11, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                              <IconP size={18} color="#fff"/>
+                            </div>
+                            <div>
+                              <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:18, color:'#fff' }}>Plan {plan2}</div>
+                              <div style={{ fontSize:12, color:'rgba(255,255,255,.7)' }}>{fmt(PLAN_PRICES[plan2]||199000)} Ar/mois</div>
+                            </div>
+                          </div>
+                          <SBadge status={status2}/>
+                        </div>
+
+                        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                          {[
+                            { l:'Patients max', v: PLAN_PATIENTS[plan2]?fmt(PLAN_PATIENTS[plan2]):'Illimités' },
+                            { l:'Jours restants', v: daysRem!==null?`${daysRem} j`:'—' },
+                            { l:'Expire le', v: endD?fdate(endD):'—' },
+                          ].map((s,i)=>(
+                            <div key={i} style={{ background:'rgba(255,255,255,.15)', borderRadius:10, padding:'8px 10px', textAlign:'center' }}>
+                              <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, color:'#fff' }}>{s.v}</div>
+                              <div style={{ fontSize:10, color:'rgba(255,255,255,.65)', marginTop:2 }}>{s.l}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Durée restante barre */}
+                      {daysRem !== null && (
+                        <Bar label="Durée restante" value={daysRem} max={30} color={daysRem<=7?'#EF4444':'#0D7A87'} note={`${daysRem} / 30 jours`}/>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Historique abonnements */}
+                {(clinicData.subscriptions||[]).length > 1 && (
+                  <div style={{ marginBottom:18 }}>
+                    <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A', marginBottom:10 }}>Historique</div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {clinicData.subscriptions.slice(0,4).map((s,i)=>(
+                        <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 12px', background:'#F8FAFC', borderRadius:9, border:'1px solid #E2E8F0' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                            <span style={{ fontSize:12, fontWeight:600, color:'#475569' }}>Plan {s.plan}</span>
+                            <SBadge status={s.status}/>
+                          </div>
+                          <span style={{ fontSize:11, color:'#94A3B8' }}>{fdate(s.start_date)} → {fdate(s.end_date)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Boutons Activer / Désactiver */}
+                <div style={{ borderTop:'1px solid #F1F5F9', paddingTop:16 }}>
+                  <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A', marginBottom:12 }}>Actions abonnement</div>
+
+                  {/* Choix du plan avant activation */}
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12 }}>
+                    {['ESSENTIAL','PRO','GROUP'].map(pl=>{
+                      const pc4 = PLAN_CFG[pl];
+                      return (
+                        <button key={pl}
+                          onClick={()=>!actionLoad && activateClinic(clinicData.clinic?.id, pl)}
+                          disabled={actionLoad}
+                          style={{ padding:'10px 6px', borderRadius:11, border:`1.5px solid ${pc4.border}`, background:pc4.bg, cursor:actionLoad?'not-allowed':'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4, transition:'all .15s', opacity:actionLoad?.6:1 }}
+                          onMouseOver={e=>{if(!actionLoad){e.currentTarget.style.background=`${pc4.border}40`;e.currentTarget.style.transform='translateY(-1px)';}}}
+                          onMouseOut={e=>{e.currentTarget.style.background=pc4.bg;e.currentTarget.style.transform='translateY(0)';}}>
+                          <CheckCircle size={16} color={pc4.text}/>
+                          <span style={{ fontSize:11, fontWeight:700, color:pc4.text }}>Activer {pl}</span>
+                          <span style={{ fontSize:10, color:'#94A3B8' }}>{fmt(PLAN_PRICES[pl])} Ar</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={()=>!actionLoad && deactivateClinic(clinicData.clinic?.id)}
+                    disabled={actionLoad}
+                    style={{ width:'100%', padding:'11px', borderRadius:11, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:actionLoad?'not-allowed':'pointer', color:'#991B1B', fontWeight:700, fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:7, transition:'all .15s', opacity:actionLoad?.6:1 }}
+                    onMouseOver={e=>{if(!actionLoad)e.currentTarget.style.background='#FEE2E2';}}
+                    onMouseOut={e=>e.currentTarget.style.background='#FEF2F2'}>
+                    {actionLoad ? <div style={{ width:14, height:14, border:'2px solid #991B1B', borderTopColor:'transparent', borderRadius:'50%', animation:'_spin .6s linear infinite' }}/> : <X size={14}/>}
+                    Désactiver l'abonnement
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -212,6 +212,40 @@ router.delete('/clinics/:id', requireRole('SUPER_ADMIN'), async (req, res) => {
   }
 });
 
+
+// ── PATCH /api/admin/clinics/:id/activate — Activer abonnement ──
+router.patch('/clinics/:id/activate', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+  try {
+    const clinic = await Clinic.findByPk(req.params.id);
+    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
+    const { plan = 'PRO', days = 30 } = req.body;
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + parseInt(days));
+    // Mettre à jour l'abonnement existant ou en créer un
+    await Subscription.update({ status: 'SUPERSEDED' }, { where: { clinic_id: clinic.id, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL','EXPIRED'] } } });
+    await Subscription.create({ clinic_id: clinic.id, plan, status: 'ACTIVE', start_date: new Date(), end_date: endDate, duration_months: 1, monthly_price_mga: { ESSENTIAL:149000, PRO:199000, GROUP:299000 }[plan] || 199000 });
+    await clinic.update({ subscription_status: 'ACTIVE', current_plan: plan, is_active: true });
+    res.json({ message: 'Abonnement activé', end_date: endDate });
+  } catch (error) {
+    console.error('Activate error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── PATCH /api/admin/clinics/:id/deactivate — Désactiver abonnement ──
+router.patch('/clinics/:id/deactivate', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+  try {
+    const clinic = await Clinic.findByPk(req.params.id);
+    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
+    await Subscription.update({ status: 'CANCELLED' }, { where: { clinic_id: clinic.id, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL'] } } });
+    await clinic.update({ subscription_status: 'CANCELLED', is_active: false });
+    res.json({ message: 'Abonnement désactivé' });
+  } catch (error) {
+    console.error('Deactivate error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 // ============================================================
 // SUBSCRIPTIONS
 // ============================================================
