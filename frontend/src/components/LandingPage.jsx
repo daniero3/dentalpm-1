@@ -882,15 +882,16 @@ export default function LandingPage() {
             <ST tag="🏥 À propos" title="Notre mission : simplifier votre quotidien" sub={null}/>
             <div style={{marginBottom:26}}>
               <div style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:14,padding:'14px 16px',background:'#F0FDFE',borderRadius:12,borderLeft:'3px solid var(--teal)'}}>
-                <span style={{fontSize:20,flexShrink:0}}>💡</span>
+                <span style={{fontSize:20,flexShrink:0}}>*</span>
                 <p style={{color:'var(--slate)',fontSize:isMobile?14:15,lineHeight:1.8,margin:0}}>
                   DPM est né d&apos;un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité. Nous avons créé la solution qu&apos;aucun éditeur international ne pouvait offrir.
                 </p>
               </div>
               <div style={{display:'flex',gap:12,alignItems:'flex-start',padding:'14px 16px',background:'var(--surface)',borderRadius:12,borderLeft:'3px solid #7DD3DA'}}>
-                <span style={{fontSize:20,flexShrink:0}}>🤝</span>
+                <span style={{fontSize:20,flexShrink:0}}>*</span>
                 <p style={{color:'var(--slate)',fontSize:isMobile?14:15,lineHeight:1.8,margin:0}}>
-                  Notre équipe basée à Antananarivo améliore continuellement la plateforme avec les retours directs des praticiens. Nous comprenons vos défis parce que nous sommes malgaches.
+                  Notre équipe basée à Antananarivo améliore continuellement la plateforme avec les retours directs des praticiens. <br />
+                  Nous comprenons vos défis parce que nous sommes malgaches.
                 </p>
               </div>
             </div>
