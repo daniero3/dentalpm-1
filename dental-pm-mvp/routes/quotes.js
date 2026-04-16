@@ -167,8 +167,18 @@ router.post('/', requireClinicOrSuperAdmin, [
     });
     return res.status(201).json({ message: 'Devis créé', quote: completeQuote });
   } catch (error) {
-    console.error('Create quote error:', error);
-    return res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    console.error('Create quote error FULL:', {
+      message: error.message,
+      name: error.name,
+      sql: error.sql,
+      original: error.original?.message,
+      stack: error.stack?.split('\n').slice(0,5).join('\n')
+    });
+    return res.status(500).json({ 
+      error: 'Erreur serveur', 
+      details: error.message,
+      hint: error.original?.message || error.name
+    });
   }
 });
 
