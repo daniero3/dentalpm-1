@@ -24,6 +24,7 @@ const fi  = e=>e.target.style.borderColor='#0D7A87', bi=e=>e.target.style.border
 const ReportsManagement = () => {
   const [report,   setReport]   = useState(null);
   const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
   const [fromDate, setFromDate] = useState(() => `${new Date().getFullYear()}-01-01`);
   const [toDate,   setToDate]   = useState(() => new Date().toISOString().split('T')[0]);
 
@@ -31,12 +32,17 @@ const ReportsManagement = () => {
 
   const fetchReport = async (from = fromDate, to = toDate) => {
     setLoading(true);
+    setError(null);
     try {
       const r = await axios.get(`${API}/reports/finance?from=${from}&to=${to}`, authH());
-      setReport(r.data);
+      if (r.data) { setReport(r.data); setError(null); }
+      else setError('Réponse vide du serveur');
     } catch (err) {
-      console.error('Reports error:', err.response?.data || err.message);
-      toast.error('Erreur chargement rapport financier');
+      const msg = err.response?.data?.error || err.response?.data?.details || err.message || 'Erreur inconnue';
+      console.error('Reports error:', msg, err.response?.status);
+      setError(msg);
+      setReport(null);
+      toast.error(`Rapport : ${msg}`);
     }
     finally { setLoading(false); }
   };
@@ -45,6 +51,20 @@ const ReportsManagement = () => {
     <div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:240 }}>
       <div style={{ width:36,height:36,border:'4px solid #E2E8F0',borderTopColor:'#3B82F6',borderRadius:'50%',animation:'spin .8s linear infinite' }}/>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+  if (!report) return (
+    <div style={{ maxWidth:1100,margin:'0 auto',paddingBottom:48 }}>
+      <div style={{ background:'#FEF2F2',borderRadius:14,border:'1px solid #FECACA',padding:'24px',textAlign:'center',marginTop:40 }}>
+        <div style={{ fontSize:32,marginBottom:12 }}>⚠️</div>
+        <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:700,fontSize:16,color:'#991B1B',marginBottom:8 }}>Rapport non disponible</div>
+        <div style={{ fontSize:13,color:'#B91C1C',marginBottom:16 }}>Impossible de charger le rapport financier. Vérifiez votre connexion.</div>
+        <button onClick={()=>fetchReport(fromDate, toDate)}
+          style={{ padding:'9px 20px',borderRadius:10,background:'#DC2626',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700 }}>
+          Réessayer
+        </button>
+      </div>
     </div>
   );
 

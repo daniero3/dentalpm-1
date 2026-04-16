@@ -34,24 +34,25 @@ router.get('/finance', [
     const toDate   = req.query.to   ? new Date(req.query.to)   : new Date();
     toDate.setHours(23, 59, 59, 999);
 
-    const invoiceWhere = { created_at: { [Op.between]: [fromDate, toDate] } };
+    // Utiliser invoice_date (colonne réelle du modèle Invoice)
+    const invoiceWhere = { invoice_date: { [Op.between]: [fromDate, toDate] } };
     if (clinicId) invoiceWhere.clinic_id = clinicId;
-    // Essayer document_type si la colonne existe
-    try { invoiceWhere.document_type = 'INVOICE'; } catch(e) {}
 
     let invoices = [];
     try {
       invoices = await Invoice.findAll({
         where: invoiceWhere,
-        attributes: ['id','invoice_number','total_mga','status','created_at'],
+        attributes: ['id','invoice_number','total_mga','status','invoice_date','created_at'],
         include: [{ model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }],
-        order: [['created_at','DESC']]
+        order: [['invoice_date','DESC']]
       });
     } catch(e) {
-      // Si document_type n'existe pas, retirer ce filtre
-      delete invoiceWhere.document_type;
+      // Fallback sur created_at si invoice_date pose problème
+      console.warn('invoice_date fallback:', e.message);
+      const fallbackWhere = { created_at: { [Op.between]: [fromDate, toDate] } };
+      if (clinicId) fallbackWhere.clinic_id = clinicId;
       invoices = await Invoice.findAll({
-        where: invoiceWhere,
+        where: fallbackWhere,
         attributes: ['id','invoice_number','total_mga','status','created_at'],
         include: [{ model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }],
         order: [['created_at','DESC']]
