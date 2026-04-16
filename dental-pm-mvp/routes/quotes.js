@@ -113,7 +113,7 @@ router.post('/', requireClinicOrSuperAdmin, async (req, res) => {
     if (!patient_id) return res.status(400).json({ error: 'patient_id requis' });
     if (!items || !Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Au moins un item requis' });
     const validItems = items.filter(i => i.description && i.description.trim());
-    if (validItems.length === 0) return res.status(400).json({ error: 'Description de l'item requise' });
+    if (validItems.length === 0) return res.status(400).json({ error: 'Aucun item valide' });
     const patientWhere = isSuperAdmin(req) ? { id: patient_id } : { id: patient_id, clinic_id: getCurrentClinicId(req) };
     const patient = await Patient.findOne({ where: patientWhere });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
