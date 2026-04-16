@@ -624,3 +624,4 @@ const AppointmentManagement = () => {
 };
 
 export default AppointmentManagement;
+
