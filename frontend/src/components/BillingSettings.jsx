@@ -69,7 +69,7 @@ const BillingSettings = () => {
 
   const fetchSubscriptionData = async () => {
     try {
-      const res = await axios.get(`${API}/subscription/status`, authHeaders());
+      const res = await axios.get(`${API}/billing/status`, authHeaders());
       setSubscription(res.data);
     } catch (err) {
       if (!axios.isCancel(err)) {

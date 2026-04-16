@@ -95,14 +95,14 @@ app.use('/api', (req, res, next) => {
 // ── Routes ── Structure IDENTIQUE à l'originale ───────────────────────────────
 // (requireAuth uniquement là où il était dans l'original)
 app.use('/api/auth',             authRoutes);
-app.use('/api/patients',         patientRoutes);
-app.use('/api/appointments',     appointmentRoutes);
-app.use('/api/invoices',         invoiceRoutes);
+app.use('/api/patients',         requireAuth, patientRoutes);
+app.use('/api/appointments',     requireAuth, appointmentRoutes);
+app.use('/api/invoices',         requireAuth, invoiceRoutes);
 app.use('/api/quotes',           requireAuth, quoteRoutes);
 app.use('/api/integrations',     integrationRoutes);
 app.use('/api/dashboard',        requireAuth, dashboardRoutes);
-app.use('/api/inventory',        inventoryRoutes);
-app.use('/api/suppliers',        supplierRoutes);
+app.use('/api/inventory',        requireAuth, inventoryRoutes);
+app.use('/api/suppliers',        requireAuth, supplierRoutes);
 app.use('/api/labs',             requireAuth, labRoutes);
 app.use('/api/mailing',          requireAuth, mailingRoutes);
 app.use('/api/media',            requireAuth, mediaRoutes);
