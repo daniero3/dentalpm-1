@@ -323,9 +323,9 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
         )}
 
         {/* Body split */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', flex:1, minHeight:0 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', flex:1, minHeight:0, overflow:'hidden' }}>
           {/* Left — form */}
-          <div style={{ display:'flex', flexDirection:'column', minHeight:0, borderRight:'1px solid #E2E8F0' }}>
+          <div style={{ display:'flex', flexDirection:'column', minHeight:0, overflow:'hidden', borderRight:'1px solid #E2E8F0' }}>
             <div style={{ padding:'11px 18px', borderBottom:'1px solid #E2E8F0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <Pill size={15} color={T}/>
@@ -357,7 +357,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
           </div>
 
           {/* Right — preview */}
-          <div style={{ display:'flex', flexDirection:'column', background:'#E8EDF5', minHeight:0 }}>
+          <div style={{ display:'flex', flexDirection:'column', background:'#E8EDF5', minHeight:0, overflow:'hidden' }}>
             <div style={{ padding:'9px 14px', borderBottom:'1px solid #D4DAE8', background:'#DDE4EF', flexShrink:0, display:'flex', alignItems:'center', gap:6 }}>
               <Sparkles size={12} color={T}/>
               <span style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.1em' }}>Aperçu en temps réel</span>
