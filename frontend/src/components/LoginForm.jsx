@@ -201,24 +201,7 @@ const LoginForm = () => {
                 {loading ? <><Loader2 size={16} style={{ animation:'spin 0.75s linear infinite' }} />Connexion...</> : 'Se connecter'}
               </button>
             </form>
-            <div style={{ textAlign:'center', marginTop:20, paddingTop:20, borderTop:'1px solid #F1F5F9' }}>
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                <div>
-                  <span style={{ fontSize:13, color:'#64748B' }}>Nouveau praticien / assistant ? </span>
-                  <button onClick={() => { setStep(STEP_REGISTER); setError(''); }}
-                    style={{ fontSize:13, color:'#0D7A87', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
-                    Créer un compte
-                  </button>
-                </div>
-                <div>
-                  <span style={{ fontSize:13, color:'#64748B' }}>Vous souhaitez créer un cabinet ? </span>
-                  <button onClick={() => navigate('/landing')}
-                    style={{ fontSize:13, color:'#7C3AED', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
-                    S&apos;abonner →
-                  </button>
-                </div>
-              </div>
-            </div>
+
           </>
         )}
 
