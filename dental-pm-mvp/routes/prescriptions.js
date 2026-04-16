@@ -392,7 +392,29 @@ router.get('/medications', async (req, res) => {
 
     // Trier par fréquence d'utilisation
     const sorted = Array.from(meds.values()).sort((a, b) => b.count - a.count);
-    res.json({ medications: sorted });
+
+    // Médicaments dentaires par défaut si pas encore d'historique
+    const DEFAULT_MEDS = [
+      { name:'Amoxicilline',       dosage:'500mg',   posology:'3 fois/jour', duration:'7 jours',  count:0 },
+      { name:'Amoxicilline + Ac. clavulanique', dosage:'1g', posology:'2 fois/jour', duration:'7 jours', count:0 },
+      { name:'Métronidazole',      dosage:'500mg',   posology:'3 fois/jour', duration:'7 jours',  count:0 },
+      { name:'Ibuprofène',         dosage:'400mg',   posology:'3 fois/jour', duration:'5 jours',  count:0 },
+      { name:'Paracétamol',        dosage:'1000mg',  posology:'4 fois/jour', duration:'5 jours',  count:0 },
+      { name:'Kétoprofène',        dosage:'100mg',   posology:'2 fois/jour', duration:'5 jours',  count:0 },
+      { name:'Prednisolone',       dosage:'20mg',    posology:'1 fois/jour', duration:'5 jours',  count:0 },
+      { name:'Clindamycine',       dosage:'300mg',   posology:'3 fois/jour', duration:'7 jours',  count:0 },
+      { name:'Chlorhexidine bain de bouche', dosage:'0,12%', posology:'2 fois/jour', duration:'10 jours', count:0 },
+      { name:'Tramadol',           dosage:'50mg',    posology:'3 fois/jour', duration:'3 jours',  count:0 },
+      { name:'Spiramycine',        dosage:'3MUI',    posology:'2 fois/jour', duration:'7 jours',  count:0 },
+      { name:'Dexaméthasone',      dosage:'4mg',     posology:'1 fois/jour', duration:'3 jours',  count:0 },
+    ];
+
+    // Fusionner historique + défauts (sans doublon)
+    const existingNames = new Set(sorted.map(m => m.name.toLowerCase()));
+    const defaults = DEFAULT_MEDS.filter(m => !existingNames.has(m.name.toLowerCase()));
+    const merged = [...sorted, ...defaults];
+
+    res.json({ medications: merged });
   } catch (error) {
     console.error('Medications list error:', error);
     res.status(500).json({ error: 'Erreur serveur', medications: [] });

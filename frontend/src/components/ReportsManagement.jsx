@@ -27,14 +27,17 @@ const ReportsManagement = () => {
   const [fromDate, setFromDate] = useState(() => `${new Date().getFullYear()}-01-01`);
   const [toDate,   setToDate]   = useState(() => new Date().toISOString().split('T')[0]);
 
-  useEffect(() => { fetchReport(); }, []);
+  useEffect(() => { fetchReport(fromDate, toDate); }, []); // eslint-disable-line
 
-  const fetchReport = async () => {
+  const fetchReport = async (from = fromDate, to = toDate) => {
     setLoading(true);
     try {
-      const r = await axios.get(`${API}/reports/finance?from=${fromDate}&to=${toDate}`, authH());
+      const r = await axios.get(`${API}/reports/finance?from=${from}&to=${to}`, authH());
       setReport(r.data);
-    } catch { toast.error('Erreur chargement rapport'); }
+    } catch (err) {
+      console.error('Reports error:', err.response?.data || err.message);
+      toast.error('Erreur chargement rapport financier');
+    }
     finally { setLoading(false); }
   };
 
@@ -75,7 +78,7 @@ const ReportsManagement = () => {
           <label style={{ fontSize:11,fontWeight:600,color:'#64748B',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em' }}>Au</label>
           <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
         </div>
-        <button onClick={fetchReport}
+        <button onClick={()=>fetchReport(fromDate, toDate)}
           style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#3B4FD8,#6366F1)',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 12px rgba(59,79,216,.25)' }}>
           <RefreshCw size={14}/>Actualiser
         </button>

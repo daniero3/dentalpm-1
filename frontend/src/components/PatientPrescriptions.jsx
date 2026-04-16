@@ -276,14 +276,14 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
 
   return (
     <div onClick={e => e.target===e.currentTarget && onClose()}
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(8,20,40,.78)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}>
+      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(8,20,40,.78)', display:'flex', alignItems:'center', justifyContent:'center', padding:'16px', backdropFilter:'blur(4px)', overflowY:'auto' }}>
       <style>{`
         @keyframes dpm-slide-up { from{opacity:0;transform:translateY(20px) scale(.98)} to{opacity:1;transform:none} }
         @keyframes dpm-spin { to{transform:rotate(360deg)} }
         .dpm-scroll::-webkit-scrollbar{width:4px}
         .dpm-scroll::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px}
       `}</style>
-      <div style={{ background:'#F1F5F9', width:'100%', maxWidth:1060, borderRadius:20, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', maxHeight:'calc(100vh - 32px)' }}>
+      <div style={{ background:'#F1F5F9', width:'100%', maxWidth:1060, borderRadius:20, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', height:'calc(100vh - 32px)', maxHeight:760 }}>
 
         {/* Header */}
         <div style={{ background:`linear-gradient(135deg,${T},${T_DARK})`, padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, position:'relative', overflow:'hidden' }}>
