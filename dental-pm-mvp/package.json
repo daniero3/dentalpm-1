@@ -1,7 +1,7 @@
 {
   "name": "dental-pm-madagascar",
   "version": "1.0.0",
-  "description": "Dental Practice Management System for Madagascar",
+  "description": "DentalPM Madagascar SaaS - rebuilt 1776338598",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
