@@ -105,21 +105,15 @@ router.get('/', requireClinicOrSuperAdmin, [
   }
 });
 
-router.post('/', requireClinicOrSuperAdmin, [
-  body('patient_id').isUUID(),
-  body('schedule_id').optional({ nullable:true, checkFalsy:true }).isUUID(),
-  body('clinic_id').optional({ nullable: true, checkFalsy: true }).isUUID(),
-  body('items').isArray({ min: 1 }),
-  body('items.*.description').notEmpty(),
-  body('items.*.quantity').isInt({ min: 1 }),
-  body('items.*.unit_price_mga').isFloat({ min: 0 }),
-  body('discount_percentage').optional().isFloat({ min: 0, max: 100 }),
-  body('validity_days').optional().isInt({ min: 1, max: 365 }),
-  body('notes').optional().isString()
-], async (req, res) => {
+router.post('/', requireClinicOrSuperAdmin, async (req, res) => {
   try {
-    if (!validateRequest(req, res)) return;
     const { patient_id, schedule_id: rawScheduleId, clinic_id: bodyClinicId, items, discount_percentage = 0, validity_days = 30, notes } = req.body;
+
+    // Validation manuelle
+    if (!patient_id) return res.status(400).json({ error: 'patient_id requis' });
+    if (!items || !Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Au moins un item requis' });
+    const validItems = items.filter(i => i.description && i.description.trim());
+    if (validItems.length === 0) return res.status(400).json({ error: 'Description de l'item requise' });
     const patientWhere = isSuperAdmin(req) ? { id: patient_id } : { id: patient_id, clinic_id: getCurrentClinicId(req) };
     const patient = await Patient.findOne({ where: patientWhere });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
@@ -142,7 +136,7 @@ router.post('/', requireClinicOrSuperAdmin, [
     }
     if (!schedule) return res.status(404).json({ error: 'Aucune grille tarifaire disponible. Créez-en une dans les paramètres.' });
     const schedule_id = schedule.id;
-    const subtotal = items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unit_price_mga)), 0);
+    const subtotal = validItems.reduce((sum, item) => sum + (Number(item.quantity||1) * Number(item.unit_price_mga||0)), 0);
     const discountAmount = (subtotal * Number(discount_percentage)) / 100;
     const total = subtotal - discountAmount;
     const quoteNumber = await generateQuoteNumber(finalClinicId);
@@ -154,7 +148,7 @@ router.post('/', requireClinicOrSuperAdmin, [
       validity_days: Number(validity_days), notes: notes || null,
       status: 'DRAFT', created_by_user_id: getCurrentUserId(req)
     });
-    await Promise.all(items.map(item => InvoiceItem.create({
+    await Promise.all(validItems.map(item => InvoiceItem.create({
       invoice_id: quote.id, description: item.description, quantity: Number(item.quantity),
       unit_price_mga: Number(item.unit_price_mga), total_price_mga: Number(item.quantity) * Number(item.unit_price_mga),
       procedure_id: item.procedure_id || null, tooth_number: item.tooth_number || null, notes: item.notes || null
@@ -221,7 +215,7 @@ router.put('/:id', requireClinicOrSuperAdmin, [
     let discPct = Number(discount_percentage !== undefined ? discount_percentage : quote.discount_percentage || 0);
     if (items && items.length > 0) {
       await InvoiceItem.destroy({ where: { invoice_id: quote.id } });
-      await Promise.all(items.map(item => InvoiceItem.create({ invoice_id: quote.id, description: item.description, quantity: Number(item.quantity), unit_price_mga: Number(item.unit_price_mga), total_price_mga: Number(item.quantity) * Number(item.unit_price_mga), procedure_id: item.procedure_id || null, tooth_number: item.tooth_number || null, notes: item.notes || null })));
+      await Promise.all(validItems.map(item => InvoiceItem.create({ invoice_id: quote.id, description: item.description, quantity: Number(item.quantity), unit_price_mga: Number(item.unit_price_mga), total_price_mga: Number(item.quantity) * Number(item.unit_price_mga), procedure_id: item.procedure_id || null, tooth_number: item.tooth_number || null, notes: item.notes || null })));
       subtotal = items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unit_price_mga)), 0);
     }
     const discountAmount = (subtotal * discPct) / 100;
