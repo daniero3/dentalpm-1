@@ -43,6 +43,7 @@ import MessagingManagement from "./components/MessagingManagement";
 import SupplierManagement from "./components/SupplierManagement";
 import PurchaseManagement from "./components/PurchaseManagement";
 import OnboardingWizard from "./components/OnboardingWizard";
+import RegisterPage from "./components/RegisterPage";
 import BillingRenew from "./components/BillingRenew";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -343,6 +344,7 @@ function App() {
               <Route path="/legal/privacy" element={<LegalPages />} />
               <Route path="/legal/mentions" element={<LegalPages />} />
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route path="/billing/renew" element={<ProtectedRoute><MainLayout><BillingRenew /></MainLayout></ProtectedRoute>} />
               <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
             </Routes>

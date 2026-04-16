@@ -329,7 +329,7 @@ const LoginForm = () => {
             </form>
             <div style={{ textAlign:'center', marginTop:20, paddingTop:20, borderTop:'1px solid #F1F5F9' }}>
               <span style={{ fontSize:13, color:'#64748B' }}>Pas encore abonné ? </span>
-              <button onClick={() => navigate('/landing')}
+              <button onClick={() => navigate('/register')}
                 style={{ fontSize:13, color:'#7C3AED', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
                 S&apos;abonner →
               </button>
