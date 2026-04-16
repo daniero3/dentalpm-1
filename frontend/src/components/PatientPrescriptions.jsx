@@ -280,10 +280,12 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
       <style>{`
         @keyframes dpm-slide-up { from{opacity:0;transform:translateY(20px) scale(.98)} to{opacity:1;transform:none} }
         @keyframes dpm-spin { to{transform:rotate(360deg)} }
+        .dpm-scroll { overflow-y: auto !important; }
         .dpm-scroll::-webkit-scrollbar{width:4px}
         .dpm-scroll::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px}
+        .dpm-modal-body { display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden; }
       `}</style>
-      <div style={{ background:'#F1F5F9', width:'100%', maxWidth:1060, borderRadius:20, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', height:'calc(100vh - 32px)', maxHeight:760 }}>
+      <div style={{ background:'#F1F5F9', width:'100%', maxWidth:1060, borderRadius:20, display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', height:'min(760px, calc(100vh - 32px))' }}>
 
         {/* Header */}
         <div style={{ background:`linear-gradient(135deg,${T},${T_DARK})`, padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, position:'relative', overflow:'hidden' }}>
@@ -339,7 +341,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
                 <Plus size={12}/> Ajouter
               </button>
             </div>
-            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', minHeight:0, padding:'12px 14px' }}>
+            <div className="dpm-scroll" style={{ flex:1, overflowY:'auto', overflowX:'hidden', minHeight:0, padding:'12px 14px', position:'relative' }}>
               {formData.items.map((item, i) => (
                 <MedCard key={i} item={item} index={i} total={formData.items.length}
                   isActive={activeIdx===i} onActivate={() => setActiveIdx(i)}
