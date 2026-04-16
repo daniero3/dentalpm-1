@@ -99,7 +99,9 @@ const QuoteManagement = () => {
   const handleSubmit = async e => {
     e.preventDefault(); setSaving(true);
     try {
-      await axios.post(`${API}/quotes`,{ patient_id:form.patient_id, schedule_id:form.schedule_id, items:form.items.filter(i=>i.description&&i.unit_price_mga), discount_percentage:form.discount_percentage, validity_days:form.validity_days, notes:form.notes },authH());
+      const payload = { patient_id:form.patient_id, items:form.items.filter(i=>i.description&&i.unit_price_mga), discount_percentage:form.discount_percentage, validity_days:form.validity_days, notes:form.notes };
+      if (form.schedule_id) payload.schedule_id = form.schedule_id;
+      await axios.post(`${API}/quotes`, payload, authH());
       toast.success('Devis créé !'); setIsOpen(false); setForm(emptyForm); fetchQuotes();
     } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
     finally { setSaving(false); }

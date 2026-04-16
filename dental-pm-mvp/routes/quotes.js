@@ -107,7 +107,7 @@ router.get('/', requireClinicOrSuperAdmin, [
 
 router.post('/', requireClinicOrSuperAdmin, [
   body('patient_id').isUUID(),
-  body('schedule_id').isUUID(),
+  body('schedule_id').optional({ nullable:true, checkFalsy:true }).isUUID(),
   body('clinic_id').optional({ nullable: true, checkFalsy: true }).isUUID(),
   body('items').isArray({ min: 1 }),
   body('items.*.description').notEmpty(),
@@ -119,16 +119,29 @@ router.post('/', requireClinicOrSuperAdmin, [
 ], async (req, res) => {
   try {
     if (!validateRequest(req, res)) return;
-    const { patient_id, schedule_id, clinic_id: bodyClinicId, items, discount_percentage = 0, validity_days = 30, notes } = req.body;
+    const { patient_id, schedule_id: rawScheduleId, clinic_id: bodyClinicId, items, discount_percentage = 0, validity_days = 30, notes } = req.body;
     const patientWhere = isSuperAdmin(req) ? { id: patient_id } : { id: patient_id, clinic_id: getCurrentClinicId(req) };
     const patient = await Patient.findOne({ where: patientWhere });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
     const finalClinicId = isSuperAdmin(req) ? (bodyClinicId || patient.clinic_id || null) : getCurrentClinicId(req);
-    let scheduleWhere = isSuperAdmin(req)
-      ? { id: schedule_id, is_active: true }
-      : { id: schedule_id, is_active: true, [Op.or]: [{ clinic_id: null, type: 'SYNDICAL' }, { clinic_id: getCurrentClinicId(req) }] };
-    const schedule = await PricingSchedule.findOne({ where: scheduleWhere });
-    if (!schedule) return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
+
+    // Trouver la grille tarifaire — utiliser celle fournie ou la première disponible
+    let schedule = null;
+    if (rawScheduleId) {
+      const schedWhere = isSuperAdmin(req)
+        ? { id: rawScheduleId, is_active: true }
+        : { id: rawScheduleId, is_active: true, [Op.or]: [{ clinic_id: null, type: 'SYNDICAL' }, { clinic_id: finalClinicId }] };
+      schedule = await PricingSchedule.findOne({ where: schedWhere });
+    }
+    if (!schedule) {
+      // Prendre la première grille disponible pour ce cabinet (ou syndical)
+      schedule = await PricingSchedule.findOne({
+        where: { is_active: true, [Op.or]: [{ clinic_id: null }, { clinic_id: finalClinicId }] },
+        order: [['created_at', 'ASC']]
+      });
+    }
+    if (!schedule) return res.status(404).json({ error: 'Aucune grille tarifaire disponible. Créez-en une dans les paramètres.' });
+    const schedule_id = schedule.id;
     const subtotal = items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unit_price_mga)), 0);
     const discountAmount = (subtotal * Number(discount_percentage)) / 100;
     const total = subtotal - discountAmount;
