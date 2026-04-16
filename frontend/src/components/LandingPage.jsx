@@ -880,13 +880,20 @@ export default function LandingPage() {
         <div style={{display:'grid',gridTemplateColumns:c2,gap:g2,alignItems:'center'}}>
           <div className="sr">
             <ST tag="🏥 À propos" title="Notre mission : simplifier votre quotidien" sub={null}/>
-            <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:13}}>
-              DPM est né d'un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité.  <br />
-              Nous avons créé la solution qu'aucun éditeur international ne pouvait offrir.
-            </p>
-            <p style={{color:'var(--slate)',fontSize:isMobile?14:16,lineHeight:1.85,marginBottom:26}}>
-              Notre équipe basée à Antananarivo améliore continuellement la plateforme avec les retours directs des praticiens. Nous comprenons vos défis parce que nous sommes malgaches.
-            </p>
+            <div style={{marginBottom:26}}>
+              <div style={{display:'flex',gap:12,alignItems:'flex-start',marginBottom:14,padding:'14px 16px',background:'#F0FDFE',borderRadius:12,borderLeft:'3px solid var(--teal)'}}>
+                <span style={{fontSize:20,flexShrink:0}}>💡</span>
+                <p style={{color:'var(--slate)',fontSize:isMobile?14:15,lineHeight:1.8,margin:0}}>
+                  DPM est né d&apos;un constat simple : les chirurgiens-dentistes malgaches méritent des outils modernes adaptés à leur réalité. Nous avons créé la solution qu&apos;aucun éditeur international ne pouvait offrir.
+                </p>
+              </div>
+              <div style={{display:'flex',gap:12,alignItems:'flex-start',padding:'14px 16px',background:'var(--surface)',borderRadius:12,borderLeft:'3px solid #7DD3DA'}}>
+                <span style={{fontSize:20,flexShrink:0}}>🤝</span>
+                <p style={{color:'var(--slate)',fontSize:isMobile?14:15,lineHeight:1.8,margin:0}}>
+                  Notre équipe basée à Antananarivo améliore continuellement la plateforme avec les retours directs des praticiens. Nous comprenons vos défis parce que nous sommes malgaches.
+                </p>
+              </div>
+            </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9,marginBottom:22}}>
               {[{v:'2024',l:'Année de création'},{v:'Tana',l:'Basé à Antananarivo'},{v:'🇲🇬',l:'Made in Madagascar'},{v:'24/7',l:'Support disponible'}].map((s,i)=>(
                 <div key={i} style={{background:'var(--surface)',borderRadius:12,padding:isMobile?'13px 12px':'18px 20px',border:'1px solid var(--border)',textAlign:'center'}}>
