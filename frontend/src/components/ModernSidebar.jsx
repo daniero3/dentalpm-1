@@ -110,29 +110,57 @@ const SUPER_ADMIN_NAV = [
 const SidebarContent = ({ collapsed, onNavClick }) => {
   const location = useLocation()
   const { user } = useAuth()
-  const [userPlan, setUserPlan] = React.useState(null)
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
 
+  // Lire le plan depuis localStorage immédiatement (pas de flash)
+  const cachedPlan = React.useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('dpm_user_plan') || 'null') } catch { return null }
+  }, [])
+
+  const [userPlan, setUserPlan] = React.useState(cachedPlan)
+  const [planLoaded, setPlanLoaded] = React.useState(!!cachedPlan)
+
   React.useEffect(() => {
-    if (!user || isSuperAdmin) return
+    if (!user || isSuperAdmin) { setPlanLoaded(true); return }
     const token = localStorage.getItem('token')
-    fetch(`${BACKEND}/api/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!token) return
+    fetch(`${BACKEND}/api/billing/status`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.plan) setUserPlan(d.plan) })
-      .catch(() => {})
+      .then(d => {
+        if (d?.plan) {
+          setUserPlan(d.plan)
+          localStorage.setItem('dpm_user_plan', JSON.stringify(d.plan))
+        } else if (d?.status === 'TRIAL') {
+          setUserPlan('PRO')
+          localStorage.setItem('dpm_user_plan', JSON.stringify('PRO'))
+        }
+        setPlanLoaded(true)
+      })
+      .catch(() => { setPlanLoaded(true) })
+  }, [user?.id]) // uniquement quand l'utilisateur change, pas à chaque rendu
+
+  // Nettoyer le plan en cache au logout
+  React.useEffect(() => {
+    if (!user) localStorage.removeItem('dpm_user_plan')
   }, [user])
 
-  // Plan actif — TRIAL traité comme PRO pour la navigation
+  // Plan actif strict — jamais null si planLoaded
   const activePlan = userPlan === 'TRIAL' ? 'PRO' : (userPlan || 'ESSENTIAL')
 
-  // Navigation filtrée selon le plan du cabinet
-  const navigation = isSuperAdmin ? [] : ALL_NAV.filter(item =>
-    item.plans.includes(activePlan)
+  // Navigation STRICTEMENT filtrée — ne jamais afficher items hors plan
+  const navigation = isSuperAdmin ? [] : (
+    planLoaded
+      ? ALL_NAV.filter(item => item.plans.includes(activePlan))
+      : [] // masquer tout pendant le chargement
   )
 
-  // Items verrouillés (non inclus dans le plan actuel)
-  const lockedItems = isSuperAdmin ? [] : ALL_NAV.filter(item =>
-    !item.plans.includes(activePlan) && item.plans.includes('PRO')
+  // Items verrouillés
+  const lockedItems = isSuperAdmin ? [] : (
+    planLoaded
+      ? ALL_NAV.filter(item => !item.plans.includes(activePlan))
+      : []
   )
 
   const isActive = (href) =>
