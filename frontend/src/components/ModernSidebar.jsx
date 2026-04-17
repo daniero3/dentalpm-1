@@ -158,7 +158,6 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   const lockedItems = isSuperAdmin ? [] : ALL_NAV.filter(item =>
     !item.plans.includes(activePlan) && item.plans.some(p => ['PRO','GROUP'].includes(p))
   )
-  )
 
   const isActive = (href) =>
     href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
