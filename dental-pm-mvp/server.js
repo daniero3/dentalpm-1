@@ -92,6 +92,16 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// ── Version publique ──────────────────────────────────────────────────────────
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2.0.0',
+    deployed_at: '2026-04-17 06:41',
+    isolation: 'clinic_scope_active',
+    stripe_only: true
+  });
+});
+
 // ── Routes ── Structure IDENTIQUE à l'originale ───────────────────────────────
 // (requireAuth uniquement là où il était dans l'original)
 app.use('/api/auth',             authRoutes);
