@@ -1063,6 +1063,29 @@ export default function LandingPage() {
         {/* Séparateur */}
         <div style={{height:1,background:'rgba(255,255,255,.07)'}}/>
 
+        {/* Informations légales */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <span style={{color:'rgba(255,255,255,.3)',fontSize:11,fontWeight:600,letterSpacing:'.05em',textTransform:'uppercase'}}>Informations</span>
+          <div style={{display:'flex',gap:isMobile?10:22,flexWrap:'wrap',alignItems:'center'}}>
+            {[
+              {href:'/legal/mentions',  label:'Mentions légales'},
+              {href:'/legal/cgv',       label:'CGV'},
+              {href:'/legal/privacy',   label:'Confidentialité'},
+              {href:'/legal/cookies',   label:'Cookies'},
+            ].map(link=>(
+              <a key={link.href} href={link.href}
+                style={{color:'rgba(255,255,255,.35)',fontSize:12,textDecoration:'none',transition:'color .2s'}}
+                onMouseOver={e=>e.currentTarget.style.color='rgba(255,255,255,.8)'}
+                onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.35)'}>
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Séparateur */}
+        <div style={{height:1,background:'rgba(255,255,255,.07)'}}/>
+
         {/* Ligne réseaux sociaux */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:14}}>
           <span style={{color:'rgba(255,255,255,.25)',fontSize:11}}>Suivez-nous sur les réseaux</span>

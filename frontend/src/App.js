@@ -364,8 +364,10 @@ function App() {
               <Route path="/billing/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
               <Route path="/legal" element={<LegalPages />} />
               <Route path="/legal/cgu" element={<LegalPages />} />
+              <Route path="/legal/cgv" element={<LegalPages />} />
               <Route path="/legal/privacy" element={<LegalPages />} />
               <Route path="/legal/mentions" element={<LegalPages />} />
+              <Route path="/legal/cookies" element={<LegalPages />} />
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/billing/renew" element={<ProtectedRoute><MainLayout><BillingRenew /></MainLayout></ProtectedRoute>} />
