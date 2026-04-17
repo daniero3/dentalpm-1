@@ -97,16 +97,24 @@ const DentalLogo = ({ size=36, animate=false }) => (
   />
 );
 
-// ── Contenu sidebar (réutilisé desktop + drawer) ──
+// ── Contenu sidebar ──
 const BACKEND = process.env.REACT_APP_BACKEND_URL || 'https://dentalpm-1-production.up.railway.app'
+
+// Navigation SUPER_ADMIN uniquement — gestion plateforme
+const SUPER_ADMIN_NAV = [
+  { name:'Dashboard revenus',    href:'/subscription',    icon:LayoutDashboard, color:'#8B5CF6' },
+  { name:'Cabinets abonnés',     href:'/admin/clinics',   icon:Building2,       color:'#0D7A87' },
+  { name:'Validation paiements', href:'/admin/payments',  icon:CreditCard,      color:'#F59E0B' },
+]
 
 const SidebarContent = ({ collapsed, onNavClick }) => {
   const location = useLocation()
   const { user } = useAuth()
   const [userPlan, setUserPlan] = React.useState(null)
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN'
 
   React.useEffect(() => {
-    if (!user || user.role === 'SUPER_ADMIN') return
+    if (!user || isSuperAdmin) return
     const token = localStorage.getItem('token')
     fetch(`${BACKEND}/api/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.ok ? r.json() : null)
@@ -114,12 +122,18 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       .catch(() => {})
   }, [user])
 
-  // Filtrer la navigation selon le plan
-  const navigation = ALL_NAV.filter(item => {
-    if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return true
-    if (!userPlan) return item.plans.includes('ESSENTIAL') // défaut conservative
-    return item.plans.includes(userPlan)
-  })
+  // Plan actif — TRIAL traité comme PRO pour la navigation
+  const activePlan = userPlan === 'TRIAL' ? 'PRO' : (userPlan || 'ESSENTIAL')
+
+  // Navigation filtrée selon le plan du cabinet
+  const navigation = isSuperAdmin ? [] : ALL_NAV.filter(item =>
+    item.plans.includes(activePlan)
+  )
+
+  // Items verrouillés (non inclus dans le plan actuel)
+  const lockedItems = isSuperAdmin ? [] : ALL_NAV.filter(item =>
+    !item.plans.includes(activePlan) && item.plans.includes('PRO')
+  )
 
   const isActive = (href) =>
     href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
@@ -179,51 +193,79 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
 
       {/* Nav */}
       <nav style={{ flex:1, padding: collapsed ? '12px 8px' : '12px', overflowY:'auto', overflowX:'hidden', scrollbarWidth:'none' }}>
-        {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 8px 8px', margin:0 }}>Navigation</p>}
-        {navigation.map(item => <NavItem key={item.href} item={item} />)}
 
-        {/* Items verrouillés — visible si plan ESSENTIAL */}
-        {userPlan === 'ESSENTIAL' && !collapsed && (
-          <div style={{ marginTop:8, padding:'8px 10px', borderRadius:10, background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.08)' }}>
-            <p style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,.35)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 6px' }}>Disponible en PRO</p>
-            {ALL_NAV.filter(i=>!i.plans.includes('ESSENTIAL')).map(item => {
-              const Icon = item.icon
-              return (
-                <div key={item.href} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 6px', borderRadius:8, opacity:.45, cursor:'not-allowed', marginBottom:2 }}>
-                  <div style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.06)', flexShrink:0 }}>
-                    <Icon size={14} color='rgba(255,255,255,.4)'/>
-                  </div>
-                  <span style={{ fontSize:12, color:'rgba(255,255,255,.4)', flex:1 }}>{item.name}</span>
-                  <span style={{ fontSize:8, fontWeight:700, background:'rgba(255,165,0,.2)', color:'#F59E0B', padding:'1px 5px', borderRadius:99 }}>PRO</span>
-                </div>
-              )
-            })}
-            <a href='/subscription' style={{ display:'block', marginTop:8, padding:'6px 8px', borderRadius:8, background:'rgba(99,91,255,.25)', color:'rgba(255,255,255,.8)', fontSize:11, fontWeight:700, textDecoration:'none', textAlign:'center' }}>
-              ↑ Passer au plan PRO
-            </a>
-          </div>
-        )}
-
-        {user?.role !== 'SUPER_ADMIN' && (
+        {/* ── SUPER_ADMIN : navigation plateforme uniquement ── */}
+        {isSuperAdmin && (
           <>
-            <div style={{ height:1, background:'rgba(255,255,255,0.12)', margin:'10px 0' }} />
-            {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.3)', textTransform:'uppercase', letterSpacing:'0.1em', padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
-            {billingNavigation.map(item => <NavItem key={item.href} item={item} />)}
-          </>
-        )}
-
-        {user?.role === 'SUPER_ADMIN' && (
-          <>
-            <div style={{ height:1, background:'rgba(255,255,255,0.12)', margin:'10px 0' }} />
             {!collapsed && (
-              <div style={{ padding:'4px 8px 8px', display:'flex', alignItems:'center', gap:6 }}>
-                <Sparkles size={10} color="#8B5CF6" />
-                <p style={{ fontSize:10, fontWeight:700, color:'#8B5CF6', textTransform:'uppercase', letterSpacing:'0.1em', margin:0 }}>Super Admin</p>
+              <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 10px', marginBottom:4 }}>
+                <Sparkles size={10} color="#8B5CF6"/>
+                <p style={{ fontSize:10, fontWeight:700, color:'#8B5CF6', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Administration plateforme</p>
               </div>
             )}
-            {adminNavigation.map(item => <NavItem key={item.href} item={item} />)}
+            {SUPER_ADMIN_NAV.map(item => {
+              const active = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+              const Icon = item.icon
+              return (
+                <Link key={item.href} to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px', borderRadius:10, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start', background: active ? 'rgba(255,255,255,.18)' : 'transparent', border: active ? '1px solid rgba(255,255,255,.25)' : '1px solid transparent', transition:'all .18s', position:'relative' }}
+                    onMouseEnter={e => { if(!active){ e.currentTarget.style.background='rgba(255,255,255,.10)'; }}}
+                    onMouseLeave={e => { if(!active){ e.currentTarget.style.background='transparent'; }}}>
+                    {active && <div style={{ position:'absolute', left:0, top:'20%', bottom:'20%', width:3, borderRadius:'0 3px 3px 0', background:'#fff' }}/>}
+                    <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.08)' }}>
+                      <Icon size={16} color={active ? item.color : 'rgba(255,255,255,.55)'}/>
+                    </div>
+                    {!collapsed && (
+                      <span style={{ fontSize:13, fontWeight: active ? 700 : 500, color: active ? '#fff' : 'rgba(255,255,255,.6)', whiteSpace:'nowrap' }}>
+                        {item.name}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              )
+            })}
           </>
         )}
+
+        {/* ── Utilisateur cabinet : navigation filtrée par plan ── */}
+        {!isSuperAdmin && (
+          <>
+            {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Navigation</p>}
+            {navigation.map(item => <NavItem key={item.href} item={item}/>)}
+
+            {/* Items verrouillés (plan supérieur requis) */}
+            {lockedItems.length > 0 && !collapsed && (
+              <div style={{ marginTop:10, padding:'8px 10px', borderRadius:10, background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.07)' }}>
+                <p style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 6px' }}>
+                  {activePlan === 'ESSENTIAL' ? '🔒 Disponible en PRO' : '🔒 Disponible en GROUP'}
+                </p>
+                {lockedItems.map(item => {
+                  const Icon = item.icon
+                  return (
+                    <div key={item.href} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 6px', borderRadius:8, opacity:.4, cursor:'not-allowed', marginBottom:2 }}>
+                      <div style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.06)', flexShrink:0 }}>
+                        <Icon size={14} color='rgba(255,255,255,.4)'/>
+                      </div>
+                      <span style={{ fontSize:12, color:'rgba(255,255,255,.4)', flex:1 }}>{item.name}</span>
+                      <span style={{ fontSize:8, fontWeight:700, background:'rgba(255,165,0,.15)', color:'#F59E0B', padding:'1px 5px', borderRadius:99 }}>
+                        {activePlan === 'ESSENTIAL' ? 'PRO' : 'GROUP'}
+                      </span>
+                    </div>
+                  )
+                })}
+                <a href='/subscription' style={{ display:'block', marginTop:8, padding:'6px 8px', borderRadius:8, background:'rgba(99,91,255,.2)', color:'rgba(255,255,255,.8)', fontSize:11, fontWeight:700, textDecoration:'none', textAlign:'center' }}>
+                  ↑ Upgrader mon plan
+                </a>
+              </div>
+            )}
+
+            {/* Abonnement */}
+            <div style={{ height:1, background:'rgba(255,255,255,.12)', margin:'10px 0' }}/>
+            {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
+            <NavItem item={{ name:'Mon Abonnement', href:'/subscription', icon:CreditCard }}/>
+          </>
+        )}
+
       </nav>
 
       {/* User */}
@@ -234,12 +276,14 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
             <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:13, color:'#fff', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
-            <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', margin:0 }}>{user?.role}</p>
-              {userPlan && user?.role !== 'SUPER_ADMIN' && (
-                <span style={{ fontSize:9, fontWeight:700, background:'rgba(255,255,255,.15)', color:'rgba(255,255,255,.7)', padding:'1px 6px', borderRadius:99, marginTop:2, display:'inline-block' }}>
-                  {userPlan}
-                </span>
-              )}
+            <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', margin:0 }}>
+              {isSuperAdmin ? 'Super Administrateur' : user?.role}
+            </p>
+            {!isSuperAdmin && userPlan && (
+              <span style={{ fontSize:9, fontWeight:700, background:'rgba(255,255,255,.15)', color:'rgba(255,255,255,.8)', padding:'2px 7px', borderRadius:99, marginTop:2, display:'inline-block' }}>
+                Plan {userPlan}
+              </span>
+            )}
           </div>
         )}
         <div style={{ width:8, height:8, borderRadius:'50%', background:'#22C55E', flexShrink:0, boxShadow:'0 0 0 2px rgba(255,255,255,0.3)' }} />
