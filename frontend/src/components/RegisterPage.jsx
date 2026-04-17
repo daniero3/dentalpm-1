@@ -111,7 +111,7 @@ export default function RegisterPage() {
                   {[
                     { label:'Nom du cabinet *',           name:'cabinet', ph:'Cabinet Dentaire Dr. Rakoto', type:'text'  },
                     { label:'Email professionnel *',       name:'email',   ph:'contact@cabinet.mg',         type:'email' },
-                    { label:'Téléphone MVola / Orange *',  name:'phone',   ph:'034 XX XXX XX',              type:'tel'   },
+                    { label:'Téléphone *',  name:'phone',   ph:'034 XX XXX XX',              type:'tel'   },
                     { label:'Ville *',                     name:'city',    ph:'Antananarivo',                type:'text'  },
                   ].map(f => (
                     <div key={f.name}>
@@ -167,24 +167,6 @@ export default function RegisterPage() {
                   style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, textDecoration:'none', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box' }}>
                   💳 Payer avec Stripe / Mastercard
                 </a>
-
-                <div style={{ display:'flex', alignItems:'center', gap:8, margin:'8px 0 14px', color:'#94A3B8', fontSize:12 }}>
-                  <div style={{ flex:1, height:1, background:'#E2E8F0' }}/><span>ou Mobile Money</span><div style={{ flex:1, height:1, background:'#E2E8F0' }}/>
-                </div>
-
-                {/* Mobile Money */}
-                <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:18 }}>
-                  {[
-                    { n:'MVola',        c:'#E30613', num:'034 XX XXX XX' },
-                    { n:'Orange Money', c:'#FF6600', num:'032 XX XXX XX' },
-                    { n:'Airtel Money', c:'#E4002B', num:'033 XX XXX XX' },
-                  ].map(p => (
-                    <div key={p.n} style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:10, padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span style={{ fontWeight:700, color:p.c, fontSize:14 }}>{p.n}</span>
-                      <span style={{ color:'#64748B', fontSize:13 }}>{p.num}</span>
-                    </div>
-                  ))}
-                </div>
 
                 {/* Bouton confirmer inscription */}
                 <button onClick={submit} disabled={loading}

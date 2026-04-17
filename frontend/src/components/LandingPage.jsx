@@ -339,11 +339,11 @@ const FEATURES_LIST = [
   {tag:'SMS',icon:'💬',title:'SMS automatiques',desc:"Rappels 24h avant RDV, messages d'anniversaire, relances patients inactifs. Zéro appel manuel inutile.",color:'#10B981'},
 ];
 const FAQS = [
-  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes, sans carte bancaire. Accès immédiat à toutes les fonctionnalités PRO. À la fin, choisissez votre plan et payez via MVola, Orange Money ou carte Mastercard."},
+  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes, sans carte bancaire. Accès immédiat à toutes les fonctionnalités PRO. À la fin, choisissez votre plan et payez directement via Stripe."},
   {q:"Mes données patients sont-elles sécurisées ?",a:"Oui. Chiffrement de bout en bout, sauvegarde automatique quotidienne, hébergement sécurisé. Confidentialité médicale respectée, aucune donnée partagée avec des tiers."},
   {q:"Puis-je annuler à tout moment ?",a:"Oui, sans engagement ni pénalité. Annulez depuis votre espace cabinet en un clic. Vos données restent accessibles jusqu'à la fin de la période payée."},
   {q:"Combien de patients avec le plan ESSENTIAL ?",a:"Le plan ESSENTIAL gère jusqu'à 500 patients actifs pour 1 praticien + 1 assistant(e). Le plan PRO offre des patients illimités dès 199 000 Ar/mois."},
-  {q:"Comment fonctionne le paiement mensuel ?",a:"Envoyez votre paiement par MVola (034), Orange Money (032), Airtel Money (033) ou virement Banquière. Notre équipe valide sous 24h et votre abonnement est renouvelé automatiquement."},
+  {q:"Comment fonctionne le paiement mensuel ?",a:"Payez directement et en toute sécurité via Stripe avec votre carte Mastercard ou Visa. L'abonnement est activé immédiatement après paiement."},
   {q:"DPM fonctionne-t-il sur mobile ?",a:"Oui, 100% responsive. Fonctionne parfaitement sur ordinateur, tablette et smartphone. Gérez votre cabinet depuis n'importe où à Madagascar."},
   {q:"Puis-je migrer mes données existantes ?",a:"Oui. Notre équipe vous accompagne gratuitement dans la migration de vos données patients et historiques. Contactez-nous sur radisonfrancky@gmail.com."},
   {q:"Y a-t-il une formation pour utiliser DPM ?",a:"Le plan GROUP inclut une formation personnalisée sur site. Pour tous les plans, documentation complète, tutoriels vidéo et support en français inclus."},

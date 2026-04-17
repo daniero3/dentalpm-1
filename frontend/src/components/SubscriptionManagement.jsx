@@ -302,7 +302,7 @@ function UserView({ user }) {
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:24 }}>
                 <div>
                   <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.6)', textTransform:'uppercase', letterSpacing:'.1em', marginBottom:4 }}>Paiement actif</div>
-                  <div style={{ fontWeight:700, fontSize:15, color:'#fff' }}>Mobile Money Madagascar</div>
+                  <div style={{ fontWeight:700, fontSize:15, color:'#fff' }}>Paiement par Stripe</div>
                 </div>
                 <div style={{ width:38, height:28, borderRadius:5, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <CreditCard size={16} color="#fff"/>
@@ -320,23 +320,7 @@ function UserView({ user }) {
                 </div>
               </div>
             </div>
-            <div style={{ fontSize:12, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10 }}>Méthodes disponibles</div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:16 }}>
-              {[
-                { name:'MVola',        color:'#E30613', num:'034 XX XXX XX', logo:'M' },
-                { name:'Orange Money', color:'#FF6600', num:'032 XX XXX XX', logo:'O' },
-                { name:'Airtel Money', color:'#E4002B', num:'033 XX XXX XX', logo:'A' },
-                { name:'Mastercard',   color:'#EB001B', num:'Carte Mastercard', logo:'MC' },
-              ].map(p => (
-                <div key={p.name} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', background:'#F8FAFC', borderRadius:11, border:'1px solid #E2E8F0' }}>
-                  <div style={{ width:30, height:30, borderRadius:8, background:p.color, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:11, color:'#fff', flexShrink:0 }}>{p.logo}</div>
-                  <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:'#0F172A' }}>{p.name}</div>
-                    <div style={{ fontSize:10, color:'#94A3B8' }}>{p.num}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+
             {/* Boutons Stripe par plan */}
             <div style={{ fontSize:12, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10, marginTop:4 }}>Payer maintenant avec Stripe</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12 }}>
@@ -360,14 +344,7 @@ function UserView({ user }) {
               })}
             </div>
 
-            {/* Séparateur */}
-            <div style={{ display:'flex', alignItems:'center', gap:8, margin:'8px 0 12px', color:'#94A3B8', fontSize:12 }}>
-              <div style={{ flex:1, height:1, background:'#E2E8F0' }}/><span>ou payer via Mobile Money</span><div style={{ flex:1, height:1, background:'#E2E8F0' }}/>
-            </div>
 
-            <a href="/payment" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'12px', borderRadius:12, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 4px 14px rgba(13,122,135,.28)' }}>
-              <CreditCard size={16}/> Payer via Mobile Money
-            </a>
           </div>
         )}
 
