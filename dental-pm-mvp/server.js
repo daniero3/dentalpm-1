@@ -129,6 +129,17 @@ app.use('/api', requireAuth, dentalChartRoutes);
 
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 
+
+// ── Endpoint de version — vérifier le déploiement ────────────────────────────
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2.0.0',
+    deployed_at: '2026-04-17 06:33',
+    commit: '4c32395',
+    features: ['clinic_isolation','stripe_only','super_admin_only','trial_dynamic_plan']
+  });
+});
+
 // ── Error handlers ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);
