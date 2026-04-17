@@ -66,4 +66,47 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, requireRole, optionalAuth };
+
+// ── Middleware isolation cabinet ──────────────────────────────────────────────
+// Garantit que chaque utilisateur ne voit que les données de SON cabinet
+// SUPER_ADMIN = accès total (gestionnaire plateforme, pas de clinic_id)
+// Tous les autres rôles = strictement limités à leur clinic_id
+const requireClinicScope = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Non authentifié' });
+
+  // SUPER_ADMIN : accès complet, pas de restriction clinic
+  if (req.user.role === 'SUPER_ADMIN') return next();
+
+  // Tous les autres (ADMIN cabinet, DENTIST, ASSISTANT, ACCOUNTANT)
+  // DOIVENT avoir un clinic_id
+  const clinicId = req.clinic_id
+    || req.user?.clinic_id
+    || req.user?.dataValues?.clinic_id
+    || null;
+
+  if (!clinicId) {
+    return res.status(403).json({
+      error: 'Accès refusé — cabinet non identifié',
+      code: 'NO_CLINIC_SCOPE'
+    });
+  }
+
+  // Forcer clinic_id dans req pour tous les middlewares suivants
+  req.clinic_id = clinicId;
+  req.user.clinic_id = clinicId;
+  next();
+};
+
+// ── Middleware SUPER_ADMIN uniquement ────────────────────────────────────────
+const requireSuperAdmin = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ error: 'Non authentifié' });
+  if (req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({
+      error: 'Accès réservé au Super Administrateur',
+      code: 'SUPER_ADMIN_REQUIRED'
+    });
+  }
+  next();
+};
+
+module.exports = { authenticateToken, requireRole, optionalAuth, requireClinicScope, requireSuperAdmin };

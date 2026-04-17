@@ -33,7 +33,7 @@ const onboardingRoutes    = require('./routes/onboarding');
 const dentalChartRoutes   = require('./routes/dental-chart');
 
 const { getSubscriptionStatus } = require('./middleware/licensing');
-const { authenticateToken: requireAuth } = require('./middleware/auth');
+const { authenticateToken: requireAuth, requireClinicScope, requireSuperAdmin } = require('./middleware/auth');
 
 const app  = express();
 const PORT = process.env.PORT || 8001;
@@ -95,31 +95,31 @@ app.use('/api', (req, res, next) => {
 // ── Routes ── Structure IDENTIQUE à l'originale ───────────────────────────────
 // (requireAuth uniquement là où il était dans l'original)
 app.use('/api/auth',             authRoutes);
-app.use('/api/patients',         requireAuth, patientRoutes);
-app.use('/api/appointments',     requireAuth, appointmentRoutes);
-app.use('/api/invoices',         requireAuth, invoiceRoutes);
-app.use('/api/quotes',           requireAuth, quoteRoutes);
+app.use('/api/patients',         requireAuth, requireClinicScope, patientRoutes);
+app.use('/api/appointments',     requireAuth, requireClinicScope, appointmentRoutes);
+app.use('/api/invoices',         requireAuth, requireClinicScope, invoiceRoutes);
+app.use('/api/quotes',           requireAuth, requireClinicScope, quoteRoutes);
 app.use('/api/integrations',     integrationRoutes);
-app.use('/api/dashboard',        requireAuth, dashboardRoutes);
-app.use('/api/inventory',        requireAuth, inventoryRoutes);
-app.use('/api/suppliers',        requireAuth, supplierRoutes);
-app.use('/api/labs',             requireAuth, labRoutes);
-app.use('/api/mailing',          requireAuth, mailingRoutes);
+app.use('/api/dashboard',        requireAuth, requireClinicScope, dashboardRoutes);
+app.use('/api/inventory',        requireAuth, requireClinicScope, inventoryRoutes);
+app.use('/api/suppliers',        requireAuth, requireClinicScope, supplierRoutes);
+app.use('/api/labs',             requireAuth, requireClinicScope, labRoutes);
+app.use('/api/mailing',          requireAuth, requireClinicScope, mailingRoutes);
 app.use('/api/media',            requireAuth, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
 // Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
 app.use('/api/billing/webhook/stripe', billingRoutes); // raw body pour vérification signature Stripe
 app.use('/api/billing/webhook',    billingRoutes);
 app.use('/api/billing',          requireAuth, billingRoutes);
-app.use('/api/admin',            requireAuth, adminRoutes);
+app.use('/api/admin',            requireAuth, requireSuperAdmin, adminRoutes);
 app.use('/api/legal',            legalRoutes);
 app.use('/api/pricing-schedules',requireAuth, pricingRoutes);
 app.use('/api/procedure-fees',   requireAuth, pricingRoutes);
-app.use('/api/documents',        requireAuth, documentRoutes);
-app.use('/api/prescriptions',    requireAuth, prescriptionRoutes);
-app.use('/api/reports',          requireAuth, reportsRoutes);
+app.use('/api/documents',        requireAuth, requireClinicScope, documentRoutes);
+app.use('/api/prescriptions',    requireAuth, requireClinicScope, prescriptionRoutes);
+app.use('/api/reports',          requireAuth, requireClinicScope, reportsRoutes);
 app.use('/api/messaging',        requireAuth, messagingRoutes);
-app.use('/api/purchases',        requireAuth, purchasesRoutes);
+app.use('/api/purchases',        requireAuth, requireClinicScope, purchasesRoutes);
 app.use('/api/onboarding',       requireAuth, onboardingRoutes);
 
 // Routes avec chemins relatifs (montées sur /api)

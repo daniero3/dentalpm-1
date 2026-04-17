@@ -61,7 +61,7 @@ const _getUserId = (req) => {
 // CLINICS MANAGEMENT
 // ============================================================
 
-router.get('/clinics', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.get('/clinics', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const { search, status, page = 1, limit = 20 } = req.query;
     const whereClause = {};
@@ -166,7 +166,7 @@ router.post('/clinics', requireRole('SUPER_ADMIN'), [
   }
 });
 
-router.get('/clinics/:id', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.get('/clinics/:id', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const clinic = await Clinic.findByPk(req.params.id);
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
@@ -214,7 +214,7 @@ router.delete('/clinics/:id', requireRole('SUPER_ADMIN'), async (req, res) => {
 
 
 // ── PATCH /api/admin/clinics/:id/activate — Activer abonnement ──
-router.patch('/clinics/:id/activate', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.patch('/clinics/:id/activate', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const clinic = await Clinic.findByPk(req.params.id);
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
@@ -233,7 +233,7 @@ router.patch('/clinics/:id/activate', requireRole('SUPER_ADMIN', 'ADMIN'), async
 });
 
 // ── PATCH /api/admin/clinics/:id/deactivate — Désactiver abonnement ──
-router.patch('/clinics/:id/deactivate', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.patch('/clinics/:id/deactivate', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const clinic = await Clinic.findByPk(req.params.id);
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
@@ -309,7 +309,7 @@ router.get('/stats', requireRole('SUPER_ADMIN'), async (req, res) => {
 // DASHBOARD SUPER ADMIN  ← NOUVEAU
 // ============================================================
 
-router.get('/dashboard', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.get('/dashboard', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const totalClinics   = await Clinic.count().catch(() => 0);
     const activeClinics  = await Clinic.count({ where: { subscription_status: 'ACTIVE' } }).catch(() => 0);
@@ -451,7 +451,7 @@ router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN'), async (
 // ============================================================
 
 // GET /api/admin/payment-requests?status=PENDING
-router.get('/payment-requests', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.get('/payment-requests', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const { status } = req.query;
     const where = {};
@@ -480,7 +480,7 @@ router.get('/payment-requests', requireRole('SUPER_ADMIN', 'ADMIN'), async (req,
 });
 
 // PATCH /api/admin/payment-requests/:id/verify
-router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const request = await PaymentRequest.findByPk(req.params.id);
     if (!request) return res.status(404).json({ error: 'Demande non trouvée' });
@@ -508,7 +508,7 @@ router.patch('/payment-requests/:id/verify', requireRole('SUPER_ADMIN', 'ADMIN')
 });
 
 // PATCH /api/admin/payment-requests/:id/reject
-router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN', 'ADMIN'), async (req, res) => {
+router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN'), async (req, res) => {
   try {
     const request = await PaymentRequest.findByPk(req.params.id);
     if (!request) return res.status(404).json({ error: 'Demande non trouvée' });

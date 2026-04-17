@@ -14,7 +14,7 @@ router.post('/register', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min:6 }),
   body('full_name').isLength({ min:2, max:100 }),
-  body('role').isIn(['SUPER_ADMIN','ADMIN','DENTIST','ASSISTANT','ACCOUNTANT']),
+  body('role').isIn(['ADMIN','DENTIST','ASSISTANT','ACCOUNTANT']), // SUPER_ADMIN non créable via API publique
   body('clinic_id').optional({ nullable:true }).isUUID()
 ], async (req, res) => {
   try {
