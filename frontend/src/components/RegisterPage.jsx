@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [plan,    setPlan]    = useState(null);
   const [loading, setLoading] = useState(false);
   const [done,    setDone]    = useState(false);
+  const [tempPwd, setTempPwd] = useState('');
   const [form,    setForm]    = useState({ cabinet:'', email:'', phone:'', city:'', dentists:'1' });
 
   const inp = {
@@ -33,7 +34,8 @@ export default function RegisterPage() {
   const submit = async () => {
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
+      const resp = await axios.post(`${API_URL}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
+      setTempPwd(resp.data.temp_password || '');
       setDone(true);
     } catch (e) {
       alert(e.response?.data?.error || 'Erreur. Vérifiez vos informations.');
@@ -184,9 +186,17 @@ export default function RegisterPage() {
               <div style={{ textAlign:'center', padding:'20px 0' }}>
                 <div style={{ fontSize:56, marginBottom:16 }}>🎉</div>
                 <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:22, color:'#0F172A', margin:'0 0 8px' }}>Cabinet créé !</h2>
-                <p style={{ color:'#64748B', fontSize:14, lineHeight:1.7, margin:'0 0 24px' }}>
-                  Votre essai de 7 jours a commencé. Consultez votre email pour accéder à votre espace.
+                <p style={{ color:'#64748B', fontSize:14, lineHeight:1.7, margin:'0 0 16px' }}>
+                  Votre essai gratuit de 7 jours est actif. Un email de bienvenue vous a été envoyé.
                 </p>
+                {tempPwd && (
+                  <div style={{ background:'#F0FDFE', border:'1.5px solid #7DD3DA', borderRadius:12, padding:'14px 18px', marginBottom:20, textAlign:'left' }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Identifiants de connexion</div>
+                    <div style={{ fontSize:13, color:'#0F172A', marginBottom:4 }}>Email : <strong>{form.email}</strong></div>
+                    <div style={{ fontSize:13, color:'#0F172A', marginBottom:8 }}>Mot de passe temporaire : <strong style={{ fontFamily:'monospace', background:'#fff', padding:'2px 8px', borderRadius:6, border:'1px solid #E2E8F0' }}>{tempPwd}</strong></div>
+                    <div style={{ fontSize:11, color:'#F59E0B', fontWeight:600 }}>⚠️ Notez ce mot de passe — changez-le dès votre première connexion</div>
+                  </div>
+                )}
                 <button onClick={() => navigate('/login')}
                   style={{ padding:'13px 32px', borderRadius:12, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:'pointer', boxShadow:`0 4px 16px ${T}40` }}>
                   Se connecter →

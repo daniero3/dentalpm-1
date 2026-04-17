@@ -108,6 +108,7 @@ app.use('/api/mailing',          requireAuth, mailingRoutes);
 app.use('/api/media',            requireAuth, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
 // Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
+app.use('/api/billing/webhook/stripe', billingRoutes); // raw body pour vérification signature Stripe
 app.use('/api/billing/webhook',    billingRoutes);
 app.use('/api/billing',          requireAuth, billingRoutes);
 app.use('/api/admin',            requireAuth, adminRoutes);

@@ -220,20 +220,31 @@ router.post('/complete', async (req, res) => {
       const now = new Date();
       const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+      const chosenPlan = req.body?.plan || 'PRO';
+      const PLAN_USERS = { ESSENTIAL:2, PRO:5, GROUP:50 };
+      const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
       subscription = await Subscription.create({
         clinic_id: clinic.id,
-        plan: 'PRO',
+        plan: chosenPlan,
         status: 'TRIAL',
         start_date: now,
         trial_end_date: trialEnd,
         end_date: trialEnd,
-        max_practitioners: 5,
-        price_mga: { ESSENTIAL:149000, PRO:199000, GROUP:299000 }[req.body?.plan || 'PRO'] || 199000
+        max_practitioners: PLAN_USERS[chosenPlan] || 5,
+        price_mga: PLAN_PRICES[chosenPlan] || 199000
       });
+      // Mettre à jour le plan du cabinet
+      await clinic.update({ current_plan: chosenPlan });
     }
 
     // Mark clinic as onboarded
     await clinic.update({ onboarding_completed: true });
+
+    // Email de bienvenue
+    try {
+      const { sendWelcomeTrial } = require('../utils/mailer');
+      await sendWelcomeTrial(clinic.email, clinic.name, subscription.plan, subscription.end_date);
+    } catch(e) { console.warn('Welcome email (non-fatal):', e.message); }
 
     res.json({
       message: 'Onboarding complété! Essai de 7 jours activé.',

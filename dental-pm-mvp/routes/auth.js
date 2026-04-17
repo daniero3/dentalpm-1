@@ -226,4 +226,82 @@ router.put('/profile', authenticateToken, [
   } catch (error) { res.status(500).json({ error:'Erreur mise à jour profil' }); }
 });
 
+
+// ── POST /api/auth/register-clinic — Création cabinet depuis RegisterPage ──
+router.post('/register-clinic', [
+  require('express-validator').body('cabinet').notEmpty(),
+  require('express-validator').body('email').isEmail().normalizeEmail(),
+  require('express-validator').body('phone').notEmpty(),
+  require('express-validator').body('plan').optional().isIn(['ESSENTIAL','PRO','GROUP']),
+], async (req, res) => {
+  try {
+    const { cabinet, email, phone, city, dentists, plan = 'PRO' } = req.body;
+    if (!cabinet || !email || !phone) return res.status(400).json({ error: 'Champs requis manquants' });
+
+    // Vérifier si email déjà utilisé
+    const existing = await Clinic.findOne({ where: { email } });
+    if (existing) return res.status(409).json({ error: 'Un cabinet avec cet email existe déjà' });
+
+    const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
+    const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };
+
+    // Créer le cabinet
+    const clinic = await Clinic.create({
+      name:                cabinet,
+      email,
+      phone,
+      city:                city || 'Madagascar',
+      subscription_status: 'TRIAL',
+      current_plan:        plan,
+      is_active:           true,
+      is_verified:         false,
+      onboarding_completed: false,
+      max_users:           PLAN_USERS[plan] || 5,
+    });
+
+    // Créer le compte admin du cabinet (mot de passe temporaire)
+    const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+    await User.create({
+      username:     email.split('@')[0].replace(/[^a-zA-Z0-9]/g,'_').slice(0,30) + '_' + Date.now().toString().slice(-4),
+      email,
+      password_hash: tempPassword,
+      full_name:    cabinet,
+      role:         'ADMIN',
+      clinic_id:    clinic.id,
+      is_active:    true,
+      is_verified:  true,
+      onboarding_completed: false,
+    });
+
+    // Créer l'abonnement trial 7 jours
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    await require('../models').Subscription.create({
+      clinic_id:         clinic.id,
+      plan,
+      status:            'TRIAL',
+      start_date:        now,
+      trial_end_date:    trialEnd,
+      end_date:          trialEnd,
+      max_practitioners: PLAN_USERS[plan] || 5,
+      price_mga:         PLAN_PRICES[plan] || 199000,
+    });
+
+    // Email de bienvenue
+    try {
+      const { sendWelcomeTrial } = require('../utils/mailer');
+      await sendWelcomeTrial(email, cabinet, plan, trialEnd);
+    } catch(e) { console.warn('Welcome email (non-fatal):', e.message); }
+
+    res.status(201).json({
+      message: 'Cabinet créé avec succès. Essai de 7 jours activé.',
+      clinic: { id: clinic.id, name: clinic.name, plan, trial_end: trialEnd },
+      temp_password: tempPassword,
+    });
+  } catch (error) {
+    console.error('Register clinic error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;

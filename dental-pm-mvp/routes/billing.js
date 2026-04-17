@@ -347,6 +347,58 @@ router.post('/verify-reference', [
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ── POST /api/billing/webhook/stripe — Webhook Stripe ────────────────────────
+router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (req, res) => {
+  const sig       = req.headers['stripe-signature'];
+  const secret    = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+  try {
+    if (secret) {
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
+      event = stripe.webhooks.constructEvent(req.body, sig, secret);
+    } else {
+      // Mode dev sans vérification de signature
+      event = JSON.parse(req.body);
+    }
+  } catch (err) {
+    console.error('Stripe webhook signature error:', err.message);
+    return res.status(400).json({ error: 'Webhook signature invalide' });
+  }
+
+  try {
+    if (event.type === 'checkout.session.completed' || event.type === 'payment_intent.succeeded') {
+      const session  = event.data.object;
+      const metadata = session.metadata || {};
+      const clinicId = metadata.clinic_id;
+      const planCode = metadata.plan || 'PRO';
+
+      if (clinicId) {
+        const { activateSubscriptionAfterPayment } = require('../job/subscriptionManager');
+        const result = await activateSubscriptionAfterPayment(clinicId, planCode, null);
+
+        // Email de confirmation
+        try {
+          const Clinic = require('../models').Clinic;
+          const clinic = await Clinic.findByPk(clinicId);
+          if (clinic) {
+            const sub = await require('../models').Subscription.findOne({ where: { clinic_id: clinicId, status: 'ACTIVE' }, order: [['created_at','DESC']] });
+            const { sendSubscriptionActivated } = require('../utils/mailer');
+            await sendSubscriptionActivated(clinic.email, clinic.name, planCode, sub?.end_date);
+          }
+        } catch(e) { console.warn('Stripe activation email (non-fatal):', e.message); }
+
+        console.log(`[Stripe Webhook] Abonnement activé: clinic=${clinicId} plan=${planCode}`);
+      }
+    }
+    res.json({ received: true });
+  } catch (error) {
+    console.error('Stripe webhook processing error:', error);
+    res.status(500).json({ error: 'Erreur traitement webhook' });
+  }
+});
+
 // POST /api/billing/webhook/mvola — Callback MVola (Telma)
 //   Appelée automatiquement par l'API MVola après paiement réussi
 //   SANS authentification (endpoint public, sécurisé par signature)

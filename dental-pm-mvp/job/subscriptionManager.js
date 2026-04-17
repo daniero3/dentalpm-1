@@ -141,6 +141,16 @@ async function activateSubscriptionAfterPayment(clinicId, planCode, paymentReque
     }
 
     log(`✅ Abonnement activé automatiquement : clinic_id=${clinicId} plan=${planCode} end=${endDate.toDateString()}`);
+
+    // Email de confirmation d'activation
+    try {
+      const clinic = await require('../models').Clinic.findByPk(clinicId);
+      if (clinic?.email) {
+        const { sendSubscriptionActivated } = require('../utils/mailer');
+        await sendSubscriptionActivated(clinic.email, clinic.name, planCode, endDate);
+      }
+    } catch(e) { log(`⚠️ Email activation (non-fatal): ${e.message}`); }
+
     return { success: true, subscription: newSub };
   } catch (error) {
     log(`❌ Erreur activation abonnement : ${error.message}`);
@@ -306,7 +316,54 @@ async function runAllChecks() {
   log('── Cycle de vérification abonnements ──');
   await deactivateExpiredSubscriptions();
   await deactivateExpiredTrials();
+  await sendTrialReminderEmails();
   log('── Fin du cycle ──');
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 5. EMAILS DE RAPPEL TRIAL — J-3 et J-1 avant expiration
+// ═══════════════════════════════════════════════════════════════════════════
+async function sendTrialReminderEmails() {
+  try {
+    const { sendTrialReminder } = require('../utils/mailer');
+    const now = new Date();
+
+    for (const daysLeft of [3, 1]) {
+      const targetStart = new Date(now);
+      targetStart.setDate(targetStart.getDate() + daysLeft);
+      targetStart.setHours(0, 0, 0, 0);
+      const targetEnd = new Date(targetStart);
+      targetEnd.setHours(23, 59, 59, 999);
+
+      const trials = await Subscription.findAll({
+        where: {
+          status: 'TRIAL',
+          end_date: { [Op.between]: [targetStart, targetEnd] }
+        }
+      });
+
+      for (const sub of trials) {
+        try {
+          const clinic = await require('../models').Clinic.findByPk(sub.clinic_id);
+          if (clinic?.email) {
+            await sendTrialReminder(clinic.email, clinic.name, daysLeft, sub.plan);
+            log(`📧 Rappel J-${daysLeft} envoyé → ${clinic.email} (${clinic.name})`);
+          }
+        } catch(e) {
+          log(`⚠️ Rappel email (non-fatal) clinic=${sub.clinic_id}: ${e.message}`);
+        }
+      }
+
+      if (trials.length > 0) {
+        log(`Rappels J-${daysLeft} : ${trials.length} email(s) envoyé(s).`);
+      } else {
+        log(`Rappels J-${daysLeft} : aucun trial à notifier.`);
+      }
+    }
+  } catch (error) {
+    log(`❌ Erreur envoi rappels trial : ${error.message}`);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -320,6 +377,7 @@ module.exports = {
   handleOrangeMoneyWebhook,
   deactivateExpiredSubscriptions,
   deactivateExpiredTrials,
+  sendTrialReminderEmails,
   PLAN_PRICES,
   PLAN_DAYS,
 };
