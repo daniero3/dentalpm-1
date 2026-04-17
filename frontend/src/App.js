@@ -226,7 +226,12 @@ const LoginRedirect = () => {
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <LoadingSpinner />;
-  return user ? children : <Navigate to="/landing" />;
+  if (!user) return <Navigate to="/landing" />;
+  // SUPER_ADMIN redirigé vers son dashboard dédié
+  if (user.role === 'SUPER_ADMIN' && window.location.pathname === '/') {
+    return <Navigate to="/subscription" />;
+  }
+  return children;
 };
 
 const AdminRoute = ({ children }) => {
