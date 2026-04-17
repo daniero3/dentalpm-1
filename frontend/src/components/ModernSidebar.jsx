@@ -3,7 +3,7 @@ import {
   Home, Users, FileText, Calendar, Settings, Package, Truck,
   ShoppingCart, FlaskConical, Mail, ChevronLeft, ChevronRight,
   Building2, CreditCard, LayoutDashboard, BarChart3,
-  Sparkles, Menu, X
+  Sparkles, Menu, X, Handshake
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../App"
@@ -149,20 +149,15 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   }, [user])
 
   // Plan actif strict — jamais null si planLoaded
+  // Plan actif : TRIAL → PRO, null → ESSENTIAL par défaut (ne jamais bloquer)
   const activePlan = userPlan === 'TRIAL' ? 'PRO' : (userPlan || 'ESSENTIAL')
 
   // Navigation STRICTEMENT filtrée — ne jamais afficher items hors plan
-  const navigation = isSuperAdmin ? [] : (
-    planLoaded
-      ? ALL_NAV.filter(item => item.plans.includes(activePlan))
-      : [] // masquer tout pendant le chargement
+  // Toujours afficher navigation (ESSENTIAL par défaut pendant chargement)
+  const navigation = isSuperAdmin ? [] : ALL_NAV.filter(item => item.plans.includes(activePlan))
+  const lockedItems = isSuperAdmin ? [] : ALL_NAV.filter(item =>
+    !item.plans.includes(activePlan) && item.plans.some(p => ['PRO','GROUP'].includes(p))
   )
-
-  // Items verrouillés
-  const lockedItems = isSuperAdmin ? [] : (
-    planLoaded
-      ? ALL_NAV.filter(item => !item.plans.includes(activePlan))
-      : []
   )
 
   const isActive = (href) =>

@@ -44,6 +44,7 @@ import SupplierManagement from "./components/SupplierManagement";
 import PurchaseManagement from "./components/PurchaseManagement";
 import OnboardingWizard from "./components/OnboardingWizard";
 import RegisterPage from "./components/RegisterPage";
+import AdminPartners from "./components/AdminPartners";
 import BillingRenew from "./components/BillingRenew";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -358,6 +359,7 @@ function App() {
               <Route path="/admin" element={<AdminRoute><MainLayout><SuperAdminDashboard /></MainLayout></AdminRoute>} />
               <Route path="/admin/clinics" element={<AdminRoute><MainLayout><SuperAdminClinics /></MainLayout></AdminRoute>} />
               <Route path="/admin/payments" element={<AdminRoute><MainLayout><PaymentValidationPage /></MainLayout></AdminRoute>} />
+              <Route path="/admin/partners" element={<AdminRoute><MainLayout><AdminPartners /></MainLayout></AdminRoute>} />
               <Route path="/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
               <Route path="/billing/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
               <Route path="/legal" element={<LegalPages />} />

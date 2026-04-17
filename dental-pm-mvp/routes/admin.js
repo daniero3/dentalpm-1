@@ -528,3 +528,69 @@ router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN'), async (
   }
 });
 module.exports = router;
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FOURNISSEURS PARTENAIRES PLATEFORME (SUPER_ADMIN uniquement)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// GET /api/admin/partners — Liste des fournisseurs partenaires
+router.get('/partners', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const { Supplier } = require('../models');
+    const partners = await Supplier.findAll({
+      where: { clinic_id: null, is_active: true }, // fournisseurs globaux (sans clinic_id)
+      order: [['name', 'ASC']]
+    }).catch(() => []);
+    res.json({ partners, count: partners.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// POST /api/admin/partners — Ajouter un fournisseur partenaire
+router.post('/partners', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const { Supplier } = require('../models');
+    const { name, contact_name, email, phone, address, city, category, notes } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nom du fournisseur requis' });
+
+    const partner = await Supplier.create({
+      name, contact_name, email, phone, address, city,
+      category: category || 'AUTRE',
+      notes,
+      clinic_id: null,       // null = partenaire plateforme (visible par tous)
+      is_partner: true,
+      is_active: true
+    });
+    res.status(201).json({ message: 'Partenaire ajouté', partner });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// PUT /api/admin/partners/:id — Modifier un partenaire
+router.put('/partners/:id', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const { Supplier } = require('../models');
+    const partner = await Supplier.findOne({ where: { id: req.params.id, clinic_id: null } });
+    if (!partner) return res.status(404).json({ error: 'Partenaire non trouvé' });
+    await partner.update(req.body);
+    res.json({ message: 'Partenaire mis à jour', partner });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// DELETE /api/admin/partners/:id — Désactiver un partenaire
+router.delete('/partners/:id', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const { Supplier } = require('../models');
+    const partner = await Supplier.findOne({ where: { id: req.params.id, clinic_id: null } });
+    if (!partner) return res.status(404).json({ error: 'Partenaire non trouvé' });
+    await partner.update({ is_active: false });
+    res.json({ message: 'Partenaire désactivé' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
