@@ -92,7 +92,13 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d) return
-        const plan = d.plan || (d.status === 'TRIAL' ? 'PRO' : null) || 'ESSENTIAL'
+        // Plan effectif — utiliser has_access pour confirmer
+        let plan = 'ESSENTIAL' // défaut restrictif
+        if (d.has_access && d.plan && ['ESSENTIAL','PRO','GROUP'].includes(d.plan)) {
+          plan = d.plan
+        } else if (d.status === 'TRIAL' && !d.is_expired) {
+          plan = d.plan || 'PRO'
+        }
         setUserPlan(plan)
         localStorage.setItem('dpm_plan', JSON.stringify(plan))
       })

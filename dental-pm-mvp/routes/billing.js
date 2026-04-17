@@ -188,9 +188,11 @@ router.get('/status', async (req, res) => {
       daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     }
 
+    const hasAccess = ['ACTIVE','TRIAL'].includes(subscription.status) && !isExpired && !isTrialExp;
     res.json({
       status:         subscription.status,
       plan:           subscription.plan,
+      has_access:     hasAccess,
       is_expired:     isExpired || isTrialExp || ['EXPIRED','TRIAL_EXPIRED'].includes(subscription.status),
       is_trial:       ['TRIAL'].includes(subscription.status),
       days_remaining: daysRemaining,
