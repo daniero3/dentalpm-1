@@ -543,7 +543,7 @@ router.post('/clinics/:id/users', requireRole('SUPER_ADMIN'), async (req, res) =
 
     // Vérifier unicité
     const existing = await User.findOne({ where: { [require('sequelize').Op.or]: [{ username }, { email }] } });
-    if (existing) return res.status(409).json({ error: 'Nom d'utilisateur ou email déjà utilisé' });
+    if (existing) return res.status(409).json({ error: 'Nom utilisateur ou email deja utilise' });
 
     const user = await User.create({
       username, email, password_hash: password,
