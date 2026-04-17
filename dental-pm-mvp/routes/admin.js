@@ -527,6 +527,42 @@ router.patch('/payment-requests/:id/reject', requireRole('SUPER_ADMIN'), async (
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });
+
+// ── POST /api/admin/clinics/:id/users — Créer un praticien pour un cabinet ──
+router.post('/clinics/:id/users', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const clinic = await Clinic.findByPk(req.params.id);
+    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
+
+    const { full_name, email, username, password, role = 'DENTIST', phone, specialization } = req.body;
+    if (!full_name || !email || !username || !password) {
+      return res.status(400).json({ error: 'Champs requis: full_name, email, username, password' });
+    }
+
+    const { User } = require('../models');
+
+    // Vérifier unicité
+    const existing = await User.findOne({ where: { [require('sequelize').Op.or]: [{ username }, { email }] } });
+    if (existing) return res.status(409).json({ error: 'Nom d'utilisateur ou email déjà utilisé' });
+
+    const user = await User.create({
+      username, email, password_hash: password,
+      full_name, role, phone, specialization,
+      clinic_id: clinic.id,
+      is_active: true, is_verified: true,
+      onboarding_completed: true
+    });
+
+    res.status(201).json({
+      message: 'Praticien créé avec succès',
+      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id: user.clinic_id }
+    });
+  } catch (error) {
+    console.error('Create clinic user error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 module.exports = router;
 
 

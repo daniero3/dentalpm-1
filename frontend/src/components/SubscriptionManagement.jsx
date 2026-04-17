@@ -581,6 +581,9 @@ function AdminView() {
   const [clinicData, setClinicData] = useState(null);
   const [clinicLoad, setClinicLoad] = useState(false);
   const [actionLoad, setActionLoad] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser]         = useState({ full_name:'', email:'', username:'', password:'', role:'DENTIST' });
+  const [userSaving, setUserSaving]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -620,6 +623,22 @@ function AdminView() {
     } catch { toast.error('Erreur activation'); }
     finally { setActionLoad(false); }
   };
+  const createUser = async (clinicId) => {
+    if (!newUser.full_name || !newUser.email || !newUser.username || !newUser.password) {
+      toast.error('Tous les champs sont requis'); return;
+    }
+    setUserSaving(true);
+    try {
+      await axios.post(`${API}/admin/clinics/${clinicId}/users`, newUser, authH());
+      toast.success('Praticien créé avec succès');
+      setShowAddUser(false);
+      setNewUser({ full_name:'', email:'', username:'', password:'', role:'DENTIST' });
+      const r = await axios.get(`${API}/admin/clinics/${clinicId}`, authH());
+      setClinicData(r.data);
+    } catch(e) { toast.error(e.response?.data?.error || 'Erreur création'); }
+    finally { setUserSaving(false); }
+  };
+
   const deactivateClinic = async id => {
     if (!window.confirm('Désactiver cet abonnement ?')) return;
     setActionLoad(true);
