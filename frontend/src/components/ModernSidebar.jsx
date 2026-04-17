@@ -72,45 +72,20 @@ const DentalLogo = ({ size=36 }) => (
 )
 
 // ── SidebarContent ────────────────────────────────────────────────────────────
-const BACKEND = process.env.REACT_APP_BACKEND_URL || 'https://dentalpm-1-production.up.railway.app'
-
 const SidebarContent = ({ collapsed, onNavClick }) => {
   const location  = useLocation()
   const { user }  = useAuth()
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
 
-  // Plan — lire depuis cache puis API
-  const [userPlan, setUserPlan] = React.useState(() => {
+  // Plan lu depuis localStorage — stocké au moment du login, toujours fiable
+  const userPlan = React.useMemo(() => {
     try { return JSON.parse(localStorage.getItem('dpm_plan') || 'null') } catch { return null }
-  })
-
-  React.useEffect(() => {
-    if (!user || isSuperAdmin) return
-    const token = localStorage.getItem('token')
-    if (!token) return
-    fetch(`${BACKEND}/api/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (!d) return
-        // Plan effectif — utiliser has_access pour confirmer
-        let plan = 'ESSENTIAL' // défaut restrictif
-        if (d.has_access && d.plan && ['ESSENTIAL','PRO','GROUP'].includes(d.plan)) {
-          plan = d.plan
-        } else if (d.status === 'TRIAL' && !d.is_expired) {
-          plan = d.plan || 'PRO'
-        }
-        setUserPlan(plan)
-        localStorage.setItem('dpm_plan', JSON.stringify(plan))
-      })
-      .catch(() => {})
   }, [user?.id])
 
-  React.useEffect(() => {
-    if (!user) { localStorage.removeItem('dpm_plan'); setUserPlan(null) }
-  }, [user])
-
-  // Plan effectif — TRIAL = PRO, null = ESSENTIAL
-  const plan = isSuperAdmin ? 'SUPER_ADMIN' : (userPlan === 'TRIAL' ? 'PRO' : (userPlan || 'ESSENTIAL'))
+  // Plan effectif — TRIAL = PRO, null = ESSENTIAL (restrictif par défaut)
+  const plan = isSuperAdmin ? 'SUPER_ADMIN'
+    : (userPlan === 'TRIAL' ? 'PRO'
+    : (['ESSENTIAL','PRO','GROUP'].includes(userPlan) ? userPlan : 'ESSENTIAL'))
 
   // Items accessibles et verrouillés
   const navItems    = isSuperAdmin ? [] : ALL_NAV.filter(i => i.plans.includes(plan))

@@ -146,11 +146,29 @@ router.post('/login', loginRateLimiter, [
     try { await AuditLog.create({ user_id: user.id, action:'LOGIN', resource_type:'auth', ip_address: req.ip, description:`Connexion: ${user.username}` }); } catch (e) {}
     resetLoginAttempts(req, username);
 
+    // Récupérer le plan d'abonnement pour la sidebar
+    let userPlan = null;
+    if (user.role !== 'SUPER_ADMIN' && resolvedClinicId) {
+      try {
+        const { Subscription } = require('../models');
+        const sub = await Subscription.findOne({
+          where: { clinic_id: resolvedClinicId },
+          order: [['created_at', 'DESC']]
+        });
+        if (sub && ['ACTIVE','TRIAL'].includes(sub.status)) {
+          const now = new Date();
+          const notExpired = !sub.end_date || new Date(sub.end_date) > now;
+          if (notExpired) userPlan = sub.plan;
+        }
+      } catch(e) {}
+    }
+
     res.json({
       message: 'Connexion réussie', token,
-      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id: user.clinic_id || null, specialization: user.specialization },
+      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id: user.clinic_id || null, specialization: user.specialization, plan: userPlan },
       clinics: availableClinics,
-      needs_clinic_selection: needsSelection
+      needs_clinic_selection: needsSelection,
+      plan: userPlan
     });
   } catch (error) {
     console.error('Login error:', error);

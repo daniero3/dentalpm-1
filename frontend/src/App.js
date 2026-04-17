@@ -133,16 +133,10 @@ const AuthProvider = ({ children }) => {
       const { token, user: userData } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
-      // Stocker le plan immédiatement après login pour la sidebar
-      if (userData.role !== 'SUPER_ADMIN') {
-        const BURL = process.env.REACT_APP_BACKEND_URL || 'https://dentalpm-1-production.up.railway.app';
-        fetch(`${BURL}/api/billing/status`, { headers: { Authorization: `Bearer ${token}` } })
-          .then(r => r.ok ? r.json() : null)
-          .then(d => {
-            if (d?.plan) localStorage.setItem('dpm_user_plan', JSON.stringify(d.plan));
-            else if (d?.status === 'TRIAL') localStorage.setItem('dpm_user_plan', JSON.stringify('PRO'));
-          }).catch(() => {});
-      }
+      // Stocker le plan depuis la réponse de login (immédiat, pas de fetch supplémentaire)
+      const planFromLogin = response.data.plan || userData.plan || null;
+      if (planFromLogin) localStorage.setItem('dpm_plan', JSON.stringify(planFromLogin));
+      else localStorage.removeItem('dpm_plan');
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       toast.success("Connexion réussie!");
