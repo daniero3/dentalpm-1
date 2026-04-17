@@ -423,7 +423,7 @@ function UserView({ user }) {
 /* ══════════════════════════════════════════════════
    MODAL DÉTAIL CABINET
 ══════════════════════════════════════════════════ */
-function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, onActivate, onDeactivate }) {
+function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, onActivate, onDeactivate, showAddUser, setShowAddUser, newUser, setNewUser, userSaving, onCreateUser }) {
   if (!selClinic) return null;
 
   const activeSub = (clinicData?.subscriptions||[]).find(s=>['ACTIVE','TRIAL'].includes(s.status));
@@ -526,6 +526,66 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                 </div>
               </div>
             )}
+
+            {/* ── Praticiens ── */}
+            <div style={{ marginBottom:18 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A' }}>
+                  Praticiens ({clinicData.users?.length||0})
+                </div>
+                <button onClick={()=>setShowAddUser(!showAddUser)}
+                  style={{ padding:'6px 14px', borderRadius:9, border:'none', background:'#0D7A87', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                  + Ajouter praticien
+                </button>
+              </div>
+              {showAddUser && (
+                <div style={{ background:'#F0FDFE', border:'1.5px solid #7DD3DA', borderRadius:12, padding:'14px', marginBottom:12 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
+                    {[
+                      { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
+                      { label:'Email *',       key:'email',    ph:'rakoto@cabinet.mg', type:'email' },
+                      { label:'Identifiant *', key:'username', ph:'rakotoj', type:'text' },
+                      { label:'Mot de passe *',key:'password', ph:'••••••••', type:'password' },
+                    ].map(f => (
+                      <div key={f.key}>
+                        <div style={{ fontSize:10, fontWeight:700, color:'#64748B', marginBottom:3 }}>{f.label}</div>
+                        <input type={f.type} placeholder={f.ph} value={newUser[f.key]||''}
+                          onChange={e=>setNewUser(u=>({...u,[f.key]:e.target.value}))}
+                          style={{ width:'100%', padding:'7px 10px', borderRadius:8, border:'1.5px solid #E2E8F0', fontSize:12, boxSizing:'border-box', outline:'none' }}/>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginBottom:8 }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:'#64748B', marginBottom:3 }}>Rôle</div>
+                    <select value={newUser.role||'DENTIST'} onChange={e=>setNewUser(u=>({...u,role:e.target.value}))}
+                      style={{ width:'100%', padding:'7px 10px', borderRadius:8, border:'1.5px solid #E2E8F0', fontSize:12 }}>
+                      <option value="DENTIST">Dentiste</option>
+                      <option value="ASSISTANT">Assistant(e)</option>
+                      <option value="ACCOUNTANT">Comptable</option>
+                      <option value="ADMIN">Admin cabinet</option>
+                    </select>
+                  </div>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={()=>setShowAddUser(false)} style={{ flex:1, padding:'8px', borderRadius:9, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, color:'#475569' }}>Annuler</button>
+                    <button onClick={()=>onCreateUser(clinicData.clinic?.id)} disabled={userSaving}
+                      style={{ flex:2, padding:'8px', borderRadius:9, border:'none', background:'#0D7A87', color:'#fff', cursor:userSaving?'not-allowed':'pointer', fontSize:12, fontWeight:700, opacity:userSaving?0.7:1 }}>
+                      {userSaving ? 'Création...' : 'Créer le compte'}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {(clinicData.users||[]).length > 0 ? (clinicData.users||[]).map((u,i) => (
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 10px', background:'#F8FAFC', borderRadius:8, border:'1px solid #E2E8F0', marginBottom:5 }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:600, color:'#0F172A' }}>{u.full_name||u.username}</div>
+                    <div style={{ fontSize:11, color:'#94A3B8' }}>{u.role} · {u.email||'—'}</div>
+                  </div>
+                  <span style={{ fontSize:10, fontWeight:700, background:u.is_active?'#DCFCE7':'#FEE2E2', color:u.is_active?'#166534':'#991B1B', padding:'2px 8px', borderRadius:99 }}>
+                    {u.is_active?'Actif':'Inactif'}
+                  </span>
+                </div>
+              )) : <div style={{ textAlign:'center', color:'#94A3B8', fontSize:12, padding:'8px' }}>Aucun praticien</div>}
+            </div>
 
             {/* Actions */}
             <div style={{ borderTop:'1px solid #F1F5F9', paddingTop:16 }}>
@@ -867,6 +927,12 @@ function AdminView() {
         onClose={()=>setSelClinic(null)}
         onActivate={activateClinic}
         onDeactivate={deactivateClinic}
+        showAddUser={showAddUser}
+        setShowAddUser={setShowAddUser}
+        newUser={newUser}
+        setNewUser={setNewUser}
+        userSaving={userSaving}
+        onCreateUser={createUser}
       />
 
     </div>
