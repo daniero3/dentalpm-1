@@ -234,13 +234,18 @@ const LoginRedirect = () => {
   return user ? <Navigate to="/" /> : <LoginForm />;
 };
 
+// Pages médicales — SUPER_ADMIN redirigé vers son dashboard
+const MEDICAL_PATHS = ['/', '/patients', '/appointments', '/invoices', '/quotes',
+  '/reports', '/inventory', '/purchases', '/suppliers', '/lab', '/mailing', '/settings'];
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) return <LoadingSpinner />;
   if (!user) return <Navigate to="/landing" />;
-  // SUPER_ADMIN redirigé vers son dashboard dédié
-  if (user.role === 'SUPER_ADMIN' && window.location.pathname === '/') {
-    return <Navigate to="/subscription" />;
+  // SUPER_ADMIN ne peut pas accéder aux pages médicales des cabinets
+  if (user.role === 'SUPER_ADMIN' && MEDICAL_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'))) {
+    return <Navigate to="/subscription" replace />;
   }
   return children;
 };
