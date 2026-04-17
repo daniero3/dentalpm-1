@@ -71,6 +71,10 @@ router.get('/', requireClinicId, [
 
     // ✅ Lire clinic_id depuis req.clinic_id OU req.user.clinic_id
     const clinicId = req.clinic_id || req.user?.clinic_id || null;
+    // SÉCURITÉ : refuser si pas de clinic_id (ne jamais retourner tous les patients)
+    if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Cabinet non identifié', code: 'NO_CLINIC' });
+    }
     let whereClause = {};
     if (clinicId) whereClause.clinic_id = clinicId;
 

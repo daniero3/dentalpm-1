@@ -116,30 +116,29 @@ router.post('/login', loginRateLimiter, [
           attributes: ['id', 'name', 'city', 'phone']
         });
         if (clinic) availableClinics = [clinic];
-      } else {
-        // Sinon charger toutes les cliniques actives
-        availableClinics = await Clinic.findAll({
-          where: { is_active: true },
-          attributes: ['id', 'name', 'city', 'phone'],
-          order: [['name', 'ASC']]
-        });
       }
+      // SÉCURITÉ : on ne charge PLUS toutes les cliniques si user n'a pas de clinic_id
+      // Un user sans clinic_id ne peut pas se connecter (sauf SUPER_ADMIN géré plus haut)
     } catch (e) { console.warn('Clinic load error:', e.message); }
 
     const needsSelection = availableClinics.length > 1;
 
     // Token avec clinic_id garanti
-    const resolvedClinicId = user.clinic_id 
-      || availableClinics[0]?.id 
-      || null;
+    const resolvedClinicId = user.clinic_id || availableClinics[0]?.id || null;
+
+    // SÉCURITÉ : bloquer si pas de clinic_id pour les rôles non-SUPER_ADMIN
+    if (!resolvedClinicId && user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        error: 'Votre compte n\'est associé à aucun cabinet. Contactez votre administrateur.',
+        code: 'NO_CLINIC_ASSIGNED'
+      });
+    }
 
     const tokenPayload = {
       userId:    user.id,
       username:  user.username,
       role:      user.role,
-      // Toujours inclure clinic_id si disponible
-      // Même si sélection requise, on met le premier disponible
-      clinic_id: resolvedClinicId || (availableClinics[0]?.id || null)
+      clinic_id: resolvedClinicId
     };
 
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });

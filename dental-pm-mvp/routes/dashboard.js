@@ -13,6 +13,9 @@ const getClinicId = (req) =>
 router.get('/kpi', async (req, res) => {
   try {
     const clinicId = getClinicId(req);
+    if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Cabinet non identifié', code: 'NO_CLINIC' });
+    }
     const today        = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const startOfYear  = new Date(today.getFullYear(), 0, 1);
