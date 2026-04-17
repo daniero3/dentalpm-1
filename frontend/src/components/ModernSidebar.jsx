@@ -105,6 +105,8 @@ const SUPER_ADMIN_NAV = [
   { name:'Dashboard revenus',    href:'/subscription',    icon:LayoutDashboard, color:'#8B5CF6' },
   { name:'Cabinets abonnés',     href:'/admin/clinics',   icon:Building2,       color:'#0D7A87' },
   { name:'Validation paiements', href:'/admin/payments',  icon:CreditCard,      color:'#F59E0B' },
+  { name:'Fournisseurs',         href:'/suppliers',       icon:Truck,           color:'#84CC16' },
+  { name:'Laboratoire',          href:'/lab',             icon:FlaskConical,    color:'#A855F7' },
 ]
 
 const SidebarContent = ({ collapsed, onNavClick }) => {
@@ -261,29 +263,30 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Navigation</p>}
             {navigation.map(item => <NavItem key={item.href} item={item}/>)}
 
-            {/* Items verrouillés (plan supérieur requis) */}
-            {lockedItems.length > 0 && !collapsed && (
-              <div style={{ marginTop:10, padding:'8px 10px', borderRadius:10, background:'rgba(255,255,255,.04)', border:'1px solid rgba(255,255,255,.07)' }}>
-                <p style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:'.1em', margin:'0 0 6px' }}>
-                  {activePlan === 'ESSENTIAL' ? '🔒 Disponible en PRO' : '🔒 Disponible en GROUP'}
-                </p>
-                {lockedItems.map(item => {
-                  const Icon = item.icon
-                  return (
-                    <div key={item.href} style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 6px', borderRadius:8, opacity:.4, cursor:'not-allowed', marginBottom:2 }}>
-                      <div style={{ width:28, height:28, borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.06)', flexShrink:0 }}>
-                        <Icon size={14} color='rgba(255,255,255,.4)'/>
+            {/* Items floutés — plan supérieur requis */}
+            {lockedItems.length > 0 && (
+              <div style={{ marginTop:4 }}>
+                <div style={{ filter:'blur(2.5px)', pointerEvents:'none', userSelect:'none', opacity:.55 }}>
+                  {lockedItems.map(item => {
+                    const Icon = item.icon
+                    const color = NAV_COLORS[item.href] || '#0D7A87'
+                    return (
+                      <div key={item.href} style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px', borderRadius:10, marginBottom:2, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+                        <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.08)' }}>
+                          <Icon size={16} color='rgba(255,255,255,.5)'/>
+                        </div>
+                        {!collapsed && (
+                          <span style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,.5)', flex:1 }}>{item.name}</span>
+                        )}
                       </div>
-                      <span style={{ fontSize:12, color:'rgba(255,255,255,.4)', flex:1 }}>{item.name}</span>
-                      <span style={{ fontSize:8, fontWeight:700, background:'rgba(255,165,0,.15)', color:'#F59E0B', padding:'1px 5px', borderRadius:99 }}>
-                        {activePlan === 'ESSENTIAL' ? 'PRO' : 'GROUP'}
-                      </span>
-                    </div>
-                  )
-                })}
-                <a href='/subscription' style={{ display:'block', marginTop:8, padding:'6px 8px', borderRadius:8, background:'rgba(99,91,255,.2)', color:'rgba(255,255,255,.8)', fontSize:11, fontWeight:700, textDecoration:'none', textAlign:'center' }}>
-                  ↑ Upgrader mon plan
-                </a>
+                    )
+                  })}
+                </div>
+                {!collapsed && (
+                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginTop:8, padding:'9px 10px', borderRadius:10, background:'linear-gradient(135deg,rgba(99,91,255,.35),rgba(99,91,255,.2))', border:'1px solid rgba(99,91,255,.4)', color:'#C4B5FD', fontSize:12, fontWeight:700, textDecoration:'none' }}>
+                    ✦ Upgrader votre plan
+                  </a>
+                )}
               </div>
             )}
 
