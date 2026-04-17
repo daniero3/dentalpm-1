@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 
 // ✅ requireClinicId — lit depuis JWT ET la DB si clinic_id absent
 const requireClinicId = async (req, res, next) => {
-  if (req.user?.role === 'SUPER_ADMIN') return next();
   
   // Source 1: req directement
   let clinicId = req.clinic_id

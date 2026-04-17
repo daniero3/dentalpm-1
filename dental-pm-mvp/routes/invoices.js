@@ -46,7 +46,7 @@ const getUserId = (req) => {
   return null;
 };
 const clinicWhere = (req, extra = {}) => {
-  if (req.user?.role === 'SUPER_ADMIN') return extra;
+  // SUPER_ADMIN bloqué par middleware - ne peut pas voir les factures patients
   const clinicId = getClinicId(req);
   if (clinicId) return { clinic_id: clinicId, ...extra };
   return extra;

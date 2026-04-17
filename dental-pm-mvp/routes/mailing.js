@@ -4,7 +4,6 @@ const { MailingCampaign, MailingLog, Patient, User, AuditLog } = require('../mod
 const { authenticateToken, requireRole } = require('../middleware/auth');
 // ✅ requireClinicId inline
 const requireClinicId = (req, res, next) => {
-  if (req.user?.role === 'SUPER_ADMIN') return next();
   const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
   if (!clinicId) return res.status(403).json({ error: 'Clinique requise', code: 'NO_CLINIC' });
   req.clinic_id = clinicId;

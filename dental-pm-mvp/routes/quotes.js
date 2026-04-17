@@ -16,7 +16,7 @@ const router = express.Router();
 // =========================
 // Helpers
 // =========================
-function isSuperAdmin(req) { return req.user?.role === 'SUPER_ADMIN'; }
+function isSuperAdmin(req) { return false; } // SUPER_ADMIN bloqué par middleware
 function getCurrentUserId(req) { return req.user?.id || req.user?.userId || null; }
 function getCurrentClinicId(req) { return req.clinic_id || req.user?.clinic_id || null; }
 

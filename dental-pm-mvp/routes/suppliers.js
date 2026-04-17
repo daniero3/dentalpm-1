@@ -19,7 +19,7 @@ const getUserId = (req) => {
 };
 
 const clinicWhere = (req, extra = {}) => {
-  if (req.user?.role === 'SUPER_ADMIN') return extra;
+  // SUPER_ADMIN bloqué par middleware
   const clinicId = getClinicId(req);
   if (clinicId) return { clinic_id: clinicId, ...extra };
   return extra;

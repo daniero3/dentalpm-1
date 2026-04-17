@@ -109,4 +109,18 @@ const requireSuperAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, requireRole, optionalAuth, requireClinicScope, requireSuperAdmin };
+
+// ── Bloque SUPER_ADMIN sur les données médicales ─────────────────────────────
+// Le SUPER_ADMIN gère la plateforme UNIQUEMENT (abonnements, cabinets)
+// Il n'a AUCUN accès aux données des patients des cabinets
+const blockSuperAdminFromMedicalData = (req, res, next) => {
+  if (req.user?.role === 'SUPER_ADMIN') {
+    return res.status(403).json({
+      error: 'Accès interdit — Le Super Administrateur ne peut pas consulter les données médicales des cabinets.',
+      code: 'MEDICAL_DATA_FORBIDDEN'
+    });
+  }
+  next();
+};
+
+module.exports = { authenticateToken, requireRole, optionalAuth, requireClinicScope, requireSuperAdmin, blockSuperAdminFromMedicalData };
