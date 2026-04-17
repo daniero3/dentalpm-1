@@ -68,30 +68,36 @@ const optionalAuth = async (req, res, next) => {
 
 
 // ── Middleware isolation cabinet ──────────────────────────────────────────────
-// Garantit que chaque utilisateur ne voit que les données de SON cabinet
-// SUPER_ADMIN = accès total (gestionnaire plateforme, pas de clinic_id)
-// Tous les autres rôles = strictement limités à leur clinic_id
-const requireClinicScope = (req, res, next) => {
+const requireClinicScope = async (req, res, next) => {
   if (!req.user) return res.status(401).json({ error: 'Non authentifié' });
 
-  // SUPER_ADMIN : accès complet, pas de restriction clinic
+  // SUPER_ADMIN : pas de restriction clinic (mais bloqué sur données médicales)
   if (req.user.role === 'SUPER_ADMIN') return next();
 
-  // Tous les autres (ADMIN cabinet, DENTIST, ASSISTANT, ACCOUNTANT)
-  // DOIVENT avoir un clinic_id
-  const clinicId = req.clinic_id
+  // Chercher clinic_id — token d'abord, puis user object, puis DB
+  let clinicId = req.clinic_id
     || req.user?.clinic_id
     || req.user?.dataValues?.clinic_id
     || null;
 
+  // Si toujours null, relire depuis la DB (ancien token avant correction)
+  if (!clinicId) {
+    try {
+      const { User } = require('../models');
+      const freshUser = await User.findByPk(req.user.id || req.user.dataValues?.id, {
+        attributes: ['clinic_id']
+      });
+      clinicId = freshUser?.clinic_id || null;
+    } catch(e) { /* ignore */ }
+  }
+
   if (!clinicId) {
     return res.status(403).json({
-      error: 'Accès refusé — cabinet non identifié',
+      error: 'Votre compte n\'est associé à aucun cabinet. Contactez votre administrateur.',
       code: 'NO_CLINIC_SCOPE'
     });
   }
 
-  // Forcer clinic_id dans req pour tous les middlewares suivants
   req.clinic_id = clinicId;
   req.user.clinic_id = clinicId;
   next();
