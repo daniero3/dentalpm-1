@@ -100,6 +100,7 @@ const requireClinicScope = async (req, res, next) => {
 
   req.clinic_id = clinicId;
   req.user.clinic_id = clinicId;
+  console.log(`[clinicScope] OK — role=${req.user?.role} clinic_id=${clinicId} path=${req.path}`);
   next();
 };
 
@@ -121,11 +122,14 @@ const requireSuperAdmin = (req, res, next) => {
 // Il n'a AUCUN accès aux données des patients des cabinets
 const blockSuperAdminFromMedicalData = (req, res, next) => {
   if (req.user?.role === 'SUPER_ADMIN') {
+    console.log(`[blockMedical] SUPER_ADMIN ${req.user?.username} bloqué sur ${req.path}`);
     return res.status(403).json({
       error: 'Accès interdit — Le Super Administrateur ne peut pas consulter les données médicales des cabinets.',
       code: 'MEDICAL_DATA_FORBIDDEN'
     });
   }
+  // Log pour debug
+  console.log(`[blockMedical] OK — role=${req.user?.role} clinic_id=${req.clinic_id} path=${req.path}`);
   next();
 };
 

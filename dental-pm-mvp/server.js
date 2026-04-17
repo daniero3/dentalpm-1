@@ -133,9 +133,9 @@ app.use('/api/purchases',        requireAuth, requireClinicScope, blockMedical, 
 app.use('/api/onboarding',       requireAuth, onboardingRoutes);
 
 // Routes avec chemins relatifs (montées sur /api)
-app.use('/api', requireAuth, prescriptionRoutes);
-app.use('/api', requireAuth, odontogramRoutes);
-app.use('/api', requireAuth, dentalChartRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, prescriptionRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, odontogramRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, dentalChartRoutes);
 
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 
