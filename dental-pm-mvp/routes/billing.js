@@ -357,6 +357,9 @@ router.post('/verify-reference', [
 // (changer carte, annuler, réactiver, voir factures)
 router.post('/customer-portal', async (req, res) => {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Stripe non configuré. Contactez le support.' });
+    }
     const stripe    = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const clinicId  = getClinicId(req);
     if (!clinicId) return res.status(400).json({ error: 'Cabinet non identifié' });
@@ -397,6 +400,9 @@ router.post('/customer-portal', async (req, res) => {
 // Retourne la carte enregistrée pour ce cabinet
 router.get('/payment-method', async (req, res) => {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.json({ card: null, subscription: null, stripe_not_configured: true });
+    }
     const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const clinicId = getClinicId(req);
     if (!clinicId) return res.status(400).json({ error: 'Cabinet non identifié' });

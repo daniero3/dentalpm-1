@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
-  CreditCard, ExternalLink, RefreshCw, AlertTriangle,
+  CreditCard, RefreshCw, AlertTriangle,
   CheckCircle, XCircle, Clock, Shield, ChevronRight
 } from 'lucide-react';
 
@@ -36,7 +36,8 @@ export default function BillingInfo() {
       const r = await axios.get(`${API}/billing/payment-method`, authH());
       setData(r.data);
     } catch(e) {
-      if (e.response?.status !== 404) toast.error('Erreur chargement infos paiement');
+      // Pas d'erreur bloquante — afficher état vide
+      console.warn('BillingInfo:', e.response?.status, e.response?.data?.error);
       setData({ card: null, subscription: null });
     } finally { setLoading(false); }
   };
