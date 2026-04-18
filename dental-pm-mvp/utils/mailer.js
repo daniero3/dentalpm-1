@@ -12,15 +12,17 @@ function getTransporter() {
   const pass = process.env.SMTP_PASS;
 
   if (!host || !user || !pass) {
-    // Mode console (développement / pas de config SMTP)
+    console.log('[Mailer] SMTP non configuré — emails désactivés');
     return null;
   }
 
+  const port   = parseInt(process.env.SMTP_PORT || '587');
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+
   return nodemailer.createTransport({
-    host,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
+    host, port, secure,
     auth: { user, pass },
+    tls: { rejectUnauthorized: false }
   });
 }
 
