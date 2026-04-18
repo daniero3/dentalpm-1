@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Plus, Edit2, Trash2, Handshake, RefreshCw, X, Check } from 'lucide-react';
+import { Plus, Edit2, Trash2, Truck, RefreshCw, X, Check } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
