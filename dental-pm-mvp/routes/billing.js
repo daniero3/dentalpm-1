@@ -351,6 +351,104 @@ router.post('/verify-reference', [
 // ═══════════════════════════════════════════════════════════════════════════
 
 
+
+// ── POST /api/billing/customer-portal ─────────────────────────────────────────
+// Redirige le client vers le portail Stripe pour gérer son abonnement
+// (changer carte, annuler, réactiver, voir factures)
+router.post('/customer-portal', async (req, res) => {
+  try {
+    const stripe    = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const clinicId  = getClinicId(req);
+    if (!clinicId) return res.status(400).json({ error: 'Cabinet non identifié' });
+
+    const { Clinic } = require('../models');
+    const clinic = await Clinic.findByPk(clinicId);
+    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
+
+    const FRONT = process.env.FRONTEND_URL || 'https://gracious-serenity-production-e854.up.railway.app';
+
+    let customerId = clinic.stripe_customer_id;
+
+    // Créer le customer Stripe si pas encore fait
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: clinic.email,
+        name:  clinic.name,
+        metadata: { clinic_id: clinicId }
+      });
+      customerId = customer.id;
+      await clinic.update({ stripe_customer_id: customerId });
+    }
+
+    // Créer la session du portail Stripe
+    const session = await stripe.billingPortal.sessions.create({
+      customer:   customerId,
+      return_url: `${FRONT}/subscription?portal=returned`,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Customer portal error:', error.message);
+    res.status(500).json({ error: 'Erreur Stripe Portal', details: error.message });
+  }
+});
+
+// ── GET /api/billing/payment-method ───────────────────────────────────────────
+// Retourne la carte enregistrée pour ce cabinet
+router.get('/payment-method', async (req, res) => {
+  try {
+    const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const clinicId = getClinicId(req);
+    if (!clinicId) return res.status(400).json({ error: 'Cabinet non identifié' });
+
+    const { Clinic } = require('../models');
+    const clinic = await Clinic.findByPk(clinicId);
+    if (!clinic?.stripe_customer_id) {
+      return res.json({ card: null, subscription: null });
+    }
+
+    // Récupérer les moyens de paiement du customer
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: clinic.stripe_customer_id,
+      type: 'card'
+    });
+
+    // Récupérer l'abonnement actif Stripe
+    let stripeSub = null;
+    try {
+      const subs = await stripe.subscriptions.list({
+        customer: clinic.stripe_customer_id,
+        status: 'all',
+        limit: 1
+      });
+      if (subs.data.length > 0) stripeSub = subs.data[0];
+    } catch(e) {}
+
+    const card = paymentMethods.data[0]?.card || null;
+    const pm   = paymentMethods.data[0] || null;
+
+    res.json({
+      card: card ? {
+        brand:    card.brand,
+        last4:    card.last4,
+        exp_month: card.exp_month,
+        exp_year:  card.exp_year,
+        pm_id:    pm.id
+      } : null,
+      subscription: stripeSub ? {
+        id:     stripeSub.id,
+        status: stripeSub.status,
+        cancel_at_period_end: stripeSub.cancel_at_period_end,
+        current_period_end:   stripeSub.current_period_end,
+        trial_end: stripeSub.trial_end,
+      } : null
+    });
+  } catch (error) {
+    console.error('Payment method error:', error.message);
+    res.status(500).json({ error: 'Erreur Stripe', details: error.message });
+  }
+});
+
 // ── POST /api/billing/create-checkout-session ─────────────────────────────────
 router.post('/create-checkout-session', async (req, res) => {
   try {

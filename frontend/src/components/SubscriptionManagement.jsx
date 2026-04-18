@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import BillingInfo from './BillingInfo';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
@@ -186,7 +187,8 @@ function UserView({ user }) {
   const NAV = [
     { id:'overview', label:"Vue d'ensemble", icon:BarChart2  },
     { id:'payment',  label:'Paiement',        icon:CreditCard },
-    { id:'invoices', label:'Historique',       icon:FileText   },
+    { id:'billing',  label:'Infos de paiement', icon:CreditCard  },
+  { id:'invoices', label:'Historique',       icon:FileText   },
     { id:'settings', label:'Paramètres',       icon:Settings   },
   ];
 
