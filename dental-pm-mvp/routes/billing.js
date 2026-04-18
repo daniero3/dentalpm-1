@@ -474,6 +474,17 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
       }
     }
 
+    // ── customer.subscription.updated → trial → actif après paiement J+7 ──
+    if (event.type === 'customer.subscription.updated') {
+      const subObj = obj;
+      if (clinicId && subObj.status === 'active' && !subObj.trial_end) {
+        // Trial terminé, abonnement maintenant actif (Stripe a prélevé)
+        const { activateSubscriptionAfterPayment } = require('../job/subscriptionManager');
+        await activateSubscriptionAfterPayment(clinicId, planCode, null).catch(()=>{});
+        console.log(`[Stripe] Subscription updated → active: clinic=${clinicId} plan=${planCode}`);
+      }
+    }
+
     // ── customer.subscription.deleted → abonnement annulé par Stripe ──────
     if (event.type === 'customer.subscription.deleted') {
       if (clinicId) {
