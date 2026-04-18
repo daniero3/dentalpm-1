@@ -21,11 +21,8 @@ const Lab = sequelize.define('labs', {
     comment: 'Nom de la personne de contact'
   },
   phone: {
-    type: DataTypes.STRING(20),
-    allowNull: false,
-    validate: {
-      is: /^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/ // Madagascar phone format
-    }
+    type: DataTypes.STRING(30),
+    allowNull: true,
   },
   email: {
     type: DataTypes.STRING(100),
@@ -36,11 +33,7 @@ const Lab = sequelize.define('labs', {
   },
   address: {
     type: DataTypes.TEXT,
-    allowNull: false,
-    validate: {
-      len: [10, 500],
-      notEmpty: true
-    }
+    allowNull: true,
   },
   city: {
     type: DataTypes.STRING(50),
