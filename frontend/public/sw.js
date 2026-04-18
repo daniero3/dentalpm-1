@@ -1,9 +1,10 @@
-const CACHE = 'dentalpm-v1';
+const CACHE = 'dentalpm-v2';
 const STATIC = [
   '/',
   '/index.html',
-  '/fix-logo.jpeg',
   '/manifest.json',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
 ];
 
 // Installation — mettre en cache les ressources statiques
