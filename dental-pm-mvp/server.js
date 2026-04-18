@@ -92,6 +92,25 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+
+// ── Debug token (temporaire) ─────────────────────────────────────────────────
+app.get('/api/check-token', require('./middleware/auth').authenticateToken, async (req, res) => {
+  const { User } = require('./models');
+  const userId = req.user?.id || req.user?.dataValues?.id;
+  let dbClinicId = null;
+  try {
+    const u = await User.findByPk(userId, { attributes: ['clinic_id','role'] });
+    dbClinicId = u?.clinic_id;
+  } catch(e) {}
+  res.json({
+    user_id:      userId,
+    role:         req.user?.role,
+    token_clinic: req.clinic_id || req.user?.clinic_id || null,
+    db_clinic:    dbClinicId,
+    ok:           !!(req.clinic_id || req.user?.clinic_id || dbClinicId)
+  });
+});
+
 // ── Version publique ──────────────────────────────────────────────────────────
 app.get('/api/version', (req, res) => {
   res.json({

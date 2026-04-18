@@ -84,14 +84,17 @@ const requireClinicScope = async (req, res, next) => {
   if (!clinicId) {
     try {
       const { User } = require('../models');
-      const freshUser = await User.findByPk(req.user.id || req.user.dataValues?.id, {
-        attributes: ['clinic_id']
-      });
+      const userId = req.user.id || req.user.dataValues?.id || req.user.userId;
+      const freshUser = await User.findByPk(userId, { attributes: ['clinic_id','role'] });
       clinicId = freshUser?.clinic_id || null;
-    } catch(e) { /* ignore */ }
+      console.log(`[clinicScope] DB lookup: userId=${userId} clinic_id=${clinicId} role=${freshUser?.role}`);
+    } catch(e) {
+      console.warn('[clinicScope] DB lookup error:', e.message);
+    }
   }
 
   if (!clinicId) {
+    console.warn(`[clinicScope] BLOCKED: role=${req.user?.role} path=${req.path} userId=${req.user?.id}`);
     return res.status(403).json({
       error: 'Votre compte n\'est associé à aucun cabinet. Contactez votre administrateur.',
       code: 'NO_CLINIC_SCOPE'
