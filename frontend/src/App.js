@@ -1,10 +1,33 @@
 import React, { useState, useEffect } from "react";
+
+// ── Service Worker PWA ────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[PWA] Service Worker enregistré:', reg.scope);
+        // Détecter mise à jour disponible
+        reg.addEventListener('updatefound', () => {
+          const worker = reg.installing;
+          worker?.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[PWA] Nouvelle version disponible');
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[PWA] SW non enregistré:', err));
+  });
+}
+
+
 import "./App.css";
 import "./components/dpm.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
 import CookieBanner from "./components/CookieBanner";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { toast } from "sonner";
 
 // Theme Provider
@@ -368,6 +391,7 @@ function App() {
               <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
             </Routes>
             <CookieBanner />
+            <PWAInstallPrompt />
           </BrowserRouter>
           <Toaster
             position="top-right"
