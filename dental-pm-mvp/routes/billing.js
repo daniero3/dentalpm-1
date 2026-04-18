@@ -385,19 +385,57 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
       } catch(e) {}
     }
 
-    // ── checkout.session.completed → trial démarré, carte enregistrée ──────
+    // ── checkout.session.completed → client a entré sa carte, trial démarre ──
     if (event.type === 'checkout.session.completed') {
       console.log(`[Stripe] Checkout complété: clinic=${clinicId} plan=${planCode}`);
-      // Le trial démarre — l'abonnement est déjà en TRIAL dans notre DB
-      // On met à jour le stripe_subscription_id pour le suivi
-      if (clinicId && obj.subscription) {
+      if (clinicId) {
         try {
-          const { Clinic } = require('../models');
+          const { Clinic, Subscription } = require('../models');
+
+          // Mettre à jour ou créer l'abonnement TRIAL dans notre DB
+          const now      = new Date();
+          const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
+          const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };
+
+          // Superseder l'ancien abonnement
+          await Subscription.update(
+            { status: 'SUPERSEDED' },
+            { where: { clinic_id: clinicId, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL','EXPIRED','TRIAL_EXPIRED'] } } }
+          ).catch(()=>{});
+
+          // Créer abonnement TRIAL (Stripe prélèvera au J+7)
+          await Subscription.create({
+            clinic_id:         clinicId,
+            plan:              planCode,
+            status:            'TRIAL',
+            start_date:        now,
+            trial_end_date:    trialEnd,
+            end_date:          trialEnd,
+            max_practitioners: PLAN_USERS[planCode] || 5,
+            price_mga:         PLAN_PRICES[planCode] || 199000,
+            stripe_subscription_id: obj.subscription || null,
+          }).catch(()=>{});
+
+          // Mettre à jour le cabinet
           await Clinic.update(
-            { stripe_subscription_id: obj.subscription },
+            { subscription_status: 'TRIAL', current_plan: planCode, is_active: true },
             { where: { id: clinicId } }
-          );
-        } catch(e) {}
+          ).catch(()=>{});
+
+          // Email de bienvenue
+          try {
+            const clinic = await Clinic.findByPk(clinicId);
+            if (clinic?.email) {
+              const { sendWelcomeTrial } = require('../utils/mailer');
+              await sendWelcomeTrial(clinic.email, clinic.name, planCode, trialEnd);
+            }
+          } catch(e) {}
+
+          console.log(`[Stripe] Trial activé: clinic=${clinicId} plan=${planCode} trial_end=${trialEnd.toDateString()}`);
+        } catch(e) {
+          console.error('[Stripe] Erreur activation trial:', e.message);
+        }
       }
     }
 
