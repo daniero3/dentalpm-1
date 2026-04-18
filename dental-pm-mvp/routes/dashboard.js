@@ -198,3 +198,33 @@ router.get('/revenue-chart', async (req, res) => {
 });
 
 module.exports = router;
+
+// ── GET /api/dashboard/patients-chart ─────────────────────────────────────────
+router.get('/patients-chart', async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Cabinet non identifié' });
+    }
+    const cWhere = clinicId ? { clinic_id: clinicId } : {};
+    const now    = new Date();
+    const data   = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+      const key   = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+      const count = await Patient.count({
+        where: { ...cWhere, created_at: { [Op.between]: [start, end] } }
+      });
+      data.push({ period: key, count });
+    }
+
+    res.json({ data, currency: 'MGA' });
+  } catch (error) {
+    console.error('Patients chart error:', error);
+    res.status(500).json({ error: 'Erreur données patients' });
+  }
+});

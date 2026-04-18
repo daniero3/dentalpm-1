@@ -66,6 +66,8 @@ const Clinic = sequelize.define('Clinic', {
     allowNull: true,
     defaultValue: '#10B981'
   },
+  stripe_subscription_id: { type: DataTypes.STRING, allowNull: true },
+  stripe_customer_id: { type: DataTypes.STRING, allowNull: true },
   subscription_status: {
     type: DataTypes.STRING(20),
     allowNull: false,

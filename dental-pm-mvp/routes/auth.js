@@ -321,4 +321,45 @@ router.post('/register-clinic', [
   }
 });
 
+
+// ── POST /api/auth/change-password ───────────────────────────────────────────
+router.post('/change-password', authenticateToken, async (req, res) => {
+  try {
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password) {
+      return res.status(400).json({ error: 'Champs requis manquants' });
+    }
+    if (new_password.length < 6) {
+      return res.status(400).json({ error: 'Nouveau mot de passe trop court (min 6 caractères)' });
+    }
+    const userId = req.user?.id || req.user?.dataValues?.id;
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const isValid = await user.validatePassword(current_password);
+    if (!isValid) return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
+
+    await user.update({ password_hash: new_password });
+    res.json({ message: 'Mot de passe modifié avec succès' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── PUT /api/auth/profile ─────────────────────────────────────────────────────
+router.put('/profile', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.dataValues?.id;
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const { full_name, phone, specialization } = req.body;
+    await user.update({ full_name, phone, specialization });
+    res.json({ message: 'Profil mis à jour', user: { full_name: user.full_name, phone: user.phone, specialization: user.specialization } });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

@@ -172,6 +172,18 @@ async function startServer() {
 // Le cron est intégré dans billing.js et démarre automatiquement au require()
 // startSubscriptionCron() est appelé par billingRoutes à l'initialisation
 
+// Exécuter migrations au démarrage
+(async () => {
+  try {
+    const { Sequelize } = require('sequelize');
+    const migration = require('./migrations/20260418-stripe-subscription-id');
+    const { sequelize } = require('./models');
+    const qi = sequelize.getQueryInterface();
+    await migration.up(qi, Sequelize);
+    console.log('✅ Migrations exécutées');
+  } catch(e) { console.log('Migration (non-fatal):', e.message); }
+})();
+
 app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       console.log(`🌍 FRONTEND_URL: ${process.env.FRONTEND_URL || 'non défini'}`);

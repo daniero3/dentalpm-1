@@ -22,6 +22,7 @@ const ALL_NAV = [
   { name:"Laboratoire",     href:"/lab",         icon:FlaskConical, plans:['PRO','GROUP'] },
   { name:"Mailing",         href:"/mailing",     icon:Mail,         plans:['PRO','GROUP'] },
   { name:"Paramètres",      href:"/settings",    icon:Settings,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Tarifs des actes", href:"/settings/pricing", icon:FileText, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
 ]
 
 // ── Navigation SUPER_ADMIN — gestion plateforme uniquement ────────────────────
@@ -45,6 +46,7 @@ const NAV_COLORS = {
   '/lab':         '#A855F7',
   '/mailing':     '#14B8A6',
   '/settings':    '#6B7280',
+  '/settings/pricing': '#6B7280',
 }
 
 // ── Plan requis par item verrouillé ───────────────────────────────────────────

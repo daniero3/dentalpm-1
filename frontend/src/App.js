@@ -13,7 +13,6 @@ import { ThemeProvider } from "./components/theme-provider";
 import LoginForm from "./components/LoginForm";
 import LandingPage from "./components/LandingPage";
 import SubscriptionManagement from './components/SubscriptionManagement';
-import SuperAdminDashboard from "./components/SuperAdminDashboard";
 import Dashboard from "./components/Dashboard";
 import PatientManagement from "./components/PatientManagement";
 import DentalChart from "./components/DentalChart";
@@ -35,17 +34,16 @@ import SuperAdminClinics from "./components/SuperAdminClinics";
 import LicensingGuard from "./components/LicensingGuard";
 import SubscriptionExpiredPage from "./components/SubscriptionExpiredPage";
 import AppointmentManagement from "./components/AppointmentManagement";
-import PaymentRequestPage from "./components/PaymentRequestPage";
 import PaymentValidationPage from "./components/PaymentValidationPage";
 import LegalPages from "./components/LegalPages";
 import PricingSettings from "./components/PricingSettings";
+import CabinetSettings from "./components/CabinetSettings";
 import MessagingManagement from "./components/MessagingManagement";
 import SupplierManagement from "./components/SupplierManagement";
 import PurchaseManagement from "./components/PurchaseManagement";
 import OnboardingWizard from "./components/OnboardingWizard";
 import RegisterPage from "./components/RegisterPage";
 import AdminPartners from "./components/AdminPartners";
-import BillingRenew from "./components/BillingRenew";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -330,7 +328,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/landing" element={<LandingRedirect />} />
-              <Route path="/super-admin" element={<ProtectedRoute><SuperAdminDashboard /></ProtectedRoute>} />
+              <Route path="/super-admin" element={<Navigate to="/subscription" replace />} />
               <Route path="/login" element={<LoginRedirect />} />
               <Route path="/" element={<ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
@@ -347,15 +345,16 @@ function App() {
               <Route path="/purchases" element={<ProtectedRoute><LicensingGuard><MainLayout><PurchaseManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/lab" element={<ProtectedRoute><LicensingGuard><MainLayout><LabManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/mailing" element={<ProtectedRoute><LicensingGuard><MainLayout><MessagingManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><LicensingGuard><MainLayout><CabinetSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
+              <Route path="/settings/pricing" element={<ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><LicensingGuard><MainLayout><ReportsManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
               <Route path="/settings/billing" element={<ProtectedRoute><LicensingGuard><MainLayout><BillingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/admin" element={<AdminRoute><MainLayout><SuperAdminDashboard /></MainLayout></AdminRoute>} />
+              <Route path="/admin" element={<Navigate to="/subscription" replace />} />
               <Route path="/admin/clinics" element={<AdminRoute><MainLayout><SuperAdminClinics /></MainLayout></AdminRoute>} />
               <Route path="/admin/payments" element={<AdminRoute><MainLayout><PaymentValidationPage /></MainLayout></AdminRoute>} />
               <Route path="/admin/partners" element={<AdminRoute><MainLayout><AdminPartners /></MainLayout></AdminRoute>} />
-              <Route path="/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
-              <Route path="/billing/payment" element={<ProtectedRoute><MainLayout><PaymentRequestPage /></MainLayout></ProtectedRoute>} />
+              <Route path="/payment" element={<Navigate to="/subscription" replace />} />
+              <Route path="/billing/payment" element={<Navigate to="/subscription" replace />} />
               <Route path="/legal" element={<LegalPages />} />
               <Route path="/legal/cgu" element={<LegalPages />} />
               <Route path="/legal/cgv" element={<LegalPages />} />
@@ -364,7 +363,7 @@ function App() {
               <Route path="/legal/cookies" element={<LegalPages />} />
               <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/billing/renew" element={<ProtectedRoute><MainLayout><BillingRenew /></MainLayout></ProtectedRoute>} />
+              <Route path="/billing/renew" element={<Navigate to="/subscription" replace />} />
               <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
             </Routes>
           </BrowserRouter>

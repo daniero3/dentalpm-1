@@ -54,6 +54,11 @@ const Subscription = sequelize.define('Subscription', {
   },
   
   // Status
+  stripe_subscription_id: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null,
+  },
   status: {
     type: DataTypes.ENUM('ACTIVE', 'CANCELLED', 'EXPIRED', 'SUSPENDED', 'PENDING'),
     allowNull: false,

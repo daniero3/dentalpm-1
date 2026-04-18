@@ -153,6 +153,7 @@ const Dashboard = () => {
         axios.get(`${API}/dashboard/kpi`, authH()),
         axios.get(`${API}/dashboard/recent-activities`, authH()),
         axios.get(`${API}/dashboard/revenue-chart?period=${period}`, authH()),
+        axios.get(`${API}/dashboard/patients-chart`, authH()),
         axios.get(`${API}/appointments`, authH()),
         axios.get(`${API}/invoices`, authH()),
       ]);
@@ -183,7 +184,7 @@ const Dashboard = () => {
       return {
         mois: MOIS[m.getMonth()],
         revenue: found?.amount || 0,
-        patients: Math.floor(Math.random() * 30 + 20), // sera remplacé par API réelle
+        patients: patChartRes?.data?.data?.find(d => d.period === key)?.count || 0,
       };
     });
   };
