@@ -367,6 +367,7 @@ function App() {
               <Route path="/billing/renew" element={<Navigate to="/subscription" replace />} />
               <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
             </Routes>
+            <CookieBanner />
           </BrowserRouter>
           <Toaster
             position="top-right"
