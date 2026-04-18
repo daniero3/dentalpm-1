@@ -4,6 +4,7 @@ import "./components/dpm.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
+import CookieBanner from "./components/CookieBanner";
 import { toast } from "sonner";
 
 // Theme Provider
