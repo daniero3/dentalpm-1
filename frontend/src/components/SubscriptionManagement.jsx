@@ -364,6 +364,10 @@ function UserView({ user }) {
           </div>
         )}
 
+        {sideTab==='billing' && (
+          <BillingInfo />
+        )}
+
         {sideTab==='invoices' && (
           <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'20px 22px' }}>
             <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A', marginBottom:18 }}>Historique des paiements</div>
