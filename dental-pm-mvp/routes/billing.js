@@ -350,6 +350,53 @@ router.post('/verify-reference', [
 
 // ═══════════════════════════════════════════════════════════════════════════
 
+
+// ── POST /api/billing/create-checkout-session ─────────────────────────────────
+router.post('/create-checkout-session', async (req, res) => {
+  try {
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const { plan_code, clinic_id: bodyClinicId } = req.body;
+
+    const STRIPE_PRICE_IDS = {
+      ESSENTIAL: 'price_1TM2Yr4zCGinpjiEssURjhxa',
+      PRO:       'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
+      GROUP:     'price_1TM2m34zCGinpjiEOo3nR5CQ',
+    };
+
+    const priceId = STRIPE_PRICE_IDS[plan_code];
+    if (!priceId) return res.status(400).json({ error: 'Plan invalide' });
+
+    const clinicId = bodyClinicId || getClinicId(req);
+    if (!clinicId) return res.status(400).json({ error: 'Cabinet non identifie' });
+
+    const { Clinic } = require('../models');
+    const clinic = await Clinic.findByPk(clinicId, { attributes: ['id','name','email'] });
+    if (!clinic) return res.status(404).json({ error: 'Cabinet non trouve' });
+
+    const FRONT = process.env.FRONTEND_URL || 'https://gracious-serenity-production-e854.up.railway.app';
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: { clinic_id: clinicId, plan: plan_code }
+      },
+      customer_email: clinic.email,
+      metadata: { clinic_id: clinicId, plan: plan_code },
+      success_url: FRONT + '/subscription?checkout=success&plan=' + plan_code,
+      cancel_url:  FRONT + '/subscription?checkout=cancelled',
+      locale: 'fr',
+    });
+
+    res.json({ url: session.url, session_id: session.id });
+  } catch (error) {
+    console.error('Stripe checkout error:', error.message);
+    res.status(500).json({ error: 'Erreur Stripe', details: error.message });
+  }
+});
+
 // ── POST /api/billing/webhook/stripe — Webhook Stripe ────────────────────────
 router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (req, res) => {
   const sig       = req.headers['stripe-signature'];
