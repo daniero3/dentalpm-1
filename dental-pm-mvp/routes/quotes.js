@@ -134,8 +134,8 @@ router.post('/', requireClinicOrSuperAdmin, async (req, res) => {
         order: [['created_at', 'ASC']]
       });
     }
-    if (!schedule) return res.status(404).json({ error: 'Aucune grille tarifaire disponible. Créez-en une dans les paramètres.' });
-    const schedule_id = schedule.id;
+    // schedule optionnel — le devis peut être créé sans grille tarifaire
+    const schedule_id = schedule?.id || null;
     const subtotal = validItems.reduce((sum, item) => sum + (Number(item.quantity||1) * Number(item.unit_price_mga||0)), 0);
     const discountAmount = (subtotal * Number(discount_percentage)) / 100;
     const total = subtotal - discountAmount;
