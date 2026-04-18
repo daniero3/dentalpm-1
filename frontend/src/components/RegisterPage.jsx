@@ -14,6 +14,42 @@ const PLANS = [
 
 const T = '#0D7A87';
 
+
+const StripeCheckoutBtn = ({ plan, form, apiUrl }) => {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleStripe = async () => {
+    setLoading(true);
+    try {
+      // 1. Créer le cabinet d'abord si pas encore fait
+      let clinicId = null;
+      try {
+        const r = await axios.post(`${apiUrl}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
+        clinicId = r.data.clinic?.id;
+      } catch(e) {
+        // Cabinet peut-être déjà créé
+        if (e.response?.status !== 409) throw e;
+      }
+
+      // 2. Créer session Stripe Checkout avec essai 7 jours
+      const payload = { plan_code: plan?.name || 'PRO' };
+      if (clinicId) payload.clinic_id = clinicId;
+
+      const r2 = await axios.post(`${apiUrl}/billing/create-checkout-session`, payload);
+      if (r2.data.url) window.location.href = r2.data.url; // Redirection Stripe
+    } catch(e) {
+      alert(e.response?.data?.error || 'Erreur connexion Stripe');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <button onClick={handleStripe} disabled={loading}
+      style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:loading?'#94A3B8':'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, border:'none', cursor:loading?'not-allowed':'pointer', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box', transition:'all .2s' }}>
+      {loading ? '⏳ Connexion à Stripe...' : '💳 Payer avec Stripe — 7 jours gratuits'}
+    </button>
+  );
+};
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [step,    setStep]    = useState(0); // 0=choix plan, 1=infos cabinet, 2=paiement
@@ -165,10 +201,7 @@ export default function RegisterPage() {
                 </p>
 
                 {/* Bouton Stripe en premier */}
-                <a href={plan?.stripe} target="_blank" rel="noopener noreferrer"
-                  style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, textDecoration:'none', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box' }}>
-                  💳 Payer avec Stripe / Mastercard
-                </a>
+                <StripeCheckoutBtn plan={plan} form={form} apiUrl={API_URL}/>
 
                 {/* Bouton confirmer inscription */}
                 <button onClick={submit} disabled={loading}

@@ -99,6 +99,20 @@ function Kpi({ label, value, sub, trend, icon:Icon, color='#0D7A87' }) {
 /* ══════════════════════════════════════════════════
    VUE UTILISATEUR
 ══════════════════════════════════════════════════ */
+async function stripeCheckout(plan, apiUrl) {
+  try {
+    const token = localStorage.getItem('token');
+    const r = await fetch(`${apiUrl}/billing/create-checkout-session`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      body: JSON.stringify({ plan_code: plan })
+    });
+    const data = await r.json();
+    if (data.url) window.location.href = data.url;
+    else alert(data.error || 'Erreur Stripe');
+  } catch(e) { alert('Erreur connexion Stripe'); }
+}
+
 async function downloadInvoicePDF(payment) {
   try {
     const date = new Date(payment.created_at);
@@ -256,12 +270,12 @@ function UserView({ user }) {
               <div style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>Renouveler avec Mastercard / Stripe</div>
               <div style={{ fontSize:11, color:'#64748B' }}>Paiement sécurisé — Plan actuel : {plan} ({fmt(PLAN_PRICES[plan]||199000)} Ar/mois)</div>
             </div>
-            <a href={STRIPE_LINKS[plan] || STRIPE_LINKS.PRO} target="_blank" rel="noopener noreferrer"
-              style={{ padding:'9px 18px', borderRadius:10, background:'#635BFF', color:'#fff', fontWeight:700, fontSize:13, textDecoration:'none', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(99,91,255,.3)' }}
+            <button onClick={()=>stripeCheckout(plan, API)}
+              style={{ padding:'9px 18px', borderRadius:10, background:'#635BFF', color:'#fff', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(99,91,255,.3)' }}
               onMouseOver={e=>{e.currentTarget.style.background='#4F46E5';}}
               onMouseOut={e=>{e.currentTarget.style.background='#635BFF';}}>
               💳 Payer avec Stripe
-            </a>
+            </button>
           </div>
         )}
 
@@ -329,17 +343,17 @@ function UserView({ user }) {
                 const Ico4 = pc4.icon;
                 const isCurrent = plan === pl;
                 return (
-                  <a key={pl} href={STRIPE_LINKS[pl]} target="_blank" rel="noopener noreferrer"
-                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'12px 8px', borderRadius:12, border:`1.5px solid ${isCurrent?'#635BFF':pc4.border}`, background:isCurrent?'#635BFF':pc4.bg, textDecoration:'none', transition:'all .15s' }}
+                  <button key={pl} onClick={()=>stripeCheckout(pl, API)}
+                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'12px 8px', borderRadius:12, border:`1.5px solid ${isCurrent?'#635BFF':pc4.border}`, background:isCurrent?'#635BFF':pc4.bg, cursor:'pointer', transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 16px rgba(99,91,255,.25)';}}
                     onMouseOut={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
                     <div style={{ width:32, height:32, borderRadius:9, background:isCurrent?'rgba(255,255,255,.2)':pc4.text+'18', display:'flex', alignItems:'center', justifyContent:'center' }}>
                       <Ico4 size={16} color={isCurrent?'#fff':pc4.text}/>
                     </div>
                     <span style={{ fontSize:11, fontWeight:700, color:isCurrent?'#fff':pc4.text }}>{pl}</span>
-                    <span style={{ fontSize:10, color:isCurrent?'rgba(255,255,255,.75)':'#94A3B8' }}>{fmt(PLAN_PRICES[pl])} Ar</span>
+                    <span style={{ fontSize:10, color:isCurrent?'rgba(255,255,255,.75)':'#94A3B8' }}>{fmt(PLAN_PRICES[pl])} Ar/mois</span>
                     {isCurrent && <span style={{ fontSize:9, background:'rgba(255,255,255,.2)', color:'#fff', padding:'1px 6px', borderRadius:99, fontWeight:700 }}>Actuel</span>}
-                  </a>
+                  </button>
                 );
               })}
             </div>

@@ -41,6 +41,7 @@
     "qrcode": "^1.5.4",
     "sequelize": "^6.35.0",
     "sqlite3": "^5.1.7",
+    "stripe": "^22.0.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

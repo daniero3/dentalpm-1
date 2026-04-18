@@ -370,30 +370,82 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
   }
 
   try {
-    if (event.type === 'checkout.session.completed' || event.type === 'payment_intent.succeeded') {
-      const session  = event.data.object;
-      const metadata = session.metadata || {};
-      const clinicId = metadata.clinic_id;
-      const planCode = metadata.plan || 'PRO';
+    const obj      = event.data.object;
+    const metadata = obj.metadata || obj.subscription_data?.metadata || {};
+    let clinicId   = metadata.clinic_id;
+    let planCode   = metadata.plan || 'PRO';
 
+    // Récupérer clinic_id depuis la subscription si absent
+    if (!clinicId && obj.subscription) {
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const sub = await stripe.subscriptions.retrieve(obj.subscription);
+        clinicId = sub.metadata?.clinic_id;
+        planCode = sub.metadata?.plan || planCode;
+      } catch(e) {}
+    }
+
+    // ── checkout.session.completed → trial démarré, carte enregistrée ──────
+    if (event.type === 'checkout.session.completed') {
+      console.log(`[Stripe] Checkout complété: clinic=${clinicId} plan=${planCode}`);
+      // Le trial démarre — l'abonnement est déjà en TRIAL dans notre DB
+      // On met à jour le stripe_subscription_id pour le suivi
+      if (clinicId && obj.subscription) {
+        try {
+          const { Clinic } = require('../models');
+          await Clinic.update(
+            { stripe_subscription_id: obj.subscription },
+            { where: { id: clinicId } }
+          );
+        } catch(e) {}
+      }
+    }
+
+    // ── invoice.payment_succeeded → paiement réussi (J+7 et renouvellements) ──
+    if (event.type === 'invoice.payment_succeeded' && obj.billing_reason !== 'subscription_create') {
       if (clinicId) {
         const { activateSubscriptionAfterPayment } = require('../job/subscriptionManager');
-        const result = await activateSubscriptionAfterPayment(clinicId, planCode, null);
+        await activateSubscriptionAfterPayment(clinicId, planCode, null);
 
-        // Email de confirmation
         try {
-          const Clinic = require('../models').Clinic;
+          const { Clinic, Subscription } = require('../models');
           const clinic = await Clinic.findByPk(clinicId);
           if (clinic) {
-            const sub = await require('../models').Subscription.findOne({ where: { clinic_id: clinicId, status: 'ACTIVE' }, order: [['created_at','DESC']] });
+            const sub = await Subscription.findOne({ where: { clinic_id: clinicId, status: 'ACTIVE' }, order: [['created_at','DESC']] });
             const { sendSubscriptionActivated } = require('../utils/mailer');
             await sendSubscriptionActivated(clinic.email, clinic.name, planCode, sub?.end_date);
           }
-        } catch(e) { console.warn('Stripe activation email (non-fatal):', e.message); }
-
-        console.log(`[Stripe Webhook] Abonnement activé: clinic=${clinicId} plan=${planCode}`);
+        } catch(e) {}
+        console.log(`[Stripe] Paiement réussi → abonnement activé: clinic=${clinicId} plan=${planCode}`);
       }
     }
+
+    // ── customer.subscription.trial_will_end → rappel J-3 avant fin essai ──
+    if (event.type === 'customer.subscription.trial_will_end') {
+      if (clinicId) {
+        try {
+          const { Clinic, Subscription } = require('../models');
+          const clinic = await Clinic.findByPk(clinicId);
+          const sub    = await Subscription.findOne({ where: { clinic_id: clinicId } });
+          if (clinic && sub) {
+            const { sendTrialReminder } = require('../utils/mailer');
+            await sendTrialReminder(clinic.email, clinic.name, 3, sub.plan);
+          }
+        } catch(e) {}
+        console.log(`[Stripe] Trial va expirer: clinic=${clinicId}`);
+      }
+    }
+
+    // ── customer.subscription.deleted → abonnement annulé par Stripe ──────
+    if (event.type === 'customer.subscription.deleted') {
+      if (clinicId) {
+        const { Clinic, Subscription } = require('../models');
+        await Subscription.update({ status: 'CANCELLED' }, { where: { clinic_id: clinicId, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL'] } } });
+        await Clinic.update({ subscription_status: 'CANCELLED' }, { where: { id: clinicId } });
+        console.log(`[Stripe] Abonnement annulé: clinic=${clinicId}`);
+      }
+    }
+
     res.json({ received: true });
   } catch (error) {
     console.error('Stripe webhook processing error:', error);
