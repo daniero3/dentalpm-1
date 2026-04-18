@@ -23,7 +23,7 @@ const LabOrder = sequelize.define('lab_orders', {
   },
   dentist_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'users',
       key: 'id'

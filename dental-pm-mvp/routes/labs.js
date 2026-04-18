@@ -75,23 +75,38 @@ router.post('/orders', [
     const count = await LabOrder.count({ where: clinicId ? { clinic_id: clinicId } : {} });
     const orderNumber = `LAB-${year}-${String(count + 1).padStart(4, '0')}`;
 
-    // Trouver ou creer un lab par defaut
+    // Trouver ou créer un lab par défaut (non-bloquant)
     let labId = req.body.lab_id || null;
     if (!labId) {
       try {
-        const Lab = models.Lab || models.Laboratory || models.Laboratoire;
+        const Lab = models.Lab;
         if (Lab) {
           const whereL = clinicId ? { clinic_id: clinicId } : {};
-          let lab = await Lab.findOne({ where: whereL });
-          if (!lab) {
+          let lab = await Lab.findOne({ where: whereL }).catch(()=>null);
+          if (!lab && clinicId) {
             lab = await Lab.create({
               name: lab_name || 'Laboratoire Principal',
-              ...(clinicId ? { clinic_id: clinicId } : {})
-            });
+              clinic_id: clinicId,
+              phone: '',
+              email: '',
+            }).catch(()=>null);
           }
-          labId = lab.id;
+          labId = lab?.id || null;
         }
       } catch (e) { console.warn('Lab find/create (non-fatal):', e.message); }
+    }
+
+    // dentist_id requis par le modèle — fallback sur le premier dentiste du cabinet
+    let finalDentistId = userId;
+    if (!finalDentistId && clinicId) {
+      try {
+        const { User } = require('../models');
+        const dentist = await User.findOne({
+          where: { clinic_id: clinicId, role: { [require('sequelize').Op.in]: ['DENTIST','ADMIN'] } },
+          attributes: ['id']
+        });
+        finalDentistId = dentist?.id || null;
+      } catch(e) {}
     }
 
     const orderData = {
@@ -105,9 +120,9 @@ router.post('/orders', [
       notes:        notes     || null,
       status:       'CREATED'
     };
-    if (clinicId) orderData.clinic_id  = clinicId;
-    if (userId)   orderData.dentist_id = userId;
-    if (labId)    orderData.lab_id     = labId;
+    if (clinicId)        orderData.clinic_id  = clinicId;
+    if (finalDentistId)  orderData.dentist_id = finalDentistId;
+    if (labId)           orderData.lab_id     = labId;
 
     const order = await LabOrder.create(orderData);
 
