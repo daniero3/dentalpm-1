@@ -44,18 +44,63 @@ function validateRequest(req, res) {
 
 async function generateQuoteNumber(clinicId) {
   const year = new Date().getFullYear();
-  const whereClause = { document_type: 'QUOTE', invoice_number: { [Op.like]: `DEV-${year}-%` } };
+  const prefix = `DEV-${year}-`;
+  // Utiliser MAX pour éviter les doublons si des devis ont été supprimés
+  const whereClause = { document_type: 'QUOTE', invoice_number: { [Op.like]: `${prefix}%` } };
   if (clinicId) whereClause.clinic_id = clinicId;
-  const count = await Invoice.count({ where: whereClause });
-  return `DEV-${year}-${String(count + 1).padStart(4, '0')}`;
+
+  const last = await Invoice.findOne({
+    where: whereClause,
+    order: [['invoice_number', 'DESC']],
+    attributes: ['invoice_number'],
+  });
+
+  let nextNum = 1;
+  if (last?.invoice_number) {
+    const lastNum = parseInt(last.invoice_number.replace(prefix, '')) || 0;
+    nextNum = lastNum + 1;
+  }
+
+  // Vérifier unicité globale (toutes cliniques) pour éviter les conflits de contrainte
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  let exists = await Invoice.findOne({ where: { invoice_number: candidate } });
+  while (exists) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    exists = await Invoice.findOne({ where: { invoice_number: candidate } });
+  }
+
+  return candidate;
 }
 
 async function generateInvoiceNumber(clinicId) {
   const year = new Date().getFullYear();
-  const whereClause = { document_type: 'INVOICE', invoice_number: { [Op.like]: `FACT-${year}-%` } };
+  const prefix = `FACT-${year}-`;
+  const whereClause = { document_type: 'INVOICE', invoice_number: { [Op.like]: `${prefix}%` } };
   if (clinicId) whereClause.clinic_id = clinicId;
-  const count = await Invoice.count({ where: whereClause });
-  return `FACT-${year}-${String(count + 1).padStart(4, '0')}`;
+
+  const last = await Invoice.findOne({
+    where: whereClause,
+    order: [['invoice_number', 'DESC']],
+    attributes: ['invoice_number'],
+  });
+
+  let nextNum = 1;
+  if (last?.invoice_number) {
+    const lastNum = parseInt(last.invoice_number.replace(prefix, '')) || 0;
+    nextNum = lastNum + 1;
+  }
+
+  // Vérifier unicité globale
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  let exists = await Invoice.findOne({ where: { invoice_number: candidate } });
+  while (exists) {
+    nextNum++;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    exists = await Invoice.findOne({ where: { invoice_number: candidate } });
+  }
+
+  return candidate;
 }
 
 const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount || 0) + ' Ar';
