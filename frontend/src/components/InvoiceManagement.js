@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
@@ -192,14 +191,14 @@ const InvoiceManagement = () => {
   const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
 
   if(loading) return(
-    <div style={{ maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48 }}>
+    <div style={{ maxWidth: 1100,margin:'0 auto',paddingBottom:48 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
       <div style={{ display:'flex',flexDirection:'column',gap:12 }}>{Array(5).fill(0).map((_,i)=><Skel key={i} h={80} r={14}/>)}</div>
     </div>
   );
 
   return (
-    <div style={{ maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48 }}>
+    <div style={{ maxWidth: 1100,margin:'0 auto',paddingBottom:48 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.inv-card{animation:fadeUp .3s ease both}`}</style>
 
       {/* En-tête */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import {
   FileText, Plus, Download, ArrowLeft, User, Loader2,
@@ -284,7 +283,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
         .dpm-scroll::-webkit-scrollbar{width:4px}
         .dpm-scroll::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px}
       `}</style>
-      <div style={{ background:'#F1F5F9', width:'100%', maxWidth: isMobile ? '100%' : 1060, borderRadius:20, overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', display:'flex', flexDirection:'column', maxHeight:'calc(100vh - 32px)', minHeight:500 }}>
+      <div style={{ background:'#F1F5F9', width:'100%', maxWidth: 1060, borderRadius:20, overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', display:'flex', flexDirection:'column', maxHeight:'calc(100vh - 32px)', minHeight:500 }}>
 
         {/* Header */}
         <div style={{ background:`linear-gradient(135deg,${T},${T_DARK})`, padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, position:'relative', overflow:'hidden' }}>
@@ -716,7 +715,7 @@ const PatientPrescriptions = () => {
   );
 
   return (
-    <div style={{ maxWidth: isMobile ? '100%' : 980, margin:'0 auto', padding:'0 16px 40px', fontFamily:'Plus Jakarta Sans, sans-serif' }}>
+    <div style={{ maxWidth: 980, margin:'0 auto', padding:'0 16px 40px', fontFamily:'Plus Jakarta Sans, sans-serif' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* ── PAGE HEADER ────────────────────────── */}

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import {
   Package, AlertTriangle, ArrowUp, ArrowDown, X,
@@ -95,7 +94,7 @@ const InventoryManagement = () => {
   );
 
   return (
-    <div style={{ maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48 }}>
+    <div style={{ maxWidth: 1100,margin:'0 auto',paddingBottom:48 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.inv-row{animation:fadeUp .3s ease both}`}</style>
 
       {/* Header */}

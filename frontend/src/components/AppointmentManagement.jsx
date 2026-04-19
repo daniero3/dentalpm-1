@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import {
@@ -351,7 +350,7 @@ const AppointmentManagement = () => {
   const nextDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()+1); setSelDate(d.toISOString().split('T')[0]); };
 
   return (
-    <div style={{ maxWidth: isMobile ? '100%' : 1200, margin:'0 auto', paddingBottom:48 }}>
+    <div style={{ maxWidth: 1200, margin:'0 auto', paddingBottom:48 }}>
       <style>{`
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         @keyframes spin{to{transform:rotate(360deg)}}
