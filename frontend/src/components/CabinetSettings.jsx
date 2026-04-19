@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Building2, User, Lock, Phone, Mail, MapPin, Save, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../App';
+import { useResponsive } from '../utils/responsive';
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
@@ -18,6 +19,7 @@ const T = '#0D7A87';
 
 export default function CabinetSettings() {
   const { user } = useAuth();
+  const { isMobile } = useResponsive();
   const [tab, setTab]         = useState('cabinet');
   const [clinic, setClinic]   = useState({});
   const [profile, setProfile] = useState({});
@@ -92,7 +94,7 @@ export default function CabinetSettings() {
             <div style={{ fontSize:13, fontWeight:700, color:T }}>{user?.full_name || 'Cabinet DentalPM'}</div>
             <div style={{ fontSize:12, color:'#64748B', marginTop:3 }}>Pour modifier les informations du cabinet, contactez le support DentalPM.</div>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:14 }}>
             {[
               { label:'Nom du cabinet', value:user?.clinic_name || '—', icon:Building2 },
               { label:'Email', value:user?.email || '—', icon:Mail },
@@ -112,7 +114,7 @@ export default function CabinetSettings() {
       {tab === 'profil' && (
         <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:24 }}>
           <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:16, color:'#0F172A', margin:'0 0 20px' }}>Mon profil</h2>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:16 }}>
+          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:14, marginBottom:16 }}>
             {[
               { label:'Nom complet', key:'full_name', ph:'Dr. Rakoto Jean' },
               { label:'Email', key:'email', ph:'rakoto@cabinet.mg', type:'email' },

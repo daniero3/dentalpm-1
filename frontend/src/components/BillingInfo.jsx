@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import {
   CreditCard, RefreshCw, AlertTriangle,
@@ -26,6 +27,7 @@ function CardBrand({ brand }) {
 }
 
 export default function BillingInfo() {
+  const { isMobile } = useResponsive();
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
@@ -107,7 +109,7 @@ export default function BillingInfo() {
                   <span style={{ fontSize:13, fontWeight:700, color:subStatus.color }}>{subStatus.label}</span>
                 </div>
               )})()}
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:10 }}>
                 {trialEnd && (
                   <div style={{ padding:'10px 14px', background:'#F8FAFC', borderRadius:10, border:'1px solid #E2E8F0' }}>
                     <div style={{ fontSize:10, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:3 }}>Fin d'essai</div>

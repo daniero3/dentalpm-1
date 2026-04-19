@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useResponsive } from '../utils/responsive';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL
@@ -52,6 +53,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl }) => {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { isMobile } = useResponsive();
   const [step,    setStep]    = useState(0); // 0=choix plan, 1=infos cabinet, 2=paiement
   const [plan,    setPlan]    = useState(null);
   const [loading, setLoading] = useState(false);

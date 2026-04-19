@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import { BarChart3, RefreshCw, TrendingUp, TrendingDown, DollarSign, AlertCircle, CheckCircle, PieChart, Calendar, Download } from 'lucide-react';
 
@@ -55,7 +56,7 @@ const ReportsManagement = () => {
   );
 
   if (!report) return (
-    <div style={{ maxWidth:1100,margin:'0 auto',paddingBottom:48 }}>
+    <div style={{ maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48 }}>
       <div style={{ background:'#FEF2F2',borderRadius:14,border:'1px solid #FECACA',padding:'24px',textAlign:'center',marginTop:40 }}>
         <div style={{ fontSize:32,marginBottom:12 }}>⚠️</div>
         <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:700,fontSize:16,color:'#991B1B',marginBottom:8 }}>Rapport non disponible</div>
@@ -72,7 +73,7 @@ const ReportsManagement = () => {
   const totalMethod = Object.values(breakdown).reduce((s,d)=>s+(d.total_mga||0),0);
 
   return (
-    <div style={{ maxWidth:1100,margin:'0 auto',paddingBottom:48 }}>
+    <div style={{ maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.rep-anim{animation:fadeUp .3s ease both}`}</style>
 
       {/* Header */}

@@ -217,7 +217,7 @@ const LabManagement = () => {
   );
 
   return(
-    <div style={{maxWidth:1100,margin:'0 auto',paddingBottom:48}}>
+    <div style={{maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* En-tête */}
@@ -319,7 +319,7 @@ const LabManagement = () => {
                   <span style={{fontSize:11,fontWeight:700,color:'#F59E0B',textTransform:'uppercase',letterSpacing:1.5}}>Espace Partenaire</span>
                 </div>
                 <h2 style={{fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:20,color:'#fff',margin:'0 0 6px'}}>Votre laboratoire dans DPM Madagascar</h2>
-                <p style={{fontSize:14,color:'rgba(255,255,255,.7)',margin:0,maxWidth:480}}>
+                <p style={{fontSize:14,color:'rgba(255,255,255,.7)',margin:0,maxWidth: isMobile ? '100%' : 480}}>
                   Rejoignez notre réseau et soyez recommandé directement aux dentistes lors de leurs commandes. Visibilité auprès de +50 cabinets.
                 </p>
               </div>

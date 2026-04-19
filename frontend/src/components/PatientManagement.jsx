@@ -246,7 +246,7 @@ const PatientManagement = () => {
   };
 
   if (loading) return (
-    <div style={{ maxWidth:1100, margin:'0 auto', paddingBottom:48 }}>
+    <div style={{ maxWidth: isMobile ? '100%' : 1100, margin:'0 auto', paddingBottom:48 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
         <Skel h={44} w={44} r={13}/><div style={{ flex:1 }}><Skel h={18} w={160} r={8}/><div style={{ marginTop:6 }}><Skel h={12} w={100} r={6}/></div></div>
@@ -262,7 +262,7 @@ const PatientManagement = () => {
   );
 
   return (
-    <div style={{ maxWidth:1100, margin:'0 auto', paddingBottom:48 }}>
+    <div style={{ maxWidth: isMobile ? '100%' : 1100, margin:'0 auto', paddingBottom:48 }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.pt-card{animation:fadeUp .35s ease both}`}</style>
 
       {/* ── En-tête ── */}

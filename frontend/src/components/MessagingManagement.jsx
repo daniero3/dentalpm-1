@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import {
   Mail, MessageSquare, Plus, Send, Clock, CheckCircle, XCircle,
@@ -206,7 +207,7 @@ const MessagingManagement = () => {
   );
 
   return (
-    <div style={{ maxWidth:1100, margin:'0 auto', paddingBottom:48 }}>
+    <div style={{ maxWidth: isMobile ? '100%' : 1100, margin:'0 auto', paddingBottom:48 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.msg-anim{animation:fadeUp .35s ease both}`}</style>
 
       {/* ── En-tête ── */}

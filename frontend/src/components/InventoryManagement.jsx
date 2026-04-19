@@ -95,7 +95,7 @@ const InventoryManagement = () => {
   );
 
   return (
-    <div style={{ maxWidth:1100,margin:'0 auto',paddingBottom:48 }}>
+    <div style={{ maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.inv-row{animation:fadeUp .3s ease both}`}</style>
 
       {/* Header */}

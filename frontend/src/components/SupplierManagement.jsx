@@ -58,7 +58,7 @@ const Modal = ({open,onClose,title,desc,children}) => {
   if(!open) return null;
   return(
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-      <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:520,boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
+      <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth: isMobile ? '100%' : 520,boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
         <button onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}><X size={15}/></button>
         <div style={{marginBottom:18,paddingRight:28}}>
           {title&&<h2 style={{fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:0}}>{title}</h2>}
@@ -170,7 +170,7 @@ const SupplierManagement = () => {
   );
 
   return(
-    <div style={{maxWidth:1100,margin:'0 auto',paddingBottom:48}}>
+    <div style={{maxWidth: isMobile ? '100%' : 1100,margin:'0 auto',paddingBottom:48}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* En-tête */}
@@ -280,7 +280,7 @@ const SupplierManagement = () => {
                   <span style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,.9)',textTransform:'uppercase',letterSpacing:1.5}}>Espace Partenaire</span>
                 </div>
                 <h2 style={{fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:20,color:'#fff',margin:'0 0 6px'}}>Votre entreprise dans DPM Madagascar</h2>
-                <p style={{fontSize:14,color:'rgba(255,255,255,.85)',margin:0,maxWidth:480}}>
+                <p style={{fontSize:14,color:'rgba(255,255,255,.85)',margin:0,maxWidth: isMobile ? '100%' : 480}}>
                   Rejoignez notre réseau de fournisseurs partenaires et soyez recommandé directement aux cabinets dentaires. Visibilité auprès de +50 cabinets à Madagascar.
                 </p>
               </div>

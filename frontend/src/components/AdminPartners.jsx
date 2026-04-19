@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import { Plus, Edit2, Trash2, Truck, RefreshCw, X, Check } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const emptyForm = { name:'', contact_name:'', email:'', phone:'', address:'', ci
 const inp = { width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box' };
 
 export default function AdminPartners() {
+  const { isMobile } = useResponsive();
   const [partners, setPartners] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [modal,    setModal]    = useState(false);
@@ -69,7 +71,7 @@ export default function AdminPartners() {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24, flexWrap:'wrap', gap:12 }}>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <div style={{ width:44, height:44, borderRadius:13, background:`linear-gradient(135deg,${T},#13A3B4)`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 4px 14px ${T}40` }}>
+          <div style={{ width:44, height:44, borderRadius:13, background:`linear-gradient(135deg,${T},#13A3B4)`, display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', boxShadow:`0 4px 14px ${T}40` }}>
             <Truck size={22} color="#fff"/>
           </div>
           <div>
@@ -100,7 +102,7 @@ export default function AdminPartners() {
           </button>
         </div>
       ) : (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:14 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
           {partners.map((p, i) => (
             <div key={p.id} style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'18px 20px', animation:`fadeUp .3s ease ${i*.05}s both`, boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
@@ -109,10 +111,10 @@ export default function AdminPartners() {
                   {p.category && <span style={{ fontSize:10, fontWeight:700, background:'#F0FDFE', color:T, border:`1px solid ${T}30`, borderRadius:99, padding:'2px 8px', marginTop:4, display:'inline-block' }}>{p.category}</span>}
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
-                  <button onClick={() => openEdit(p)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <button onClick={() => openEdit(p)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
                     <Edit2 size={13} color="#64748B"/>
                   </button>
-                  <button onClick={() => remove(p.id, p.name)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #FEE2E2', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <button onClick={() => remove(p.id, p.name)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #FEE2E2', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
                     <Trash2 size={13} color="#EF4444"/>
                   </button>
                 </div>
@@ -131,11 +133,11 @@ export default function AdminPartners() {
 
       {/* Modal ajout/édition */}
       {modal && (
-        <div onClick={e=>e.target===e.currentTarget&&setModal(false)} style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+        <div onClick={e=>e.target===e.currentTarget&&setModal(false)} style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.6)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding:16 }}>
           <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
             <div style={{ padding:'18px 22px', borderBottom:'1px solid #F1F5F9', display:'flex', justifyContent:'space-between', alignItems:'center', background:`linear-gradient(135deg,${T},#0A5F6A)`, borderRadius:'20px 20px 0 0' }}>
               <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff' }}>{editing ? 'Modifier le partenaire' : 'Nouveau partenaire'}</div>
-              <button onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}><X size={15}/></button>
+              <button onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}><X size={15}/></button>
             </div>
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
               {[
@@ -168,7 +170,7 @@ export default function AdminPartners() {
               </div>
               <div style={{ display:'flex', gap:8, paddingTop:8 }}>
                 <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-                <button onClick={save} disabled={saving} style={{ flex:2, padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:7, opacity:saving?.7:1 }}>
+                <button onClick={save} disabled={saving} style={{ flex:2, padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', gap:7, opacity:saving?.7:1 }}>
                   {saving ? 'Enregistrement...' : <><Check size={14}/>{editing ? 'Mettre à jour' : 'Ajouter le partenaire'}</>}
                 </button>
               </div>
