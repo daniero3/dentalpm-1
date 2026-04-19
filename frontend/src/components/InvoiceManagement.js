@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,

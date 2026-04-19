@@ -114,7 +114,7 @@ export function ModernTopbar() {
         {/* ── Profile ── */}
         <div ref={profileRef} style={{ position:'relative' }}>
           <button onClick={() => setIsProfileOpen(!isProfileOpen)}
-            style={{ display:'flex', alignItems:'center', gap: isMobile ? 0 : 8, padding: isMobile ? 4 : '6px 10px 6px 6px', borderRadius:12, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', transition:'all 0.18s' }}
+            className='dpm-topbar' style={{ display:'flex', alignItems:'center', gap: isMobile ? 0 : 8, padding: isMobile ? 4 : '6px 10px 6px 6px', borderRadius:12, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', transition:'all 0.18s' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.background='#F0F7F8'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.background='#fff'; }}>
             <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, background:'linear-gradient(135deg,#0D7A87,#3B4FD8)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:13, color:'#fff' }}>
@@ -171,7 +171,7 @@ export function ModernTopbar() {
           onClick={() => setSearchOpen(false)}>
           <div style={{ background:'#fff', borderRadius:14, padding:16, width:'100%', boxShadow:'0 16px 48px rgba(15,23,42,0.18)' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+            <div className='dpm-topbar' style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
               <Search size={16} color="#94A3B8" />
               <input type="text" placeholder="Rechercher patients, factures..." autoFocus
                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)}

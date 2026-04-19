@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
 import {

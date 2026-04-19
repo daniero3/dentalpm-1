@@ -23,6 +23,7 @@ if ('serviceWorker' in navigator) {
 
 import "./App.css";
 import "./components/dpm.css";
+import "./components/mobile.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";

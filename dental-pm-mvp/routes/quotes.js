@@ -118,6 +118,8 @@ router.post('/', requireClinicOrSuperAdmin, async (req, res) => {
     const patient = await Patient.findOne({ where: patientWhere });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
     const finalClinicId = isSuperAdmin(req) ? (bodyClinicId || patient.clinic_id || null) : getCurrentClinicId(req);
+    // S'assurer que created_by_user_id est valide
+    const safeUserId = getCurrentUserId(req) || null;
 
     // Trouver la grille tarifaire — utiliser celle fournie ou la première disponible
     let schedule = null;
@@ -140,13 +142,19 @@ router.post('/', requireClinicOrSuperAdmin, async (req, res) => {
     const discountAmount = (subtotal * Number(discount_percentage)) / 100;
     const total = subtotal - discountAmount;
     const quoteNumber = await generateQuoteNumber(finalClinicId);
+    const userId = getCurrentUserId(req);
+    console.log('[Quote Create] payload:', {
+      document_type:'QUOTE', invoice_number:quoteNumber, patient_id, schedule_id,
+      clinic_id:finalClinicId, subtotal_mga:subtotal, total_mga:total,
+      validity_days:Number(validity_days), status:'DRAFT', created_by_user_id:userId
+    });
     const quote = await Invoice.create({
       document_type: 'QUOTE', invoice_number: quoteNumber, patient_id, schedule_id,
       clinic_id: finalClinicId, invoice_date: new Date(),
       subtotal_mga: subtotal, discount_percentage: Number(discount_percentage),
       discount_amount_mga: discountAmount, total_mga: total,
       validity_days: Number(validity_days), notes: notes || null,
-      status: 'DRAFT', created_by_user_id: getCurrentUserId(req)
+      status: 'DRAFT', created_by_user_id: userId
     });
     await Promise.all(validItems.map(item => InvoiceItem.create({
       invoice_id: quote.id, description: item.description, quantity: Number(item.quantity),
@@ -276,7 +284,7 @@ router.post('/:id/convert', requireClinicOrSuperAdmin, [param('id').isUUID()], a
       tax_percentage: quote.tax_percentage || 0, tax_amount_mga: quote.tax_amount_mga || 0,
       total_mga: quote.total_mga,
       notes: quote.notes ? `Converti du devis ${quote.invoice_number}. ${quote.notes}` : `Converti du devis ${quote.invoice_number}`,
-      status: 'DRAFT', created_by_user_id: getCurrentUserId(req)
+      status: 'DRAFT', created_by_user_id: safeUserId
     });
     await Promise.all((quote.items || []).map(item => InvoiceItem.create({ invoice_id: invoice.id, description: item.description, quantity: item.quantity, unit_price_mga: item.unit_price_mga, total_price_mga: item.total_price_mga, procedure_id: item.procedure_id || null, tooth_number: item.tooth_number || null, notes: item.notes || null })));
     await quote.update({ status: 'CONVERTED', converted_to_invoice_id: invoice.id });

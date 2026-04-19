@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import BillingInfo from './BillingInfo';
 import axios from 'axios';
+import { useResponsive } from '../utils/responsive';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -193,11 +194,11 @@ function UserView({ user }) {
   ];
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns:'220px 1fr', gap:20, alignItems:'start' }}>
+    <div style={{ display:'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '220px 1fr', gap:16, alignItems:'start' }}>
       <style>{`@keyframes _spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* Sidebar */}
-      <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'16px 12px', position:'sticky', top:20 }}>
+      <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'16px 12px', position: window.innerWidth < 768 ? 'relative' : 'sticky', top:20 }}>
         <div style={{ padding:'10px 10px 14px', marginBottom:8, borderBottom:'1px solid #F1F5F9' }}>
           <Avatar name={user?.full_name||'U'} size={42}/>
           <div style={{ marginTop:8 }}>

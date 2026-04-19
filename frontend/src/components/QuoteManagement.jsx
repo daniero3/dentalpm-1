@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useResponsive, modalOverlay, getModalStyle } from '../utils/responsive';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
 import {
