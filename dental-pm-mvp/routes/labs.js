@@ -102,16 +102,19 @@ router.post('/orders', [
       } catch(e) {}
     }
 
+    const labCost = parseFloat(lab_cost_mga) || 0;
     const orderData = {
       order_number: orderNumber,
       patient_id,
       work_type,
       due_date,
-      lab_name:     lab_name  || null,
-      shade:        shade     || null,
-      lab_cost_mga: parseFloat(lab_cost_mga) || 0,
-      notes:        notes     || null,
-      status:       'CREATED'
+      lab_name:     lab_name   || null,
+      shade:        shade      || null,
+      lab_cost_mga: labCost,
+      total_mga:    labCost,   // requis par le modèle
+      notes:        notes      || null,
+      status:       'CREATED',
+      priority:     'NORMAL',  // requis par le modèle
     };
     if (clinicId)        orderData.clinic_id  = clinicId;
     if (finalDentistId)  orderData.dentist_id = finalDentistId;
