@@ -61,8 +61,15 @@ app.use((req, res, next) => {
 });
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'https://dentalpracticemada.com',
+  'https://www.dentalpracticemada.com',
+  'https://gracious-serenity-production-e854.up.railway.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 const corsOptions = {
-  origin: (origin, cb) => cb(null, true),
+  origin: (origin, cb) => cb(null, true), // accepte tout
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS','PATCH'],
   allowedHeaders: ['Content-Type','Authorization','X-Requested-With','Accept'],
@@ -237,7 +244,10 @@ async function startServer() {
       if (!sub) await Subscription.create({ clinic_id:clinic.id, plan:acc.plan, status:'ACTIVE', start_date:new Date(), end_date:endDate, price_mga:PLAN_PRICES[acc.plan], max_practitioners:PLAN_USERS[acc.plan] }).catch(()=>{});
       else await sub.update({ plan:acc.plan, status:'ACTIVE', end_date:endDate }).catch(()=>{});
     }
-    console.log('[Seed] Comptes test OK: test_essential / test_pro / test_group (mdp: DentalPM2026!)');
+    console.log('[Seed] ✅ Comptes test créés/mis à jour:');
+    console.log('[Seed]   test_essential | DentalPM2026! | Plan ESSENTIAL');
+    console.log('[Seed]   test_pro       | DentalPM2026! | Plan PRO');
+    console.log('[Seed]   test_group     | DentalPM2026! | Plan GROUP');
   } catch(e) { console.warn('[Seed] non-fatal:', e.message); }
 })();
 

@@ -27,7 +27,7 @@ function getTransporter() {
 }
 
 const FROM = process.env.SMTP_FROM || 'DentalPM Madagascar <noreply@dentalpm.mg>';
-const FRONT = process.env.FRONTEND_URL || 'https://gracious-serenity-production-e854.up.railway.app';
+const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
 
 /**
  * Envoyer un email — fail silencieux si pas de config SMTP

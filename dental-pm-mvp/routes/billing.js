@@ -368,7 +368,7 @@ router.post('/customer-portal', async (req, res) => {
     const clinic = await Clinic.findByPk(clinicId);
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
 
-    const FRONT = process.env.FRONTEND_URL || 'https://gracious-serenity-production-e854.up.railway.app';
+    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
 
     let customerId = clinic.stripe_customer_id;
 
@@ -477,7 +477,7 @@ router.post('/create-checkout-session', async (req, res) => {
     const clinic = await Clinic.findByPk(clinicId, { attributes: ['id','name','email'] });
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouve' });
 
-    const FRONT = process.env.FRONTEND_URL || 'https://gracious-serenity-production-e854.up.railway.app';
+    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
