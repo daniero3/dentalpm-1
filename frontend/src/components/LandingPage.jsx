@@ -528,13 +528,13 @@ export default function LandingPage() {
                 <a key={href} href={href} className="nav-link" style={{padding:'7px 13px',color:sc?'var(--slate)':'rgba(255,255,255,.8)',fontWeight:500,fontSize:14,borderRadius:9}}>{label}</a>
               ))}
               <button onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
-              <button onClick={()=>open(PLANS[1])} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j </button>
+              <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j </button>
             </div>
           )}
           {/* Mobile */}
           {isMobile&&(
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <button onClick={()=>open(PLANS[1])} style={{padding:'7px 12px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>Essai gratuit</button>
+              <button onClick={()=>navigate('/register')} style={{padding:'7px 12px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>Essai gratuit</button>
               <button onClick={()=>setMobMenu(m=>!m)} style={{width:38,height:38,borderRadius:9,background:sc?'var(--surface)':'rgba(255,255,255,.15)',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:5}}>
                 {[0,1,2].map(i=><div key={i} style={{width:18,height:2,borderRadius:99,background:sc?'var(--ink)':'#fff',transition:'all .25s',transform:mobMenu&&i===0?'rotate(45deg) translate(5px,5px)':mobMenu&&i===2?'rotate(-45deg) translate(5px,-5px)':mobMenu&&i===1?'scaleX(0)':'none'}}/>)}
               </button>
@@ -579,7 +579,7 @@ export default function LandingPage() {
               DPM centralise toute la gestion de votre cabinet et patients, agenda, facturation, ordonnances, laboratoire. Simple, rapide, 100% adapté aux réalités malgaches.
             </p>
             <div className="au3" style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:isMobile?18:32}}>
-              <button onClick={()=>open(PLANS[1])} className="btn-main"
+              <button onClick={()=>navigate('/register')} className="btn-main"
                 style={{padding:isMobile?'13px 18px':'16px 32px',borderRadius:13,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'0 12px 40px rgba(0,0,0,.2)',width:isMobile?'100%':'auto'}}>
                 Essayer gratuitement — 7 jours 
               </button>
@@ -676,7 +676,7 @@ export default function LandingPage() {
                 color:'#0D7A87',
               },
             ].map((item,i)=>(
-              <div key={i} className="sr" onClick={()=>open(PLANS[1])} style={{
+              <div key={i} className="sr" onClick={()=>navigate('/register')} style={{
                 background:'rgba(255,255,255,.04)',
                 border:'1px solid rgba(255,255,255,.08)',
                 borderRadius:18,
@@ -712,7 +712,7 @@ export default function LandingPage() {
                 Rejoignez les cabinets dentaires malgaches qui ont repris le contrôle de leur gestion.
               </p>
               <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
-                <button onClick={()=>open(PLANS[1])} className="btn-main"
+                <button onClick={()=>navigate('/register')} className="btn-main"
                   style={{padding:isMobile?'13px 22px':'14px 32px',borderRadius:12,background:'var(--teal)',color:'#fff',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>
                   Essayer gratuitement — 7 jours 
                 </button>
@@ -782,7 +782,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>open(PLANS[1])} className="btn-main"
+            <button onClick={()=>navigate('/register')} className="btn-main"
               style={{marginTop:22,padding:'13px 26px',borderRadius:12,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:15,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
               Essayer gratuitement →
             </button>
@@ -810,7 +810,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="sr" style={{transitionDelay:'.15s',display:'flex',flexDirection:'column',gap:11}}>
-            <button onClick={()=>open(PLANS[1])} className="btn-main"
+            <button onClick={()=>navigate('/register')} className="btn-main"
               style={{padding:'17px 32px',borderRadius:13,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?16:17,border:'none',cursor:'pointer'}}>
               Commencer maintenant →
             </button>
@@ -903,7 +903,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>open(PLANS[1])} className="btn-main"
+            <button onClick={()=>navigate('/register')} className="btn-main"
               style={{padding:'12px 24px',borderRadius:12,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:15,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
               Rejoindre DPM →
             </button>
@@ -945,7 +945,7 @@ export default function LandingPage() {
                     style={{display:'block',width:'100%',padding:'12px',borderRadius:11,background:plan.popular?'var(--teal)':'transparent',color:plan.popular?'#fff':'var(--teal)',fontWeight:700,fontSize:14,border:'2px solid var(--teal)',cursor:'pointer',textDecoration:'none',textAlign:'center',boxSizing:'border-box'}}>
                     Payer avec Stripe →
                   </a>
-                  <button onClick={()=>open(plan)} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
+                  <button onClick={()=>navigate('/register')} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
                     Essai gratuit 7 jours
                   </button>
                 </div>
@@ -996,7 +996,7 @@ export default function LandingPage() {
             ))}
             <div style={{marginTop:24,padding:'18px 20px',background:'rgba(255,255,255,.07)',borderRadius:14,border:'1px solid rgba(255,255,255,.12)'}}>
               <p style={{color:'rgba(255,255,255,.5)',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:1.5,marginBottom:10}}>PRÊT À COMMENCER ?</p>
-              <button onClick={()=>open(PLANS[1])} className="btn-main"
+              <button onClick={()=>navigate('/register')} className="btn-main"
                 style={{padding:'11px 22px',borderRadius:11,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:14,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
                 Essai gratuit 7 jours 
               </button>
