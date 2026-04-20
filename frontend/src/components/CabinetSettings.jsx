@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Building2, User, Lock, Phone, Mail, MapPin, Save, Eye, EyeOff } from 'lucide-react';
+import { Building2, User, Lock, Phone, Mail, MapPin, Save, Eye, EyeOff, Users } from 'lucide-react';
 import { useAuth } from '../App';
+import ClinicUsersTab from './ClinicUsersTab';
 import { useResponsive } from '../utils/responsive';
 
 const API = process.env.REACT_APP_BACKEND_URL
@@ -60,9 +61,10 @@ export default function CabinetSettings() {
   };
 
   const TABS = [
-    { id:'cabinet', label:'Cabinet', icon:Building2 },
-    { id:'profil',  label:'Mon profil', icon:User },
-    { id:'securite',label:'Sécurité', icon:Lock },
+    { id:'cabinet',     label:'Cabinet',      icon:Building2 },
+    { id:'utilisateurs',label:'Utilisateurs', icon:Users },
+    { id:'profil',      label:'Mon profil',   icon:User },
+    { id:'securite',    label:'Sécurité',     icon:Lock },
   ];
 
   return (
@@ -108,6 +110,11 @@ export default function CabinetSettings() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Utilisateurs */}
+      {tab === 'utilisateurs' && (
+        <ClinicUsersTab />
       )}
 
       {/* Profil */}

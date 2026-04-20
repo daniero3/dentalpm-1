@@ -362,4 +362,142 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+
+// ── GET /api/auth/clinic-users — Liste des users du cabinet connecté ──────────
+router.get('/clinic-users', authenticateToken, async (req, res) => {
+  try {
+    const clinicId = req.clinic_id || req.user?.clinic_id;
+    if (!clinicId) return res.status(403).json({ error: 'Cabinet non identifié' });
+
+    const users = await User.findAll({
+      where: { clinic_id: clinicId, role: { [Op.ne]: 'SUPER_ADMIN' } },
+      attributes: ['id','username','email','full_name','role','phone','specialization','is_active','created_at'],
+      order: [['created_at', 'ASC']]
+    });
+
+    // Récupérer la limite du plan
+    const { Subscription } = require('../models');
+    const sub = await Subscription.findOne({
+      where: { clinic_id: clinicId },
+      order: [['created_at', 'DESC']]
+    });
+    const PLAN_LIMITS = { ESSENTIAL: 2, PRO: 5, GROUP: 50, TRIAL: 5 };
+    const limit = PLAN_LIMITS[sub?.plan] || 2;
+
+    res.json({ users, count: users.length, limit, plan: sub?.plan || 'ESSENTIAL' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── POST /api/auth/clinic-users — Créer un user pour son propre cabinet ───────
+router.post('/clinic-users', authenticateToken, async (req, res) => {
+  try {
+    const clinicId = req.clinic_id || req.user?.clinic_id;
+    if (!clinicId) return res.status(403).json({ error: 'Cabinet non identifié' });
+
+    // Seul l'ADMIN du cabinet peut créer des users
+    if (!['ADMIN','SUPER_ADMIN'].includes(req.user?.role)) {
+      return res.status(403).json({ error: 'Seul l\'administrateur du cabinet peut creer des utilisateurs' });
+    }
+
+    const { Subscription } = require('../models');
+    const sub = await Subscription.findOne({
+      where: { clinic_id: clinicId },
+      order: [['created_at', 'DESC']]
+    });
+
+    // Vérifier limite du plan
+    const PLAN_LIMITS = { ESSENTIAL: 2, PRO: 5, GROUP: 50, TRIAL: 5 };
+    const limit = PLAN_LIMITS[sub?.plan] || 2;
+    const currentCount = await User.count({ where: { clinic_id: clinicId, is_active: true, role: { [Op.ne]: 'SUPER_ADMIN' } } });
+
+    if (currentCount >= limit) {
+      return res.status(403).json({
+        error: `Limite atteinte pour votre plan ${sub?.plan || 'ESSENTIAL'} (${limit} utilisateur${limit > 1 ? 's' : ''} max)`,
+        code: 'PLAN_LIMIT_REACHED',
+        limit, current: currentCount, plan: sub?.plan
+      });
+    }
+
+    const { full_name, email, username, password, role = 'DENTIST', phone, specialization } = req.body;
+    if (!full_name || !email || !username || !password) {
+      return res.status(400).json({ error: 'Champs requis: full_name, email, username, password' });
+    }
+    if (password.length < 6) return res.status(400).json({ error: 'Mot de passe minimum 6 caractères' });
+    if (!['DENTIST','ASSISTANT','ACCOUNTANT','ADMIN'].includes(role)) {
+      return res.status(400).json({ error: 'Rôle invalide' });
+    }
+
+    const existing = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+    if (existing) return res.status(409).json({ error: 'Nom utilisateur ou email deja utilise' });
+
+    const user = await User.create({
+      username, email, password_hash: password,
+      full_name, role, phone, specialization,
+      clinic_id: clinicId,
+      is_active: true, is_verified: true,
+      onboarding_completed: true,
+    });
+
+    res.status(201).json({
+      message: 'Utilisateur créé avec succès',
+      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role }
+    });
+  } catch (error) {
+    console.error('Create clinic user error:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── PATCH /api/auth/clinic-users/:id — Activer/désactiver un user ─────────────
+router.patch('/clinic-users/:id', authenticateToken, async (req, res) => {
+  try {
+    const clinicId = req.clinic_id || req.user?.clinic_id;
+    if (!clinicId) return res.status(403).json({ error: 'Cabinet non identifié' });
+    if (!['ADMIN','SUPER_ADMIN'].includes(req.user?.role)) {
+      return res.status(403).json({ error: 'Permission refusée' });
+    }
+
+    const userId = req.user?.id || req.user?.dataValues?.id;
+    if (req.params.id === userId) {
+      return res.status(403).json({ error: 'Vous ne pouvez pas modifier votre propre compte ici' });
+    }
+
+    const user = await User.findOne({ where: { id: req.params.id, clinic_id: clinicId } });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const { is_active, full_name, role, phone, specialization } = req.body;
+    await user.update({ is_active, full_name, role, phone, specialization });
+
+    res.json({ message: 'Utilisateur mis à jour', user });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ── DELETE /api/auth/clinic-users/:id — Supprimer un user du cabinet ──────────
+router.delete('/clinic-users/:id', authenticateToken, async (req, res) => {
+  try {
+    const clinicId = req.clinic_id || req.user?.clinic_id;
+    if (!clinicId) return res.status(403).json({ error: 'Cabinet non identifié' });
+    if (!['ADMIN','SUPER_ADMIN'].includes(req.user?.role)) {
+      return res.status(403).json({ error: 'Permission refusée' });
+    }
+
+    const userId = req.user?.id || req.user?.dataValues?.id;
+    if (req.params.id === userId) {
+      return res.status(403).json({ error: 'Vous ne pouvez pas supprimer votre propre compte' });
+    }
+
+    const user = await User.findOne({ where: { id: req.params.id, clinic_id: clinicId } });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    await user.update({ is_active: false });
+    res.json({ message: 'Utilisateur désactivé' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;

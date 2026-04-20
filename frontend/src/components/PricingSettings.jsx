@@ -113,7 +113,7 @@ const PricingSettings = () => {
 
   const handleUpdateFee = async (fee) => {
     try {
-      await axios.put(`${API}/procedure-fees/${fee.id}`, {
+      await axios.patch(`${API}/procedure-fees/${fee.id}`, {
         label: fee.label,
         price_mga: parseFloat(fee.price_mga),
         category: fee.category,
@@ -128,16 +128,23 @@ const PricingSettings = () => {
   };
 
   const handleDeleteFee = async (fee) => {
-    if (!confirm(`Désactiver l'acte "${fee.procedure_code}" ?`)) return;
+    if (!window.confirm(`Supprimer définitivement l'acte "${fee.label || fee.procedure_code}" ?`)) return;
     try {
-      await axios.put(`${API}/procedure-fees/${fee.id}`, {
-        is_active: false
-      });
-      toast.success('Acte désactivé');
+      await axios.delete(`${API}/procedure-fees/${fee.id}`);
+      toast.success('Acte supprimé');
       fetchFees(selectedSchedule.id);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur lors de la désactivation');
+      toast.error(error.response?.data?.error || 'Erreur suppression');
     }
+  };
+
+  // Créer une nouvelle grille si aucune n'existe pour le cabinet
+  const handleCreateSchedule = async () => {
+    try {
+      const r = await axios.post(`${API}/pricing-schedules`, { name: 'Mes tarifs', type: 'CUSTOM' });
+      toast.success('Grille créée');
+      fetchSchedules();
+    } catch(e) { toast.error('Erreur création grille'); }
   };
 
   const handleExportCSV = () => {

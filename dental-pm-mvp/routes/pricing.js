@@ -247,6 +247,69 @@ router.get('/:id/export-fees', [param('id').isUUID()], async (req, res) => {
   }
 });
 
+
+// ── PATCH /api/procedure-fees/:id — Modifier un acte ─────────────────────────
+router.patch('/:id', [param('id').isUUID()], async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const fee = await ProcedureFee.findOne({
+      where: { id: req.params.id },
+      include: [{ model: PricingSchedule, as: 'schedule', required: false }]
+    });
+    if (!fee) return res.status(404).json({ error: 'Acte non trouvé' });
+    if (fee.schedule?.type === 'SYNDICAL' && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Non autorisé — grille syndicale réservée au SUPER_ADMIN' });
+    }
+    const { label, price_mga, category, is_active } = req.body;
+    await fee.update({ label, price_mga, category, is_active });
+    res.json({ message: 'Acte mis à jour', fee });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── DELETE /api/procedure-fees/:id — Supprimer un acte ───────────────────────
+router.delete('/:id', [param('id').isUUID()], async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const fee = await ProcedureFee.findOne({
+      where: { id: req.params.id },
+      include: [{ model: PricingSchedule, as: 'schedule', required: false }]
+    });
+    if (!fee) return res.status(404).json({ error: 'Acte non trouvé' });
+    if (fee.schedule?.type === 'SYNDICAL' && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Non autorisé — grille syndicale réservée au SUPER_ADMIN' });
+    }
+    // Vérifier que la grille appartient au cabinet
+    if (fee.schedule?.clinic_id && fee.schedule.clinic_id !== clinicId) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+    await fee.destroy();
+    res.json({ message: 'Acte supprimé' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── POST /api/pricing-schedules — Créer une nouvelle grille pour le cabinet ───
+router.post('/', async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Cabinet non identifié' });
+    }
+    const { name = 'Ma grille tarifaire', type = 'CUSTOM' } = req.body;
+    const schedule = await PricingSchedule.create({
+      name, type: req.user?.role === 'SUPER_ADMIN' ? type : 'CUSTOM',
+      clinic_id: clinicId || null,
+      is_active: true,
+    });
+    res.status(201).json({ message: 'Grille créée', schedule });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
 // ── DELETE /cleanup-syndical ──────────────────────────────────────────────────
 router.delete('/cleanup-syndical', async (req, res) => {
   try {
