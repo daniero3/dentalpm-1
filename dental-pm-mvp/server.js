@@ -118,6 +118,69 @@ app.get('/api/check-token', require('./middleware/auth').authenticateToken, asyn
   });
 });
 
+
+// ── Endpoint setup comptes test (usage unique) ────────────────────────────────
+app.get('/api/setup-test-accounts', async (req, res) => {
+  const key = req.query.key;
+  if (key !== 'dentalpm2026setup') return res.status(403).json({ error: 'Clé invalide' });
+
+  const results = [];
+  try {
+    const { User, Clinic, Subscription } = require('./models');
+    const ACCOUNTS = [
+      { username:'test_essential', email:'essential@dentalpm-test.mg', password:'DentalPM2026!', full_name:'Admin Essential', role:'ADMIN', plan:'ESSENTIAL', clinicName:'Cabinet Test ESSENTIAL', phone:'034 00 000 01' },
+      { username:'test_pro',       email:'pro@dentalpm-test.mg',       password:'DentalPM2026!', full_name:'Admin Pro',        role:'ADMIN', plan:'PRO',       clinicName:'Cabinet Test PRO',       phone:'034 00 000 02' },
+      { username:'test_group',     email:'group@dentalpm-test.mg',     password:'DentalPM2026!', full_name:'Admin Group',      role:'ADMIN', plan:'GROUP',     clinicName:'Cabinet Test GROUP',     phone:'034 00 000 03' },
+    ];
+    const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
+    const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };
+    const endDate = new Date(); endDate.setFullYear(endDate.getFullYear() + 1);
+
+    for (const acc of ACCOUNTS) {
+      let clinic = await Clinic.findOne({ where: { email: acc.email } });
+      if (!clinic) {
+        clinic = await Clinic.create({ name:acc.clinicName, email:acc.email, phone:acc.phone, city:'Antananarivo', subscription_status:'ACTIVE', current_plan:acc.plan, is_active:true, is_verified:true, onboarding_completed:true, max_users:PLAN_USERS[acc.plan] });
+        results.push(`✅ Cabinet créé: ${clinic.name}`);
+      } else {
+        await clinic.update({ subscription_status:'ACTIVE', current_plan:acc.plan });
+        results.push(`♻️ Cabinet existant: ${clinic.name}`);
+      }
+
+      let user = await User.findOne({ where: { username: acc.username } });
+      if (!user) {
+        user = await User.create({ username:acc.username, email:acc.email, password_hash:acc.password, full_name:acc.full_name, role:acc.role, clinic_id:clinic.id, is_active:true, is_verified:true, onboarding_completed:true });
+        results.push(`✅ User créé: ${user.username}`);
+      } else {
+        // Forcer reset du mot de passe
+        user.password_hash = acc.password;
+        await user.save();
+        await user.update({ clinic_id:clinic.id, is_active:true });
+        results.push(`♻️ User existant reset: ${user.username}`);
+      }
+
+      const sub = await Subscription.findOne({ where:{ clinic_id:clinic.id } });
+      if (!sub) {
+        await Subscription.create({ clinic_id:clinic.id, plan:acc.plan, status:'ACTIVE', start_date:new Date(), end_date:endDate, price_mga:PLAN_PRICES[acc.plan], max_practitioners:PLAN_USERS[acc.plan] });
+      } else {
+        await sub.update({ plan:acc.plan, status:'ACTIVE', end_date:endDate });
+      }
+      results.push(`✅ Abonnement ${acc.plan} OK`);
+    }
+
+    res.json({
+      success: true,
+      results,
+      accounts: [
+        { plan:'ESSENTIAL', username:'test_essential', password:'DentalPM2026!' },
+        { plan:'PRO',       username:'test_pro',       password:'DentalPM2026!' },
+        { plan:'GROUP',     username:'test_group',     password:'DentalPM2026!' },
+      ]
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message, results });
+  }
+});
+
 // ── Version publique ──────────────────────────────────────────────────────────
 app.get('/api/version', (req, res) => {
   res.json({
