@@ -132,7 +132,15 @@ router.post('/orders', [
     return res.status(201).json({ message: 'Commande créée', order });
   } catch (error) {
     console.error('Create lab order error:', error.message);
-    return res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    // Log détaillé de la validation
+    if (error.errors) {
+      error.errors.forEach(e => console.error('  Champ:', e.path, '| Message:', e.message, '| Valeur:', e.value));
+    }
+    return res.status(500).json({ 
+      error: 'Erreur serveur', 
+      details: error.message,
+      validation: error.errors?.map(e => ({ field: e.path, message: e.message }))
+    });
   }
 });
 

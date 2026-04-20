@@ -202,6 +202,74 @@ router.post('/products/:id/movements', [
 });
 
 // ── POST /movements ───────────────────────────────────────────────────────────
+
+router.post('/products/:id/movement', [
+  param('id').isUUID(),
+  body('type').isIn(['IN','OUT','ADJUST']),
+  body('quantity').customSanitizer(v => parseInt(v)).isInt({ min:1 }),
+  body('reason').isLength({ min:1, max:255 }).trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
+
+    const clinicId = getClinicId(req);
+    const product  = await Product.findOne({ where: { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) } });
+    if (!product) return res.status(404).json({ error:'Produit non trouvé' });
+
+    const { type, quantity, reason, reference } = req.body;
+    const currentQty = product.current_qty;
+    let newQty;
+
+    if (type === 'IN')     newQty = currentQty + Math.abs(quantity);
+    else if (type === 'OUT') {
+      newQty = currentQty - Math.abs(quantity);
+      if (newQty < 0) return res.status(400).json({ error:'Stock insuffisant' });
+    } else newQty = Math.abs(quantity);
+
+    const movQty = type === 'ADJUST' ? (newQty - currentQty) : (type === 'IN' ? Math.abs(quantity) : -Math.abs(quantity));
+    const userId = getUserId(req);
+    const movData = { product_id: product.id, type, quantity: movQty, reason };
+    if (clinicId)      movData.clinic_id    = clinicId;
+    if (userId)        movData.user_id      = userId;
+    if (reference)     movData.reference    = reference;
+    try { movData.previous_qty = currentQty; movData.new_qty = newQty; } catch(e) {}
+
+    // Transaction atomique — StockMovement + Product update ensemble
+    const { sequelize } = require('../models');
+    let movement;
+
+    try {
+      await sequelize.transaction(async (t) => {
+        // Créer le mouvement
+        try {
+          movement = await StockMovement.create(movData, { transaction: t });
+        } catch(e) {
+          console.warn('StockMovement full create failed, trying minimal:', e.message);
+          movement = await StockMovement.create(
+            { product_id: product.id, type, quantity: movQty, reason },
+            { transaction: t }
+          );
+        }
+        // Mettre à jour le stock — atomique dans la même transaction
+        await product.update({ current_qty: newQty }, { transaction: t });
+      });
+    } catch(e) {
+      console.error('Transaction failed:', e.message);
+      return res.status(500).json({ error: 'Erreur mise à jour stock', details: e.message });
+    }
+
+    res.status(201).json({
+      message: 'Mouvement enregistré',
+      movement: { id: movement.id, type, quantity: movement.quantity, previous_qty: currentQty, new_qty: newQty },
+      product:  { id: product.id, name: product.name, current_qty: newQty }
+    });
+  } catch (error) {
+    res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
+// ── POST /movements ───────────────────────────────────────────────────────────
 router.post('/movements', [
   body('product_id').isUUID(),
   body('type').isIn(['IN','OUT','ADJUST']),

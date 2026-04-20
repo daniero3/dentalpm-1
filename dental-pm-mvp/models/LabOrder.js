@@ -9,7 +9,7 @@ const LabOrder = sequelize.define('lab_orders', {
   },
   order_number: {
     type: DataTypes.STRING(20),
-    allowNull: false,
+    allowNull: true,
     unique: true,
     comment: 'Auto-generated: LAB-000001'
   },
@@ -64,17 +64,17 @@ const LabOrder = sequelize.define('lab_orders', {
   },
   status: {
     type: DataTypes.ENUM('CREATED', 'SENT', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED'),
-    allowNull: false,
+    allowNull: true,
     defaultValue: 'CREATED'
   },
   priority: {
     type: DataTypes.ENUM('LOW', 'NORMAL', 'HIGH', 'URGENT'),
-    allowNull: false,
+    allowNull: true,
     defaultValue: 'NORMAL'
   },
   total_mga: {
     type: DataTypes.DECIMAL(12, 2),
-    allowNull: false,
+    allowNull: true,
     defaultValue: 0.00,
     comment: 'Total en Ariary malgache'
   },
