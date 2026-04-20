@@ -139,7 +139,7 @@ app.get('/api/setup-test-accounts', async (req, res) => {
     for (const acc of ACCOUNTS) {
       let clinic = await Clinic.findOne({ where: { email: acc.email } });
       if (!clinic) {
-        clinic = await Clinic.create({ name:acc.clinicName, email:acc.email, phone:acc.phone, city:'Antananarivo', subscription_status:'ACTIVE', current_plan:acc.plan, is_active:true, is_verified:true, onboarding_completed:true, max_users:PLAN_USERS[acc.plan] });
+        clinic = await Clinic.create({ name:acc.clinicName, email:acc.email, phone:acc.phone, address:'Antananarivo, Madagascar', city:'Antananarivo', subscription_status:'ACTIVE', current_plan:acc.plan, is_active:true, is_verified:true, onboarding_completed:true, max_users:PLAN_USERS[acc.plan] });
         results.push(`✅ Cabinet créé: ${clinic.name}`);
       } else {
         await clinic.update({ subscription_status:'ACTIVE', current_plan:acc.plan });
@@ -290,7 +290,7 @@ async function startServer() {
     for (const acc of ACCOUNTS) {
       let clinic = await Clinic.findOne({ where: { email: acc.email } }).catch(()=>null);
       if (!clinic) {
-        clinic = await Clinic.create({ name:acc.clinicName, email:acc.email, phone:acc.phone, city:'Antananarivo', subscription_status:'ACTIVE', current_plan:acc.plan, is_active:true, is_verified:true, onboarding_completed:true, max_users:PLAN_USERS[acc.plan] }).catch(()=>null);
+        clinic = await Clinic.create({ name:acc.clinicName, email:acc.email, phone:acc.phone, address:'Antananarivo, Madagascar', city:'Antananarivo', subscription_status:'ACTIVE', current_plan:acc.plan, is_active:true, is_verified:true, onboarding_completed:true, max_users:PLAN_USERS[acc.plan] }).catch(()=>null);
       } else {
         await clinic.update({ subscription_status:'ACTIVE', current_plan:acc.plan }).catch(()=>{});
       }

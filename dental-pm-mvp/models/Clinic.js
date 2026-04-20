@@ -28,7 +28,8 @@ const Clinic = sequelize.define('Clinic', {
   },
   address: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: true,
+    defaultValue: ''
   },
   city: {
     type: DataTypes.STRING(50),
