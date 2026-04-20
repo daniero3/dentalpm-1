@@ -207,6 +207,7 @@ app.use('/api/mailing',          requireAuth, requireClinicScope, blockMedical, 
 app.use('/api/media',            requireAuth, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
 // Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
+app.use('/api/billing/public-checkout', billingRoutes); // Sans auth — inscription cabinet
 app.use('/api/billing/webhook/stripe', billingRoutes); // raw body pour vérification signature Stripe
 app.use('/api/billing/webhook',    billingRoutes);
 app.use('/api/billing',          requireAuth, billingRoutes);

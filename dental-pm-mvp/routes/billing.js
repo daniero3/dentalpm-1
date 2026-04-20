@@ -455,6 +455,56 @@ router.get('/payment-method', async (req, res) => {
   }
 });
 
+
+// ── POST /api/billing/public-checkout — Session Stripe SANS authentification ──
+// Utilisé lors de l'inscription d'un nouveau cabinet
+router.post('/public-checkout', async (req, res) => {
+  try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Paiement Stripe non configuré' });
+    }
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const { plan_code, clinic_id, email } = req.body;
+
+    const STRIPE_PRICE_IDS = {
+      ESSENTIAL: 'price_1TM2Yr4zCGinpjiEssURjhxa',
+      PRO:       'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
+      GROUP:     'price_1TM2m34zCGinpjiEOo3nR5CQ',
+    };
+
+    const priceId = STRIPE_PRICE_IDS[plan_code];
+    if (!priceId) return res.status(400).json({ error: 'Plan invalide' });
+
+    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
+
+    const sessionData = {
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: { plan: plan_code }
+      },
+      metadata: { plan: plan_code },
+      success_url: FRONT + '/login?checkout=success&plan=' + plan_code,
+      cancel_url:  FRONT + '/register?checkout=cancelled',
+      locale: 'fr',
+    };
+
+    if (clinic_id) {
+      sessionData.metadata.clinic_id = clinic_id;
+      sessionData.subscription_data.metadata.clinic_id = clinic_id;
+    }
+    if (email) sessionData.customer_email = email;
+
+    const session = await stripe.checkout.sessions.create(sessionData);
+    res.json({ url: session.url, session_id: session.id });
+  } catch (error) {
+    console.error('Public checkout error:', error.message);
+    res.status(500).json({ error: 'Erreur Stripe', details: error.message });
+  }
+});
+
 // ── POST /api/billing/create-checkout-session ─────────────────────────────────
 router.post('/create-checkout-session', async (req, res) => {
   try {

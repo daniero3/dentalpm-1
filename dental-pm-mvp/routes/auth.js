@@ -257,7 +257,13 @@ router.post('/register-clinic', [
 
     // Vérifier si email déjà utilisé
     const existing = await Clinic.findOne({ where: { email } });
-    if (existing) return res.status(409).json({ error: 'Un cabinet avec cet email existe déjà' });
+    if (existing) {
+      // Retourner l'ID existant pour permettre la suite du flux
+      return res.status(409).json({ 
+        error: 'Un cabinet avec cet email existe deja',
+        clinic: { id: existing.id, name: existing.name, email: existing.email }
+      });
+    }
 
     const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
     const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };

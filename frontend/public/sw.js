@@ -1,4 +1,4 @@
-const CACHE = 'dentalpm-v2';
+const CACHE = 'dentalpm-v3';
 const STATIC = [
   '/',
   '/index.html',
@@ -42,13 +42,18 @@ self.addEventListener('fetch', e => {
   }
 
   // Assets statiques → Cache First avec fallback réseau
+  // Ignorer chrome-extension et autres schémas non supportés
+  if (!e.request.url.startsWith('http')) return;
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
         if (!res || res.status !== 200 || res.type !== 'basic') return res;
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
+        try {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy)).catch(()=>{});
+        } catch(e) {}
         return res;
       }).catch(() => caches.match('/index.html'));
     })
