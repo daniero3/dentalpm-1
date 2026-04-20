@@ -71,9 +71,23 @@ router.post('/orders', [
     const userId   = getUserId(req);
     const { patient_id, work_type, due_date, lab_name, shade, lab_cost_mga, notes } = req.body;
 
-    const year  = new Date().getFullYear();
-    const count = await LabOrder.count({ where: clinicId ? { clinic_id: clinicId } : {} });
-    const orderNumber = `LAB-${year}-${String(count + 1).padStart(4, '0')}`;
+    const year   = new Date().getFullYear();
+    const prefix = `LAB-${year}-`;
+    const last = await LabOrder.findOne({
+      where: { order_number: { [require('sequelize').Op.like]: `${prefix}%` } },
+      order: [['order_number', 'DESC']],
+      attributes: ['order_number'],
+    }).catch(() => null);
+    let nextNum = 1;
+    if (last?.order_number) {
+      nextNum = (parseInt(last.order_number.replace(prefix, '')) || 0) + 1;
+    }
+    // Garantir unicité
+    let orderNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    while (await LabOrder.findOne({ where: { order_number: orderNumber } }).catch(() => null)) {
+      nextNum++;
+      orderNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+    }
 
     // Trouver un lab existant pour ce cabinet (ne pas créer auto)
     let labId = req.body.lab_id || null;
