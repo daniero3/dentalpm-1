@@ -16,45 +16,52 @@ const PLANS = [
 const T = '#0D7A87';
 
 
-const StripeCheckoutBtn = ({ plan, form, apiUrl }) => {
-  const [loading, setLoading] = React.useState(false);
+// Liens Stripe statiques par plan (trial 7 jours configuré dans Stripe Dashboard)
+const STRIPE_LINKS = {
+  ESSENTIAL: 'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01',
+  PRO:       'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00',
+  GROUP:     'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02',
+};
 
-  const handleStripe = async () => {
+const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
+  const [loading, setLoading] = React.useState(false);
+  const [step, setStep]       = React.useState('stripe'); // 'stripe' | 'done'
+
+  const handleClick = async () => {
     setLoading(true);
     try {
-      // 1. Créer le cabinet
-      let clinicId = null;
+      // 1. Créer le cabinet en DB
       try {
         const r = await axios.post(`${apiUrl}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
-        clinicId = r.data.clinic?.id;
+        if (r.data.temp_password) setTempPwd && setTempPwd(r.data.temp_password);
       } catch(e) {
-        if (e.response?.status === 409) {
-          // Cabinet déjà existant — récupérer son ID
-          clinicId = e.response?.data?.clinic?.id || null;
-        } else {
-          throw e;
+        if (e.response?.status !== 409) {
+          alert(e.response?.data?.error || 'Erreur création cabinet');
+          setLoading(false);
+          return;
         }
+        // 409 = cabinet existant, on continue vers Stripe
       }
 
-      // 2. Session Stripe PUBLIQUE (sans auth requise)
-      const payload = {
-        plan_code: plan?.name || 'PRO',
-        email: form.email,
-      };
-      if (clinicId) payload.clinic_id = clinicId;
+      // 2. Redirection directe vers Stripe Payment Link (aucun backend requis)
+      const planName = plan?.name || 'PRO';
+      const stripeUrl = STRIPE_LINKS[planName] || STRIPE_LINKS.PRO;
 
-      const r2 = await axios.post(`${apiUrl}/billing/public-checkout`, payload);
-      if (r2.data.url) window.location.href = r2.data.url;
-      else alert('Erreur Stripe : URL manquante');
+      // Pré-remplir l'email dans Stripe si possible
+      const url = new URL(stripeUrl);
+      if (form.email) url.searchParams.set('prefilled_email', form.email);
+
+      window.location.href = url.toString();
     } catch(e) {
-      alert(e.response?.data?.error || 'Erreur connexion Stripe. Réessayez.');
-    } finally { setLoading(false); }
+      alert('Erreur inattendue. Réessayez.');
+      setLoading(false);
+    }
   };
 
   return (
-    <button onClick={handleStripe} disabled={loading}
+    <button onClick={handleClick} disabled={loading}
       style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:loading?'#94A3B8':'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, border:'none', cursor:loading?'not-allowed':'pointer', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box', transition:'all .2s' }}>
-      {loading ? '⏳ Connexion à Stripe...' : '💳 Payer avec Stripe — 7 jours gratuits'}
+      {loading ? '⏳ Redirection vers Stripe...' : '💳 Payer avec Stripe — 7 jours gratuits'}
     </button>
   );
 };

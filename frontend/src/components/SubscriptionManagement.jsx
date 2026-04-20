@@ -101,18 +101,40 @@ function Kpi({ label, value, sub, trend, icon:Icon, color='#0D7A87' }) {
 /* ══════════════════════════════════════════════════
    VUE UTILISATEUR
 ══════════════════════════════════════════════════ */
+const STRIPE_PAYMENT_LINKS = {
+  ESSENTIAL: 'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01',
+  PRO:       'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00',
+  GROUP:     'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02',
+};
+
 async function stripeCheckout(plan, apiUrl) {
   try {
     const token = localStorage.getItem('token');
+    if (!token) {
+      // Pas de token — utiliser Payment Link direct
+      window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+      return;
+    }
     const r = await fetch(`${apiUrl}/billing/create-checkout-session`, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
       body: JSON.stringify({ plan_code: plan })
     });
+    if (r.status === 401) {
+      // Token invalide — fallback Payment Link
+      window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+      return;
+    }
     const data = await r.json();
     if (data.url) window.location.href = data.url;
-    else alert(data.error || 'Erreur Stripe');
-  } catch(e) { alert('Erreur connexion Stripe'); }
+    else {
+      // Fallback si pas d'URL
+      window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+    }
+  } catch(e) {
+    // Erreur réseau — fallback Payment Link
+    window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+  }
 }
 
 async function downloadInvoicePDF(payment) {
