@@ -22,24 +22,32 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl }) => {
   const handleStripe = async () => {
     setLoading(true);
     try {
-      // 1. Créer le cabinet d'abord si pas encore fait
+      // 1. Créer le cabinet
       let clinicId = null;
       try {
         const r = await axios.post(`${apiUrl}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
         clinicId = r.data.clinic?.id;
       } catch(e) {
-        // Cabinet peut-être déjà créé
-        if (e.response?.status !== 409) throw e;
+        if (e.response?.status === 409) {
+          // Cabinet déjà existant — récupérer son ID
+          clinicId = e.response?.data?.clinic?.id || null;
+        } else {
+          throw e;
+        }
       }
 
-      // 2. Créer session Stripe Checkout avec essai 7 jours
-      const payload = { plan_code: plan?.name || 'PRO' };
+      // 2. Session Stripe PUBLIQUE (sans auth requise)
+      const payload = {
+        plan_code: plan?.name || 'PRO',
+        email: form.email,
+      };
       if (clinicId) payload.clinic_id = clinicId;
 
-      const r2 = await axios.post(`${apiUrl}/billing/create-checkout-session`, payload);
-      if (r2.data.url) window.location.href = r2.data.url; // Redirection Stripe
+      const r2 = await axios.post(`${apiUrl}/billing/public-checkout`, payload);
+      if (r2.data.url) window.location.href = r2.data.url;
+      else alert('Erreur Stripe : URL manquante');
     } catch(e) {
-      alert(e.response?.data?.error || 'Erreur connexion Stripe');
+      alert(e.response?.data?.error || 'Erreur connexion Stripe. Réessayez.');
     } finally { setLoading(false); }
   };
 
