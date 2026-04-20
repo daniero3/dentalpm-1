@@ -142,8 +142,8 @@ app.use('/api/billing/webhook',    billingRoutes);
 app.use('/api/billing',          requireAuth, billingRoutes);
 app.use('/api/admin',            requireAuth, requireSuperAdmin, adminRoutes);
 app.use('/api/legal',            legalRoutes);
-app.use('/api/pricing-schedules',requireAuth, blockMedical, pricingRoutes);
-app.use('/api/procedure-fees',   requireAuth, pricingRoutes);
+app.use('/api/pricing-schedules',requireAuth, requireClinicScope, pricingRoutes);
+app.use('/api/procedure-fees',   requireAuth, requireClinicScope, pricingRoutes);
 app.use('/api/documents',        requireAuth, requireClinicScope, blockMedical, documentRoutes);
 app.use('/api/prescriptions',    requireAuth, requireClinicScope, blockMedical, prescriptionRoutes);
 app.use('/api/reports',          requireAuth, requireClinicScope, blockMedical, reportsRoutes);
@@ -201,6 +201,44 @@ async function startServer() {
     await migration.up(qi, Sequelize);
     console.log('✅ Migrations exécutées');
   } catch(e) { console.log('Migration (non-fatal):', e.message); }
+})();
+
+
+// ── Seed comptes test (exécuté une seule fois) ───────────────────────────────
+(async () => {
+  try {
+    const { User, Clinic, Subscription } = require('./models');
+    const ACCOUNTS = [
+      { username:'test_essential', email:'essential@dentalpm-test.mg', password:'DentalPM2026!', full_name:'Admin Essential', role:'ADMIN', plan:'ESSENTIAL', clinicName:'Cabinet Test ESSENTIAL', phone:'034 00 000 01' },
+      { username:'test_pro',       email:'pro@dentalpm-test.mg',       password:'DentalPM2026!', full_name:'Admin Pro',        role:'ADMIN', plan:'PRO',       clinicName:'Cabinet Test PRO',       phone:'034 00 000 02' },
+      { username:'test_group',     email:'group@dentalpm-test.mg',     password:'DentalPM2026!', full_name:'Admin Group',      role:'ADMIN', plan:'GROUP',     clinicName:'Cabinet Test GROUP',     phone:'034 00 000 03' },
+    ];
+    const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
+    const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };
+    const endDate = new Date(); endDate.setFullYear(endDate.getFullYear() + 1);
+
+    for (const acc of ACCOUNTS) {
+      let clinic = await Clinic.findOne({ where: { email: acc.email } }).catch(()=>null);
+      if (!clinic) {
+        clinic = await Clinic.create({ name:acc.clinicName, email:acc.email, phone:acc.phone, city:'Antananarivo', subscription_status:'ACTIVE', current_plan:acc.plan, is_active:true, is_verified:true, onboarding_completed:true, max_users:PLAN_USERS[acc.plan] }).catch(()=>null);
+      } else {
+        await clinic.update({ subscription_status:'ACTIVE', current_plan:acc.plan }).catch(()=>{});
+      }
+      if (!clinic) continue;
+
+      const existing = await User.findOne({ where:{ username:acc.username } }).catch(()=>null);
+      if (!existing) {
+        await User.create({ username:acc.username, email:acc.email, password_hash:acc.password, full_name:acc.full_name, role:acc.role, clinic_id:clinic.id, is_active:true, is_verified:true, onboarding_completed:true }).catch(()=>{});
+      } else {
+        await existing.update({ clinic_id:clinic.id, is_active:true }).catch(()=>{});
+      }
+
+      const sub = await Subscription.findOne({ where:{ clinic_id:clinic.id } }).catch(()=>null);
+      if (!sub) await Subscription.create({ clinic_id:clinic.id, plan:acc.plan, status:'ACTIVE', start_date:new Date(), end_date:endDate, price_mga:PLAN_PRICES[acc.plan], max_practitioners:PLAN_USERS[acc.plan] }).catch(()=>{});
+      else await sub.update({ plan:acc.plan, status:'ACTIVE', end_date:endDate }).catch(()=>{});
+    }
+    console.log('[Seed] Comptes test OK: test_essential / test_pro / test_group (mdp: DentalPM2026!)');
+  } catch(e) { console.warn('[Seed] non-fatal:', e.message); }
 })();
 
 app.listen(PORT, '0.0.0.0', () => {

@@ -139,8 +139,9 @@ router.post('/:id/fees', [
     const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, ...whereOr } });
     if (!schedule) return res.status(404).json({ error:'Grille tarifaire non trouvée' });
 
-    if (schedule.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error:'Non autorisé', message:'SUPER_ADMIN requis pour modifier la grille Syndicale' });
+    // Grille SYNDICAL = réservée SUPER_ADMIN, grille CUSTOM = ouverte à tous les users du cabinet
+    if (schedule.type === 'SYNDICAL' && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error:'Non autorisé', message:'La grille Syndicale ne peut pas être modifiée par les cabinets' });
     }
 
     const { procedure_code, label, price_mga, category = 'GENERAL' } = req.body;
