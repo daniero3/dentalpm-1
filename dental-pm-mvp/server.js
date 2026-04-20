@@ -207,7 +207,50 @@ app.use('/api/mailing',          requireAuth, requireClinicScope, blockMedical, 
 app.use('/api/media',            requireAuth, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
 // Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
-app.use('/api/billing/public-checkout', billingRoutes); // Sans auth — inscription cabinet
+
+// ── Public checkout Stripe — sans authentification (inscription cabinet) ───────
+app.post('/api/billing/public-checkout', async (req, res) => {
+  try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Paiement Stripe non configuré' });
+    }
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const { plan_code, clinic_id, email } = req.body;
+
+    const STRIPE_PRICE_IDS = {
+      ESSENTIAL: 'price_1TM2Yr4zCGinpjiEssURjhxa',
+      PRO:       'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
+      GROUP:     'price_1TM2m34zCGinpjiEOo3nR5CQ',
+    };
+
+    const priceId = STRIPE_PRICE_IDS[plan_code];
+    if (!priceId) return res.status(400).json({ error: 'Plan invalide (ESSENTIAL, PRO ou GROUP)' });
+
+    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
+
+    const sessionData = {
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: { plan: plan_code, clinic_id: clinic_id || '' }
+      },
+      metadata: { plan: plan_code, clinic_id: clinic_id || '' },
+      success_url: FRONT + '/login?checkout=success&plan=' + plan_code,
+      cancel_url:  FRONT + '/register?checkout=cancelled',
+      locale: 'fr',
+    };
+    if (email) sessionData.customer_email = email;
+
+    const session = await stripe.checkout.sessions.create(sessionData);
+    res.json({ url: session.url, session_id: session.id });
+  } catch (error) {
+    console.error('Public checkout error:', error.message);
+    res.status(500).json({ error: 'Erreur Stripe', details: error.message });
+  }
+});
+
 app.use('/api/billing/webhook/stripe', billingRoutes); // raw body pour vérification signature Stripe
 app.use('/api/billing/webhook',    billingRoutes);
 app.use('/api/billing',          requireAuth, billingRoutes);
