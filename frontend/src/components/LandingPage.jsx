@@ -1095,8 +1095,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Séparateur */}
-        <div style={{ height:1, background:'rgba(255,255,255,.07)', margin:'20px 0 16px' }}/>
+         {/* Séparateur */}
+        {/* <div style={{ height:1, background:'rgba(255,255,255,.07)', margin:'20px 0 16px' }}/>*/}
 
         {/* Copyright */}
         <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'center' : 'space-between', flexWrap:'wrap', gap:10 }}>
