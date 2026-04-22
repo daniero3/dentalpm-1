@@ -625,7 +625,7 @@ export default function LandingPage() {
           <div className="sr" style={{textAlign:'center',marginBottom:isMobile?36:64}}>
 
             <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?26:isTablet?34:46,color:'#fff',lineHeight:1.15,marginBottom:16}}>
-              <span style={{display:'block',fontSize:isMobile?'0.65em':'0.55em',fontWeight:700,color:'#FCA5A5',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10}}>
+              <span style={{display:'block',fontSize:isMobile?'0.65em':'0.55em',fontWeight:700,color:'#5EEAD4',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10}}>
                 ⚠️ Vous reconnaissez-vous ?
               </span>
               <span style={{color:'#FFFFFF',textShadow:'0 0 40px rgba(255,255,255,.25)'}}>Ces problèmes freinent</span><br/>
@@ -1103,14 +1103,14 @@ export default function LandingPage() {
           <span style={{ fontSize:12, color:'rgba(255,255,255,.25)', fontWeight:500, letterSpacing:'.02em' }}>
             &copy; 2026 DANIERO GLOBAL LLC. Tous droits réservés.
           </span>
-          <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+          {/* <div style={{ display:'flex', gap:16, alignItems:'center' }}>
             <button onClick={()=>navigate('/login')}
               style={{ padding:'5px 14px', borderRadius:7, border:'1px solid rgba(255,255,255,.15)', background:'transparent', color:'rgba(255,255,255,.45)', cursor:'pointer', fontSize:12, fontWeight:600, transition:'all .2s' }}
               onMouseOver={e=>{ e.currentTarget.style.borderColor='rgba(13,122,135,.6)'; e.currentTarget.style.color='#fff'; }}
               onMouseOut={e=>{ e.currentTarget.style.borderColor='rgba(255,255,255,.15)'; e.currentTarget.style.color='rgba(255,255,255,.45)'; }}>
               Connexion
             </button>
-          </div>
+          </div>*/}
         </div>
       </footer>
 
