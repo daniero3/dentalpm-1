@@ -1,19 +1,38 @@
 import React, { useState, useEffect } from "react";
 
-// ── Service Worker PWA ────────────────────────────────────────────────────────
+// ── Service Worker PWA — Cache Busting ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
-        console.log('[PWA] Service Worker enregistré:', reg.scope);
-        // Détecter mise à jour disponible
+        console.log('[PWA] SW enregistré:', reg.scope);
+
+        // Vérifier les mises à jour toutes les 60 secondes
+        setInterval(() => reg.update(), 60 * 1000);
+
+        // Mise à jour détectée
         reg.addEventListener('updatefound', () => {
           const worker = reg.installing;
           worker?.addEventListener('statechange', () => {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Nouvelle version disponible');
+              console.log('[PWA] Nouvelle version disponible — rechargement...');
+              // Forcer la mise à jour immédiate
+              worker.postMessage('SKIP_WAITING');
             }
           });
+        });
+
+        // Recharger quand le SW prend le contrôle
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[PWA] Nouveau SW actif — rechargement page');
+          window.location.reload();
+        });
+
+        // Écouter les messages du SW
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'SW_UPDATED') {
+            console.log('[PWA] Cache mis à jour:', e.data.cache);
+          }
         });
       })
       .catch(err => console.warn('[PWA] SW non enregistré:', err));
