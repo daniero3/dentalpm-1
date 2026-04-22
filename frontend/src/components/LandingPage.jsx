@@ -1098,11 +1098,11 @@ export default function LandingPage() {
          {/* Séparateur */}
         {/* <div style={{ height:1, background:'rgba(255,255,255,.07)', margin:'20px 0 16px' }}/>*/}
 
-        {/* Copyright */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'center' : /*'space-between'*/, flexWrap:'wrap', gap:10 }}>
-          <span style={{ fontSize:12, color:'rgba(255,255,255,.25)', fontWeight:500, letterSpacing:'.02em' }}>
-            &copy; 2026 DANIERO GLOBAL LLC. Tous droits réservés.
-          </span>
+        {/* Copyright */ /*'space-between'*/}
+        <div style={{ display:'flex', alignItems:'center', justifyContent: 'center', flexWrap:'wrap', gap:10 }}>
+            <span style={{ fontSize:12, color:'rgba(255,255,255,.25)', fontWeight:500, letterSpacing:'.02em' }}>
+                &copy; 2026 DANIERO GLOBAL LLC. Tous droits réservés.
+            </span>
           {/* <div style={{ display:'flex', gap:16, alignItems:'center' }}>
             <button onClick={()=>navigate('/login')}
               style={{ padding:'5px 14px', borderRadius:7, border:'1px solid rgba(255,255,255,.15)', background:'transparent', color:'rgba(255,255,255,.45)', cursor:'pointer', fontSize:12, fontWeight:600, transition:'all .2s' }}
