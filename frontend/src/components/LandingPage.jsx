@@ -1101,7 +1101,7 @@ export default function LandingPage() {
         {/* Copyright */ /*'space-between'*/}
         <div style={{ display:'flex', alignItems:'center', justifyContent: 'center', flexWrap:'wrap', gap:10 }}>
             <span style={{ fontSize:12, color:'rgba(255,255,255,.25)', fontWeight:500, letterSpacing:'.02em' }}>
-                &copy; 2026 DANIERO GLOBAL LLC. Tous droits réservés.
+                &copy; 2026 DANIERO GLOBAL LLC.  DentalPM Madagascar.
             </span>
           {/* <div style={{ display:'flex', gap:16, alignItems:'center' }}>
             <button onClick={()=>navigate('/login')}
