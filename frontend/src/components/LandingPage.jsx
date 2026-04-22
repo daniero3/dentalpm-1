@@ -1099,7 +1099,7 @@ export default function LandingPage() {
         {/* <div style={{ height:1, background:'rgba(255,255,255,.07)', margin:'20px 0 16px' }}/>*/}
 
         {/* Copyright */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'center' : 'space-between', flexWrap:'wrap', gap:10 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent: isMobile ? 'center' : /*'space-between'*/, flexWrap:'wrap', gap:10 }}>
           <span style={{ fontSize:12, color:'rgba(255,255,255,.25)', fontWeight:500, letterSpacing:'.02em' }}>
             &copy; 2026 DANIERO GLOBAL LLC. Tous droits réservés.
           </span>
