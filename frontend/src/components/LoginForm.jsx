@@ -10,18 +10,19 @@ const API = `${BACKEND_URL}/api`;
 // ── Logo statique premium ──
 const LogoAnim = () => (
   <div style={{ width:96, height:96, margin:'0 auto 18px' }}>
-    <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={96} height={96}
-      style={{
-        display:'block', objectFit:'cover',
-        borderRadius:'50%',
-        boxShadow:'0 0 0 4px rgba(13,122,135,.12), 0 0 0 8px rgba(13,122,135,.06), 0 8px 28px rgba(13,122,135,.25)',
-      }}/>
+    <div style={{ width:96, height:96, borderRadius:'50%', overflow:'hidden', flexShrink:0,
+        boxShadow:'0 0 0 4px rgba(13,122,135,.15), 0 8px 24px rgba(13,122,135,.25)' }}>
+      <img src="/fix-logo.jpeg" alt="DPM Madagascar"
+        style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
+    </div>
   </div>
 );
 
 const DentalLogo = ({ size = 32 }) => (
-  <img src="/fix-logo.jpeg" alt="DPM Madagascar" width={size} height={size}
-    style={{ borderRadius: '50%', objectFit:'cover', display:'block' }}/>
+  <div style={{ width:size, height:size, borderRadius:'50%', overflow:'hidden', display:'block' }}>
+    <img src="/fix-logo.jpeg" alt="DPM Madagascar"
+      style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
+  </div>
 );
 
 const STEP_LOGIN    = 'login';
