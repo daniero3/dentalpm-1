@@ -160,21 +160,30 @@ const GlobalCSS = () => (
 
 /* ── Logo ── */
 const Logo = ({ size=36, glow=false }) => (
-  <img
-    src="/fix-logo.jpeg"
-    alt="DPM Madagascar"
-    width={size}
-    height={size}
-    style={{
-      borderRadius: '50%',
-      objectFit: 'cover',
-      display: 'block',
-      flexShrink: 0,
-      filter: glow
-        ? 'drop-shadow(0 0 16px rgba(13,122,135,.6)) drop-shadow(0 4px 14px rgba(0,0,0,.28))'
-        : 'drop-shadow(0 3px 10px rgba(0,0,0,.22))',
-    }}
-  />
+  <div style={{
+    width: size, height: size,
+    borderRadius: '50%',
+    overflow: 'hidden',          /* Force le masque circulaire */
+    flexShrink: 0,
+    display: 'block',
+    boxShadow: glow
+      ? '0 0 0 2px rgba(13,122,135,.5), 0 0 24px rgba(13,122,135,.5), 0 4px 14px rgba(0,0,0,.28)'
+      : '0 3px 10px rgba(0,0,0,.22)',
+  }}>
+    <img
+      src="/fix-logo.jpeg"
+      alt="DPM Madagascar"
+      width={size}
+      height={size}
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition: 'center',
+        display: 'block',
+      }}
+    />
+  </div>
 );
 
 /* ── FadeSlider ── */

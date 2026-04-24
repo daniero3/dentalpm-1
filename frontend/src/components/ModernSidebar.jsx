@@ -68,9 +68,11 @@ const LogoCSS = () => <style>{`
 `}</style>
 
 const DentalLogo = ({ size=36 }) => (
-  <img src="/fix-logo.jpeg" alt="DPM" width={size} height={size}
-    style={{ borderRadius:'50%', objectFit:'cover', display:'block', flexShrink:0,
-      filter:'drop-shadow(0 2px 10px rgba(255,255,255,.25)) drop-shadow(0 4px 18px rgba(0,0,0,.2))' }}/>
+  <div style={{ width:size, height:size, borderRadius:'50%', overflow:'hidden', flexShrink:0, display:'block',
+    boxShadow:'0 2px 10px rgba(255,255,255,.2), 0 4px 18px rgba(0,0,0,.25)' }}>
+    <img src="/fix-logo.jpeg" alt="DPM"
+      style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
+  </div>
 )
 
 // ── SidebarContent ────────────────────────────────────────────────────────────
