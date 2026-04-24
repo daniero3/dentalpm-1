@@ -55,39 +55,39 @@ import { ThemeProvider } from "./components/theme-provider";
 
 // Components
 import LoginForm from "./components/LoginForm";
-import LandingPage from "./components/LandingPage";
+const LandingPage = React.lazy(() => import("./components/LandingPage"));
 import SubscriptionManagement from './components/SubscriptionManagement';
 import Dashboard from "./components/Dashboard";
-import PatientManagement from "./components/PatientManagement";
-import DentalChart from "./components/DentalChart";
-import InvoiceManagement from "./components/InvoiceManagement";
-import QuoteManagement from "./components/QuoteManagement";
-import PatientDocuments from "./components/PatientDocuments";
-import PatientPrescriptions from "./components/PatientPrescriptions";
-import PatientOdontogram from "./components/PatientOdontogram";
-import InventoryManagement from "./components/InventoryManagement";
-import LabManagement from "./components/LabManagement";
-import PatientLabOrders from "./components/PatientLabOrders";
-import ReportsManagement from "./components/ReportsManagement";
+const PatientManagement = React.lazy(() => import("./components/PatientManagement"));
+const DentalChart = React.lazy(() => import("./components/DentalChart"));
+const InvoiceManagement = React.lazy(() => import("./components/InvoiceManagement"));
+const QuoteManagement = React.lazy(() => import("./components/QuoteManagement"));
+const PatientDocuments = React.lazy(() => import("./components/PatientDocuments"));
+const PatientPrescriptions = React.lazy(() => import("./components/PatientPrescriptions"));
+const PatientOdontogram = React.lazy(() => import("./components/PatientOdontogram"));
+const InventoryManagement = React.lazy(() => import("./components/InventoryManagement"));
+const LabManagement = React.lazy(() => import("./components/LabManagement"));
+const PatientLabOrders = React.lazy(() => import("./components/PatientLabOrders"));
+const ReportsManagement = React.lazy(() => import("./components/ReportsManagement"));
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
 
 // SaaS Components
 import BillingSettings from "./components/BillingSettings";
-import SuperAdminClinics from "./components/SuperAdminClinics";
+const SuperAdminClinics = React.lazy(() => import("./components/SuperAdminClinics"));
 import LicensingGuard from "./components/LicensingGuard";
 import SubscriptionExpiredPage from "./components/SubscriptionExpiredPage";
-import AppointmentManagement from "./components/AppointmentManagement";
-import PaymentValidationPage from "./components/PaymentValidationPage";
-import LegalPages from "./components/LegalPages";
-import PricingSettings from "./components/PricingSettings";
+const AppointmentManagement = React.lazy(() => import("./components/AppointmentManagement"));
+const PaymentValidationPage = React.lazy(() => import("./components/PaymentValidationPage"));
+const LegalPages = React.lazy(() => import("./components/LegalPages"));
+const PricingSettings = React.lazy(() => import("./components/PricingSettings"));
 import CabinetSettings from "./components/CabinetSettings";
-import MessagingManagement from "./components/MessagingManagement";
-import SupplierManagement from "./components/SupplierManagement";
-import PurchaseManagement from "./components/PurchaseManagement";
+const MessagingManagement = React.lazy(() => import("./components/MessagingManagement"));
+const SupplierManagement = React.lazy(() => import("./components/SupplierManagement"));
+const PurchaseManagement = React.lazy(() => import("./components/PurchaseManagement"));
 import OnboardingWizard from "./components/OnboardingWizard";
-import RegisterPage from "./components/RegisterPage";
-import AdminPartners from "./components/AdminPartners";
+const RegisterPage = React.lazy(() => import("./components/RegisterPage"));
+const AdminPartners = React.lazy(() => import("./components/AdminPartners"));
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -366,6 +366,15 @@ const MainLayout = ({ children }) => {
 
 function App() {
   return (
+    <React.Suspense fallback={
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#F5F7FA' }}>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ width:48, height:48, border:'3px solid #E2E8F0', borderTopColor:'#0D7A87', borderRadius:'50%', animation:'spin .8s linear infinite', margin:'0 auto 16px' }}/>
+          <p style={{ color:'#64748B', fontSize:14 }}>Chargement DentalPM...</p>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      </div>
+    }>
     <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
       <AuthProvider>
         <div className="App">
@@ -413,6 +422,7 @@ function App() {
             <CookieBanner />
             <PWAInstallPrompt />
           </BrowserRouter>
+    </React.Suspense>
           <Toaster
             position="top-right"
             toastOptions={{

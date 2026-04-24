@@ -1,7 +1,8 @@
 const express = require('express');
-const cors    = require('cors');
-const helmet  = require('helmet');
-const rateLimit = require('express-rate-limit');
+const cors        = require('cors');
+const helmet      = require('helmet');
+const rateLimit   = require('express-rate-limit');
+const compression = require('compression');
 require('dotenv').config();
 
 const sequelize = require('./database/connection');
@@ -191,6 +192,12 @@ app.get('/api/version', (req, res) => {
   });
 });
 
+// ── Cache headers pour assets statiques ──────────────────────────────────────
+app.use('/static', (req, res, next) => {
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); // 1 an
+  next();
+});
+
 // ── Routes ── Structure IDENTIQUE à l'originale ───────────────────────────────
 // (requireAuth uniquement là où il était dans l'original)
 app.use('/api/auth',             authRoutes);
@@ -309,11 +316,13 @@ async function startServer() {
 (async () => {
   try {
     const { Sequelize } = require('sequelize');
-    const migration = require('./migrations/20260418-stripe-subscription-id');
     const { sequelize } = require('./models');
     const qi = sequelize.getQueryInterface();
-    await migration.up(qi, Sequelize);
-    console.log('✅ Migrations exécutées');
+    // Migration Stripe fields
+    await require('./migrations/20260418-stripe-subscription-id').up(qi, Sequelize).catch(()=>{});
+    // Migration index performances
+    await require('./migrations/20260424-performance-indexes').up(qi, Sequelize).catch(()=>{});
+    console.log('✅ Migrations & index DB OK');
   } catch(e) { console.log('Migration (non-fatal):', e.message); }
 })();
 

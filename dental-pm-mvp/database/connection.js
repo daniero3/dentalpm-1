@@ -7,7 +7,6 @@ let sequelize;
 
 if (process.env.DATABASE_URL) {
   // Production: Use DATABASE_URL (Postgres connection string)
-  console.log('🔄 Using DATABASE_URL for PostgreSQL connection');
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
@@ -18,10 +17,11 @@ if (process.env.DATABASE_URL) {
       } : false
     },
     pool: {
-      max: 10,
-      min: 0,
+      max: 15,       // Augmenté pour Railway (15 connexions max)
+      min: 2,        // Garder 2 connexions chaudes
       acquire: 30000,
-      idle: 10000
+      idle: 10000,
+      evict: 1000,   // Nettoyage connexions mortes chaque seconde
     },
     timezone: '+03:00',
     define: {
@@ -42,10 +42,11 @@ if (process.env.DATABASE_URL) {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
-      max: 10,
-      min: 0,
+      max: 15,       // Augmenté pour Railway (15 connexions max)
+      min: 2,        // Garder 2 connexions chaudes
       acquire: 30000,
-      idle: 10000
+      idle: 10000,
+      evict: 1000,   // Nettoyage connexions mortes chaque seconde
     },
     timezone: '+03:00',
     define: {
