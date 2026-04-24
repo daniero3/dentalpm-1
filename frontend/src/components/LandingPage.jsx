@@ -490,6 +490,40 @@ export default function LandingPage() {
   const fs2   = isMobile ? 24 : isTablet ? 32 : 44;  // section h2
   const sc    = scrolled || mobMenu;
 
+  // ── Thème clair / sombre ──────────────────────────────────────────────────
+  const [isDark, setIsDark] = useState(() => {
+    try { return localStorage.getItem('dpm_theme') === 'dark'; } catch { return false; }
+  });
+  const toggleTheme = () => {
+    setIsDark(d => {
+      const next = !d;
+      try { localStorage.setItem('dpm_theme', next ? 'dark' : 'light'); } catch {}
+      return next;
+    });
+  };
+  useEffect(() => {
+    const r = document.documentElement;
+    if (isDark) {
+      r.style.setProperty('--bg',      '#0A0F14');
+      r.style.setProperty('--surface', '#141A22');
+      r.style.setProperty('--ink',     '#F0F4F8');
+      r.style.setProperty('--slate',   '#94A3B8');
+      r.style.setProperty('--border',  '#1E2A36');
+      r.style.setProperty('--white',   '#141A22');
+      document.body.style.background = '#0A0F14';
+      document.body.style.color      = '#F0F4F8';
+    } else {
+      r.style.setProperty('--bg',      '#FFFFFF');
+      r.style.setProperty('--surface', '#F7F9FC');
+      r.style.setProperty('--ink',     '#0A0F14');
+      r.style.setProperty('--slate',   '#4A5568');
+      r.style.setProperty('--border',  '#E8EDF2');
+      r.style.setProperty('--white',   '#FFFFFF');
+      document.body.style.background = '#fff';
+      document.body.style.color      = '#0A0F14';
+    }
+  }, [isDark]);
+
   const IMGS_SERVICES = [
     {src:'/2.jpg',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
     {src:'/3.jpg',alt:'Cabinet moderne',caption:'🏥 Cabinet dentaire moderne et équipé'},
@@ -534,18 +568,17 @@ export default function LandingPage() {
                 <a key={href} href={href} className="nav-link" style={{padding:'7px 13px',color:sc?'var(--slate)':'rgba(255,255,255,.8)',fontWeight:500,fontSize:14,borderRadius:9}}>{label}</a>
               ))}
               <button onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
-              <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j </button>
+              <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j</button>
+              <button onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
+                style={{width:38,height:38,borderRadius:10,border:`1.5px solid ${isDark?'rgba(255,255,255,.2)':'var(--border)'}`,background:isDark?'rgba(255,255,255,.08)':'var(--surface)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:4,flexShrink:0}}
+                onMouseOver={e=>{e.currentTarget.style.borderColor='var(--teal)';}}
+                onMouseOut={e=>{e.currentTarget.style.borderColor=isDark?'rgba(255,255,255,.2)':'var(--border)';}}>
+                {isDark
+                  ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D7A87" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                }
+              </button>
 
-          {/* Toggle thème */}
-          <button onClick={toggleTheme} title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}
-            style={{ width:38,height:38,borderRadius:10,border:`1.5px solid ${isDark?'rgba(255,255,255,.2)':'var(--border)'}`,background: isDark?'rgba(255,255,255,.08)':'var(--surface)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:6,flexShrink:0 }}
-            onMouseOver={e=>{e.currentTarget.style.background=isDark?'rgba(255,255,255,.15)':'#F0FDFE'; e.currentTarget.style.borderColor='var(--teal)';}}
-            onMouseOut={e=>{e.currentTarget.style.background=isDark?'rgba(255,255,255,.08)':'var(--surface)'; e.currentTarget.style.borderColor=isDark?'rgba(255,255,255,.2)':'var(--border)';}}>
-            {isDark
-              ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D7A87" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-            }
-          </button>
             </div>
           )}
           {/* Mobile */}
