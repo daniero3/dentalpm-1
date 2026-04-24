@@ -168,7 +168,23 @@ const InvoiceManagement = () => {
     } catch { toast.error('Erreur PDF'); }
   };
 
-  const openPayModal = inv => { setPayInv(inv); setIsPayOpen(true); fetchPayments(inv); };
+  const openPayModal = async inv => {
+    setPayInv(inv);
+    setIsPayOpen(true);
+    // Charger les paiements et pré-remplir avec le solde restant
+    try {
+      const r = await axios.get(`${API}/invoices/${inv.id}/payments`, authH());
+      const stats = r.data.stats || { total_mga:0, paid_total_mga:0, balance_mga:0 };
+      setPayments(r.data.payments || []);
+      setPayStats(stats);
+      // Pré-remplir avec le solde restant
+      const solde = stats.balance_mga != null ? stats.balance_mga : parseFloat(inv.total_mga || 0);
+      setPayData(d => ({ ...d, amount_mga: solde > 0 ? String(Math.round(solde)) : '' }));
+    } catch {
+      setPayments([]);
+      setPayData(d => ({ ...d, amount_mga: String(Math.round(parseFloat(inv.total_mga || 0))) }));
+    }
+  };
 
   const pname = id => { const p=patients.find(p=>p.id===id); return p?`${p.first_name} ${p.last_name}`:'—'; };
   const getStatus = inv => inv.payment_status || inv.status || 'DRAFT';
@@ -375,7 +391,7 @@ const InvoiceManagement = () => {
       </Modal>
 
       {/* ══ MODAL PAIEMENT ══ */}
-      <Modal open={isPayOpen} onClose={()=>{setIsPayOpen(false);setPayInv(null);setPayments([]);}} title={`💳 Paiement — ${payInv?.invoice_number}`} maxW={520}>
+      <Modal open={isPayOpen} onClose={()=>{setIsPayOpen(false);setPayInv(null);setPayments([]);setPayData({amount_mga:'',payment_method:'CASH',reference_number:''});}} title={`💳 Paiement — ${payInv?.invoice_number}`} maxW={520}>
         {payInv&&(
           <div>
             {/* Résumé solde */}
@@ -417,7 +433,7 @@ const InvoiceManagement = () => {
               <div style={{ marginBottom:12 }}>
                 <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Montant (Ar) *</label>
                 <input type="number" min="0" value={payData.amount_mga} onChange={e=>setPayData({...payData,amount_mga:e.target.value})}
-                  placeholder={`Solde : ${fmt(payStats.balance_mga!=null?payStats.balance_mga:payInv.total_mga||0)}`}
+                  placeholder={`Solde restant: ${fmt(payStats.balance_mga!=null?payStats.balance_mga:payInv.total_mga||0)} Ar`}
                   style={inp} onFocus={fi} onBlur={bi}/>
                 {/* Bouton solde complet */}
                 {payStats.balance_mga>0&&<button type="button" onClick={()=>setPayData({...payData,amount_mga:String(payStats.balance_mga)})}
