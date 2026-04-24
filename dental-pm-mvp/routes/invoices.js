@@ -268,15 +268,39 @@ router.post('/:id/payments', [
     const balance    = parseFloat(invoice.total_mga) - currentPaid;
     const { amount_mga, payment_method, reference_number, notes } = req.body;
 
-    if (parseFloat(amount_mga) > balance) {
-      return res.status(409).json({ error:'OVERPAYMENT_NOT_ALLOWED', balance_mga: balance });
+    const balanceRounded = Math.round(balance);
+    const amountRounded  = Math.round(parseFloat(amount_mga));
+
+    if (amountRounded > balanceRounded + 1) { // +1 tolérance arrondi
+      return res.status(409).json({
+        error: 'Montant supérieur au solde restant',
+        code: 'OVERPAYMENT_NOT_ALLOWED',
+        balance_mga: balanceRounded,
+        message: `Le solde restant est de ${new Intl.NumberFormat('fr-MG').format(balanceRounded)} Ar`
+      });
     }
 
-    const paymentCount = await Payment.count();
+    // Générer payment_number unique (MAX au lieu de COUNT pour éviter doublons)
+    const prefix = 'PAY-';
+    const lastPay = await Payment.findOne({
+      where: { payment_number: { [Op.like]: `${prefix}%` } },
+      order: [['payment_number', 'DESC']],
+      attributes: ['payment_number']
+    }).catch(() => null);
+    let nextNum = 1;
+    if (lastPay?.payment_number) {
+      nextNum = (parseInt(lastPay.payment_number.replace(prefix, '')) || 0) + 1;
+    }
+    let paymentNumber = `${prefix}${String(nextNum).padStart(6,'0')}`;
+    while (await Payment.findOne({ where: { payment_number: paymentNumber } }).catch(()=>null)) {
+      nextNum++;
+      paymentNumber = `${prefix}${String(nextNum).padStart(6,'0')}`;
+    }
+
     const payment = await Payment.create({
       invoice_id:           invoice.id,
       clinic_id:            invoice.clinic_id,
-      payment_number:       `PAY-${String(paymentCount+1).padStart(6,'0')}`,
+      payment_number:       paymentNumber,
       amount_mga:           parseFloat(amount_mga),
       payment_method, reference_number, notes,
       processed_by_user_id: getUserIdFromToken(req),
