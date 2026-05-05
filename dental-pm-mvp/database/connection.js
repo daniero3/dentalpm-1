@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
 // Database connection configuration
-// Priority: DATABASE_URL (production) > DB_HOST config > SQLite (local dev)
+// Priority: DATABASE_URL (production) > DB_HOST config
 let sequelize;
 
 if (process.env.DATABASE_URL) {
@@ -56,18 +56,9 @@ if (process.env.DATABASE_URL) {
     }
   });
 } else {
-  // SQLite fallback for local development only
-  console.log('🔄 Using SQLite database for local development');
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: './database/dental_pm_madagascar.sqlite',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    define: {
-      timestamps: true,
-      underscored: true,
-      freezeTableName: true
-    }
-  });
+  throw new Error(
+    'Database configuration missing. Set DATABASE_URL or DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD.'
+  );
 }
 
 // Test connection function

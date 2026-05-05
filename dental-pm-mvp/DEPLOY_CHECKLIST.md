@@ -5,11 +5,8 @@
 ### Backend (.env)
 ```bash
 # Database PostgreSQL (OBLIGATOIRE)
-DB_HOST=<PROD_DB_HOST>
-DB_PORT=5432
-DB_NAME=dental_pm_prod
-DB_USER=<PROD_DB_USER>
-DB_PASSWORD=<STRONG_PASSWORD_32_CHARS>
+DATABASE_URL=postgres://<PROD_DB_USER>:<STRONG_PASSWORD_32_CHARS>@<PROD_DB_HOST>:5432/dental_pm_prod
+DB_SSL=true
 
 # Server
 PORT=8001
@@ -79,12 +76,12 @@ add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
 ### 3.1 Migrations
 ```bash
 cd /app/dental-pm-mvp
-npx sequelize-cli db:migrate --env production
+npm run db:migrate
 ```
 
-### 3.2 Seed admin (si nouveau déploiement)
+### 3.2 Seed admin (si nouveau déploiement de test)
 ```bash
-npx sequelize-cli db:seed --seed admin-user --env production
+npm run seed
 ```
 
 ### 3.3 Backup automatique

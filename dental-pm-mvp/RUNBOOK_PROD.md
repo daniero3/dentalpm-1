@@ -43,7 +43,7 @@ curl -s https://app.dental-madagascar.com/api/health
 sudo supervisorctl status frontend
 
 # 2. Rebuild si nécessaire
-cd /app/frontend && yarn build
+cd /app/frontend && npm run build
 
 # 3. Redémarrer
 sudo supervisorctl restart frontend
@@ -109,15 +109,13 @@ curl -s https://app.dental-madagascar.com/api/health
 ### 3.2 Rollback Migration DB
 
 ```bash
-# 1. Lister migrations
+# 1. Appliquer les migrations idempotentes du dépôt
 cd /app/dental-pm-mvp
-npx sequelize-cli db:migrate:status
+npm run db:migrate
 
-# 2. Undo dernière migration
-npx sequelize-cli db:migrate:undo
-
-# 3. Vérifier intégrité
-psql -c "SELECT COUNT(*) FROM patients;"
+# 2. Si un rollback est nécessaire, revenir au commit stable puis restaurer la base depuis backup
+git checkout <STABLE_COMMIT>
+gunzip -c /var/backups/dental-pm/<BACKUP_FILE>.sql.gz | psql "$DATABASE_URL"
 ```
 
 ---
@@ -197,7 +195,7 @@ sudo supervisorctl restart backend
 psql -c "ALTER USER dental_admin WITH PASSWORD 'NEW_STRONG_PASSWORD';"
 
 # 2. Mettre à jour .env
-sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=NEW_STRONG_PASSWORD/" /app/dental-pm-mvp/.env
+sed -i "s/DATABASE_URL=.*/DATABASE_URL=postgres:\/\/dental_admin:NEW_STRONG_PASSWORD@DB_HOST:5432\/dental_pm_prod/" /app/dental-pm-mvp/.env
 
 # 3. Redémarrer
 sudo supervisorctl restart backend

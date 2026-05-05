@@ -329,7 +329,7 @@ router.post('/:id/convert', requireClinicOrSuperAdmin, [param('id').isUUID()], a
       tax_percentage: quote.tax_percentage || 0, tax_amount_mga: quote.tax_amount_mga || 0,
       total_mga: quote.total_mga,
       notes: quote.notes ? `Converti du devis ${quote.invoice_number}. ${quote.notes}` : `Converti du devis ${quote.invoice_number}`,
-      status: 'DRAFT', created_by_user_id: safeUserId
+      status: 'DRAFT', created_by_user_id: getCurrentUserId(req)
     });
     await Promise.all((quote.items || []).map(item => InvoiceItem.create({ invoice_id: invoice.id, description: item.description, quantity: item.quantity, unit_price_mga: item.unit_price_mga, total_price_mga: item.total_price_mga, procedure_id: item.procedure_id || null, tooth_number: item.tooth_number || null, notes: item.notes || null })));
     await quote.update({ status: 'CONVERTED', converted_to_invoice_id: invoice.id });

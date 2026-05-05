@@ -11,7 +11,9 @@ import { CheckCircle, RefreshCw, Copy, Clock, AlertCircle, ChevronRight } from '
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
-  : 'https://dentalpm-1-production.up.railway.app/api';
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 
 const fmt = n => new Intl.NumberFormat('fr-MG').format(n || 0);
 

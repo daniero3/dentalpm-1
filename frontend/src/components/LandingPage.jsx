@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://dentalpm-1-production.up.railway.app/api';
+const API_URL = process.env.REACT_APP_API_URL
+  || (process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api` : null)
+  || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8001/api' : '/api');
 
 /* ── Hook responsive ── */
 const useScreen = () => {
@@ -1207,5 +1209,4 @@ export default function LandingPage() {
     </div>
   );
 }
-
 

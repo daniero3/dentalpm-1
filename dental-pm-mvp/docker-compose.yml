@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: dental_pm_postgres
     environment:
-      POSTGRES_DB: dental_pm_madagascar
-      POSTGRES_USER: dental_admin
-      POSTGRES_PASSWORD: dental_pass_2024
+      POSTGRES_DB: ${POSTGRES_DB:-dental_pm_madagascar}
+      POSTGRES_USER: ${POSTGRES_USER:-dental_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
     ports:
       - "5432:5432"
     volumes:

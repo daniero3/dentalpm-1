@@ -6,7 +6,9 @@ import { Plus, Edit2, Trash2, Truck, RefreshCw, X, Check } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
-  : 'https://dentalpm-1-production.up.railway.app/api';
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const CATEGORIES = ['MATERIEL','MEDICAMENT','LABORATOIRE','CONSOMMABLE','EQUIPEMENT','AUTRE'];

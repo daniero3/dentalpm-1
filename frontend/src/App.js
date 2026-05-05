@@ -90,7 +90,11 @@ const RegisterPage = React.lazy(() => import("./components/RegisterPage"));
 const AdminPartners = React.lazy(() => import("./components/AdminPartners"));
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = BACKEND_URL
+  ? `${BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 
 // ══════════════════════════════════════════════════════════════
 // PROTECTION GLOBALE AXIOS
@@ -375,73 +379,72 @@ function App() {
         </div>
       </div>
     }>
-    <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
-      <AuthProvider>
-        <div className="App">
-          <BrowserRouter>
-            <Routes>
-              <Route path="/landing" element={<LandingRedirect />} />
-              <Route path="/super-admin" element={<Navigate to="/subscription" replace />} />
-              <Route path="/login" element={<LoginRedirect />} />
-              <Route path="/" element={<ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/patients" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/patients/:patientId/chart" element={<ProtectedRoute><LicensingGuard><MainLayout><DentalChart /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/patients/:patientId/documents" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientDocuments /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/patients/:patientId/prescriptions" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientPrescriptions /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/patients/:patientId/odontogram" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientOdontogram /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/patients/:patientId/lab-orders" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientLabOrders /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/invoices" element={<ProtectedRoute><LicensingGuard><MainLayout><InvoiceManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/quotes" element={<ProtectedRoute><LicensingGuard><MainLayout><QuoteManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/appointments" element={<ProtectedRoute><LicensingGuard><MainLayout><AppointmentManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/inventory" element={<ProtectedRoute><LicensingGuard><MainLayout><InventoryManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/suppliers" element={<ProtectedRoute><LicensingGuard><MainLayout><SupplierManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/purchases" element={<ProtectedRoute><LicensingGuard><MainLayout><PurchaseManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/lab" element={<ProtectedRoute><LicensingGuard><MainLayout><LabManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/mailing" element={<ProtectedRoute><LicensingGuard><MainLayout><MessagingManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><LicensingGuard><MainLayout><CabinetSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/settings/pricing" element={<ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><LicensingGuard><MainLayout><ReportsManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/settings/billing" element={<ProtectedRoute><LicensingGuard><MainLayout><BillingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
-              <Route path="/admin" element={<Navigate to="/subscription" replace />} />
-              <Route path="/admin/clinics" element={<AdminRoute><MainLayout><SuperAdminClinics /></MainLayout></AdminRoute>} />
-              <Route path="/admin/payments" element={<AdminRoute><MainLayout><PaymentValidationPage /></MainLayout></AdminRoute>} />
-              <Route path="/admin/partners" element={<AdminRoute><MainLayout><AdminPartners /></MainLayout></AdminRoute>} />
-              <Route path="/payment" element={<Navigate to="/subscription" replace />} />
-              <Route path="/billing/payment" element={<Navigate to="/subscription" replace />} />
-              <Route path="/legal" element={<LegalPages />} />
-              <Route path="/legal/cgu" element={<LegalPages />} />
-              <Route path="/legal/cgv" element={<LegalPages />} />
-              <Route path="/legal/privacy" element={<LegalPages />} />
-              <Route path="/legal/mentions" element={<LegalPages />} />
-              <Route path="/legal/cookies" element={<LegalPages />} />
-              <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/billing/renew" element={<Navigate to="/subscription" replace />} />
-              <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
-            </Routes>
-            <CookieBanner />
-            <PWAInstallPrompt />
-          </BrowserRouter>
+      <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
+        <AuthProvider>
+          <div className="App">
+            <BrowserRouter>
+              <Routes>
+                <Route path="/landing" element={<LandingRedirect />} />
+                <Route path="/super-admin" element={<Navigate to="/subscription" replace />} />
+                <Route path="/login" element={<LoginRedirect />} />
+                <Route path="/" element={<ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients/:patientId/chart" element={<ProtectedRoute><LicensingGuard><MainLayout><DentalChart /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients/:patientId/documents" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientDocuments /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients/:patientId/prescriptions" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientPrescriptions /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients/:patientId/odontogram" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientOdontogram /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients/:patientId/lab-orders" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientLabOrders /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/invoices" element={<ProtectedRoute><LicensingGuard><MainLayout><InvoiceManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/quotes" element={<ProtectedRoute><LicensingGuard><MainLayout><QuoteManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/appointments" element={<ProtectedRoute><LicensingGuard><MainLayout><AppointmentManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/inventory" element={<ProtectedRoute><LicensingGuard><MainLayout><InventoryManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/suppliers" element={<ProtectedRoute><LicensingGuard><MainLayout><SupplierManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/purchases" element={<ProtectedRoute><LicensingGuard><MainLayout><PurchaseManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/lab" element={<ProtectedRoute><LicensingGuard><MainLayout><LabManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/mailing" element={<ProtectedRoute><LicensingGuard><MainLayout><MessagingManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><LicensingGuard><MainLayout><CabinetSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/settings/pricing" element={<ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><LicensingGuard><MainLayout><ReportsManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/settings/billing" element={<ProtectedRoute><LicensingGuard><MainLayout><BillingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/admin" element={<Navigate to="/subscription" replace />} />
+                <Route path="/admin/clinics" element={<AdminRoute><MainLayout><SuperAdminClinics /></MainLayout></AdminRoute>} />
+                <Route path="/admin/payments" element={<AdminRoute><MainLayout><PaymentValidationPage /></MainLayout></AdminRoute>} />
+                <Route path="/admin/partners" element={<AdminRoute><MainLayout><AdminPartners /></MainLayout></AdminRoute>} />
+                <Route path="/payment" element={<Navigate to="/subscription" replace />} />
+                <Route path="/billing/payment" element={<Navigate to="/subscription" replace />} />
+                <Route path="/legal" element={<LegalPages />} />
+                <Route path="/legal/cgu" element={<LegalPages />} />
+                <Route path="/legal/cgv" element={<LegalPages />} />
+                <Route path="/legal/privacy" element={<LegalPages />} />
+                <Route path="/legal/mentions" element={<LegalPages />} />
+                <Route path="/legal/cookies" element={<LegalPages />} />
+                <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/billing/renew" element={<Navigate to="/subscription" replace />} />
+                <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
+              </Routes>
+              <CookieBanner />
+              <PWAInstallPrompt />
+            </BrowserRouter>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#fff',
+                  color: '#0F172A',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: 12,
+                  boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
+                  fontFamily: 'DM Sans, sans-serif',
+                },
+              }}
+            />
+          </div>
+        </AuthProvider>
+      </ThemeProvider>
     </React.Suspense>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#fff',
-                color: '#0F172A',
-                border: '1px solid #E2E8F0',
-                borderRadius: 12,
-                boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
-                fontFamily: 'DM Sans, sans-serif',
-              },
-            }}
-          />
-        </div>
-      </AuthProvider>
-    </ThemeProvider>
   );
 }
 
 export default App;
-

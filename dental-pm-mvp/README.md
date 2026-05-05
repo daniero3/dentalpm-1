@@ -5,7 +5,7 @@ Un système de gestion de cabinet dentaire moderne conçu spécifiquement pour M
 ## 🏗️ Architecture
 
 - **Backend**: Node.js + Express + PostgreSQL + Sequelize ORM
-- **Frontend**: React (à venir)
+- **Frontend**: React
 - **Base de données**: PostgreSQL avec Docker
 - **Authentication**: JWT
 - **Intégrations**: SMS mockées, Mobile Money mocké
@@ -57,7 +57,7 @@ Un système de gestion de cabinet dentaire moderne conçu spécifiquement pour M
 
 ### 1. Cloner et installer
 ```bash
-cd /app/dental-pm-mvp
+cd dental-pm-mvp
 npm install
 ```
 
@@ -86,19 +86,29 @@ npm run dev
 npm start
 ```
 
-Le serveur sera accessible sur `http://localhost:3001`
+Le serveur backend sera accessible sur `http://localhost:8001`
+
+### 6. Démarrer le frontend
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm start
+```
+
+Le frontend sera accessible sur `http://localhost:3000`
 
 ## 🧪 API Testing
 
 ### Health Check
 ```bash
-curl http://localhost:3001/api/health
+curl http://localhost:8001/api/health
 ```
 
 ### Authentication
 ```bash
-# Register new user
-curl -X POST http://localhost:3001/api/auth/register \
+# Register new user (développement uniquement)
+curl -X POST http://localhost:8001/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "username": "test_user",
@@ -109,7 +119,7 @@ curl -X POST http://localhost:3001/api/auth/register \
   }'
 
 # Login
-curl -X POST http://localhost:3001/api/auth/login \
+curl -X POST http://localhost:8001/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "dr_rakoto",
@@ -120,11 +130,11 @@ curl -X POST http://localhost:3001/api/auth/login \
 ### Patients
 ```bash
 # Get all patients (need authentication token)
-curl -X GET http://localhost:3001/api/patients \
+curl -X GET http://localhost:8001/api/patients \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
 # Create patient
-curl -X POST http://localhost:3001/api/patients \
+curl -X POST http://localhost:8001/api/patients \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -142,7 +152,7 @@ curl -X POST http://localhost:3001/api/patients \
 ### Invoices
 ```bash
 # Create invoice
-curl -X POST http://localhost:3001/api/invoices \
+curl -X POST http://localhost:8001/api/invoices \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -164,7 +174,7 @@ curl -X POST http://localhost:3001/api/invoices \
 ### SMS (Madagascar Carriers)
 ```bash
 # Send SMS
-curl -X POST http://localhost:3001/api/integrations/sms/send \
+curl -X POST http://localhost:8001/api/integrations/sms/send \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -178,7 +188,7 @@ curl -X POST http://localhost:3001/api/integrations/sms/send \
 ### Mobile Money
 ```bash
 # Process payment
-curl -X POST http://localhost:3001/api/integrations/mobile-money/process-payment \
+curl -X POST http://localhost:8001/api/integrations/mobile-money/process-payment \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -228,7 +238,7 @@ Accès aux statistiques : `GET /api/dashboard/kpi`
 ## 🔧 Scripts Utiles
 
 ```bash
-# Réinitialiser la base de données
+# Réinitialiser la base de données de développement
 npm run seed
 
 # Migration manuelle
@@ -251,7 +261,7 @@ Interface web pour la base de données : `http://localhost:8080`
 - **Système** : PostgreSQL
 - **Serveur** : postgres
 - **Utilisateur** : dental_admin
-- **Mot de passe** : dental_pass_2024
+- **Mot de passe** : `change-me` par défaut via `docker-compose.yml` si non redéfini
 - **Base** : dental_pm_madagascar
 
 ## 🌍 Spécificités Madagascar
@@ -304,10 +314,10 @@ dental-pm-mvp/
 - [x] Dashboard KPIs
 
 ### Phase 2 - Frontend React 🚧
-- [ ] Interface utilisateur responsive
-- [ ] Calendrier des rendez-vous
-- [ ] Fiche dentaire interactive
-- [ ] Génération PDF des factures
+- [x] Interface utilisateur responsive
+- [x] Calendrier des rendez-vous
+- [x] Fiche dentaire interactive
+- [x] Génération PDF des factures
 
 ### Phase 3 - Intégrations Réelles 🔄
 - [ ] API SMS opérateurs malgaches

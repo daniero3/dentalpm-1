@@ -5,7 +5,9 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
-  : 'https://dentalpm-1-production.up.railway.app/api';
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 
 const PLANS = [
   { name:'ESSENTIAL', price:'149 000', stripe:'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01', desc:'Idéal pour les cabinets solo',    popular:false },
