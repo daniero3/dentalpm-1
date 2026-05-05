@@ -181,8 +181,13 @@ const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userData));
       // Stocker le plan depuis la réponse de login (immédiat, pas de fetch supplémentaire)
       const planFromLogin = response.data.plan || userData.plan || null;
-      if (planFromLogin) localStorage.setItem('dpm_plan', JSON.stringify(planFromLogin));
-      else localStorage.removeItem('dpm_plan');
+      if (planFromLogin) {
+        localStorage.setItem('dpm_plan', JSON.stringify(planFromLogin));
+        localStorage.setItem('dpm_user_plan', JSON.stringify(planFromLogin));
+      } else {
+        localStorage.removeItem('dpm_plan');
+        localStorage.removeItem('dpm_user_plan');
+      }
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       toast.success("Connexion réussie!");
@@ -196,6 +201,7 @@ const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('dpm_plan');
     localStorage.removeItem('dpm_user_plan'); // vider le plan en cache
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);

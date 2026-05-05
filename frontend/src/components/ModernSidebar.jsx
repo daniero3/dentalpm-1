@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import axios from "axios"
 import {
   Home, Users, FileText, Calendar, Settings, Package, Truck,
   ShoppingCart, FlaskConical, Mail, ChevronLeft, ChevronRight,
@@ -7,6 +8,12 @@ import {
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../App"
+
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api'
 
 // ── Navigation cabinet — filtrée par plan ─────────────────────────────────────
 const ALL_NAV = [
@@ -80,16 +87,61 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   const location  = useLocation()
   const { user }  = useAuth()
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+  const [subscription, setSubscription] = useState(null)
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false)
 
-  // Plan lu depuis localStorage — stocké au moment du login, toujours fiable
-  const userPlan = React.useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('dpm_plan') || 'null') } catch { return null }
+  // Plan lu depuis localStorage — fallback uniquement
+  const cachedPlan = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('dpm_plan') || localStorage.getItem('dpm_user_plan') || 'null')
+    } catch { return null }
   }, [user?.id])
 
-  // Plan effectif — TRIAL = PRO, null = ESSENTIAL (restrictif par défaut)
+  useEffect(() => {
+    let cancelled = false
+
+    const loadSubscription = async () => {
+      if (!user || isSuperAdmin) {
+        if (!cancelled) {
+          setSubscription(null)
+          setSubscriptionLoaded(true)
+        }
+        return
+      }
+
+      setSubscriptionLoaded(false)
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get(`${API}/subscription/status`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        })
+        if (!cancelled) setSubscription(response.data || null)
+      } catch (error) {
+        if (!cancelled) setSubscription(null)
+      } finally {
+        if (!cancelled) setSubscriptionLoaded(true)
+      }
+    }
+
+    loadSubscription()
+    return () => { cancelled = true }
+  }, [user?.id, isSuperAdmin])
+
+  // Plan effectif — toujours celui de l'abonnement actif si disponible
   const plan = isSuperAdmin ? 'SUPER_ADMIN'
-    : (userPlan === 'TRIAL' ? 'PRO'
-    : (['ESSENTIAL','PRO','GROUP'].includes(userPlan) ? userPlan : 'ESSENTIAL'))
+    : (subscription?.plan || user?.plan || cachedPlan || user?.current_plan || 'ESSENTIAL')
+
+  const planLabel = isSuperAdmin
+    ? 'Administration'
+    : (subscription?.status === 'TRIAL'
+      ? `${plan} — Essai`
+      : plan)
+
+  const planPrice = {
+    ESSENTIAL: '149 000 Ar/mois',
+    PRO: '199 000 Ar/mois',
+    GROUP: '299 000 Ar/mois'
+  }[plan] || null
 
   // Items accessibles et verrouillés
   const navItems    = isSuperAdmin ? [] : ALL_NAV.filter(i => i.plans.includes(plan))
@@ -195,7 +247,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 8px 8px' }}>
                 <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Navigation</p>
-                {plan && <span style={{ fontSize:9, fontWeight:700, background:'rgba(255,255,255,.12)', color:'rgba(255,255,255,.7)', padding:'2px 7px', borderRadius:99 }}>{plan}</span>}
+                {plan && <span style={{ fontSize:9, fontWeight:700, background:'rgba(255,255,255,.12)', color:'rgba(255,255,255,.7)', padding:'2px 7px', borderRadius:99 }}>{planLabel}</span>}
               </div>
             )}
 
@@ -240,6 +292,17 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             {/* Abonnement */}
             <div style={{ height:1, background:'rgba(255,255,255,.12)', margin:'10px 0' }}/>
             {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
+            {!collapsed && !isSuperAdmin && subscriptionLoaded && (
+              <div style={{ padding:'0 8px 8px', color:'rgba(255,255,255,.72)', fontSize:11, lineHeight:1.4 }}>
+                <div style={{ fontWeight:700, color:'#fff', marginBottom:2 }}>{planLabel}</div>
+                {planPrice && <div>{planPrice}</div>}
+                {subscription?.status && (
+                  <div style={{ marginTop:4, fontSize:10, color:'rgba(255,255,255,.5)' }}>
+                    Statut: {subscription.status}
+                  </div>
+                )}
+              </div>
+            )}
             <NavItem item={{ name:'Mon Abonnement', href:'/subscription', icon:CreditCard }}/>
           </>
         )}
