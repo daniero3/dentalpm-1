@@ -5,7 +5,30 @@ import { User, Lock, Eye, EyeOff, Building2, ChevronRight, ArrowLeft, Loader2 } 
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = BACKEND_URL
+  ? `${BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
+
+const normalizePlan = (value) => {
+  const raw = typeof value === 'string'
+    ? value
+    : value?.plan || value?.current_plan || value?.name || value?.code || null;
+  const plan = raw ? String(raw).toUpperCase() : null;
+  return ['ESSENTIAL', 'PRO', 'GROUP'].includes(plan) ? plan : null;
+};
+
+const syncPlanCache = (value) => {
+  const plan = normalizePlan(value);
+  if (plan) {
+    localStorage.setItem('dpm_plan', JSON.stringify(plan));
+    localStorage.setItem('dpm_user_plan', JSON.stringify(plan));
+  } else {
+    localStorage.removeItem('dpm_plan');
+    localStorage.removeItem('dpm_user_plan');
+  }
+};
 
 // ── Logo statique premium ──
 const LogoAnim = () => (
@@ -78,10 +101,12 @@ const LoginForm = () => {
         password: loginData.password
       });
       const { token, user: userData, clinics: userClinics, needs_clinic_selection } = res.data;
+      const loginPlan = normalizePlan(res.data.plan || userData?.plan || userData?.current_plan);
 
       if (userData.role === 'SUPER_ADMIN') {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
+        syncPlanCache(null);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         window.location.href = '/';
         return;
@@ -94,11 +119,12 @@ const LoginForm = () => {
         setStep(STEP_CLINIC);
       } else if (userClinics?.length === 1) {
         // Auto-sélectionner si une seule clinique
-        await selectClinic(token, userClinics[0]);
+        await selectClinic(token, userClinics[0], loginPlan);
       } else {
         // Login direct
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
+        syncPlanCache(loginPlan);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         window.location.href = '/';
       }
@@ -107,7 +133,7 @@ const LoginForm = () => {
     } finally { setLoading(false); }
   };
 
-  const selectClinic = async (token, clinic) => {
+  const selectClinic = async (token, clinic, fallbackPlan = null) => {
     try {
       const res = await axios.post(`${API}/auth/select-clinic`,
         { clinic_id: clinic.id },
@@ -116,6 +142,7 @@ const LoginForm = () => {
       const { token: finalToken, user: finalUser } = res.data;
       localStorage.setItem('token', finalToken);
       localStorage.setItem('user', JSON.stringify(finalUser));
+      syncPlanCache(finalUser?.plan || finalUser?.current_plan || clinic?.current_plan || fallbackPlan);
       axios.defaults.headers.common['Authorization'] = `Bearer ${finalToken}`;
       window.location.href = '/';
     } catch (err) {
@@ -126,7 +153,7 @@ const LoginForm = () => {
 
   const handleSelectClinic = async (clinic) => {
     setLoading(true); setError('');
-    await selectClinic(tempToken, clinic);
+    await selectClinic(tempToken, clinic, tempUser?.plan || tempUser?.current_plan);
   };
 
   const handleRegister = async (e) => {

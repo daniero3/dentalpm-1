@@ -344,11 +344,13 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export function ModernSidebar() {
+export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChange } = {}) {
   const { isMobile, isTablet } = useScreenSize()
-  const [collapsed, setCollapsed] = useState(false)
+  const [internalCollapsed, setInternalCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const collapsed = controlledCollapsed ?? internalCollapsed
+  const setCollapsed = onCollapsedChange || setInternalCollapsed
 
   useEffect(() => { if (isTablet) setCollapsed(true); else if (!isMobile) setCollapsed(false); }, [isTablet, isMobile])
   useEffect(() => { setMobileOpen(false); }, [location.pathname])

@@ -348,12 +348,17 @@ const MainLayout = ({ children }) => {
   const w = useLayoutWidth();
   const isMobile  = w < 768;
   const isTablet  = w >= 768 && w < 1024;
-  const sidebarW  = isMobile ? 0 : (isTablet ? 72 : 264);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(isTablet);
+  React.useEffect(() => {
+    if (isMobile) return;
+    setSidebarCollapsed(isTablet);
+  }, [isMobile, isTablet]);
+  const sidebarW  = isMobile ? 0 : (sidebarCollapsed ? 72 : 264);
   const padding   = isMobile ? '10px 10px 80px' : '20px 24px 64px';
 
   return (
     <div style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden', position:'relative' }}>
-      <ModernSidebar />
+      <ModernSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       <div style={{
         display:'flex', flexDirection:'column', flex:1,
         overflow:'hidden', minWidth:0,
