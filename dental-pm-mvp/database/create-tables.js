@@ -34,7 +34,33 @@ async function createAllTables() {
     `);
     console.log('✅ Table clinics');
 
-    // 2. USERS
+    // 2. COUNTERS
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS counters (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+        counter_type VARCHAR(50) NOT NULL,
+        current_value INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE (clinic_id, counter_type)
+      );
+    `).catch(async () => {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS counters (
+          id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+          clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+          counter_type VARCHAR(50) NOT NULL,
+          current_value INTEGER NOT NULL DEFAULT 0,
+          created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+          updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+          UNIQUE (clinic_id, counter_type)
+        );
+      `);
+    });
+    console.log('✅ Table counters');
+
+    // 3. USERS
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -57,7 +83,7 @@ async function createAllTables() {
     `);
     console.log('✅ Table users');
 
-    // 3. PATIENTS
+    // 4. PATIENTS
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS patients (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -459,6 +485,7 @@ async function createAllTables() {
         plan VARCHAR(30) DEFAULT 'ESSENTIAL',
         status VARCHAR(30) DEFAULT 'ACTIVE',
         billing_cycle VARCHAR(20) DEFAULT 'MONTHLY',
+        price_mga DECIMAL(12,2) DEFAULT 0,
         monthly_price_mga DECIMAL(12,2) DEFAULT 0,
         annual_price_mga DECIMAL(12,2) DEFAULT 0,
         discount_type VARCHAR(30),

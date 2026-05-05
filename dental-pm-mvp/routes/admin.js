@@ -23,6 +23,7 @@ async function activateSubscriptionAfterPayment(clinicId, planCode, paymentReque
       start_date:        now,
       end_date:          endDate,
       duration_months:   1,
+      price_mga:         basePrice,
       monthly_price_mga: basePrice,
       annual_price_mga:  basePrice * 12,
     });
@@ -149,11 +150,10 @@ router.post('/clinics', requireRole('SUPER_ADMIN'), [
       created_by_user_id: _getUserId(req)
     });
 
-    const passwordHash = await bcrypt.hash(admin_password, 12);
     const adminUser = await User.create({
       username: admin_username,
       email: admin_email || `${admin_username}@${email.split('@')[1]}`,
-      password_hash: passwordHash,
+      password_hash: admin_password,
       full_name: `${admin_first_name} ${admin_last_name}`,
       role: 'ADMIN', clinic_id: clinic.id, is_active: true
     });
@@ -227,7 +227,7 @@ router.patch('/clinics/:id/activate', requireRole('SUPER_ADMIN'), async (req, re
     // Mettre à jour l'abonnement existant ou en créer un
     await Subscription.update({ status: 'SUPERSEDED' }, { where: { clinic_id: clinic.id, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL','EXPIRED'] } } });
     const planPrice = { ESSENTIAL:149000, PRO:199000, GROUP:299000 }[plan] || 199000;
-    await Subscription.create({ clinic_id: clinic.id, plan, status: 'ACTIVE', billing_cycle: 'MONTHLY', start_date: new Date(), end_date: endDate, duration_months: 1, monthly_price_mga: planPrice, annual_price_mga: planPrice * 12 });
+    await Subscription.create({ clinic_id: clinic.id, plan, status: 'ACTIVE', billing_cycle: 'MONTHLY', start_date: new Date(), end_date: endDate, duration_months: 1, price_mga: planPrice, monthly_price_mga: planPrice, annual_price_mga: planPrice * 12 });
     await clinic.update({ subscription_status: 'ACTIVE', current_plan: plan, is_active: true });
     res.json({ message: 'Abonnement activé', end_date: endDate });
   } catch (error) {

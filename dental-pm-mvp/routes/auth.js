@@ -307,6 +307,7 @@ router.post('/register-clinic', [
       trial_end_date:    trialEnd,
       end_date:          trialEnd,
       billing_cycle:     'MONTHLY',
+      price_mga:         PLAN_PRICES[plan] || 199000,
       monthly_price_mga: PLAN_PRICES[plan] || 199000,
       annual_price_mga:  (PLAN_PRICES[plan] || 199000) * 12,
       max_practitioners: PLAN_USERS[plan] || 5,

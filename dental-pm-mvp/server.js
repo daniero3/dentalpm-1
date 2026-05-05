@@ -108,6 +108,7 @@ async function seedTestAccounts() {
         billing_cycle: 'ANNUAL',
         start_date: new Date(),
         end_date: endDate,
+        price_mga: PLAN_PRICES[acc.plan],
         monthly_price_mga: PLAN_PRICES[acc.plan],
         annual_price_mga: PLAN_PRICES[acc.plan] * 12,
         max_practitioners: PLAN_USERS[acc.plan],

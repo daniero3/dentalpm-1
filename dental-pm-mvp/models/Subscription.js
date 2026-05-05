@@ -46,6 +46,25 @@ const Subscription = sequelize.define('Subscription', {
       min: 0
     }
   },
+  price_mga: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: false,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    },
+    get() {
+      const monthly = this.getDataValue('monthly_price_mga');
+      const legacy = this.getDataValue('price_mga');
+      return monthly != null ? monthly : legacy;
+    },
+    set(value) {
+      this.setDataValue('price_mga', value);
+      if (value != null && this.getDataValue('monthly_price_mga') == null) {
+        this.setDataValue('monthly_price_mga', value);
+      }
+    }
+  },
   currency: {
     type: DataTypes.STRING(3),
     allowNull: false,
@@ -163,16 +182,6 @@ const Subscription = sequelize.define('Subscription', {
     allowNull: true
   },
 
-  price_mga: {
-    type: DataTypes.VIRTUAL,
-    get() {
-      return this.getDataValue('monthly_price_mga');
-    },
-    set(value) {
-      this.setDataValue('monthly_price_mga', value);
-    }
-  },
-  
   // Tracking
   created_by_user_id: {
     type: DataTypes.UUID,
@@ -239,6 +248,35 @@ Subscription.prototype.getDiscountedPrice = function() {
 Subscription.prototype.shouldRenew = function() {
   return this.auto_renew && this.status === 'ACTIVE' && this.getDaysRemaining() <= 7;
 };
+
+Subscription.beforeValidate((subscription) => {
+  const monthly = subscription.getDataValue('monthly_price_mga');
+  const legacyPrice = subscription.getDataValue('price_mga');
+  const annual = subscription.getDataValue('annual_price_mga');
+
+  if ((monthly === undefined || monthly === null) && legacyPrice != null) {
+    subscription.setDataValue('monthly_price_mga', legacyPrice);
+  }
+
+  if ((legacyPrice === undefined || legacyPrice === null) && monthly != null) {
+    subscription.setDataValue('price_mga', monthly);
+  }
+
+  if ((annual === undefined || annual === null) && monthly != null) {
+    subscription.setDataValue('annual_price_mga', Number(monthly) * 12);
+  }
+});
+
+Subscription.beforeSave((subscription) => {
+  const monthly = subscription.getDataValue('monthly_price_mga');
+  const legacyPrice = subscription.getDataValue('price_mga');
+
+  if (monthly != null && (legacyPrice === undefined || legacyPrice === null)) {
+    subscription.setDataValue('price_mga', monthly);
+  } else if (legacyPrice != null && (monthly === undefined || monthly === null)) {
+    subscription.setDataValue('monthly_price_mga', legacyPrice);
+  }
+});
 
 // Static methods for plan configuration
 Subscription.getPlanConfig = function(plan) {

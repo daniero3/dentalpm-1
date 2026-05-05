@@ -9,6 +9,9 @@ async function runMigrations() {
   const migrations = [
     '../migrations/20260418-stripe-subscription-id',
     '../migrations/20260424-performance-indexes',
+    '../migrations/20260505-subscription-schema-fix',
+    '../migrations/20260505-subscription-price-mga-fix',
+    '../migrations/20260505-counters-table-fix',
   ];
 
   for (const migrationPath of migrations) {

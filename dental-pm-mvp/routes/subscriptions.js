@@ -141,6 +141,7 @@ router.post('/', [
       plan,
       status: 'ACTIVE',
       billing_cycle,
+      price_mga: monthly_price_mga,
       monthly_price_mga,
       annual_price_mga: monthly_price_mga * 12,
       discount_type,
@@ -219,6 +220,7 @@ router.post('/trial', [
       plan,
       status: 'TRIAL',
       billing_cycle: 'MONTHLY',
+      price_mga: 0,
       monthly_price_mga: 0, // Free trial
       annual_price_mga: 0,
       start_date: startDate,

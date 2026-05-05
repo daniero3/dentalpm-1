@@ -181,12 +181,11 @@ router.post('/step5', [
       return res.status(409).json({ error: 'Nom d\'utilisateur déjà pris' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       clinic_id: req.user.clinic_id,
       full_name,
       username,
-      password: hashedPassword,
+      password_hash: password,
       role,
       email,
       is_active: true
@@ -231,6 +230,7 @@ router.post('/complete', async (req, res) => {
         start_date: now,
         trial_end_date: trialEnd,
         end_date: trialEnd,
+        price_mga: PLAN_PRICES[chosenPlan] || 199000,
         monthly_price_mga: PLAN_PRICES[chosenPlan] || 199000,
         annual_price_mga: (PLAN_PRICES[chosenPlan] || 199000) * 12,
         max_practitioners: PLAN_USERS[chosenPlan] || 5,
