@@ -45,8 +45,10 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file)  return res.status(400).json({ error: 'Fichier requis' });
     const clinicId = getClinicId(req);
     const doc = await Document.create({
-      patient_id: patientId, clinic_id: clinicId, uploaded_by: getUserId(req),
-      title: req.body.title || req.file.originalname,
+      patient_id: patientId,
+      clinic_id: clinicId,
+      uploaded_by_user_id: getUserId(req),
+      description: req.body.description || req.body.title || null,
       category: req.body.category || 'AUTRE',
       original_filename: req.file.originalname, mime_type: req.file.mimetype,
       file_size: req.file.size,
@@ -62,8 +64,10 @@ router.post('/patient/:patientId', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Fichier requis' });
     const clinicId = getClinicId(req);
     const doc = await Document.create({
-      patient_id: req.params.patientId, clinic_id: clinicId, uploaded_by: getUserId(req),
-      title: req.body.title || req.file.originalname,
+      patient_id: req.params.patientId,
+      clinic_id: clinicId,
+      uploaded_by_user_id: getUserId(req),
+      description: req.body.description || req.body.title || null,
       category: req.body.category || 'AUTRE',
       original_filename: req.file.originalname, mime_type: req.file.mimetype,
       file_size: req.file.size,

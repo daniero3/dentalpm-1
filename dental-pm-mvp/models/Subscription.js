@@ -24,15 +24,24 @@ const Subscription = sequelize.define('Subscription', {
     comment: 'Subscription plan type'
   },
   billing_cycle: {
-    type: DataTypes.ENUM('MONTHLY', 'QUARTERLY', 'YEARLY'),
+    type: DataTypes.ENUM('MONTHLY', 'QUARTERLY', 'ANNUAL'),
     allowNull: false,
     defaultValue: 'MONTHLY'
   },
   
   // Pricing in MGA
-  price_mga: {
+  monthly_price_mga: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: false,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
+  },
+  annual_price_mga: {
+    type: DataTypes.DECIMAL(12, 2),
+    allowNull: false,
+    defaultValue: 0,
     validate: {
       min: 0
     }
@@ -60,7 +69,7 @@ const Subscription = sequelize.define('Subscription', {
     defaultValue: null,
   },
   status: {
-    type: DataTypes.ENUM('ACTIVE', 'CANCELLED', 'EXPIRED', 'SUSPENDED', 'PENDING'),
+    type: DataTypes.ENUM('ACTIVE', 'TRIAL', 'EXPIRED', 'CANCELLED', 'TRIAL_EXPIRED', 'SUPERSEDED', 'SUSPENDED', 'PENDING'),
     allowNull: false,
     defaultValue: 'PENDING'
   },
@@ -81,6 +90,17 @@ const Subscription = sequelize.define('Subscription', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true
+  },
+
+  // Plan limits
+  max_practitioners: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 2
+  },
+  discount_type: {
+    type: DataTypes.STRING(30),
+    allowNull: true
   },
   
   // Discounts
@@ -142,6 +162,16 @@ const Subscription = sequelize.define('Subscription', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+
+  price_mga: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.getDataValue('monthly_price_mga');
+    },
+    set(value) {
+      this.setDataValue('monthly_price_mga', value);
+    }
+  },
   
   // Tracking
   created_by_user_id: {
@@ -201,8 +231,9 @@ Subscription.prototype.getDaysRemaining = function() {
 };
 
 Subscription.prototype.getDiscountedPrice = function() {
-  const discountAmount = (this.price_mga * this.discount_percentage) / 100;
-  return this.price_mga - discountAmount;
+  const monthlyPrice = Number(this.monthly_price_mga || this.price_mga || 0);
+  const discountAmount = (monthlyPrice * this.discount_percentage) / 100;
+  return monthlyPrice - discountAmount;
 };
 
 Subscription.prototype.shouldRenew = function() {

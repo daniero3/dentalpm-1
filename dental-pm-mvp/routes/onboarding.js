@@ -227,11 +227,13 @@ router.post('/complete', async (req, res) => {
         clinic_id: clinic.id,
         plan: chosenPlan,
         status: 'TRIAL',
+        billing_cycle: 'MONTHLY',
         start_date: now,
         trial_end_date: trialEnd,
         end_date: trialEnd,
+        monthly_price_mga: PLAN_PRICES[chosenPlan] || 199000,
+        annual_price_mga: (PLAN_PRICES[chosenPlan] || 199000) * 12,
         max_practitioners: PLAN_USERS[chosenPlan] || 5,
-        price_mga: PLAN_PRICES[chosenPlan] || 199000
       });
       // Mettre à jour le plan du cabinet
       await clinic.update({ current_plan: chosenPlan });

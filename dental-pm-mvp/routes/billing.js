@@ -36,10 +36,12 @@ async function activateSubscriptionAfterPayment(clinicId, planCode, paymentReque
       clinic_id:         clinicId,
       plan:              planCode || 'PRO',
       status:            'ACTIVE',
+      billing_cycle:     'MONTHLY',
       start_date:        now,
       end_date:          endDate,
       duration_months:   1,
       monthly_price_mga: PLAN_PRICES[planCode] || PLAN_PRICES.PRO,
+      annual_price_mga:  (PLAN_PRICES[planCode] || PLAN_PRICES.PRO) * 12,
       auto_renew:        false,
     });
 
@@ -610,11 +612,13 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
             clinic_id:         clinicId,
             plan:              planCode,
             status:            'TRIAL',
+            billing_cycle:     'MONTHLY',
             start_date:        now,
             trial_end_date:    trialEnd,
             end_date:          trialEnd,
             max_practitioners: PLAN_USERS[planCode] || 5,
-            price_mga:         PLAN_PRICES[planCode] || 199000,
+            monthly_price_mga: PLAN_PRICES[planCode] || 199000,
+            annual_price_mga:  (PLAN_PRICES[planCode] || 199000) * 12,
             stripe_subscription_id: obj.subscription || null,
           }).catch(()=>{});
 

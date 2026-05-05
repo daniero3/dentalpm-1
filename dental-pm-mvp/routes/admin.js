@@ -14,14 +14,17 @@ async function activateSubscriptionAfterPayment(clinicId, planCode, paymentReque
       { where: { clinic_id: clinicId, status: { [_Op.in]: ['ACTIVE','TRIAL','EXPIRED','TRIAL_EXPIRED'] } } }
     );
 
+    const basePrice = _PLAN_PRICES[planCode] || 199000;
     const newSub = await Subscription.create({
       clinic_id:         clinicId,
       plan:              planCode || 'PRO',
       status:            'ACTIVE',
+      billing_cycle:     'MONTHLY',
       start_date:        now,
       end_date:          endDate,
       duration_months:   1,
-      monthly_price_mga: _PLAN_PRICES[planCode] || 199000,
+      monthly_price_mga: basePrice,
+      annual_price_mga:  basePrice * 12,
     });
 
     await Clinic.update(
@@ -223,7 +226,8 @@ router.patch('/clinics/:id/activate', requireRole('SUPER_ADMIN'), async (req, re
     endDate.setDate(endDate.getDate() + parseInt(days));
     // Mettre à jour l'abonnement existant ou en créer un
     await Subscription.update({ status: 'SUPERSEDED' }, { where: { clinic_id: clinic.id, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL','EXPIRED'] } } });
-    await Subscription.create({ clinic_id: clinic.id, plan, status: 'ACTIVE', start_date: new Date(), end_date: endDate, duration_months: 1, monthly_price_mga: { ESSENTIAL:149000, PRO:199000, GROUP:299000 }[plan] || 199000 });
+    const planPrice = { ESSENTIAL:149000, PRO:199000, GROUP:299000 }[plan] || 199000;
+    await Subscription.create({ clinic_id: clinic.id, plan, status: 'ACTIVE', billing_cycle: 'MONTHLY', start_date: new Date(), end_date: endDate, duration_months: 1, monthly_price_mga: planPrice, annual_price_mga: planPrice * 12 });
     await clinic.update({ subscription_status: 'ACTIVE', current_plan: plan, is_active: true });
     res.json({ message: 'Abonnement activé', end_date: endDate });
   } catch (error) {
@@ -276,9 +280,12 @@ router.post('/subscriptions', requireRole('SUPER_ADMIN'), [
     const endDate = new Date();
     endDate.setMonth(endDate.getMonth() + parseInt(duration_months));
 
+    const monthlyPrice = amount_mga;
     const subscription = await Subscription.create({
       clinic_id, plan, status: 'ACTIVE', start_date: startDate, end_date: endDate,
-      duration_months: parseInt(duration_months), monthly_price_mga: amount_mga,
+      billing_cycle: parseInt(duration_months) >= 12 ? 'ANNUAL' : 'MONTHLY',
+      duration_months: parseInt(duration_months), monthly_price_mga: monthlyPrice,
+      annual_price_mga: monthlyPrice * 12,
       notes, created_by_user_id: _getUserId(req)
     });
 

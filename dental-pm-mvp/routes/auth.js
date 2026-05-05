@@ -306,8 +306,10 @@ router.post('/register-clinic', [
       start_date:        now,
       trial_end_date:    trialEnd,
       end_date:          trialEnd,
+      billing_cycle:     'MONTHLY',
+      monthly_price_mga: PLAN_PRICES[plan] || 199000,
+      annual_price_mga:  (PLAN_PRICES[plan] || 199000) * 12,
       max_practitioners: PLAN_USERS[plan] || 5,
-      price_mga:         PLAN_PRICES[plan] || 199000,
     });
 
     // Email de bienvenue
