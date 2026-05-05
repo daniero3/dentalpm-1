@@ -1,6 +1,6 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
-// Version horodatée : chaque déploiement génère un nouveau cache unique
-const BUILD_TIME = '__BUILD_TIMESTAMP__'; // Remplacé à chaque build
+// Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
+const BUILD_TIME = '2026-05-05-sidebar-fix-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
@@ -89,7 +89,7 @@ self.addEventListener('fetch', e => {
 
   // HTML et autres ressources → Network First (toujours fraîche)
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request, { cache: 'no-store' })
       .then(res => {
         if (!res || res.status !== 200 || res.type !== 'basic') return res;
         try {

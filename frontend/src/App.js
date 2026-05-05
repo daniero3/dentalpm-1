@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 // ── Service Worker PWA — Cache Busting ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
       .then(reg => {
         console.log('[PWA] SW enregistré:', reg.scope);
 
