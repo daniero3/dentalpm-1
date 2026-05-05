@@ -15,6 +15,16 @@ const API = process.env.REACT_APP_BACKEND_URL
     ? 'http://localhost:8001/api'
     : '/api'
 
+const normalizePlan = (value) => {
+  const raw = typeof value === 'string'
+    ? value
+    : value?.plan || value?.current_plan || value?.name || value?.code || null
+  const plan = raw ? String(raw).toUpperCase() : null
+
+  if (plan === 'TRIAL') return 'PRO'
+  return ['ESSENTIAL', 'PRO', 'GROUP'].includes(plan) ? plan : null
+}
+
 // ── Navigation cabinet — filtrée par plan ─────────────────────────────────────
 const ALL_NAV = [
   { name:"Tableau de bord", href:"/",            icon:Home,         plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
@@ -93,7 +103,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   // Plan lu depuis localStorage — fallback uniquement
   const cachedPlan = React.useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('dpm_plan') || localStorage.getItem('dpm_user_plan') || 'null')
+      return normalizePlan(JSON.parse(localStorage.getItem('dpm_plan') || localStorage.getItem('dpm_user_plan') || 'null'))
     } catch { return null }
   }, [user?.id])
 
@@ -129,7 +139,12 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
 
   // Plan effectif — toujours celui de l'abonnement actif si disponible
   const plan = isSuperAdmin ? 'SUPER_ADMIN'
-    : (subscription?.plan || user?.plan || cachedPlan || user?.current_plan || 'ESSENTIAL')
+    : (
+      normalizePlan(subscription?.plan || subscription) ||
+      normalizePlan(user?.current_plan || user?.plan || user) ||
+      cachedPlan ||
+      'ESSENTIAL'
+    )
 
   const planLabel = isSuperAdmin
     ? 'Administration'

@@ -96,6 +96,14 @@ const API = BACKEND_URL
     ? 'http://localhost:8001/api'
     : '/api';
 
+const normalizePlan = (value) => {
+  const raw = typeof value === 'string'
+    ? value
+    : value?.plan || value?.current_plan || value?.name || null;
+  const plan = raw ? String(raw).toUpperCase() : null;
+  return ['ESSENTIAL', 'PRO', 'GROUP'].includes(plan) ? plan : null;
+};
+
 // ══════════════════════════════════════════════════════════════
 // PROTECTION GLOBALE AXIOS
 // Bloque TOUS les appels contenant /undefined ou /null dans l'URL
@@ -180,7 +188,7 @@ const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       // Stocker le plan depuis la réponse de login (immédiat, pas de fetch supplémentaire)
-      const planFromLogin = response.data.plan || userData.plan || null;
+      const planFromLogin = normalizePlan(response.data.plan || userData.plan || userData.current_plan);
       if (planFromLogin) {
         localStorage.setItem('dpm_plan', JSON.stringify(planFromLogin));
         localStorage.setItem('dpm_user_plan', JSON.stringify(planFromLogin));
