@@ -1,7 +1,6 @@
 const express = require('express');
 const { body, validationResult, param } = require('express-validator');
-const { PricingSchedule, ProcedureFee, Clinic } = require('../models');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { PricingSchedule, ProcedureFee } = require('../models');
 const multer = require('multer');
 const csv = require('csv-parse/sync');
 const { Op } = require('sequelize');
@@ -10,6 +9,14 @@ const router = express.Router();
 
 // ✅ Helpers
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+const isSuperAdmin = (req) => req.user?.role === 'SUPER_ADMIN';
+const canEditSchedule = (req, schedule) => {
+  if (!schedule) return false;
+  if (isSuperAdmin(req)) return true;
+
+  const clinicId = getClinicId(req);
+  return Boolean(clinicId && schedule.clinic_id === clinicId && schedule.type !== 'SYNDICAL');
+};
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -139,9 +146,11 @@ router.post('/:id/fees', [
     const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, ...whereOr } });
     if (!schedule) return res.status(404).json({ error:'Grille tarifaire non trouvée' });
 
-    // Grille SYNDICAL = réservée SUPER_ADMIN, grille CUSTOM = ouverte à tous les users du cabinet
-    if (schedule.type === 'SYNDICAL' && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error:'Non autorisé', message:'La grille Syndicale ne peut pas être modifiée par les cabinets' });
+    if (!canEditSchedule(req, schedule)) {
+      return res.status(403).json({
+        error:'Non autorisé',
+        message:'Seuls les tarifs propres à votre cabinet peuvent être modifiés'
+      });
     }
 
     const { procedure_code, label, price_mga, category = 'GENERAL' } = req.body;
@@ -158,15 +167,17 @@ router.post('/:id/fees', [
 // ── PUT /api/procedure-fees/:id ───────────────────────────────────────────────
 router.put('/:id', [param('id').isUUID()], async (req, res) => {
   try {
-    const clinicId = getClinicId(req);
     const fee = await ProcedureFee.findOne({
       where: { id: req.params.id },
       include: [{ model: PricingSchedule, as: 'schedule', required: false }]
     });
     if (!fee) return res.status(404).json({ error:'Acte non trouvé' });
 
-    if (fee.schedule?.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error:'Non autorisé' });
+    if (!canEditSchedule(req, fee.schedule)) {
+      return res.status(403).json({
+        error:'Non autorisé',
+        message:'Seuls les tarifs propres à votre cabinet peuvent être modifiés'
+      });
     }
 
     const { label, price_mga, category, is_active } = req.body;
@@ -189,8 +200,11 @@ router.post('/:id/import-fees', upload.single('file'), [param('id').isUUID()], a
     const whereOr  = clinicId ? { [Op.or]: [{ clinic_id: clinicId }, { clinic_id: null, type:'SYNDICAL' }] } : {};
     const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, ...whereOr } });
     if (!schedule) return res.status(404).json({ error:'Grille non trouvée' });
-    if (schedule.type === 'SYNDICAL' && req.user.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error:'Non autorisé' });
+    if (!canEditSchedule(req, schedule)) {
+      return res.status(403).json({
+        error:'Non autorisé',
+        message:'Seuls les tarifs propres à votre cabinet peuvent être importés'
+      });
     }
     if (!req.file) return res.status(400).json({ error:'Fichier requis' });
 
@@ -252,14 +266,16 @@ router.get('/:id/export-fees', [param('id').isUUID()], async (req, res) => {
 // ── PATCH /api/procedure-fees/:id — Modifier un acte ─────────────────────────
 router.patch('/:id', [param('id').isUUID()], async (req, res) => {
   try {
-    const clinicId = getClinicId(req);
     const fee = await ProcedureFee.findOne({
       where: { id: req.params.id },
       include: [{ model: PricingSchedule, as: 'schedule', required: false }]
     });
     if (!fee) return res.status(404).json({ error: 'Acte non trouvé' });
-    if (fee.schedule?.type === 'SYNDICAL' && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Non autorisé — grille syndicale réservée au SUPER_ADMIN' });
+    if (!canEditSchedule(req, fee.schedule)) {
+      return res.status(403).json({
+        error: 'Non autorisé',
+        message: 'Seuls les tarifs propres à votre cabinet peuvent être modifiés'
+      });
     }
     const { label, price_mga, category, is_active } = req.body;
     await fee.update({ label, price_mga, category, is_active });
@@ -272,18 +288,16 @@ router.patch('/:id', [param('id').isUUID()], async (req, res) => {
 // ── DELETE /api/procedure-fees/:id — Supprimer un acte ───────────────────────
 router.delete('/:id', [param('id').isUUID()], async (req, res) => {
   try {
-    const clinicId = getClinicId(req);
     const fee = await ProcedureFee.findOne({
       where: { id: req.params.id },
       include: [{ model: PricingSchedule, as: 'schedule', required: false }]
     });
     if (!fee) return res.status(404).json({ error: 'Acte non trouvé' });
-    if (fee.schedule?.type === 'SYNDICAL' && req.user?.role !== 'SUPER_ADMIN') {
-      return res.status(403).json({ error: 'Non autorisé — grille syndicale réservée au SUPER_ADMIN' });
-    }
-    // Vérifier que la grille appartient au cabinet
-    if (fee.schedule?.clinic_id && fee.schedule.clinic_id !== clinicId) {
-      return res.status(403).json({ error: 'Accès refusé' });
+    if (!canEditSchedule(req, fee.schedule)) {
+      return res.status(403).json({
+        error: 'Non autorisé',
+        message: 'Seuls les tarifs propres à votre cabinet peuvent être supprimés'
+      });
     }
     await fee.destroy();
     res.json({ message: 'Acte supprimé' });
@@ -330,8 +344,17 @@ router.delete('/cleanup-syndical', async (req, res) => {
 router.post('/:id/import-template-maeva', [param('id').isUUID()], async (req, res) => {
   try {
     const clinicId = getClinicId(req);
-    const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, clinic_id: clinicId, type:'CABINET' } });
-    if (!schedule) return res.status(404).json({ error:'Grille CABINET non trouvée' });
+    const schedule = await PricingSchedule.findOne({
+      where: {
+        id: req.params.id,
+        clinic_id: clinicId,
+        type: { [Op.in]: ['CABINET', 'CUSTOM'] }
+      }
+    });
+    if (!schedule) return res.status(404).json({ error:'Grille cabinet non trouvée' });
+    if (!canEditSchedule(req, schedule)) {
+      return res.status(403).json({ error:'Non autorisé' });
+    }
 
     await ProcedureFee.update({ is_active: false }, { where: { schedule_id: schedule.id } });
     let inserted = 0, updated = 0;

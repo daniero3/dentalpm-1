@@ -21,15 +21,13 @@ import {
   Download,
   Lock,
   Unlock,
-  DollarSign,
   FileText,
   Save,
   Trash2,
-  X,
-  AlertTriangle
+  X
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 const API = `${BACKEND_URL}/api`;
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
@@ -95,13 +93,13 @@ const PricingSettings = () => {
 
   const handleAddFee = async (e) => {
     e.preventDefault();
-    if (!selectedSchedule) return;
+    if (!canEditSchedule(selectedSchedule)) return;
 
     try {
       await axios.post(`${API}/pricing-schedules/${selectedSchedule.id}/fees`, {
         ...newFee,
         price_mga: parseFloat(newFee.price_mga)
-      });
+      }, authH());
       toast.success('Acte ajouté avec succès');
       fetchFees(selectedSchedule.id);
       setIsAddDialogOpen(false);
@@ -118,7 +116,7 @@ const PricingSettings = () => {
         price_mga: parseFloat(fee.price_mga),
         category: fee.category,
         is_active: fee.is_active
-      });
+      }, authH());
       toast.success('Acte mis à jour');
       setEditingFee(null);
       fetchFees(selectedSchedule.id);
@@ -130,7 +128,7 @@ const PricingSettings = () => {
   const handleDeleteFee = async (fee) => {
     if (!window.confirm(`Supprimer définitivement l'acte "${fee.label || fee.procedure_code}" ?`)) return;
     try {
-      await axios.delete(`${API}/procedure-fees/${fee.id}`);
+      await axios.delete(`${API}/procedure-fees/${fee.id}`, authH());
       toast.success('Acte supprimé');
       fetchFees(selectedSchedule.id);
     } catch (error) {
@@ -141,7 +139,7 @@ const PricingSettings = () => {
   // Créer une nouvelle grille si aucune n'existe pour le cabinet
   const handleCreateSchedule = async () => {
     try {
-      const r = await axios.post(`${API}/pricing-schedules`, { name: 'Mes tarifs', type: 'CUSTOM' });
+      await axios.post(`${API}/pricing-schedules`, { name: 'Mes tarifs', type: 'CUSTOM' }, authH());
       toast.success('Grille créée');
       fetchSchedules();
     } catch(e) { toast.error('Erreur création grille'); }
@@ -175,7 +173,12 @@ const PricingSettings = () => {
       const response = await axios.post(
         `${API}/pricing-schedules/${selectedSchedule.id}/import-fees`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
       );
       toast.success(`Import terminé: ${response.data.inserted || response.data.imported || 0} ajoutés, ${response.data.updated || 0} mis à jour`);
       fetchFees(selectedSchedule.id);
@@ -186,8 +189,8 @@ const PricingSettings = () => {
   };
 
   const handleImportTemplateMAEVA = async () => {
-    if (!selectedSchedule || selectedSchedule.type !== 'CABINET') {
-      toast.error('Sélectionnez une grille CABINET');
+    if (!canEditSchedule(selectedSchedule)) {
+      toast.error('Sélectionnez une grille modifiable du cabinet');
       return;
     }
     
@@ -195,7 +198,9 @@ const PricingSettings = () => {
 
     try {
       const response = await axios.post(
-        `${API}/pricing-schedules/${selectedSchedule.id}/import-template-maeva`
+        `${API}/pricing-schedules/${selectedSchedule.id}/import-template-maeva`,
+        null,
+        authH()
       );
       toast.success(`Template MAEVA importé: ${response.data.stats.inserted} ajoutés, ${response.data.stats.updated} mis à jour`);
       fetchFees(selectedSchedule.id);
@@ -208,7 +213,7 @@ const PricingSettings = () => {
     try {
       await axios.put(`${API}/procedure-fees/${fee.id}`, {
         is_active: !fee.is_active
-      });
+      }, authH());
       toast.success(fee.is_active ? 'Acte désactivé' : 'Acte activé');
       fetchFees(selectedSchedule.id);
     } catch (error) {
@@ -232,8 +237,11 @@ const PricingSettings = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const isReadOnly = selectedSchedule?.type === 'SYNDICAL' && user?.role !== 'SUPER_ADMIN';
-
+  const canEditSchedule = (schedule) => {
+    if (!schedule) return false;
+    if (user?.role === 'SUPER_ADMIN') return true;
+    return Boolean(schedule.clinic_id && schedule.type !== 'SYNDICAL');
+  };
   if (loading) {
     return (
       <div className="p-6">
@@ -262,7 +270,10 @@ const PricingSettings = () => {
 
       {/* Schedule Tabs */}
       <Tabs defaultValue={schedules[0]?.id} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList
+          className="grid w-full max-w-2xl"
+          style={{ gridTemplateColumns: `repeat(${Math.max(schedules.length, 1)}, minmax(0, 1fr))` }}
+        >
           {schedules.map(schedule => (
             <TabsTrigger 
               key={schedule.id} 
@@ -302,8 +313,8 @@ const PricingSettings = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Exporter CSV
                     </Button>
-                    {/* Import Template MAEVA (CABINET only) */}
-                    {schedule.type === 'CABINET' && (
+                    {/* Import Template MAEVA */}
+                    {canEditSchedule(schedule) && (
                       <Button 
                         variant="outline" 
                         onClick={handleImportTemplateMAEVA}
@@ -314,8 +325,8 @@ const PricingSettings = () => {
                         Template MAEVA
                       </Button>
                     )}
-                    {/* Import Button (SYNDICAL: Admin only, CABINET: always) */}
-                    {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
+                    {/* Import Button */}
+                    {canEditSchedule(schedule) && (
                       <>
                         <input
                           type="file"
@@ -334,8 +345,8 @@ const PricingSettings = () => {
                         </Button>
                       </>
                     )}
-                    {/* Add Button (CABINET or Admin) */}
-                    {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
+                    {/* Add Button */}
+                    {canEditSchedule(schedule) && (
                       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                         <DialogTrigger asChild>
                           <Button data-testid="add-fee-btn">
@@ -399,11 +410,11 @@ const PricingSettings = () => {
               </CardHeader>
               <CardContent>
                 {/* Read-only notice */}
-                {isReadOnly && schedule.type === 'SYNDICAL' && (
+                {!canEditSchedule(schedule) && (
                   <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
                     <Lock className="h-4 w-4 text-amber-600" />
                     <span className="text-amber-800 text-sm">
-                      Grille Syndicale en lecture seule. Seul un administrateur peut la modifier.
+                      Grille en lecture seule. Les tarifs propres au cabinet peuvent être modifiés par tous les comptes du cabinet.
                     </span>
                   </div>
                 )}
@@ -442,7 +453,7 @@ const PricingSettings = () => {
                         <TableHead>Libellé</TableHead>
                         <TableHead className="w-[150px]">Catégorie</TableHead>
                         <TableHead className="w-[150px] text-right">Prix (MGA)</TableHead>
-                        {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
+                        {canEditSchedule(schedule) && (
                           <>
                             <TableHead className="w-[80px] text-center">Actif</TableHead>
                             <TableHead className="w-[100px]">Actions</TableHead>
@@ -476,7 +487,7 @@ const PricingSettings = () => {
                               />
                             ) : formatCurrency(fee.price_mga)}
                           </TableCell>
-                          {(schedule.type === 'CABINET' || user?.role === 'SUPER_ADMIN') && (
+                          {canEditSchedule(schedule) && (
                             <>
                               <TableCell className="text-center">
                                 <Switch
@@ -497,9 +508,14 @@ const PricingSettings = () => {
                                       </Button>
                                     </>
                                   ) : (
-                                    <Button size="sm" variant="ghost" onClick={() => setEditingFee({...fee})} data-testid={`edit-${fee.procedure_code}`}>
-                                      <Edit2 className="h-4 w-4" />
-                                    </Button>
+                                    <>
+                                      <Button size="sm" variant="ghost" onClick={() => setEditingFee({...fee})} data-testid={`edit-${fee.procedure_code}`}>
+                                        <Edit2 className="h-4 w-4" />
+                                      </Button>
+                                      <Button size="sm" variant="ghost" onClick={() => handleDeleteFee(fee)} data-testid={`delete-${fee.procedure_code}`}>
+                                        <Trash2 className="h-4 w-4 text-red-600" />
+                                      </Button>
+                                    </>
                                   )}
                                 </div>
                               </TableCell>
