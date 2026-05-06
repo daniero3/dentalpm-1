@@ -14,6 +14,9 @@ function buildApp(role = 'ADMIN', clinicId = clinicA) {
   const models = {
     Invoice: {
       count: jest.fn().mockResolvedValue(0),
+      findOne: jest.fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null),
       create: jest.fn().mockResolvedValue({ id: 'invoice-id' }),
       findByPk: jest.fn().mockResolvedValue({ id: 'invoice-id', clinic_id: clinicId })
     },
@@ -116,6 +119,7 @@ describe('invoice multi-tenant isolation', () => {
     expect(res.status).toBe(201);
     expect(models.sequelize.transaction).toHaveBeenCalledTimes(1);
     expect(models.Invoice.create).toHaveBeenCalledWith(expect.objectContaining({
+      invoice_number: expect.stringMatching(/^FACT-\d{4}-\d{4}$/),
       patient_id: patientA,
       clinic_id: clinicA,
       schedule_id: scheduleA

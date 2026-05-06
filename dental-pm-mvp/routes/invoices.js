@@ -53,6 +53,31 @@ const clinicWhere = (req, extra = {}) => {
   return extra;
 };
 
+const getNextInvoiceNumber = async (transaction) => {
+  const year = new Date().getFullYear();
+  const prefix = `FACT-${year}-`;
+
+  const lastInvoice = await Invoice.findOne({
+    where: { invoice_number: { [Op.like]: `${prefix}%` } },
+    order: [['invoice_number', 'DESC']],
+    attributes: ['invoice_number'],
+    transaction
+  });
+
+  let nextNum = 1;
+  if (lastInvoice?.invoice_number) {
+    nextNum = (parseInt(lastInvoice.invoice_number.replace(prefix, ''), 10) || 0) + 1;
+  }
+
+  let candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  while (await Invoice.findOne({ where: { invoice_number: candidate }, transaction })) {
+    nextNum += 1;
+    candidate = `${prefix}${String(nextNum).padStart(4, '0')}`;
+  }
+
+  return candidate;
+};
+
 // ── GET / ─────────────────────────────────────────────────────────────────────
 router.get('/', [
   query('page').optional().isInt({ min:1 }),
@@ -148,15 +173,7 @@ router.post('/', [
     }
 
     const complete = await sequelize.transaction(async (transaction) => {
-      const year  = new Date().getFullYear();
-      const count = await Invoice.count({
-        where: {
-          clinic_id: clinicId,
-          created_at: { [Op.gte]: new Date(year,0,1), [Op.lt]: new Date(year+1,0,1) }
-        },
-        transaction
-      });
-      const invoiceNumber = `FACT-${year}-${String(count+1).padStart(4,'0')}`;
+      const invoiceNumber = await getNextInvoiceNumber(transaction);
 
       const baseInvoice = {
         invoice_number:      invoiceNumber,
