@@ -421,7 +421,9 @@ const PricingSettings = () => {
                   <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
                     <Lock className="h-4 w-4 text-amber-600" />
                     <span className="text-amber-800 text-sm">
-                      Grille en lecture seule. Les tarifs propres au cabinet peuvent être modifiés par tous les comptes du cabinet.
+                      {schedule.type === 'SYNDICAL'
+                        ? 'Grille syndicale en lecture seule. Les tarifs SYNDICAL restent gérés au niveau plateforme.'
+                        : 'Cette grille cabinet est en lecture seule pour ce compte. Les tarifs propres au cabinet peuvent être modifiés par les comptes autorisés du cabinet.'}
                     </span>
                   </div>
                 )}
