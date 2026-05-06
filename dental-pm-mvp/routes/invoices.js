@@ -375,9 +375,10 @@ router.get('/:id/print', [param('id').isUUID()], async (req, res) => {
 
     const fmt   = (a) => new Intl.NumberFormat('fr-MG').format(a||0) + ' Ar';
     const fmtDt = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-';
+    const esc   = (v) => String(v ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
     const pmLabels = { CASH:'Espèces', CHEQUE:'Chèque', CARD:'Carte', MVOLA:'MVola', ORANGE_MONEY:'Orange Money', AIRTEL_MONEY:'Airtel Money', BANK_TRANSFER:'Virement' };
 
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${invoice.invoice_number}</title>
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${esc(invoice.invoice_number)}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:12px;color:#333;padding:20px}
 .header{display:flex;justify-content:space-between;margin-bottom:24px;border-bottom:2px solid #0D7A87;padding-bottom:16px}
 .clinic h1{font-size:20px;color:#0D7A87}table{width:100%;border-collapse:collapse;margin-bottom:16px}
@@ -385,28 +386,28 @@ th,td{padding:8px;text-align:left;border-bottom:1px solid #eee}th{background:#f8
 .amount{text-align:right}.totals{margin-left:auto;width:280px}
 .total-row{background:#0D7A87;color:white}@media print{body{padding:0}}</style></head><body>
 <div class="header">
-  <div class="clinic"><h1>${clinic?.name||'Cabinet Dentaire'}</h1><p>${clinic?.address||''}</p><p>${clinic?.phone||''}</p></div>
-  <div style="text-align:right"><h2 style="font-size:24px">FACTURE</h2><p style="color:#0D7A87;font-weight:bold">${invoice.invoice_number}</p><p>${fmtDt(invoice.created_at)}</p></div>
+  <div class="clinic"><h1>${esc(clinic?.name||'Cabinet Dentaire')}</h1><p>${esc(clinic?.address||'')}</p><p>${esc(clinic?.phone||'')}</p></div>
+  <div style="text-align:right"><h2 style="font-size:24px">FACTURE</h2><p style="color:#0D7A87;font-weight:bold">${esc(invoice.invoice_number)}</p><p>${esc(fmtDt(invoice.created_at))}</p></div>
 </div>
 <div style="background:#f8fafc;padding:10px;border-radius:6px;margin-bottom:16px">
-  <strong>Patient:</strong> ${invoice.patient?.first_name||''} ${invoice.patient?.last_name||''} — ${invoice.patient?.phone_primary||''}
+  <strong>Patient:</strong> ${esc(invoice.patient?.first_name||'')} ${esc(invoice.patient?.last_name||'')} - ${esc(invoice.patient?.phone_primary||'')}
 </div>
 <table><thead><tr><th>Description</th><th class="amount">Qté</th><th class="amount">Prix unit.</th><th class="amount">Total</th></tr></thead>
-<tbody>${(invoice.items||[]).map(i=>`<tr><td>${i.description}${i.tooth_number?` (Dent ${i.tooth_number})`:''}</td><td class="amount">${i.quantity}</td><td class="amount">${fmt(i.unit_price_mga)}</td><td class="amount">${fmt(i.total_price_mga)}</td></tr>`).join('')}</tbody></table>
+<tbody>${(invoice.items||[]).map(i=>`<tr><td>${esc(i.description)}${i.tooth_number?` (Dent ${esc(i.tooth_number)})`:''}</td><td class="amount">${esc(i.quantity)}</td><td class="amount">${esc(fmt(i.unit_price_mga))}</td><td class="amount">${esc(fmt(i.total_price_mga))}</td></tr>`).join('')}</tbody></table>
 <div class="totals"><table>
-  <tr><td>Sous-total</td><td class="amount">${fmt(invoice.subtotal_mga)}</td></tr>
-  ${invoice.discount_percentage>0?`<tr><td>Remise (${invoice.discount_percentage}%)</td><td class="amount">-${fmt(invoice.discount_amount_mga)}</td></tr>`:''}
-  <tr class="total-row"><td><strong>TOTAL</strong></td><td class="amount"><strong>${fmt(invoice.total_mga)}</strong></td></tr>
-  <tr><td>Payé</td><td class="amount">${fmt(paidTotal)}</td></tr>
-  <tr style="background:${balance>0?'#fef3c7':'#d1fae5'}"><td><strong>Reste</strong></td><td class="amount"><strong>${fmt(balance)}</strong></td></tr>
+  <tr><td>Sous-total</td><td class="amount">${esc(fmt(invoice.subtotal_mga))}</td></tr>
+  ${invoice.discount_percentage>0?`<tr><td>Remise (${esc(invoice.discount_percentage)}%)</td><td class="amount">-${esc(fmt(invoice.discount_amount_mga))}</td></tr>`:''}
+  <tr class="total-row"><td><strong>TOTAL</strong></td><td class="amount"><strong>${esc(fmt(invoice.total_mga))}</strong></td></tr>
+  <tr><td>Payé</td><td class="amount">${esc(fmt(paidTotal))}</td></tr>
+  <tr style="background:${balance>0?'#fef3c7':'#d1fae5'}"><td><strong>Reste</strong></td><td class="amount"><strong>${esc(fmt(balance))}</strong></td></tr>
 </table></div>
-${payments.length>0?`<div style="margin-top:16px"><h3 style="color:#0D7A87;margin-bottom:8px">Paiements</h3><table><thead><tr><th>Date</th><th>Méthode</th><th class="amount">Montant</th></tr></thead><tbody>${payments.map(p=>`<tr><td>${fmtDt(p.payment_date)}</td><td>${pmLabels[p.payment_method]||p.payment_method}</td><td class="amount">${fmt(p.amount_mga)}</td></tr>`).join('')}</tbody></table></div>`:''}
-${invoice.notes?`<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${invoice.notes}</p>`:''}
+${payments.length>0?`<div style="margin-top:16px"><h3 style="color:#0D7A87;margin-bottom:8px">Paiements</h3><table><thead><tr><th>Date</th><th>Méthode</th><th class="amount">Montant</th></tr></thead><tbody>${payments.map(p=>`<tr><td>${esc(fmtDt(p.payment_date))}</td><td>${esc(pmLabels[p.payment_method]||p.payment_method)}</td><td class="amount">${esc(fmt(p.amount_mga))}</td></tr>`).join('')}</tbody></table></div>`:''}
+${invoice.notes?`<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${esc(invoice.notes)}</p>`:''}
 <div style="margin-top:30px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #eee;padding-top:16px">
   <div style="text-align:center">
     <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent('DPM-FACT:'+invoice.invoice_number+' | Montant:'+invoice.total_mga+' Ar | Date:'+new Date(invoice.invoice_date||invoice.created_at).toLocaleDateString('fr-FR'))}" 
          alt="QR" style="width:90px;height:90px;border:1px solid #eee;border-radius:6px;padding:4px"/>
-    <div style="font-size:9px;color:#999;margin-top:3px">${invoice.invoice_number}</div>
+    <div style="font-size:9px;color:#999;margin-top:3px">${esc(invoice.invoice_number)}</div>
     <div style="font-size:8px;color:#bbb">DPM Madagascar</div>
   </div>
   <div style="text-align:center;color:#666;font-size:11px">

@@ -16,6 +16,7 @@ from enum import Enum
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+IS_PRODUCTION = os.environ.get("NODE_ENV") == "production" or os.environ.get("ENV") == "production"
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -23,31 +24,43 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app without a prefix
-app = FastAPI(title="Dental Practice Management SaaS - Madagascar", version="2.0.0")
+app = FastAPI(
+    title="Dental Practice Management SaaS - Madagascar",
+    version="2.0.0",
+    docs_url=None if IS_PRODUCTION else "/docs",
+    redoc_url=None if IS_PRODUCTION else "/redoc",
+    openapi_url=None if IS_PRODUCTION else "/openapi.json",
+)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
 # CORS configuration for deployment
-origins = [
+dev_origins = [
     "http://localhost:3000",
     "https://localhost:3000",
-    os.environ.get("FRONTEND_URL", ""),
-    "https://*.emergent.host",
-    "https://*.emergentagent.com"
 ]
+production_origins = [
+    os.environ.get("FRONTEND_URL", ""),
+]
+origins = production_origins if IS_PRODUCTION else [*dev_origins, *production_origins]
+origins = [origin for origin in origins if origin]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=None if IS_PRODUCTION else r"https://.*\.(emergent\.host|emergentagent\.com)",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # Security
 security = HTTPBearer()
-JWT_SECRET = os.environ.get('JWT_SECRET', 'dental-practice-secret-key-madagascar-2024')
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if IS_PRODUCTION and not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET is required in production")
+JWT_SECRET = JWT_SECRET or 'dev-only-dental-practice-secret-key-madagascar-2024'
 
 # Enums
 class UserRole(str, Enum):

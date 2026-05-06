@@ -4,6 +4,7 @@ const helmet      = require('helmet');
 const rateLimit   = require('express-rate-limit');
 const compression = require('compression');
 const crypto      = require('crypto');
+const { URL }     = require('url');
 require('dotenv').config();
 
 const sequelize = require('./database/connection');
@@ -42,14 +43,23 @@ const app  = express();
 const PORT = process.env.PORT || 8001;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const REQUIRE_HTTPS = process.env.REQUIRE_HTTPS === 'true' || IS_PRODUCTION;
-const ALLOWED_ORIGINS = [
+const DEV_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:8001',
+];
+const PRODUCTION_ORIGINS = [
   'https://dentalpracticemada.com',
   'https://www.dentalpracticemada.com',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
+const ALLOWED_ORIGINS = [
+  ...(IS_PRODUCTION ? [] : DEV_ORIGINS),
+  ...PRODUCTION_ORIGINS,
+].filter(Boolean);
+const ALLOWED_HOSTS = new Set(ALLOWED_ORIGINS.map(origin => {
+  try { return new URL(origin).host; } catch { return null; }
+}).filter(Boolean));
 const ENABLE_TEST_ACCOUNTS = process.env.ENABLE_TEST_ACCOUNTS === 'true';
 
 const TEST_ACCOUNTS = [
@@ -148,7 +158,10 @@ app.use((req, res, next) => {
   }
 
   if (['GET', 'HEAD'].includes(req.method)) {
-    return res.redirect(308, `https://${req.get('host')}${req.originalUrl}`);
+    const host = req.get('host');
+    if (ALLOWED_HOSTS.has(host)) {
+      return res.redirect(308, `https://${host}${req.originalUrl}`);
+    }
   }
 
   return res.status(426).json({
@@ -178,7 +191,14 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
 app.use(rateLimit({ windowMs: 15*60*1000, max: 500, skip: r => r.path === '/api/health' }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    if (req.originalUrl === '/api/billing/webhook/stripe') {
+      req.rawBody = Buffer.from(buf);
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 100 }));
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -202,7 +222,6 @@ app.use('/api', (req, res, next) => {
 
   next();
 });
-app.use('/uploads', express.static('uploads'));
 
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -262,56 +281,14 @@ app.use('/api/inventory',        requireAuth, requireClinicScope, blockMedical, 
 app.use('/api/suppliers',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('suppliers'), supplierRoutes);
 app.use('/api/labs',             requireAuth, requireClinicScope, blockMedical, requireModuleAccess('lab_orders'), labRoutes);
 app.use('/api/mailing',          requireAuth, requireClinicScope, blockMedical, requireModuleAccess('messaging'), mailingRoutes);
-app.use('/api/media',            requireAuth, mediaRoutes);
+app.use('/api/media',            requireAuth, requireClinicScope, blockMedical, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
-// Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
-
-// ── Public checkout Stripe — sans authentification (inscription cabinet) ───────
-app.post('/api/billing/public-checkout', async (req, res) => {
-  try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(503).json({ error: 'Paiement Stripe non configuré' });
-    }
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    const { plan_code, clinic_id, email } = req.body;
-
-    const STRIPE_PRICE_IDS = {
-      ESSENTIAL: 'price_1TM2Yr4zCGinpjiEssURjhxa',
-      PRO:       'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
-      GROUP:     'price_1TM2m34zCGinpjiEOo3nR5CQ',
-    };
-
-    const priceId = STRIPE_PRICE_IDS[plan_code];
-    if (!priceId) return res.status(400).json({ error: 'Plan invalide (ESSENTIAL, PRO ou GROUP)' });
-
-    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
-
-    const sessionData = {
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: {
-        trial_period_days: 7,
-        metadata: { plan: plan_code, clinic_id: clinic_id || '' }
-      },
-      metadata: { plan: plan_code, clinic_id: clinic_id || '' },
-      success_url: FRONT + '/login?checkout=success&plan=' + plan_code,
-      cancel_url:  FRONT + '/register?checkout=cancelled',
-      locale: 'fr',
-    };
-    if (email) sessionData.customer_email = email;
-
-    const session = await stripe.checkout.sessions.create(sessionData);
-    res.json({ url: session.url, session_id: session.id });
-  } catch (error) {
-    console.error('Public checkout error:', error.message);
-    res.status(500).json({ error: 'Erreur Stripe', details: error.message });
-  }
-});
-
-app.use('/api/billing/webhook/stripe', billingRoutes); // raw body pour vérification signature Stripe
-app.use('/api/billing/webhook',    billingRoutes);
-app.use('/api/billing',          requireAuth, billingRoutes);
+// Webhooks de paiement et checkout public restent sans auth; le reste de billing est protégé.
+app.use('/api/billing', (req, res, next) => {
+  const publicPaths = new Set(['/public-checkout', '/webhook/stripe', '/webhook/mvola', '/webhook/orange', '/webhook/generic']);
+  if (publicPaths.has(req.path)) return next();
+  return requireAuth(req, res, next);
+}, billingRoutes);
 app.use('/api/admin',            requireAuth, requireSuperAdmin, adminRoutes);
 app.use('/api/legal',            legalRoutes);
 app.use('/api/pricing-schedules',requireAuth, requireClinicScope, pricingRoutes);

@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const crypto = require('crypto');
 const { body, validationResult, param, query } = require('express-validator');
 const { Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
@@ -33,11 +34,8 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    // Generate unique filename: timestamp_random_originalname
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = path.extname(file.originalname);
-    const name = path.basename(file.originalname, extension);
-    cb(null, `${uniqueSuffix}_${name}${extension}`);
+    const extension = path.extname(file.originalname).toLowerCase();
+    cb(null, `${crypto.randomUUID()}${extension}`);
   }
 });
 
@@ -480,12 +478,14 @@ router.post('/staff/:userId/photo', [
 // Serve uploaded files (with proper security)
 router.get('/files/:filename', async (req, res) => {
   try {
-    const { filename } = req.params;
-    const filePath = path.join(__dirname, '../uploads', filename);
+    const filename = path.basename(req.params.filename || '');
+    if (!/^[a-f0-9-]{36}\.[a-z0-9]{2,8}$/i.test(filename)) {
+      return res.status(400).json({ error: 'Nom de fichier invalide' });
+    }
 
     // Check if file exists
     try {
-      await fs.access(filePath);
+      await fs.access(path.join(__dirname, '../uploads', filename));
     } catch {
       return res.status(404).json({
         error: 'Fichier non trouvé'
@@ -493,7 +493,8 @@ router.get('/files/:filename', async (req, res) => {
     }
 
     // Serve the file
-    res.sendFile(filePath);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.sendFile(filename, { root: path.join(__dirname, '../uploads'), dotfiles: 'deny' });
   } catch (error) {
     console.error('Serve file error:', error);
     res.status(500).json({

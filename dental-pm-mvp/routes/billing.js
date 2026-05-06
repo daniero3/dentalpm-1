@@ -555,15 +555,19 @@ router.post('/create-checkout-session', async (req, res) => {
 router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (req, res) => {
   const sig       = req.headers['stripe-signature'];
   const secret    = process.env.STRIPE_WEBHOOK_SECRET;
+  const rawBody   = req.rawBody || req.body;
 
   let event;
   try {
     if (secret) {
       const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
-      event = stripe.webhooks.constructEvent(req.body, sig, secret);
+      event = stripe.webhooks.constructEvent(rawBody, sig, secret);
     } else {
-      // Mode dev sans vérification de signature
-      event = JSON.parse(req.body);
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(503).json({ error: 'Webhook Stripe non configuré' });
+      }
+      // Mode dev sans vérification de signature.
+      event = Buffer.isBuffer(rawBody) ? JSON.parse(rawBody.toString('utf8')) : rawBody;
     }
   } catch (err) {
     console.error('Stripe webhook signature error:', err.message);
@@ -724,14 +728,14 @@ router.post('/webhook/mvola', async (req, res) => {
       }
     }
 
-    console.log('[MVola Webhook] Payload reçu:', JSON.stringify(req.body));
+    console.log('[MVola Webhook] Payload reçu');
     const result = await handleMVolaWebhook(req.body);
 
     // MVola attend une réponse 200 rapide
     res.status(200).json({ received: true, processed: result.processed });
   } catch (error) {
     console.error('[MVola Webhook] Erreur:', error);
-    res.status(200).json({ received: true, error: error.message });
+    res.status(200).json({ received: true, error: 'Erreur traitement webhook' });
   }
 });
 
@@ -749,12 +753,12 @@ router.post('/webhook/orange', async (req, res) => {
       }
     }
 
-    console.log('[Orange Webhook] Payload reçu:', JSON.stringify(req.body));
+    console.log('[Orange Webhook] Payload reçu');
     const result = await handleOrangeMoneyWebhook(req.body);
     res.status(200).json({ received: true, processed: result.processed });
   } catch (error) {
     console.error('[Orange Webhook] Erreur:', error);
-    res.status(200).json({ received: true, error: error.message });
+    res.status(200).json({ received: true, error: 'Erreur traitement webhook' });
   }
 });
 
@@ -779,7 +783,8 @@ router.post('/webhook/generic', async (req, res) => {
     const result = await autoVerifyByReference(reference, clinic_id);
     res.json({ processed: result.verified, ...result });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('[Generic Webhook] Erreur:', error.message);
+    res.status(500).json({ error: 'Erreur traitement webhook' });
   }
 });
 

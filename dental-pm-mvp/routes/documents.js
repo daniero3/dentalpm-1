@@ -7,20 +7,39 @@ const router = express.Router();
 
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
 const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+const safeFilename = (name) => String(name || 'document')
+  .replace(/[^\w.\- ]+/g, '_')
+  .replace(/["\\]/g, '_')
+  .slice(0, 120) || 'document';
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, true)
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME_TYPES.has(file.mimetype)) return cb(null, true);
+    return cb(new Error('Type de fichier non autorisé'), false);
+  }
 });
 
 const serveFile = (doc, res, disp) => {
   if (doc.file_data?.startsWith('data:')) {
     const [hdr, b64] = doc.file_data.split(',');
     const mime       = hdr.split(':')[1].split(';')[0];
+    if (!ALLOWED_MIME_TYPES.has(mime)) {
+      return res.status(415).json({ error: 'Type de fichier non autorisé' });
+    }
     const buf        = Buffer.from(b64, 'base64');
     res.setHeader('Content-Type', mime);
-    res.setHeader('Content-Disposition', `${disp}; filename="${doc.original_filename || 'document'}"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', `${disp}; filename="${safeFilename(doc.original_filename)}"`);
     return res.send(buf);
   }
   return res.status(404).json({ error: 'Fichier non disponible' });

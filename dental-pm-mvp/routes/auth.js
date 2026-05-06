@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { User, Clinic, AuditLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
@@ -13,16 +14,26 @@ const router = express.Router();
 router.post('/register', [
   body('username').isLength({ min:3, max:50 }).matches(/^[a-zA-Z0-9_-]+$/),
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min:6 }),
+  body('password').isStrongPassword({ minLength: 10, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 }),
   body('full_name').isLength({ min:2, max:100 }),
   body('role').isIn(['ADMIN','DENTIST','ASSISTANT','ACCOUNTANT']), // SUPER_ADMIN non créable via API publique
-  body('clinic_id').optional({ nullable:true }).isUUID()
+  body('clinic_id').optional({ nullable:true }).isUUID(),
+  body('invite_code').optional({ nullable:true }).isLength({ min: 8, max: 128 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
 
     const { username, email, password, full_name, role, phone, specialization, clinic_id } = req.body;
+    if (process.env.NODE_ENV === 'production' && process.env.PUBLIC_CLINIC_USER_REGISTRATION !== 'true') {
+      return res.status(403).json({
+        error: 'Inscription publique désactivée. Demandez à votre administrateur de créer votre compte.',
+        code: 'PUBLIC_REGISTRATION_DISABLED'
+      });
+    }
+    if (process.env.CLINIC_JOIN_INVITE_CODE && req.body.invite_code !== process.env.CLINIC_JOIN_INVITE_CODE) {
+      return res.status(403).json({ error: 'Code invitation invalide', code: 'INVALID_INVITE_CODE' });
+    }
 
     const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
     if (existingUser) return res.status(409).json({ error:"Un utilisateur existe déjà avec ce nom d'utilisateur ou cet email" });
@@ -283,8 +294,8 @@ router.post('/register-clinic', [
       max_users:           PLAN_USERS[plan] || 5,
     });
 
-    // Créer le compte admin du cabinet (mot de passe temporaire)
-    const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+    // Mot de passe temporaire généré avec une source cryptographique.
+    const tempPassword = crypto.randomBytes(18).toString('base64url') + 'A1!';
     await User.create({
       username:     email.split('@')[0].replace(/[^a-zA-Z0-9]/g,'_').slice(0,30) + '_' + Date.now().toString().slice(-4),
       email,
@@ -327,7 +338,7 @@ router.post('/register-clinic', [
     });
   } catch (error) {
     console.error('Register clinic error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
@@ -339,8 +350,9 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     if (!current_password || !new_password) {
       return res.status(400).json({ error: 'Champs requis manquants' });
     }
-    if (new_password.length < 6) {
-      return res.status(400).json({ error: 'Nouveau mot de passe trop court (min 6 caractères)' });
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+    if (!strongPassword.test(new_password)) {
+      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 10 caractères, une majuscule, une minuscule, un chiffre et un symbole.' });
     }
     const userId = req.user?.id || req.user?.dataValues?.id;
     const user = await User.findByPk(userId);
@@ -426,7 +438,9 @@ router.post('/clinic-users', authenticateToken, async (req, res) => {
     if (!full_name || !email || !username || !password) {
       return res.status(400).json({ error: 'Champs requis: full_name, email, username, password' });
     }
-    if (password.length < 6) return res.status(400).json({ error: 'Mot de passe minimum 6 caractères' });
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(password)) {
+      return res.status(400).json({ error: 'Mot de passe trop faible' });
+    }
     if (!['DENTIST','ASSISTANT','ACCOUNTANT','ADMIN'].includes(role)) {
       return res.status(400).json({ error: 'Rôle invalide' });
     }
