@@ -326,17 +326,20 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
         <div style={{ display:'grid', gridTemplateColumns:'1fr 340px', flex:1, overflow:'hidden', minHeight:400 }}>
           {/* Left — form */}
           <div style={{ display:'flex', flexDirection:'column', overflow:'hidden', borderRight:'1px solid #E2E8F0' }}>
-            <div style={{ padding:'11px 18px', borderBottom:'1px solid #E2E8F0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+            <div style={{ padding:'11px 18px', borderBottom:'1px solid #E2E8F0', background:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexShrink:0 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <Pill size={15} color={T}/>
-                <span style={{ fontWeight:700, fontSize:14, color:'#0F172A' }}>Médicaments</span>
+                <div>
+                  <div style={{ fontWeight:700, fontSize:14, color:'#0F172A' }}>Médicaments</div>
+                  <div style={{ fontSize:11, color:'#94A3B8', marginTop:1 }}>Ajoutez plusieurs médicaments dans la même ordonnance</div>
+                </div>
                 {filled.length > 0 && <span style={{ background:`${T}15`, color:T, fontSize:11, fontWeight:700, padding:'2px 9px', borderRadius:99 }}>{filled.length}/{formData.items.length}</span>}
               </div>
               <button type="button" onClick={addItem}
-                style={{ padding:'6px 14px', borderRadius:9, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5, boxShadow:`0 2px 8px ${T}40`, transition:'filter .15s' }}
+                style={{ padding:'6px 14px', borderRadius:9, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5, boxShadow:`0 2px 8px ${T}40`, transition:'filter .15s', whiteSpace:'nowrap' }}
                 onMouseOver={e=>e.currentTarget.style.filter='brightness(1.1)'}
                 onMouseOut={e=>e.currentTarget.style.filter='none'}>
-                <Plus size={12}/> Ajouter
+                <Plus size={12}/> Ajouter un autre médicament
               </button>
             </div>
             <div style={{ flex:1, overflowY:'scroll', overflowX:'hidden', padding:'12px 14px' }}>
@@ -345,6 +348,12 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
                   isActive={activeIdx===i} onActivate={() => setActiveIdx(i)}
                   onUpdate={updateItem} onRemove={removeItem} suggestions={suggestions}/>
               ))}
+            </div>
+            <div style={{ padding:'0 18px 12px', background:'#fff', flexShrink:0 }}>
+              <button type="button" onClick={addItem}
+                style={{ width:'100%', padding:'8px 14px', borderRadius:10, border:'1.5px dashed #7DD3DA', background:'#F0FDFE', cursor:'pointer', fontSize:12, fontWeight:700, color:T, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                <Plus size={12}/> Ajouter un médicament supplémentaire
+              </button>
             </div>
             <div style={{ padding:'12px 18px', background:'#fff', borderTop:'1px solid #E2E8F0', flexShrink:0 }}>
               <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>Notes / Instructions complémentaires</label>

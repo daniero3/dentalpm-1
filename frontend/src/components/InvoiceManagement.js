@@ -157,7 +157,15 @@ const InvoiceManagement = () => {
     } catch(e){ toast.error(e.response?.data?.error||'Erreur paiement'); }
   };
 
-  const handlePrint = id => window.open(`${API}/invoices/${id}/print`, '_blank');
+  const handlePrint = id => {
+    const printUrl = `${API}/invoices/${id}/print`;
+    const popup = window.open(printUrl, '_blank', 'noopener,noreferrer');
+    if (!popup) {
+      toast.error("Autorisez les fenêtres contextuelles pour imprimer la facture");
+      return;
+    }
+    popup.focus();
+  };
   const handlePDF = async (id, num) => {
     try {
       const r=await fetch(`${API}/invoices/${id}/pdf`,{headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});
