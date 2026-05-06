@@ -334,8 +334,11 @@ router.get('/:id/dental-chart', requireClinicId, [
     const patient = await Patient.findOne({ where: whereClause });
     if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
 
+    const treatmentWhere = { patient_id: req.params.id };
+    if (req.clinic_id) treatmentWhere.clinic_id = req.clinic_id;
+
     const treatments = await Treatment.findAll({
-      where: { patient_id: req.params.id },
+      where: treatmentWhere,
       order: [['treatment_date', 'DESC']]
     });
 

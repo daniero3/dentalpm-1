@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult, param, query } = require('express-validator');
 const { Op } = require('sequelize');
+const { requirePermission } = require('../utils/permissions');
 
 const router = express.Router();
 
@@ -156,7 +157,7 @@ router.patch('/:id/status', [
 
 
 // ── POST /:id/receive ─────────────────────────────────────────────────────────
-router.post('/:id/receive', [param('id').isUUID()], async (req, res) => {
+router.post('/:id/receive', requirePermission('purchases', 'execute'), [param('id').isUUID()], async (req, res) => {
   try {
     const models   = await getModels();
     const Purchase = models.Purchase || models.PurchaseOrder;

@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { param, body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
+const { requirePermission } = require('../utils/permissions');
 
 const router = express.Router();
 
@@ -240,7 +241,7 @@ router.get('/patients/:patientId/prescriptions/:id/print', [
 
 
 // ── POST /api/prescriptions/:id/issue ────────────────────────────────────────
-router.post('/:id/issue', [param('id').isUUID()], async (req, res) => {
+router.post('/:id/issue', requirePermission('prescriptions', 'execute'), [param('id').isUUID()], async (req, res) => {
   try {
     const { Prescription } = await getModels();
     const clinicId = getClinicId(req);
@@ -256,7 +257,7 @@ router.post('/:id/issue', [param('id').isUUID()], async (req, res) => {
 });
 
 // ── POST /api/prescriptions/:id/cancel ───────────────────────────────────────
-router.post('/:id/cancel', [param('id').isUUID()], async (req, res) => {
+router.post('/:id/cancel', requirePermission('prescriptions', 'execute'), [param('id').isUUID()], async (req, res) => {
   try {
     const { Prescription } = await getModels();
     const clinicId = getClinicId(req);

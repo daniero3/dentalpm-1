@@ -60,7 +60,9 @@ self.addEventListener('fetch', e => {
   ) {
     e.respondWith(
       fetch(e.request).catch(() =>
-        new Response(JSON.stringify({ error: 'Hors ligne' }), {
+        new Response(JSON.stringify({ error: 'Hors ligne', code: 'OFFLINE' }), {
+          status: 503,
+          statusText: 'Service Unavailable',
           headers: { 'Content-Type': 'application/json' }
         })
       )

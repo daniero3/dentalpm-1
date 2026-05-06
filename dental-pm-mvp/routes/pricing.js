@@ -4,6 +4,7 @@ const { PricingSchedule, ProcedureFee } = require('../models');
 const multer = require('multer');
 const csv = require('csv-parse/sync');
 const { Op } = require('sequelize');
+const { getPermissionsForRole } = require('../utils/permissions');
 
 const router = express.Router();
 
@@ -13,13 +14,21 @@ const isSuperAdmin = (req) => req.user?.role === 'SUPER_ADMIN';
 const getSchedulePermissions = (req, schedule) => {
   const none = { read: false, write: false, execute: false };
   if (!schedule) return none;
-  if (isSuperAdmin(req)) return { read: true, write: schedule.type !== 'SYNDICAL', execute: schedule.type !== 'SYNDICAL' };
+  const moduleName = schedule.type === 'SYNDICAL' ? 'pricing_syndical' : 'pricing_cabinet';
+  const rolePermissions = getPermissionsForRole(req.user?.role, moduleName);
+  const fromRole = {
+    read: rolePermissions.includes('read'),
+    write: rolePermissions.includes('write'),
+    execute: rolePermissions.includes('execute')
+  };
+
+  if (isSuperAdmin(req)) return schedule.type === 'SYNDICAL' ? fromRole : none;
 
   const clinicId = getClinicId(req);
   const ownsCabinetSchedule = Boolean(clinicId && schedule.clinic_id === clinicId && schedule.type === 'CABINET');
 
-  if (ownsCabinetSchedule) return { read: true, write: true, execute: true };
-  if (schedule.type === 'SYNDICAL') return { read: true, write: false, execute: false };
+  if (ownsCabinetSchedule) return fromRole;
+  if (schedule.type === 'SYNDICAL') return fromRole;
   return none;
 };
 const canReadSchedule = (req, schedule) => getSchedulePermissions(req, schedule).read;
@@ -69,6 +78,9 @@ router.get('/', async (req, res) => {
         { clinic_id: clinicId },
         { clinic_id: null, type: 'SYNDICAL' }
       ];
+    } else {
+      whereClause.clinic_id = null;
+      whereClause.type = 'SYNDICAL';
     }
 
     let schedules = await PricingSchedule.findAll({

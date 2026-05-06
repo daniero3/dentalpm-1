@@ -3,6 +3,7 @@ const cors        = require('cors');
 const helmet      = require('helmet');
 const rateLimit   = require('express-rate-limit');
 const compression = require('compression');
+const crypto      = require('crypto');
 require('dotenv').config();
 
 const sequelize = require('./database/connection');
@@ -35,9 +36,12 @@ const dentalChartRoutes   = require('./routes/dental-chart');
 
 const { getSubscriptionStatus } = require('./middleware/licensing');
 const { authenticateToken: requireAuth, requireClinicScope, requireSuperAdmin, blockSuperAdminFromMedicalData: blockMedical } = require('./middleware/auth');
+const { requireModuleAccess } = require('./utils/permissions');
 
 const app  = express();
 const PORT = process.env.PORT || 8001;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const REQUIRE_HTTPS = process.env.REQUIRE_HTTPS === 'true' || IS_PRODUCTION;
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -131,7 +135,32 @@ async function seedTestAccounts() {
 
 // ✅ CORS inconditionnel — tout premier middleware
 app.set('trust proxy', 1);
-app.use(helmet());
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  const requestId = req.get('X-Request-Id') || crypto.randomUUID();
+  req.requestId = requestId;
+  res.setHeader('X-Request-Id', requestId);
+  next();
+});
+app.use((req, res, next) => {
+  if (!REQUIRE_HTTPS || req.secure || req.get('x-forwarded-proto') === 'https') {
+    return next();
+  }
+
+  if (['GET', 'HEAD'].includes(req.method)) {
+    return res.redirect(308, `https://${req.get('host')}${req.originalUrl}`);
+  }
+
+  return res.status(426).json({
+    error: 'Connexion HTTPS requise',
+    code: 'HTTPS_REQUIRED',
+    request_id: req.requestId
+  });
+});
+app.use(helmet({
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 const corsOptions = {
@@ -150,7 +179,29 @@ app.options('*', cors(corsOptions));
 
 app.use(rateLimit({ windowMs: 15*60*1000, max: 500, skip: r => r.path === '/api/health' }));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 100 }));
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+
+  const originalJson = res.json.bind(res);
+  res.json = (payload) => {
+    if (IS_PRODUCTION && res.statusCode >= 500 && payload && typeof payload === 'object') {
+      return originalJson({
+        error: payload.error || 'Erreur serveur',
+        code: payload.code || 'INTERNAL_SERVER_ERROR',
+        request_id: req.requestId
+      });
+    }
+
+    if (payload && typeof payload === 'object' && req.requestId && !payload.request_id) {
+      payload.request_id = req.requestId;
+    }
+
+    return originalJson(payload);
+  };
+
+  next();
+});
 app.use('/uploads', express.static('uploads'));
 
 // ── Health ────────────────────────────────────────────────────────────────────
@@ -201,16 +252,16 @@ app.use('/static', (req, res, next) => {
 // ── Routes ── Structure IDENTIQUE à l'originale ───────────────────────────────
 // (requireAuth uniquement là où il était dans l'original)
 app.use('/api/auth',             authRoutes);
-app.use('/api/patients',         requireAuth, requireClinicScope, blockMedical, patientRoutes);
-app.use('/api/appointments',     requireAuth, requireClinicScope, blockMedical, appointmentRoutes);
-app.use('/api/invoices',         requireAuth, requireClinicScope, blockMedical, invoiceRoutes);
-app.use('/api/quotes',           requireAuth, requireClinicScope, blockMedical, quoteRoutes);
+app.use('/api/patients',         requireAuth, requireClinicScope, blockMedical, requireModuleAccess('patients'), patientRoutes);
+app.use('/api/appointments',     requireAuth, requireClinicScope, blockMedical, requireModuleAccess('appointments'), appointmentRoutes);
+app.use('/api/invoices',         requireAuth, requireClinicScope, blockMedical, requireModuleAccess('invoices'), invoiceRoutes);
+app.use('/api/quotes',           requireAuth, requireClinicScope, blockMedical, requireModuleAccess('quotes'), quoteRoutes);
 app.use('/api/integrations',     integrationRoutes);
 app.use('/api/dashboard',        requireAuth, requireClinicScope, blockMedical, dashboardRoutes);
-app.use('/api/inventory',        requireAuth, requireClinicScope, blockMedical, inventoryRoutes);
-app.use('/api/suppliers',        requireAuth, requireClinicScope, blockMedical, supplierRoutes);
-app.use('/api/labs',             requireAuth, requireClinicScope, blockMedical, labRoutes);
-app.use('/api/mailing',          requireAuth, requireClinicScope, blockMedical, mailingRoutes);
+app.use('/api/inventory',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('inventory'), inventoryRoutes);
+app.use('/api/suppliers',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('suppliers'), supplierRoutes);
+app.use('/api/labs',             requireAuth, requireClinicScope, blockMedical, requireModuleAccess('lab_orders'), labRoutes);
+app.use('/api/mailing',          requireAuth, requireClinicScope, blockMedical, requireModuleAccess('messaging'), mailingRoutes);
 app.use('/api/media',            requireAuth, mediaRoutes);
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
 // Webhooks de paiement — SANS auth (appelés par MVola/Orange depuis l'extérieur)
@@ -265,17 +316,17 @@ app.use('/api/admin',            requireAuth, requireSuperAdmin, adminRoutes);
 app.use('/api/legal',            legalRoutes);
 app.use('/api/pricing-schedules',requireAuth, requireClinicScope, pricingRoutes);
 app.use('/api/procedure-fees',   requireAuth, requireClinicScope, pricingRoutes);
-app.use('/api/documents',        requireAuth, requireClinicScope, blockMedical, documentRoutes);
-app.use('/api/prescriptions',    requireAuth, requireClinicScope, blockMedical, prescriptionRoutes);
-app.use('/api/reports',          requireAuth, requireClinicScope, blockMedical, reportsRoutes);
-app.use('/api/messaging',        requireAuth, messagingRoutes);
-app.use('/api/purchases',        requireAuth, requireClinicScope, blockMedical, purchasesRoutes);
+app.use('/api/documents',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('patient_documents'), documentRoutes);
+app.use('/api/prescriptions',    requireAuth, requireClinicScope, blockMedical, requireModuleAccess('prescriptions'), prescriptionRoutes);
+app.use('/api/reports',          requireAuth, requireClinicScope, blockMedical, requireModuleAccess('reports'), reportsRoutes);
+app.use('/api/messaging',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('messaging'), messagingRoutes);
+app.use('/api/purchases',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('purchases'), purchasesRoutes);
 app.use('/api/onboarding',       requireAuth, onboardingRoutes);
 
 // Routes avec chemins relatifs (montées sur /api)
-app.use('/api', requireAuth, requireClinicScope, blockMedical, prescriptionRoutes);
-app.use('/api', requireAuth, requireClinicScope, blockMedical, odontogramRoutes);
-app.use('/api', requireAuth, requireClinicScope, blockMedical, dentalChartRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('prescriptions'), prescriptionRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('dental_chart'), odontogramRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('dental_chart'), dentalChartRoutes);
 
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 
@@ -292,12 +343,23 @@ app.get('/api/version', (req, res) => {
 
 // ── Error handlers ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.message);
-  res.status(err.status || 500).json({ error: err.message || "Erreur interne" });
+  console.error(JSON.stringify({
+    level: 'error',
+    request_id: req.requestId,
+    method: req.method,
+    path: req.originalUrl,
+    status: err.status || 500,
+    message: err.message
+  }));
+  res.status(err.status || 500).json({
+    error: IS_PRODUCTION ? 'Erreur interne' : (err.message || 'Erreur interne'),
+    code: 'UNHANDLED_ERROR',
+    request_id: req.requestId
+  });
 });
 
 app.use('*', (req, res) => {
-  res.status(404).json({ error:'Route non trouvée', path: req.originalUrl });
+  res.status(404).json({ error:'Route non trouvée', path: req.originalUrl, request_id: req.requestId });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

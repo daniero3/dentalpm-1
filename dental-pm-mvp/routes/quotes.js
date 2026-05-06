@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { Invoice, InvoiceItem, Patient, Clinic, AuditLog, PricingSchedule } = require('../models');
+const { requirePermission } = require('../utils/permissions');
 // ✅ requireClinicId inline
 const requireClinicId = (req, res, next) => {
   if (req.user?.role === 'SUPER_ADMIN') return next();
@@ -301,7 +302,7 @@ router.patch('/:id/status', requireClinicOrSuperAdmin, [
 });
 
 // ✅ Route convert — bloque PAID, EXPIRED, CONVERTED, REJECTED, CANCELLED
-router.post('/:id/convert', requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
+router.post('/:id/convert', requirePermission('quotes', 'execute'), requireClinicOrSuperAdmin, [param('id').isUUID()], async (req, res) => {
   try {
     if (!validateRequest(req, res)) return;
     const quote = await Invoice.findOne({

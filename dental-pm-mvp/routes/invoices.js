@@ -1,8 +1,9 @@
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
-const { Invoice, InvoiceItem, Patient, Payment, AuditLog, PricingSchedule, Clinic } = require('../models');
+const { Invoice, InvoiceItem, Patient, Payment, AuditLog, PricingSchedule, Clinic, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const { auditLogger } = require('../middleware/auditLogger');
+const { requirePermission } = require('../utils/permissions');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 
@@ -115,83 +116,102 @@ router.post('/', [
 
     const { patient_id, schedule_id, items, discount_percentage=0, notes } = req.body;
     const clinicId = getClinicId(req);
-    const userId   = getUserIdFromToken(req);
+    if (!clinicId) return res.status(403).json({ error: 'Cabinet non identifié', code: 'NO_CLINIC' });
 
-    const patient = await Patient.findByPk(patient_id);
+    const patient = await Patient.findOne({ where: { id: patient_id, clinic_id: clinicId } });
     if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
 
-    const year  = new Date().getFullYear();
-    const count = await Invoice.count({ where: { created_at: { [Op.gte]: new Date(year,0,1), [Op.lt]: new Date(year+1,0,1) } } });
-    const invoiceNumber = `FACT-${year}-${String(count+1).padStart(4,'0')}`;
+    if (schedule_id) {
+      const schedule = await PricingSchedule.findOne({
+        where: {
+          id: schedule_id,
+          is_active: true,
+          [Op.or]: [
+            { clinic_id: clinicId },
+            { clinic_id: null, type: 'SYNDICAL' }
+          ]
+        }
+      });
+      if (!schedule) return res.status(404).json({ error:'Grille tarifaire non trouvée' });
+    }
 
     const subtotal       = items.reduce((sum, i) => sum + (i.quantity * i.unit_price_mga), 0);
     const discountAmount = (subtotal * discount_percentage) / 100;
     const total          = subtotal - discountAmount;
+    let finalUserId = getUserIdFromToken(req);
 
-    // Essayer de créer la facture — champs minimaux garantis
-    let invoice;
-    const baseInvoice = {
-      invoice_number:      invoiceNumber,
-      patient_id,
-      subtotal_mga:        subtotal,
-      discount_percentage: discount_percentage || 0,
-      discount_amount_mga: discountAmount,
-      total_mga:           total,
-      status:              'DRAFT',
-    };
-    if (clinicId)    baseInvoice.clinic_id           = clinicId;
-    if (schedule_id) baseInvoice.schedule_id         = schedule_id;
-    if (notes)       baseInvoice.notes               = notes;
-    // created_by_user_id — getUserId lit depuis req.user ET le token JWT
-    const finalUserId = getUserIdFromToken(req);
-    if (finalUserId) baseInvoice.created_by_user_id = finalUserId;
-
-    // Dernier recours DB
     if (!finalUserId && req.user?.username) {
       try {
-        const { User } = require('../models');
         const u = await User.findOne({ where: { username: req.user.username }, attributes: ['id'] });
         finalUserId = u?.id || null;
       } catch(e) {}
     }
 
-    // Si userId trouvé, l'ajouter — sinon continuer sans (colonne nullable après SQL)
-    if (finalUserId) {
-      baseInvoice.created_by_user_id = finalUserId;
-    }
+    const complete = await sequelize.transaction(async (transaction) => {
+      const year  = new Date().getFullYear();
+      const count = await Invoice.count({
+        where: {
+          clinic_id: clinicId,
+          created_at: { [Op.gte]: new Date(year,0,1), [Op.lt]: new Date(year+1,0,1) }
+        },
+        transaction
+      });
+      const invoiceNumber = `FACT-${year}-${String(count+1).padStart(4,'0')}`;
 
-    // Tenter avec document_type d'abord
-    try {
-      invoice = await Invoice.create({ ...baseInvoice, document_type: 'INVOICE' });
-    } catch(e1) {
-      // Si document_type n'existe pas, réessayer sans
-      if (e1.message?.includes('document_type') || e1.message?.includes('column')) {
-        invoice = await Invoice.create(baseInvoice);
-      } else {
-        throw e1;
+      const baseInvoice = {
+        invoice_number:      invoiceNumber,
+        patient_id,
+        clinic_id:           clinicId,
+        subtotal_mga:        subtotal,
+        discount_percentage: discount_percentage || 0,
+        discount_amount_mga: discountAmount,
+        total_mga:           total,
+        status:              'DRAFT',
+      };
+      if (schedule_id)  baseInvoice.schedule_id = schedule_id;
+      if (notes)        baseInvoice.notes = notes;
+      if (finalUserId)  baseInvoice.created_by_user_id = finalUserId;
+
+      let invoice;
+      try {
+        invoice = await Invoice.create({ ...baseInvoice, document_type: 'INVOICE' }, { transaction });
+      } catch(e1) {
+        if (e1.message?.includes('document_type') || e1.message?.includes('column')) {
+          invoice = await Invoice.create(baseInvoice, { transaction });
+        } else {
+          throw e1;
+        }
       }
-    }
 
-    await Promise.all(items.map(item => InvoiceItem.create({
-      invoice_id:      invoice.id,
-      description:     item.description,
-      quantity:        item.quantity,
-      unit_price_mga:  item.unit_price_mga,
-      total_price_mga: item.quantity * item.unit_price_mga,
-      procedure_id:    item.procedure_id || null,
-      tooth_number:    item.tooth_number || null,
-      notes:           item.notes || null
-    })));
+      await Promise.all(items.map(item => InvoiceItem.create({
+        invoice_id:      invoice.id,
+        description:     item.description,
+        quantity:        item.quantity,
+        unit_price_mga:  item.unit_price_mga,
+        total_price_mga: item.quantity * item.unit_price_mga,
+        procedure_id:    item.procedure_id || null,
+        tooth_number:    item.tooth_number || null,
+        notes:           item.notes || null
+      }, { transaction })));
 
-    try {
-      await AuditLog.create({ user_id: userId, action:'CREATE', resource_type:'invoices', resource_id: invoice.id, ip_address: req.ip, description:`Facture créée: ${invoiceNumber}` });
-    } catch(e) {}
+      try {
+        await AuditLog.create({
+          user_id: finalUserId,
+          action:'CREATE',
+          resource_type:'invoices',
+          resource_id: invoice.id,
+          ip_address: req.ip,
+          description:`Facture créée: ${invoiceNumber}`
+        }, { transaction });
+      } catch(e) {}
 
-    const complete = await Invoice.findByPk(invoice.id, {
-      include: [
-        { model: Patient,     as: 'patient', attributes: ['id','first_name','last_name','phone_primary'], required: false },
-        { model: InvoiceItem, as: 'items',   required: false }
-      ]
+      return Invoice.findByPk(invoice.id, {
+        include: [
+          { model: Patient,     as: 'patient', attributes: ['id','first_name','last_name','phone_primary'], required: false },
+          { model: InvoiceItem, as: 'items',   required: false }
+        ],
+        transaction
+      });
     });
 
     res.status(201).json({ message:'Facture créée', invoice: complete });
@@ -235,7 +255,7 @@ router.delete('/:id', [param('id').isUUID()], async (req, res) => {
 });
 
 // ── GET /:id/payments ─────────────────────────────────────────────────────────
-router.get('/:id/payments', [param('id').isUUID()], async (req, res) => {
+router.get('/:id/payments', requirePermission('payments', 'read'), [param('id').isUUID()], async (req, res) => {
   try {
     const invoice = await Invoice.findOne({ where: { id: req.params.id, ...clinicWhere(req) } });
     if (!invoice) return res.status(404).json({ error:'Facture non trouvée' });
@@ -251,7 +271,7 @@ router.get('/:id/payments', [param('id').isUUID()], async (req, res) => {
 });
 
 // ── POST /:id/payments ────────────────────────────────────────────────────────
-router.post('/:id/payments', [
+router.post('/:id/payments', requirePermission('payments', 'execute'), [
   param('id').isUUID(),
   body('amount_mga').isFloat({ min:1 }),
   body('payment_method').isIn(['CASH','CHEQUE','CARD','MVOLA','ORANGE_MONEY','AIRTEL_MONEY','BANK_TRANSFER'])

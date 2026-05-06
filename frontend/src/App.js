@@ -136,6 +136,15 @@ axios.interceptors.request.use(
 );
 
 let setGlobalSubscriptionError = null;
+let authExpiryHandled = false;
+
+const clearStoredSession = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('dpm_plan');
+  localStorage.removeItem('dpm_user_plan');
+  delete axios.defaults.headers.common['Authorization'];
+};
 
 // Auth Context
 const AuthContext = React.createContext();
@@ -163,6 +172,19 @@ const AuthProvider = ({ children }) => {
           if (['SUBSCRIPTION_EXPIRED', 'TRIAL_EXPIRED', 'NO_ACTIVE_SUBSCRIPTION'].includes(code)) {
             setSubscriptionError(error.response.data);
             return Promise.reject(error);
+          }
+        }
+        if (error.response?.status === 401) {
+          const code = error.response?.data?.code;
+          if (['TOKEN_EXPIRED', 'INVALID_TOKEN', 'MISSING_TOKEN', 'AUTH_REQUIRED'].includes(code) && !authExpiryHandled) {
+            authExpiryHandled = true;
+            clearStoredSession();
+            setUser(null);
+            toast.error('Session expirée. Reconnectez-vous pour continuer.');
+            window.setTimeout(() => {
+              authExpiryHandled = false;
+              if (window.location.pathname !== '/login') window.location.assign('/login');
+            }, 250);
           }
         }
         return Promise.reject(error);
@@ -198,6 +220,7 @@ const AuthProvider = ({ children }) => {
       }
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
+      authExpiryHandled = false;
       toast.success("Connexion réussie!");
       return { success: true };
     } catch (error) {
@@ -207,11 +230,7 @@ const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('dpm_plan');
-    localStorage.removeItem('dpm_user_plan'); // vider le plan en cache
-    delete axios.defaults.headers.common['Authorization'];
+    clearStoredSession();
     setUser(null);
     setSubscriptionError(null);
     toast.success("Déconnexion réussie");
@@ -333,6 +352,42 @@ const PageTransition = ({ children }) => {
   );
 };
 
+const OfflineBanner = () => {
+  const [online, setOnline] = React.useState(() => typeof navigator === 'undefined' ? true : navigator.onLine);
+
+  React.useEffect(() => {
+    const sync = () => setOnline(navigator.onLine);
+    window.addEventListener('online', sync);
+    window.addEventListener('offline', sync);
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('offline', sync);
+    };
+  }, []);
+
+  if (online) return null;
+
+  return (
+    <div style={{
+      position:'fixed',
+      left:12,
+      right:12,
+      bottom:12,
+      zIndex:9999,
+      padding:'10px 14px',
+      borderRadius:12,
+      background:'#7F1D1D',
+      color:'#fff',
+      boxShadow:'0 12px 32px rgba(15,23,42,.22)',
+      fontSize:13,
+      fontWeight:700,
+      textAlign:'center'
+    }}>
+      Connexion interrompue. Les nouvelles sauvegardes ne seront pas envoyées tant que le réseau n'est pas revenu.
+    </div>
+  );
+};
+
 // ── Main Layout — Responsive ────────────────────────────────────────────
 const useLayoutWidth = () => {
   const [w, setW] = React.useState(window.innerWidth);
@@ -444,6 +499,7 @@ function App() {
               </Routes>
               <CookieBanner />
               <PWAInstallPrompt />
+              <OfflineBanner />
             </BrowserRouter>
             <Toaster
               position="top-right"

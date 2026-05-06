@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { param, body, validationResult } = require('express-validator');
+const { requirePermission } = require('../utils/permissions');
 
 const router = express.Router();
 
@@ -159,7 +160,7 @@ router.post('/orders', [
 });
 
 // ── POST /api/labs/orders/:id/status ─────────────────────────────────────────
-router.post('/orders/:id/status', [
+router.post('/orders/:id/status', requirePermission('lab_orders', 'execute'), [
   param('id').isUUID(),
   body('status').isIn(STATUSES)
 ], async (req, res) => {
