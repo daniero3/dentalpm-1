@@ -1,7 +1,9 @@
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
-const { Appointment, Patient, User } = require('../models');
+const { Appointment, Patient, User, AuditLog, sequelize } = require('../models');
 const { auditLogger } = require('../middleware/auditLogger');
+const multer = require('multer');
+const csv = require('csv-parse/sync');
 
 const jwt = require('jsonwebtoken');
 const _getClinicId = (req) => {
@@ -21,6 +23,10 @@ let messagingRouter = null;
 try { messagingRouter = require('./messaging'); } catch(e) {}
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }
+});
 
 // ✅ Pas de requireValidSubscription ni requireClinicId bloquant
 router.use(auditLogger('appointments'));
@@ -48,6 +54,148 @@ const normalizeTimeForDb = (v) => {
   return hhmm;
 };
 
+const parseCsvDate = (value) => {
+  if (!value) return null;
+  const str = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  const parts = str.split(/[\/.-]/).map(p => p.trim());
+  if (parts.length === 3 && parts[2].length === 4) {
+    const [d, m, y] = parts;
+    return `${y.padStart(4, '0')}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  return str;
+};
+
+const normalizeText = (value) => {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  return text === '' ? null : text;
+};
+
+const normalizeAppointmentType = (value) => {
+  if (!value) return 'CONSULTATION';
+  const key = String(value).trim().toUpperCase();
+  const map = {
+    CONSULTATION: 'CONSULTATION',
+    CONSULT: 'CONSULTATION',
+    TREATMENT: 'TREATMENT',
+    TRAITEMENT: 'TREATMENT',
+    FOLLOW_UP: 'FOLLOW_UP',
+    SUIVI: 'FOLLOW_UP',
+    EMERGENCY: 'EMERGENCY',
+    URGENCE: 'EMERGENCY',
+    CLEANING: 'CLEANING',
+    NETTOYAGE: 'CLEANING',
+    CHECK_UP: 'CHECK_UP',
+    CHECKUP: 'CHECK_UP',
+    CONTROLE: 'CHECK_UP',
+    CONTRÔLE: 'CHECK_UP'
+  };
+  return map[key] || 'CONSULTATION';
+};
+
+const normalizeAppointmentStatus = (value) => {
+  if (!value) return 'SCHEDULED';
+  const key = String(value).trim().toUpperCase();
+  const map = {
+    SCHEDULED: 'SCHEDULED',
+    PLANIFIE: 'SCHEDULED',
+    PLANIFIÉ: 'SCHEDULED',
+    CONFIRMED: 'CONFIRMED',
+    CONFIRME: 'CONFIRMED',
+    CONFIRMÉ: 'CONFIRMED',
+    IN_PROGRESS: 'IN_PROGRESS',
+    EN_COURS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+    TERMINE: 'COMPLETED',
+    TERMINÉ: 'COMPLETED',
+    CANCELLED: 'CANCELLED',
+    ANNULE: 'CANCELLED',
+    ANNULÉ: 'CANCELLED',
+    NO_SHOW: 'NO_SHOW',
+    ABSENT: 'NO_SHOW',
+    RESCHEDULED: 'RESCHEDULED',
+    REPORTE: 'RESCHEDULED',
+    REPORTÉ: 'RESCHEDULED'
+  };
+  return map[key] || 'SCHEDULED';
+};
+
+const resolvePatient = async (row, clinicId, transaction) => {
+  const patientId = normalizeText(row.patient_id);
+  if (patientId) {
+    const byId = await Patient.findOne({ where: { id: patientId, ...(clinicId ? { clinic_id: clinicId } : {}) }, transaction });
+    if (byId) return byId;
+  }
+
+  const patientNumber = normalizeText(row.patient_number);
+  if (patientNumber) {
+    const byNumber = await Patient.findOne({ where: { patient_number: patientNumber, ...(clinicId ? { clinic_id: clinicId } : {}) }, transaction });
+    if (byNumber) return byNumber;
+  }
+
+  const phone = normalizeText(row.patient_phone_primary);
+  if (phone) {
+    const byPhone = await Patient.findOne({ where: { phone_primary: phone, ...(clinicId ? { clinic_id: clinicId } : {}) }, transaction });
+    if (byPhone) return byPhone;
+  }
+
+  const email = normalizeText(row.patient_email);
+  if (email) {
+    const byEmail = await Patient.findOne({ where: { email, ...(clinicId ? { clinic_id: clinicId } : {}) }, transaction });
+    if (byEmail) return byEmail;
+  }
+
+  return null;
+};
+
+const resolveDentist = async (row, clinicId, req, transaction) => {
+  const dentistId = normalizeText(row.dentist_id);
+  if (dentistId) {
+    const byId = await User.findOne({
+      where: {
+        id: dentistId,
+        ...(clinicId ? { clinic_id: clinicId } : {}),
+        role: 'DENTIST'
+      },
+      transaction
+    });
+    if (byId) return byId.id;
+  }
+
+  const dentistEmail = normalizeText(row.dentist_email);
+  if (dentistEmail) {
+    const byEmail = await User.findOne({
+      where: {
+        email: dentistEmail,
+        ...(clinicId ? { clinic_id: clinicId } : {})
+      },
+      transaction
+    });
+    if (byEmail) return byEmail.id;
+  }
+
+  const dentistName = normalizeText(row.dentist_name);
+  if (dentistName) {
+    const byName = await User.findOne({
+      where: {
+        full_name: dentistName,
+        ...(clinicId ? { clinic_id: clinicId } : {}),
+        role: 'DENTIST'
+      },
+      transaction
+    });
+    if (byName) return byName.id;
+  }
+
+  if (req.user?.role === 'DENTIST') {
+    const currentUserId = getUserId(req);
+    if (currentUserId) return currentUserId;
+  }
+
+  return null;
+};
+
 const timeToMinutes = (v) => {
   const hhmm = normalizeTimeHHMM(v);
   const [h, m] = hhmm.split(':').map(Number);
@@ -69,6 +217,142 @@ const extractErrors = (error) => {
   }
   return error?.message || null;
 };
+
+router.post('/import-csv', upload.single('file'), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: 'Fichier CSV requis' });
+  }
+
+  const clinicId = getClinicId(req);
+  if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ error: 'Cabinet non identifié', code: 'NO_CLINIC' });
+  }
+
+  let rows = [];
+  try {
+    rows = csv.parse(file.buffer.toString('utf8'), {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      bom: true
+    });
+  } catch (error) {
+    return res.status(400).json({ error: 'CSV invalide', details: error.message });
+  }
+
+  const result = { inserted: 0, updated: 0, skipped: 0, errors: [] };
+  const transaction = await sequelize.transaction();
+
+  try {
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index];
+      const rowNumber = index + 2;
+
+      try {
+        const patient = await resolvePatient(row, clinicId, transaction);
+        if (!patient) {
+          result.skipped += 1;
+          result.errors.push({
+            row: rowNumber,
+            error: 'Patient introuvable dans ce cabinet'
+          });
+          continue;
+        }
+
+        const appointmentDate = parseCsvDate(row.appointment_date || row.date);
+        const startTime = normalizeTimeHHMM(row.start_time || row.start || row.begin_time);
+        const endTime = normalizeTimeHHMM(row.end_time || row.end || row.finish_time);
+        const appointmentType = normalizeAppointmentType(row.appointment_type || row.type);
+        const status = normalizeAppointmentStatus(row.status);
+        const reason = normalizeText(row.reason || row.motif);
+        const notes = normalizeText(row.notes || row.commentaire || row.comment);
+        const chairNumber = normalizeText(row.chair_number || row.chair || row.salle);
+
+        if (!appointmentDate) {
+          throw new Error('appointment_date manquant ou invalide');
+        }
+        if (!startTime || !endTime) {
+          throw new Error('start_time et end_time sont requis');
+        }
+        if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+          throw new Error('end_time doit être après start_time');
+        }
+
+        const dentist_id = await resolveDentist(row, clinicId, req, transaction);
+
+        const existing = await Appointment.findOne({
+          where: {
+            clinic_id: clinicId,
+            patient_id: patient.id,
+            appointment_date: appointmentDate,
+            start_time: normalizeTimeForDb(startTime),
+            end_time: normalizeTimeForDb(endTime),
+            ...(dentist_id ? { dentist_id } : {})
+          },
+          transaction
+        });
+
+        const payload = {
+          patient_id: patient.id,
+          dentist_id,
+          clinic_id: clinicId,
+          appointment_date: appointmentDate,
+          start_time: normalizeTimeForDb(startTime),
+          end_time: normalizeTimeForDb(endTime),
+          appointment_type: appointmentType,
+          status,
+          reason,
+          notes,
+          chair_number: chairNumber,
+          confirmed_by_patient: status === 'CONFIRMED',
+          confirmed_at: status === 'CONFIRMED' ? new Date() : null,
+          cancelled_at: status === 'CANCELLED' ? new Date() : null,
+          cancelled_reason: status === 'CANCELLED' ? normalizeText(row.cancelled_reason || row.cancel_reason) : null
+        };
+
+        if (existing) {
+          await existing.update(payload, { transaction });
+          result.updated += 1;
+        } else {
+          await Appointment.create(payload, { transaction });
+          result.inserted += 1;
+        }
+      } catch (rowError) {
+        result.skipped += 1;
+        result.errors.push({
+          row: rowNumber,
+          error: rowError.message || 'Erreur ligne'
+        });
+      }
+    }
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Import appointments error:', error);
+    return res.status(500).json({ error: 'Erreur lors de l\'import CSV', details: extractErrors(error) });
+  }
+
+  try {
+    await AuditLog.create({
+      user_id: getUserId(req),
+      action: 'IMPORT',
+      resource_type: 'appointments',
+      resource_id: null,
+      ip_address: req.ip,
+      user_agent: req.get('User-Agent'),
+      description: `Import CSV rendez-vous: ${result.inserted} créés, ${result.updated} mis à jour, ${result.skipped} ignorés`
+    });
+  } catch (auditErr) {
+    console.error('Audit log error:', auditErr);
+  }
+
+  return res.json({
+    message: 'Import terminé',
+    ...result
+  });
+});
 
 // ── GET / ─────────────────────────────────────────────────────────────────────
 router.get('/', [

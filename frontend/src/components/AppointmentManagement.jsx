@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import {
-  Calendar, Clock, Plus, Edit2, Trash2, Download, User, X,
+  Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
   CheckCircle, XCircle, MoreHorizontal, Filter, Search,
   Stethoscope, Zap, Eye, Grid, List, AlertTriangle
@@ -228,6 +228,9 @@ const AppointmentManagement = () => {
   const [selDate,  setSelDate]  = useState(today());
   const [viewMode, setView]     = useState('day'); // day | week | all
   const [showCal,  setShowCal]  = useState(true);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef(null);
+  const canImportAppointments = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
   const [form, setForm] = useState({
     patient_id:'', dentist_id:'',
@@ -324,6 +327,76 @@ const AppointmentManagement = () => {
     } catch { toast.error('Erreur export'); }
   };
 
+  const downloadCsvTemplate = () => {
+    const header = [
+      'patient_number',
+      'patient_phone_primary',
+      'patient_email',
+      'appointment_date',
+      'start_time',
+      'end_time',
+      'appointment_type',
+      'status',
+      'reason',
+      'notes',
+      'chair_number',
+      'dentist_email',
+      'dentist_name'
+    ].join(',');
+
+    const sample = [
+      'PAT-000001',
+      '0340000000',
+      'jean@example.com',
+      '2026-05-06',
+      '09:00',
+      '09:30',
+      'CONSULTATION',
+      'SCHEDULED',
+      'Contrôle annuel',
+      'Premier RDV importé',
+      '1',
+      'dr.rakoto@example.com',
+      'Dr Rakoto'
+    ].join(',');
+
+    const blob = new Blob([`${header}\n${sample}\n`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'modele_import_rendez_vous.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleImportCsv = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setImporting(true);
+    try {
+      const response = await axios.post(`${API}/appointments/import-csv`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      const inserted = response.data.inserted || 0;
+      const updated = response.data.updated || 0;
+      const skipped = response.data.skipped || 0;
+      toast.success(`Import terminé: ${inserted} créés, ${updated} mis à jour, ${skipped} ignorés`);
+      fetchAppts();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Erreur lors de l\'import CSV');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
   /* Filtrage + recherche */
   const filtered = appts.filter(a => {
     const mt = typeF === 'all' || a.appointment_type === typeF;
@@ -373,6 +446,27 @@ const AppointmentManagement = () => {
           <button onClick={fetchAppts} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
+          <button onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#7C3AED', border:'1.5px solid #C4B5FD', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
+            <Download size={15}/>Modèle CSV
+          </button>
+          {canImportAppointments && (
+            <>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleImportCsv}
+                style={{ display:'none' }}
+              />
+              <button
+                onClick={() => importInputRef.current?.click()}
+                disabled={importing}
+                style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(124,58,237,.25)', opacity: importing ? .75 : 1 }}
+              >
+                <Upload size={15}/>{importing ? 'Import en cours' : 'Importer CSV'}
+              </button>
+            </>
+          )}
           <button onClick={openCreate}
             style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(139,92,246,.3)' }}>
             <Plus size={15}/>Nouveau RDV
@@ -624,5 +718,4 @@ const AppointmentManagement = () => {
 };
 
 export default AppointmentManagement;
-
 
