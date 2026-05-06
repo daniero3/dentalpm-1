@@ -82,7 +82,7 @@ const PaymentValidationPage = React.lazy(() => import("./components/PaymentValid
 const LegalPages = React.lazy(() => import("./components/LegalPages"));
 const PricingSettings = React.lazy(() => import("./components/PricingSettings"));
 import CabinetSettings from "./components/CabinetSettings";
-const MessagingManagement = React.lazy(() => import("./components/MessagingManagement"));
+const DentalMailingSuite = React.lazy(() => import("./components/DentalMailingSuite"));
 const SupplierManagement = React.lazy(() => import("./components/SupplierManagement"));
 const PurchaseManagement = React.lazy(() => import("./components/PurchaseManagement"));
 import OnboardingWizard from "./components/OnboardingWizard";
@@ -475,7 +475,7 @@ function App() {
                 <Route path="/suppliers" element={<ProtectedRoute><LicensingGuard><MainLayout><SupplierManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/purchases" element={<ProtectedRoute><LicensingGuard><MainLayout><PurchaseManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/lab" element={<ProtectedRoute><LicensingGuard><MainLayout><LabManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-                <Route path="/mailing" element={<ProtectedRoute><LicensingGuard><MainLayout><MessagingManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/mailing" element={<ProtectedRoute><LicensingGuard><MainLayout><DentalMailingSuite /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><LicensingGuard><MainLayout><CabinetSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/settings/pricing" element={<ProtectedRoute><LicensingGuard><MainLayout><PricingSettings /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><LicensingGuard><MainLayout><ReportsManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
