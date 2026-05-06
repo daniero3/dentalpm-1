@@ -20,7 +20,10 @@ describe('RBAC permission matrix', () => {
     expect(hasPermission('ASSISTANT', 'pricing_cabinet', 'execute')).toBe(false);
   });
 
-  test('ACCOUNTANT can execute financial workflows but not clinical prescriptions', () => {
+  test('operational roles can execute payment workflows but accountants still avoid prescriptions', () => {
+    expect(hasPermission('ADMIN', 'payments', 'execute')).toBe(true);
+    expect(hasPermission('DENTIST', 'payments', 'execute')).toBe(true);
+    expect(hasPermission('ASSISTANT', 'payments', 'execute')).toBe(true);
     expect(hasPermission('ACCOUNTANT', 'payments', 'execute')).toBe(true);
     expect(hasPermission('ACCOUNTANT', 'reports', 'execute')).toBe(true);
     expect(hasPermission('ACCOUNTANT', 'prescriptions', 'write')).toBe(false);
@@ -41,7 +44,7 @@ describe('RBAC permission matrix', () => {
 
   test('execute permissions remain stricter than regular write permissions', () => {
     expect(hasPermission('DENTIST', 'invoices', 'write')).toBe(true);
-    expect(hasPermission('DENTIST', 'payments', 'execute')).toBe(false);
+    expect(hasPermission('DENTIST', 'payments', 'execute')).toBe(true);
     expect(hasPermission('ASSISTANT', 'lab_orders', 'write')).toBe(true);
     expect(hasPermission('ASSISTANT', 'lab_orders', 'execute')).toBe(false);
   });
