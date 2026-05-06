@@ -367,19 +367,12 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Connexion à PostgreSQL réussie');
-    // Exécuter migrations au démarrage
-    (async () => {
-      try {
-        const { Sequelize } = require('sequelize');
-        const { sequelize } = require('./models');
-        const qi = sequelize.getQueryInterface();
-        await require('./migrations/20260418-stripe-subscription-id').up(qi, Sequelize).catch(() => {});
-        await require('./migrations/20260424-performance-indexes').up(qi, Sequelize).catch(() => {});
-        console.log('✅ Migrations & index DB OK');
-      } catch (e) {
-        console.log('Migration (non-fatal):', e.message);
-      }
-    })();
+    try {
+      const { runMigrations } = require('./database/migrate');
+      await runMigrations();
+    } catch (e) {
+      console.log('Migration (non-fatal):', e.message);
+    }
 
     if (ENABLE_TEST_ACCOUNTS) {
       await seedTestAccounts();
