@@ -62,9 +62,10 @@ const PricingSettings = () => {
   const fetchSchedules = async () => {
     try {
       const response = await axios.get(`${API}/pricing-schedules`, authH());
-      setSchedules(response.data.schedules || []);
-      if (response.data.schedules?.length > 0) {
-        const firstSchedule = response.data.schedules[0];
+      const nextSchedules = response.data.schedules || [];
+      setSchedules(nextSchedules);
+      if (nextSchedules.length > 0) {
+        const firstSchedule = nextSchedules.find(schedule => schedule.type === 'CABINET') || nextSchedules[0];
         setSelectedSchedule(firstSchedule);
         fetchFees(firstSchedule.id);
       }
@@ -276,7 +277,14 @@ const PricingSettings = () => {
       </div>
 
       {/* Schedule Tabs */}
-      <Tabs defaultValue={schedules[0]?.id} className="w-full">
+      <Tabs
+        value={selectedSchedule?.id || schedules[0]?.id}
+        onValueChange={(scheduleId) => {
+          const schedule = schedules.find(item => item.id === scheduleId);
+          if (schedule) handleScheduleSelect(schedule);
+        }}
+        className="w-full"
+      >
         <TabsList
           className="grid w-full max-w-2xl"
           style={{ gridTemplateColumns: `repeat(${Math.max(schedules.length, 1)}, minmax(0, 1fr))` }}

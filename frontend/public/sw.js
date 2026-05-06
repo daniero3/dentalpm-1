@@ -1,6 +1,6 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
 // Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
-const BUILD_TIME = '2026-05-06-pricing-permissions-1';
+const BUILD_TIME = '2026-05-06-pricing-default-cabinet-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
