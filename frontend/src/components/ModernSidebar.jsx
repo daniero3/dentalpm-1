@@ -92,6 +92,17 @@ const DentalLogo = ({ size=36 }) => (
   </div>
 )
 
+const sidebarShell = {
+  height:'100%',
+  display:'flex',
+  flexDirection:'column',
+  background:'linear-gradient(180deg,#0C2332 0%,#102F42 56%,#0D3D4A 100%)',
+  boxShadow:'10px 0 36px rgba(15,23,42,.18)',
+  borderRight:'1px solid rgba(255,255,255,.08)',
+  position:'relative',
+  overflow:'hidden'
+}
+
 // ── SidebarContent ────────────────────────────────────────────────────────────
 const SidebarContent = ({ collapsed, onNavClick }) => {
   const location  = useLocation()
@@ -173,18 +184,19 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div title={collapsed ? item.name : ''}
           style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px',
-            borderRadius:10, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
-            background: active ? 'rgba(255,255,255,.18)' : 'transparent',
-            border: active ? '1px solid rgba(255,255,255,.25)' : '1px solid transparent',
+            borderRadius:12, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
+            background: active ? '#FFFFFF' : 'transparent',
+            border: active ? '1px solid rgba(255,255,255,.7)' : '1px solid transparent',
+            boxShadow: active ? '0 8px 22px rgba(15,23,42,.18)' : 'none',
             transition:'all .18s', position:'relative' }}
-          onMouseEnter={e=>{ if(!active){ e.currentTarget.style.background='rgba(255,255,255,.1)'; e.currentTarget.style.borderColor='rgba(255,255,255,.15)'; }}}
+          onMouseEnter={e=>{ if(!active){ e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor='rgba(255,255,255,.12)'; }}}
           onMouseLeave={e=>{ if(!active){ e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='transparent'; }}}>
-          {active && <div style={{ position:'absolute', left:0, top:'20%', bottom:'20%', width:3, borderRadius:'0 3px 3px 0', background:'#fff', boxShadow:'0 0 8px rgba(255,255,255,.5)' }}/>}
-          <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.08)', transition:'all .18s' }}>
-            <Icon size={16} color={active ? color : 'rgba(255,255,255,.55)'}/>
+          {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:3, borderRadius:'0 4px 4px 0', background:color, boxShadow:`0 0 10px ${color}66` }}/>}
+          <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? `${color}14` : 'rgba(255,255,255,.08)', transition:'all .18s' }}>
+            <Icon size={16} color={active ? color : 'rgba(226,232,240,.72)'}/>
           </div>
           {!collapsed && (
-            <span style={{ fontSize:13, fontWeight: active ? 700 : 500, color: active ? '#fff' : 'rgba(255,255,255,.6)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'all .18s' }}>
+            <span style={{ fontSize:13, fontWeight: active ? 800 : 600, color: active ? '#0F172A' : 'rgba(226,232,240,.78)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'all .18s' }}>
               {item.name}
             </span>
           )}
@@ -200,18 +212,19 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     return (
       <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px',
-          borderRadius:10, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
-          background: active ? 'rgba(255,255,255,.18)' : 'transparent',
-          border: active ? '1px solid rgba(255,255,255,.25)' : '1px solid transparent',
+          borderRadius:12, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
+          background: active ? '#FFFFFF' : 'transparent',
+          border: active ? '1px solid rgba(255,255,255,.7)' : '1px solid transparent',
+          boxShadow: active ? '0 8px 22px rgba(15,23,42,.18)' : 'none',
           transition:'all .18s', position:'relative' }}
-          onMouseEnter={e=>{ if(!active) e.currentTarget.style.background='rgba(255,255,255,.1)'; }}
+          onMouseEnter={e=>{ if(!active) e.currentTarget.style.background='rgba(255,255,255,.08)'; }}
           onMouseLeave={e=>{ if(!active) e.currentTarget.style.background='transparent'; }}>
-          {active && <div style={{ position:'absolute', left:0, top:'20%', bottom:'20%', width:3, borderRadius:'0 3px 3px 0', background:'#fff' }}/>}
-          <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? 'rgba(255,255,255,.2)' : 'rgba(255,255,255,.08)' }}>
-            <Icon size={16} color={active ? item.color : 'rgba(255,255,255,.55)'}/>
+          {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:3, borderRadius:'0 4px 4px 0', background:item.color }}/>}
+          <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? `${item.color}14` : 'rgba(255,255,255,.08)' }}>
+            <Icon size={16} color={active ? item.color : 'rgba(226,232,240,.72)'}/>
           </div>
           {!collapsed && (
-            <span style={{ fontSize:13, fontWeight: active ? 700 : 500, color: active ? '#fff' : 'rgba(255,255,255,.6)', whiteSpace:'nowrap' }}>
+            <span style={{ fontSize:13, fontWeight: active ? 800 : 600, color: active ? '#0F172A' : 'rgba(226,232,240,.78)', whiteSpace:'nowrap' }}>
               {item.name}
             </span>
           )}
@@ -221,11 +234,11 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   }
 
   return (
-    <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'linear-gradient(180deg,#064E56 0%,#0A6B75 50%,#0D7A87 100%)', boxShadow:'4px 0 24px rgba(0,0,0,.2)', borderRight:'1px solid rgba(255,255,255,.1)' }}>
+    <div style={sidebarShell}>
       <LogoCSS/>
 
       {/* Logo */}
-      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:'1px solid rgba(255,255,255,.12)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64 }}>
+      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:'1px solid rgba(255,255,255,.10)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64, position:'relative', zIndex:1 }}>
         <DentalLogo size={40}/>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
@@ -241,15 +254,15 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex:1, padding: collapsed ? '12px 8px' : '12px', overflowY:'auto', overflowX:'hidden', scrollbarWidth:'none' }}>
+      <nav style={{ flex:1, padding: collapsed ? '12px 8px' : '12px', overflowY:'auto', overflowX:'hidden', scrollbarWidth:'none', position:'relative', zIndex:1 }}>
 
         {/* ── SUPER_ADMIN ── */}
         {isSuperAdmin && (
           <>
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 10px' }}>
-                <Sparkles size={10} color="#8B5CF6"/>
-                <p style={{ fontSize:10, fontWeight:700, color:'#8B5CF6', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Administration plateforme</p>
+                <Sparkles size={10} color="#C4B5FD"/>
+                <p style={{ fontSize:10, fontWeight:800, color:'#C4B5FD', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Administration plateforme</p>
               </div>
             )}
             {SUPER_ADMIN_NAV.map(item => <AdminItem key={item.href} item={item}/>)}
@@ -261,15 +274,15 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           <>
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 8px 8px' }}>
-                <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Navigation</p>
-                {plan && <span style={{ fontSize:9, fontWeight:700, background:'rgba(255,255,255,.12)', color:'rgba(255,255,255,.7)', padding:'2px 7px', borderRadius:99 }}>{planLabel}</span>}
+                <p style={{ fontSize:10, fontWeight:800, color:'rgba(226,232,240,.48)', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Navigation</p>
+                {plan && <span style={{ fontSize:9, fontWeight:800, background:'rgba(255,255,255,.10)', color:'rgba(226,232,240,.78)', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(255,255,255,.08)' }}>{planLabel}</span>}
               </div>
             )}
 
             {/* Items accessibles */}
             {navItems.map(item => <NavItem key={item.href} item={item}/>)}
 
-            {/* Items verrouillés — floutés */}
+            {/* Items verrouillés */}
             {lockedItems.length > 0 && (
               <div style={{ marginTop:6 }}>
                 {/* Séparateur */}
@@ -281,8 +294,8 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                     </p>
                   </div>
                 )}
-                {/* Items floutés */}
-                <div style={{ filter:'blur(2px)', pointerEvents:'none', userSelect:'none', opacity:.4 }}>
+                {/* Items non disponibles */}
+                <div style={{ pointerEvents:'none', userSelect:'none', opacity:.46 }}>
                   {lockedItems.map(item => {
                     const Icon = item.icon
                     return (
@@ -297,22 +310,22 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                 </div>
                 {/* Bouton upgrade */}
                 {!collapsed && (
-                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'6px 0 4px', padding:'8px', borderRadius:10, background:'rgba(99,91,255,.25)', border:'1px solid rgba(99,91,255,.4)', color:'#C4B5FD', fontSize:11, fontWeight:700, textDecoration:'none' }}>
-                    ✦ Upgrader mon plan
+                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'8px 0 4px', padding:'9px', borderRadius:12, background:'rgba(255,255,255,.08)', border:'1px solid rgba(196,181,253,.24)', color:'#DDD6FE', fontSize:11, fontWeight:800, textDecoration:'none' }}>
+                    <Sparkles size={12}/> Upgrader mon plan
                   </a>
                 )}
               </div>
             )}
 
             {/* Abonnement */}
-            <div style={{ height:1, background:'rgba(255,255,255,.12)', margin:'10px 0' }}/>
-            {!collapsed && <p style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.3)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
+            <div style={{ height:1, background:'rgba(255,255,255,.10)', margin:'12px 0 10px' }}/>
+            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:'rgba(226,232,240,.42)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
             {!collapsed && !isSuperAdmin && subscriptionLoaded && (
-              <div style={{ padding:'0 8px 8px', color:'rgba(255,255,255,.72)', fontSize:11, lineHeight:1.4 }}>
+              <div style={{ margin:'0 4px 8px', padding:'10px 12px', borderRadius:14, background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.08)', color:'rgba(226,232,240,.78)', fontSize:11, lineHeight:1.4 }}>
                 <div style={{ fontWeight:700, color:'#fff', marginBottom:2 }}>{planLabel}</div>
                 {planPrice && <div>{planPrice}</div>}
                 {subscription?.status && (
-                  <div style={{ marginTop:4, fontSize:10, color:'rgba(255,255,255,.5)' }}>
+                  <div style={{ marginTop:4, fontSize:10, color:'rgba(226,232,240,.55)' }}>
                     Statut: {subscription.status}
                   </div>
                 )}
@@ -325,7 +338,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       </nav>
 
       {/* User */}
-      <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop:'1px solid rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10 }}>
+      <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop:'1px solid rgba(255,255,255,.12)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, position:'relative', zIndex:1, background:'rgba(4,18,28,.22)' }}>
         <div style={{ width:36, height:36, borderRadius:10, flexShrink:0, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, color:'#fff', border:'1.5px solid rgba(255,255,255,.3)' }}>
           {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
         </div>
@@ -379,7 +392,7 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
   }
 
   return (
-    <div style={{ position:'fixed', left:0, top:0, bottom:0, width: collapsed ? 72 : 264, zIndex:100, transition:'width .25s cubic-bezier(.4,0,.2,1)', flexShrink:0 }}>
+    <div className="dpm-sidebar-desktop" style={{ position:'fixed', left:0, top:0, bottom:0, width: collapsed ? 72 : 264, zIndex:100, transition:'width .25s cubic-bezier(.4,0,.2,1)', flexShrink:0 }}>
       <SidebarContent collapsed={collapsed} onNavClick={null}/>
       <button onClick={() => setCollapsed(!collapsed)}
         style={{ position:'absolute', top:72, right:-12, width:24, height:24, borderRadius:'50%', background:'#fff', border:'1.5px solid #E2E8F0', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(15,23,42,.12)', zIndex:101 }}
