@@ -11,12 +11,12 @@ module.exports = {
       },
       clinic_id: {
         type: Sequelize.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: 'clinics',
           key: 'id'
         },
-        onDelete: 'CASCADE'
+        onDelete: 'SET NULL'
       },
       type: {
         type: Sequelize.ENUM('SYNDICAL', 'CABINET'),
@@ -39,6 +39,15 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false
+      },
+      year: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: 2026
+      },
+      version_code: {
+        type: Sequelize.STRING(30),
+        allowNull: true
       },
       created_at: {
         type: Sequelize.DATE,

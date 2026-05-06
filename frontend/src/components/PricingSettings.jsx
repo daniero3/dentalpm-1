@@ -139,7 +139,7 @@ const PricingSettings = () => {
   // Créer une nouvelle grille si aucune n'existe pour le cabinet
   const handleCreateSchedule = async () => {
     try {
-      await axios.post(`${API}/pricing-schedules`, { name: 'Mes tarifs', type: 'CUSTOM' }, authH());
+      await axios.post(`${API}/pricing-schedules`, { name: 'Mes tarifs', type: 'CABINET' }, authH());
       toast.success('Grille créée');
       fetchSchedules();
     } catch(e) { toast.error('Erreur création grille'); }
@@ -189,8 +189,8 @@ const PricingSettings = () => {
   };
 
   const handleImportTemplateMAEVA = async () => {
-    if (!canEditSchedule(selectedSchedule)) {
-      toast.error('Sélectionnez une grille modifiable du cabinet');
+    if (!canExecuteSchedule(selectedSchedule)) {
+      toast.error('Permission exécution requise pour importer le template');
       return;
     }
     
@@ -239,8 +239,15 @@ const PricingSettings = () => {
 
   const canEditSchedule = (schedule) => {
     if (!schedule) return false;
-    if (user?.role === 'SUPER_ADMIN') return true;
+    if (schedule.permissions) return Boolean(schedule.permissions.write);
+    if (user?.role === 'SUPER_ADMIN') return schedule.type !== 'SYNDICAL';
     return Boolean(schedule.clinic_id && schedule.type !== 'SYNDICAL');
+  };
+
+  const canExecuteSchedule = (schedule) => {
+    if (!schedule) return false;
+    if (schedule.permissions) return Boolean(schedule.permissions.execute);
+    return canEditSchedule(schedule);
   };
   if (loading) {
     return (
@@ -314,7 +321,7 @@ const PricingSettings = () => {
                       Exporter CSV
                     </Button>
                     {/* Import Template MAEVA */}
-                    {canEditSchedule(schedule) && (
+                    {canExecuteSchedule(schedule) && (
                       <Button 
                         variant="outline" 
                         onClick={handleImportTemplateMAEVA}
@@ -326,7 +333,7 @@ const PricingSettings = () => {
                       </Button>
                     )}
                     {/* Import Button */}
-                    {canEditSchedule(schedule) && (
+                    {canExecuteSchedule(schedule) && (
                       <>
                         <input
                           type="file"

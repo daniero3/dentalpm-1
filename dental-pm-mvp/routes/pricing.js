@@ -10,12 +10,24 @@ const router = express.Router();
 // ✅ Helpers
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
 const isSuperAdmin = (req) => req.user?.role === 'SUPER_ADMIN';
-const canEditSchedule = (req, schedule) => {
-  if (!schedule) return false;
-  if (isSuperAdmin(req)) return true;
+const getSchedulePermissions = (req, schedule) => {
+  const none = { read: false, write: false, execute: false };
+  if (!schedule) return none;
+  if (isSuperAdmin(req)) return { read: true, write: schedule.type !== 'SYNDICAL', execute: schedule.type !== 'SYNDICAL' };
 
   const clinicId = getClinicId(req);
-  return Boolean(clinicId && schedule.clinic_id === clinicId && schedule.type !== 'SYNDICAL');
+  const ownsCabinetSchedule = Boolean(clinicId && schedule.clinic_id === clinicId && schedule.type === 'CABINET');
+
+  if (ownsCabinetSchedule) return { read: true, write: true, execute: true };
+  if (schedule.type === 'SYNDICAL') return { read: true, write: false, execute: false };
+  return none;
+};
+const canReadSchedule = (req, schedule) => getSchedulePermissions(req, schedule).read;
+const canWriteSchedule = (req, schedule) => getSchedulePermissions(req, schedule).write;
+const canExecuteSchedule = (req, schedule) => getSchedulePermissions(req, schedule).execute;
+const attachPermissions = (req, schedule) => {
+  const data = typeof schedule.toJSON === 'function' ? schedule.toJSON() : schedule;
+  return { ...data, permissions: getSchedulePermissions(req, schedule) };
 };
 
 const upload = multer({ 
@@ -45,6 +57,12 @@ router.get('/', async (req, res) => {
   try {
     const clinicId = getClinicId(req);
 
+    if (clinicId) {
+      await seedDefaultSchedules(clinicId);
+    } else {
+      await getOrCreateGlobalSyndical();
+    }
+
     let whereClause = { is_active: true };
     if (clinicId) {
       whereClause[Op.or] = [
@@ -59,16 +77,7 @@ router.get('/', async (req, res) => {
       order: [['type', 'ASC']]
     });
 
-    if (schedules.length === 0 && clinicId) {
-      await seedDefaultSchedules(clinicId);
-      schedules = await PricingSchedule.findAll({
-        where: { clinic_id: clinicId, is_active: true },
-        include: [{ model: ProcedureFee, as: 'fees', where: { is_active: true }, required: false }],
-        order: [['type', 'ASC']]
-      });
-    }
-
-    res.json({ schedules, count: schedules.length });
+    res.json({ schedules: schedules.map(schedule => attachPermissions(req, schedule)), count: schedules.length });
   } catch (error) {
     console.error('Get pricing schedules error:', error);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
@@ -89,7 +98,8 @@ router.get('/:id', [param('id').isUUID()], async (req, res) => {
     });
 
     if (!schedule) return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
-    res.json({ schedule });
+    if (!canReadSchedule(req, schedule)) return res.status(403).json({ error: 'Non autorisé' });
+    res.json({ schedule: attachPermissions(req, schedule) });
   } catch (error) {
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
@@ -105,6 +115,7 @@ router.get('/:id/fees', [param('id').isUUID()], async (req, res) => {
 
     const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, ...whereOr } });
     if (!schedule) return res.status(404).json({ error: 'Grille tarifaire non trouvée' });
+    if (!canReadSchedule(req, schedule)) return res.status(403).json({ error: 'Non autorisé' });
 
     const whereClause = { schedule_id: req.params.id, is_active: true };
     if (req.query.category) whereClause.category = req.query.category;
@@ -120,7 +131,15 @@ router.get('/:id/fees', [param('id').isUUID()], async (req, res) => {
       by_category[f.category].push(f);
     });
 
-    res.json({ schedule_id: schedule.id, schedule_type: schedule.type, schedule_name: schedule.name, fees, by_category, total_count: fees.length });
+    res.json({
+      schedule_id: schedule.id,
+      schedule_type: schedule.type,
+      schedule_name: schedule.name,
+      permissions: getSchedulePermissions(req, schedule),
+      fees,
+      by_category,
+      total_count: fees.length
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
@@ -146,10 +165,10 @@ router.post('/:id/fees', [
     const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, ...whereOr } });
     if (!schedule) return res.status(404).json({ error:'Grille tarifaire non trouvée' });
 
-    if (!canEditSchedule(req, schedule)) {
+    if (!canWriteSchedule(req, schedule)) {
       return res.status(403).json({
         error:'Non autorisé',
-        message:'Seuls les tarifs propres à votre cabinet peuvent être modifiés'
+        message:'Permission écriture requise pour modifier les tarifs'
       });
     }
 
@@ -173,10 +192,10 @@ router.put('/:id', [param('id').isUUID()], async (req, res) => {
     });
     if (!fee) return res.status(404).json({ error:'Acte non trouvé' });
 
-    if (!canEditSchedule(req, fee.schedule)) {
+    if (!canWriteSchedule(req, fee.schedule)) {
       return res.status(403).json({
         error:'Non autorisé',
-        message:'Seuls les tarifs propres à votre cabinet peuvent être modifiés'
+        message:'Permission écriture requise pour modifier les tarifs'
       });
     }
 
@@ -200,10 +219,10 @@ router.post('/:id/import-fees', upload.single('file'), [param('id').isUUID()], a
     const whereOr  = clinicId ? { [Op.or]: [{ clinic_id: clinicId }, { clinic_id: null, type:'SYNDICAL' }] } : {};
     const schedule = await PricingSchedule.findOne({ where: { id: req.params.id, ...whereOr } });
     if (!schedule) return res.status(404).json({ error:'Grille non trouvée' });
-    if (!canEditSchedule(req, schedule)) {
+    if (!canExecuteSchedule(req, schedule)) {
       return res.status(403).json({
         error:'Non autorisé',
-        message:'Seuls les tarifs propres à votre cabinet peuvent être importés'
+        message:'Permission exécution requise pour importer les tarifs'
       });
     }
     if (!req.file) return res.status(400).json({ error:'Fichier requis' });
@@ -250,6 +269,7 @@ router.get('/:id/export-fees', [param('id').isUUID()], async (req, res) => {
   try {
     const schedule = await PricingSchedule.findByPk(req.params.id);
     if (!schedule) return res.status(404).json({ error:'Grille non trouvée' });
+    if (!canReadSchedule(req, schedule)) return res.status(403).json({ error: 'Non autorisé' });
 
     const fees = await ProcedureFee.findAll({ where: { schedule_id: schedule.id }, order: [['category','ASC'],['procedure_code','ASC']] });
     const csv  = 'code,acte,tarif_mga,category\n' + fees.map(f => `"${f.procedure_code}","${f.label.replace(/"/g,'""')}",${f.price_mga},"${f.category||'GENERAL'}"`).join('\n');
@@ -271,10 +291,10 @@ router.patch('/:id', [param('id').isUUID()], async (req, res) => {
       include: [{ model: PricingSchedule, as: 'schedule', required: false }]
     });
     if (!fee) return res.status(404).json({ error: 'Acte non trouvé' });
-    if (!canEditSchedule(req, fee.schedule)) {
+    if (!canWriteSchedule(req, fee.schedule)) {
       return res.status(403).json({
         error: 'Non autorisé',
-        message: 'Seuls les tarifs propres à votre cabinet peuvent être modifiés'
+        message: 'Permission écriture requise pour modifier les tarifs'
       });
     }
     const { label, price_mga, category, is_active } = req.body;
@@ -293,10 +313,10 @@ router.delete('/:id', [param('id').isUUID()], async (req, res) => {
       include: [{ model: PricingSchedule, as: 'schedule', required: false }]
     });
     if (!fee) return res.status(404).json({ error: 'Acte non trouvé' });
-    if (!canEditSchedule(req, fee.schedule)) {
+    if (!canWriteSchedule(req, fee.schedule)) {
       return res.status(403).json({
         error: 'Non autorisé',
-        message: 'Seuls les tarifs propres à votre cabinet peuvent être supprimés'
+        message: 'Permission écriture requise pour supprimer les tarifs'
       });
     }
     await fee.destroy();
@@ -313,11 +333,38 @@ router.post('/', async (req, res) => {
     if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ error: 'Cabinet non identifié' });
     }
-    const { name = 'Ma grille tarifaire', type = 'CUSTOM' } = req.body;
+    const { name = 'Ma grille tarifaire', type = 'CABINET' } = req.body;
+    const scheduleType = req.user?.role === 'SUPER_ADMIN' ? type : 'CABINET';
+
+    if (!['SYNDICAL', 'CABINET'].includes(scheduleType)) {
+      return res.status(400).json({ error: 'Type de grille invalide' });
+    }
+
+    if (scheduleType === 'CABINET' && clinicId) {
+      const [schedule, created] = await PricingSchedule.findOrCreate({
+        where: { clinic_id: clinicId, type: 'CABINET' },
+        defaults: {
+          name,
+          is_active: true,
+          is_default: false,
+          year: 2026,
+          version_code: 'CABINET_2026'
+        }
+      });
+      if (!schedule.is_active) await schedule.update({ is_active: true });
+      return res.status(created ? 201 : 200).json({
+        message: created ? 'Grille créée' : 'Grille existante',
+        schedule
+      });
+    }
+
     const schedule = await PricingSchedule.create({
-      name, type: req.user?.role === 'SUPER_ADMIN' ? type : 'CUSTOM',
+      name,
+      type: scheduleType,
       clinic_id: clinicId || null,
       is_active: true,
+      year: 2026,
+      version_code: `${scheduleType}_2026`
     });
     res.status(201).json({ message: 'Grille créée', schedule });
   } catch (error) {
@@ -348,12 +395,12 @@ router.post('/:id/import-template-maeva', [param('id').isUUID()], async (req, re
       where: {
         id: req.params.id,
         clinic_id: clinicId,
-        type: { [Op.in]: ['CABINET', 'CUSTOM'] }
+        type: 'CABINET'
       }
     });
     if (!schedule) return res.status(404).json({ error:'Grille cabinet non trouvée' });
-    if (!canEditSchedule(req, schedule)) {
-      return res.status(403).json({ error:'Non autorisé' });
+    if (!canExecuteSchedule(req, schedule)) {
+      return res.status(403).json({ error:'Non autorisé', message:'Permission exécution requise pour importer le template' });
     }
 
     await ProcedureFee.update({ is_active: false }, { where: { schedule_id: schedule.id } });
@@ -387,10 +434,29 @@ async function getOrCreateGlobalSyndical() {
 
 async function seedDefaultSchedules(clinicId) {
   await getOrCreateGlobalSyndical();
-  const cabinet = await PricingSchedule.create({ clinic_id: clinicId, type:'CABINET', name:'Tarification Cabinet', is_active: true, is_default: false, year: 2026, version_code:'CABINET_2026' });
-  for (const fee of DEFAULT_CABINET_FEES) {
-    await ProcedureFee.create({ schedule_id: cabinet.id, ...fee, is_active: true });
+
+  const [cabinet, created] = await PricingSchedule.findOrCreate({
+    where: { clinic_id: clinicId, type:'CABINET' },
+    defaults: {
+      name:'Tarification Cabinet',
+      is_active: true,
+      is_default: false,
+      year: 2026,
+      version_code:'CABINET_2026'
+    }
+  });
+
+  if (!cabinet.is_active) {
+    await cabinet.update({ is_active: true });
   }
+
+  const feeCount = created ? 0 : await ProcedureFee.count({ where: { schedule_id: cabinet.id } });
+  if (feeCount === 0) {
+    for (const fee of DEFAULT_CABINET_FEES) {
+      await ProcedureFee.create({ schedule_id: cabinet.id, ...fee, is_active: true });
+    }
+  }
+
   return cabinet;
 }
 

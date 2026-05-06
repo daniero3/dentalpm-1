@@ -184,10 +184,12 @@ async function createAllTables() {
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         clinic_id UUID REFERENCES clinics(id) ON DELETE SET NULL,
         name VARCHAR(100) NOT NULL,
-        type VARCHAR(30) DEFAULT 'STANDARD',
+        type VARCHAR(30) DEFAULT 'CABINET',
         description TEXT,
         is_active BOOLEAN DEFAULT true,
         is_default BOOLEAN DEFAULT false,
+        year INTEGER DEFAULT 2026,
+        version_code VARCHAR(30),
         created_at TIMESTAMP DEFAULT NOW() NOT NULL,
         updated_at TIMESTAMP DEFAULT NOW() NOT NULL
       );
@@ -199,8 +201,11 @@ async function createAllTables() {
       CREATE TABLE IF NOT EXISTS procedure_fees (
         id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
         schedule_id UUID REFERENCES pricing_schedules(id) ON DELETE CASCADE,
-        procedure_id UUID REFERENCES procedures(id) ON DELETE CASCADE,
+        procedure_code VARCHAR(20) NOT NULL,
+        label VARCHAR(200) NOT NULL,
         price_mga DECIMAL(12,2) DEFAULT 0,
+        category VARCHAR(50) DEFAULT 'GENERAL',
+        is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW() NOT NULL,
         updated_at TIMESTAMP DEFAULT NOW() NOT NULL
       );
