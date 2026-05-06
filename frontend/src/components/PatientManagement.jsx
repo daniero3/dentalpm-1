@@ -8,7 +8,7 @@ import {
   AlertTriangle, User, Calendar, FileText, ClipboardList,
   FlaskConical, X, Save, Loader2, ChevronRight, Filter,
   BarChart2, UserCheck, UserX, Heart, RefreshCw, Download,
-  MapPin, Shield, Pill, Eye, Grid, List, SortAsc
+  MapPin, Shield, Pill, Eye, Grid, List, SortAsc, Upload
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -183,8 +183,11 @@ const PatientManagement = () => {
   const [isOpen,    setIsOpen]    = useState(false);
   const [selP,      setSelP]      = useState(null);
   const [saving,    setSaving]    = useState(false);
+  const [importing, setImporting] = useState(false);
   const [detail,    setDetail]    = useState(null);
   const mountedRef = useRef(true);
+  const importInputRef = useRef(null);
+  const canImportPatients = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
   const emptyForm = { first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' };
   const [form, setForm] = useState(emptyForm);
@@ -218,6 +221,85 @@ const PatientManagement = () => {
       setIsOpen(false); fetchPatients();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
+  };
+
+  const downloadCsvTemplate = () => {
+    const header = [
+      'patient_number',
+      'first_name',
+      'last_name',
+      'date_of_birth',
+      'gender',
+      'phone_primary',
+      'email',
+      'address',
+      'city',
+      'emergency_contact_name',
+      'emergency_contact_phone',
+      'medical_history',
+      'allergies',
+      'current_medications',
+      'payer_type',
+      'preferred_language',
+      'consent_treatment',
+      'consent_data_processing',
+      'consent_sms_reminders',
+      'notes'
+    ].join(',');
+    const sample = [
+      'PAT-000001',
+      'Jean',
+      'Rakoto',
+      '1990-05-12',
+      'M',
+      '0340000000',
+      'jean@example.com',
+      'Antananarivo',
+      'Antananarivo',
+      'Marie Rakoto',
+      '0340000001',
+      'Hypertension',
+      'Aucune',
+      'Aucun',
+      'SELF_PAY',
+      'FRENCH',
+      'true',
+      'true',
+      'true',
+      'Patient importé'
+    ].join(',');
+
+    const blob = new Blob([`${header}\n${sample}\n`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'modele_import_patients.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleImportCsv = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setImporting(true);
+    try {
+      const response = await axios.post(`${API}/patients/import-csv`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      toast.success(`Import terminé: ${response.data.inserted || 0} créés, ${response.data.updated || 0} mis à jour`);
+      fetchPatients();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Erreur lors de l\'import CSV');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
   };
 
   /* Filtrage et tri */
@@ -279,6 +361,27 @@ const PatientManagement = () => {
           <button onClick={fetchPatients} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
+          <button onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#0D7A87', border:'1.5px solid #7DD3DA', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
+            <Download size={15}/>Modèle CSV
+          </button>
+          {canImportPatients && (
+            <>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleImportCsv}
+                style={{ display:'none' }}
+              />
+              <button
+                onClick={() => importInputRef.current?.click()}
+                disabled={importing}
+                style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(124,58,237,.25)', opacity: importing ? .75 : 1 }}
+              >
+                <Upload size={15}/>{importing ? 'Import en cours' : 'Importer CSV'}
+              </button>
+            </>
+          )}
           <button onClick={openCreate}
             style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
             <Plus size={15}/>Nouveau Patient

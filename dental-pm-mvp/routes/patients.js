@@ -3,6 +3,8 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const csv = require('csv-parse/sync');
 
 // ✅ requireClinicId — lit depuis JWT ET la DB si clinic_id absent
 const requireClinicId = async (req, res, next) => {
@@ -47,6 +49,10 @@ const getUserId   = (req) => {
 };
 const { auditLogger } = require('../middleware/auditLogger');
 const { Op } = require('sequelize');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }
+});
 
 const router = express.Router();
 
@@ -235,6 +241,164 @@ router.post('/', requireClinicId, [
       });
     }
     res.status(500).json({ error: 'Erreur lors de la création du patient', message: error.message });
+  }
+});
+
+const normalizeGender = (value) => {
+  const gender = (value || '').toString().toLowerCase().trim();
+  if (['m', 'male', 'homme', 'masculin'].includes(gender)) return 'M';
+  if (['f', 'female', 'femme', 'féminin', 'feminin'].includes(gender)) return 'F';
+  if (['other', 'autre', '?'].includes(gender)) return 'OTHER';
+  return null;
+};
+
+const parseCsvDate = (value) => {
+  if (!value) return null;
+  const raw = value.toString().trim();
+  if (!raw) return null;
+  const frMatch = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (frMatch) {
+    const [, dd, mm, yyyy] = frMatch;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return raw;
+};
+
+router.post('/import-csv', requireClinicId, upload.single('file'), async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: 'Cabinet non identifié', code: 'NO_CLINIC' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Fichier CSV requis' });
+    }
+
+    const content = req.file.buffer.toString('utf-8').replace(/^\uFEFF/, '');
+    const rows = csv.parse(content, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      bom: true
+    });
+
+    if (!rows.length) {
+      return res.status(400).json({ error: 'Aucune ligne à importer' });
+    }
+
+    const stats = { inserted: 0, updated: 0, skipped: 0 };
+    const errors = [];
+
+    await sequelize.transaction(async (transaction) => {
+      for (const [index, row] of rows.entries()) {
+        const first_name = (row.first_name || row.prenom || row.firstname || '').trim();
+        const last_name = (row.last_name || row.nom || row.lastname || '').trim();
+        const date_of_birth = parseCsvDate(row.date_of_birth || row.birth_date || row.dob);
+        const gender = normalizeGender(row.gender || row.sexe);
+        const phone_primary = (row.phone_primary || row.telephone || row.phone || '').trim();
+        const email = (row.email || '').trim() || null;
+
+        if (!first_name || !last_name || !date_of_birth || !gender || !phone_primary) {
+          stats.skipped += 1;
+          errors.push({
+            row: index + 2,
+            message: 'Champs requis manquants (prénom, nom, date de naissance, sexe, téléphone)',
+          });
+          continue;
+        }
+
+        const patientData = {
+          patient_number: (row.patient_number || '').trim() || null,
+          first_name,
+          last_name,
+          date_of_birth,
+          gender,
+          phone_primary,
+          phone_secondary: (row.phone_secondary || '').trim() || null,
+          email,
+          address: (row.address || '').trim() || null,
+          city: (row.city || 'Antananarivo').trim() || 'Antananarivo',
+          postal_code: (row.postal_code || '').trim() || null,
+          emergency_contact_name: (row.emergency_contact_name || '').trim() || null,
+          emergency_contact_phone: (row.emergency_contact_phone || '').trim() || null,
+          emergency_contact_relationship: (row.emergency_contact_relationship || '').trim() || null,
+          medical_history: (row.medical_history || '').trim() || null,
+          allergies: (row.allergies || '').trim() || null,
+          current_medications: (row.current_medications || '').trim() || null,
+          insurance_provider: (row.insurance_provider || '').trim() || null,
+          insurance_number: (row.insurance_number || '').trim() || null,
+          payer_type: (row.payer_type || 'SELF_PAY').trim() || 'SELF_PAY',
+          occupation: (row.occupation || '').trim() || null,
+          preferred_language: (row.preferred_language || 'FRENCH').trim() || 'FRENCH',
+          consent_treatment: ['true', '1', 'yes', 'oui', 'y'].includes((row.consent_treatment || '').toString().toLowerCase().trim()),
+          consent_data_processing: ['true', '1', 'yes', 'oui', 'y'].includes((row.consent_data_processing || '').toString().toLowerCase().trim()),
+          consent_sms_reminders: row.consent_sms_reminders == null
+            ? true
+            : ['true', '1', 'yes', 'oui', 'y'].includes((row.consent_sms_reminders || '').toString().toLowerCase().trim()),
+          notes: (row.notes || '').trim() || null,
+          is_active: row.is_active == null
+            ? true
+            : ['true', '1', 'yes', 'oui', 'y'].includes((row.is_active || '').toString().toLowerCase().trim()),
+          clinic_id: clinicId,
+          created_by_user_id: getUserId(req),
+        };
+
+        let existing = null;
+        if (patientData.patient_number) {
+          existing = await Patient.findOne({
+            where: { clinic_id: clinicId, patient_number: patientData.patient_number },
+            transaction
+          });
+        }
+        if (!existing && patientData.phone_primary) {
+          existing = await Patient.findOne({
+            where: { clinic_id: clinicId, phone_primary: patientData.phone_primary },
+            transaction
+          });
+        }
+        if (!existing && patientData.email) {
+          existing = await Patient.findOne({
+            where: { clinic_id: clinicId, email: patientData.email },
+            transaction
+          });
+        }
+
+        if (existing) {
+          await existing.update(patientData, { transaction });
+          stats.updated += 1;
+          continue;
+        }
+
+        await Patient.create(patientData, { transaction });
+        stats.inserted += 1;
+      }
+    });
+
+    try {
+      await AuditLog.create({
+        user_id: getUserId(req),
+        action: 'IMPORT',
+        resource_type: 'patients',
+        resource_id: null,
+        ip_address: req.ip,
+        user_agent: req.get('User-Agent'),
+        description: `Import patients CSV: ${stats.inserted} créés, ${stats.updated} mis à jour, ${stats.skipped} ignorés`
+      });
+    } catch (auditErr) {
+      console.error('Audit log error:', auditErr);
+    }
+
+    res.json({
+      message: 'Import terminé',
+      inserted: stats.inserted,
+      updated: stats.updated,
+      skipped: stats.skipped,
+      errors
+    });
+  } catch (error) {
+    console.error('Import patients CSV error:', error);
+    res.status(500).json({ error: 'Erreur import CSV', message: error.message });
   }
 });
 
