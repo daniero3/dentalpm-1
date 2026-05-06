@@ -1,4 +1,5 @@
-const { Subscription, User } = require('../models');
+const { User } = require('../models');
+const { getCurrentSubscriptionForClinic, getCurrentPlanForClinic } = require('../utils/subscriptionResolver');
 const { Op } = require('sequelize');
 
 const PLAN_FEATURES = {
@@ -16,10 +17,7 @@ const requireValidSubscription = async (req, res, next) => {
     const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
     if (clinicId) {
       try {
-        const sub = await Subscription.findOne({
-          where: { clinic_id: clinicId },
-          order: [['created_at','DESC']]
-        });
+        const sub = await getCurrentSubscriptionForClinic(clinicId);
         if (sub) req.subscription = sub;
       } catch(e) { console.warn('Subscription lookup (non-fatal):', e.message); }
     }
@@ -84,13 +82,12 @@ const getSubscriptionStatus = async (req, res) => {
       return res.json({ status:'NO_CLINIC', has_access: false });
     }
 
-    const subscription = await Subscription.findOne({
-      where: { clinic_id: clinicId },
-      order: [['created_at','DESC']]
-    });
+    const current = await getCurrentPlanForClinic(clinicId);
+    const subscription = current.subscription;
+    const plan = current.plan;
 
     if (!subscription) {
-      return res.json({ status:'NO_SUBSCRIPTION', has_access: false });
+      return res.json({ status:'NO_SUBSCRIPTION', plan, has_access: false });
     }
 
     const now        = new Date();
@@ -103,14 +100,14 @@ const getSubscriptionStatus = async (req, res) => {
 
     return res.json({
       status:              subscription.status,
-      plan:                subscription.plan,
+      plan:                plan || subscription.plan,
       has_access:          ['ACTIVE','TRIAL'].includes(subscription.status) && !is_expired,
       is_trial:            subscription.status === 'TRIAL',
       is_expired,
       trial_days_remaining,
       end_date:            subscription.end_date,
-      features:            PLAN_FEATURES[subscription.plan] || [],
-      max_practitioners:   PLAN_MAX_USERS[subscription.plan] || 3,
+      features:            PLAN_FEATURES[plan || subscription.plan] || [],
+      max_practitioners:   PLAN_MAX_USERS[plan || subscription.plan] || 3,
       subscription_id:     subscription.id
     });
   } catch(error) {

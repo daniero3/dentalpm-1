@@ -3,6 +3,7 @@ const router = express.Router();
 const { body, param, query, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');
 const { Clinic, Subscription, SubscriptionInvoice, User } = require('../models');
+const { getCurrentSubscriptionForClinic } = require('../utils/subscriptionResolver');
 const { Op } = require('sequelize');
 
 // Subscription Plans Configuration
@@ -295,16 +296,12 @@ router.get('/', async (req, res) => {
         return res.status(404).json({ error: 'Aucun abonnement trouvé' });
       }
 
-      const subscription = await Subscription.findOne({
-        where: { clinic_id: user.clinic_id },
-        include: [
-          {
-            model: Clinic,
-            attributes: ['id', 'name', 'city']
-          }
-        ],
-        order: [['created_at', 'DESC']]
-      });
+      const subscription = await getCurrentSubscriptionForClinic(user.clinic_id);
+      const clinic = subscription?.clinic_id
+        ? await Clinic.findByPk(subscription.clinic_id, {
+          attributes: ['id', 'name', 'city']
+        }).catch(() => null)
+        : null;
 
       if (!subscription) {
         return res.status(404).json({ error: 'Aucun abonnement trouvé' });
@@ -322,6 +319,7 @@ router.get('/', async (req, res) => {
       return res.json({
         subscription: {
           ...subscription.toJSON(),
+          clinic,
           plan_details: SUBSCRIPTION_PLANS[subscription.plan],
           trial_days_remaining
         }

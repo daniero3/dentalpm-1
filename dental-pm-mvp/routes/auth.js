@@ -1,9 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { User, Clinic, AuditLog, Subscription } = require('../models');
+const { User, Clinic, AuditLog } = require('../models');
 const { authenticateToken } = require('../middleware/auth');
 const { loginRateLimiter, resetLoginAttempts } = require('../middleware/rateLimiter');
+const { getCurrentPlanForClinic, getCurrentSubscriptionForClinic } = require('../utils/subscriptionResolver');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -113,7 +114,7 @@ router.post('/login', loginRateLimiter, [
       // Si l'utilisateur a une clinique assignée
       if (user.clinic_id) {
         const clinic = await Clinic.findByPk(user.clinic_id, {
-          attributes: ['id', 'name', 'city', 'phone']
+          attributes: ['id', 'name', 'city', 'phone', 'subscription_status', 'current_plan']
         });
         if (clinic) availableClinics = [clinic];
       }
@@ -150,16 +151,8 @@ router.post('/login', loginRateLimiter, [
     let userPlan = null;
     if (user.role !== 'SUPER_ADMIN' && resolvedClinicId) {
       try {
-        const { Subscription } = require('../models');
-        const sub = await Subscription.findOne({
-          where: { clinic_id: resolvedClinicId },
-          order: [['created_at', 'DESC']]
-        });
-        if (sub && ['ACTIVE','TRIAL'].includes(sub.status)) {
-          const now = new Date();
-          const notExpired = !sub.end_date || new Date(sub.end_date) > now;
-          if (notExpired) userPlan = sub.plan;
-        }
+        const current = await getCurrentPlanForClinic(resolvedClinicId);
+        userPlan = current.plan;
       } catch(e) {}
     }
 
@@ -182,7 +175,7 @@ router.post('/select-clinic', authenticateToken, async (req, res) => {
     const { clinic_id } = req.body;
     if (!clinic_id) return res.status(400).json({ error:'clinic_id requis' });
 
-    const clinic = await Clinic.findByPk(clinic_id, { attributes:['id','name','city'] });
+    const clinic = await Clinic.findByPk(clinic_id, { attributes:['id','name','city','subscription_status','current_plan'] });
     if (!clinic) return res.status(404).json({ error:'Cabinet non trouvé' });
 
     const user = await User.findByPk((req.user?.id || req.user?.dataValues?.id) || req.user.userId);
@@ -199,10 +192,18 @@ router.post('/select-clinic', authenticateToken, async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
+    let userPlan = null;
+    try {
+      const current = await getCurrentPlanForClinic(clinic_id);
+      userPlan = current.plan;
+    } catch(e) {
+      userPlan = clinic.current_plan || null;
+    }
+
     res.json({
       message: 'Cabinet sélectionné', token: finalToken,
-      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id, specialization: user.specialization },
-      clinic: { id: clinic.id, name: clinic.name, city: clinic.city }
+      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id, specialization: user.specialization, plan: userPlan },
+      clinic: { id: clinic.id, name: clinic.name, city: clinic.city, current_plan: userPlan || clinic.current_plan }
     });
   } catch (error) {
     console.error('Select clinic error:', error);
@@ -385,11 +386,7 @@ router.get('/clinic-users', authenticateToken, async (req, res) => {
     });
 
     // Récupérer la limite du plan
-    const { Subscription } = require('../models');
-    const sub = await Subscription.findOne({
-      where: { clinic_id: clinicId },
-      order: [['created_at', 'DESC']]
-    });
+    const sub = await getCurrentSubscriptionForClinic(clinicId);
     const PLAN_LIMITS = { ESSENTIAL: 2, PRO: 5, GROUP: 50, TRIAL: 5 };
     const limit = PLAN_LIMITS[sub?.plan] || 2;
 
@@ -410,11 +407,7 @@ router.post('/clinic-users', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Seul l\'administrateur du cabinet peut creer des utilisateurs' });
     }
 
-    const { Subscription } = require('../models');
-    const sub = await Subscription.findOne({
-      where: { clinic_id: clinicId },
-      order: [['created_at', 'DESC']]
-    });
+    const sub = await getCurrentSubscriptionForClinic(clinicId);
 
     // Vérifier limite du plan
     const PLAN_LIMITS = { ESSENTIAL: 2, PRO: 5, GROUP: 50, TRIAL: 5 };

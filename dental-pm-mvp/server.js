@@ -99,8 +99,20 @@ async function seedTestAccounts() {
       await existing.update({ clinic_id: clinic.id, is_active: true }).catch(() => {});
     }
 
-    const sub = await Subscription.findOne({ where: { clinic_id: clinic.id } }).catch(() => null);
-    if (!sub) {
+    const [updatedSubs] = await Subscription.update(
+      {
+        plan: acc.plan,
+        status: 'ACTIVE',
+        end_date: endDate,
+        monthly_price_mga: PLAN_PRICES[acc.plan],
+        annual_price_mga: PLAN_PRICES[acc.plan] * 12,
+        price_mga: PLAN_PRICES[acc.plan],
+        max_practitioners: PLAN_USERS[acc.plan],
+      },
+      { where: { clinic_id: clinic.id } }
+    ).catch(() => [0]);
+
+    if (!updatedSubs) {
       await Subscription.create({
         clinic_id: clinic.id,
         plan: acc.plan,
@@ -113,8 +125,6 @@ async function seedTestAccounts() {
         annual_price_mga: PLAN_PRICES[acc.plan] * 12,
         max_practitioners: PLAN_USERS[acc.plan],
       }).catch(() => {});
-    } else {
-      await sub.update({ plan: acc.plan, status: 'ACTIVE', end_date: endDate }).catch(() => {});
     }
   }
 }

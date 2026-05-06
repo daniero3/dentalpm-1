@@ -15,6 +15,7 @@ const PDFDocument = require('pdfkit');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { getCurrentSubscriptionForClinic, getCurrentPlanForClinic } = require('../utils/subscriptionResolver');
 
 // ── Fonctions de gestion automatique (inlinées) ─────────────────────────
 const PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
@@ -168,14 +169,13 @@ function generateRef(clinicId) {
 // ═══════════════════════════════════════════════════════════════════════════
 router.get('/status', async (req, res) => {
   try {
-    const subscription = await Subscription.findOne({
-      where: { clinic_id: getClinicId(req) },
-      order: [['created_at', 'DESC']]
-    });
+    const current = await getCurrentPlanForClinic(getClinicId(req));
+    const subscription = current.subscription;
+    const plan = current.plan;
 
     if (!subscription) {
       return res.json({
-        status: 'NO_SUBSCRIPTION', needs_payment: true,
+        status: 'NO_SUBSCRIPTION', plan, needs_payment: true,
         message: 'Aucun abonnement trouvé'
       });
     }
@@ -194,14 +194,14 @@ router.get('/status', async (req, res) => {
     const hasAccess = ['ACTIVE','TRIAL'].includes(subscription.status) && !isExpired && !isTrialExp;
     res.json({
       status:         subscription.status,
-      plan:           subscription.plan,
+      plan:           plan || subscription.plan,
       has_access:     hasAccess,
       is_expired:     isExpired || isTrialExp || ['EXPIRED','TRIAL_EXPIRED'].includes(subscription.status),
       is_trial:       ['TRIAL'].includes(subscription.status),
       days_remaining: daysRemaining,
       end_date:       subscription.end_date,
       trial_end_date: subscription.trial_end_date,
-      price_mga:      PLAN_PRICES[subscription.plan] || MONTHLY_PRICE_MGA,
+      price_mga:      PLAN_PRICES[plan || subscription.plan] || MONTHLY_PRICE_MGA,
       needs_payment:  isExpired || isTrialExp || ['EXPIRED','TRIAL_EXPIRED','SUPERSEDED'].includes(subscription.status),
     });
   } catch (error) {
@@ -215,10 +215,7 @@ router.get('/status', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════
 router.get('/subscription', async (req, res) => {
   try {
-    const subscription = await Subscription.findOne({
-      where: { clinic_id: getClinicId(req) },
-      order: [['created_at', 'DESC']]
-    });
+    const subscription = await getCurrentSubscriptionForClinic(getClinicId(req));
     if (!subscription) return res.json({ subscription: null });
     res.json({ subscription });
   } catch (error) {
