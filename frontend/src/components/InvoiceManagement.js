@@ -157,14 +157,30 @@ const InvoiceManagement = () => {
     } catch(e){ toast.error(e.response?.data?.error||'Erreur paiement'); }
   };
 
-  const handlePrint = id => {
-    const printUrl = `${API}/invoices/${id}/print`;
-    const popup = window.open(printUrl, '_blank', 'noopener,noreferrer');
-    if (!popup) {
-      toast.error("Autorisez les fenêtres contextuelles pour imprimer la facture");
-      return;
+  const handlePrint = async id => {
+    try {
+      const response = await fetch(`${API}/invoices/${id}/print`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('print_failed');
+      }
+
+      const html = await response.text();
+      const popup = window.open('', '_blank', 'noopener,noreferrer');
+      if (!popup) {
+        toast.error("Autorisez les fenêtres contextuelles pour imprimer la facture");
+        return;
+      }
+
+      popup.document.open();
+      popup.document.write(html);
+      popup.document.close();
+      popup.focus();
+    } catch (error) {
+      toast.error('Erreur impression facture');
     }
-    popup.focus();
   };
   const handlePDF = async (id, num) => {
     try {
