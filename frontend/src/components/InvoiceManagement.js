@@ -168,16 +168,18 @@ const InvoiceManagement = () => {
       }
 
       const html = await response.text();
-      const popup = window.open('', '_blank', 'noopener,noreferrer');
+      const blobUrl = window.URL.createObjectURL(
+        new Blob([html], { type: 'text/html;charset=utf-8' })
+      );
+      const popup = window.open(blobUrl, '_blank', 'noopener,noreferrer');
       if (!popup) {
+        window.URL.revokeObjectURL(blobUrl);
         toast.error("Autorisez les fenêtres contextuelles pour imprimer la facture");
         return;
       }
 
-      popup.document.open();
-      popup.document.write(html);
-      popup.document.close();
       popup.focus();
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
     } catch (error) {
       toast.error('Erreur impression facture');
     }
