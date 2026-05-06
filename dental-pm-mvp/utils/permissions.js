@@ -60,7 +60,7 @@ const ROLE_PERMISSIONS = {
     prescriptions: ['read'],
     patient_documents: ['read', 'write'],
     pricing_syndical: ['read'],
-    pricing_cabinet: ['read'],
+    pricing_cabinet: ['read', 'write'],
     quotes: ['read', 'write'],
     invoices: ['read'],
     payments: ['read', 'write', 'execute'],

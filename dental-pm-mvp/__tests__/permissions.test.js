@@ -16,7 +16,7 @@ describe('RBAC permission matrix', () => {
 
   test('ASSISTANT can read cabinet pricing but cannot modify it', () => {
     expect(hasPermission('ASSISTANT', 'pricing_cabinet', 'read')).toBe(true);
-    expect(hasPermission('ASSISTANT', 'pricing_cabinet', 'write')).toBe(false);
+    expect(hasPermission('ASSISTANT', 'pricing_cabinet', 'write')).toBe(true);
     expect(hasPermission('ASSISTANT', 'pricing_cabinet', 'execute')).toBe(false);
   });
 

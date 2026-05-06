@@ -32,7 +32,7 @@ Cette matrice est le contrat d'autorisation cible pour DentalPM. Les routes doiv
 | Prescriptions | none | read/write/execute | read/write/execute | read | none |
 | Documents patients | none | read/write/execute | read/write/execute | read/write | read |
 | Pricing SYNDICAL | read | read | read | read | read |
-| Pricing CABINET | none | read/write/execute | read/write/execute | read | read |
+| Pricing CABINET | none | read/write/execute | read/write/execute | read/write | read |
 | Quotes | none | read/write/execute | read/write/execute | read/write | read/write/execute |
 | Invoices | none | read/write/execute | read/write | read | read/write/execute |
 | Payments | none | read/write/execute | read/write/execute | read/write/execute | read/write/execute |
