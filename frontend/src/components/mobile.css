@@ -1,225 +1,345 @@
 /* ═══════════════════════════════════════════════════════════
-   DentalPM — Responsive Mobile Fix
-   Corrige tous les débordements et désordres sur smartphone
+   DentalPM — Responsive Global
+   Règles transversales sans casser les layouts spécifiques.
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Base ── */
-*, *::before, *::after { box-sizing: border-box !important; }
-html, body, #root { overflow-x: hidden !important; max-width: 100vw !important; }
-
-/* ── Layout principal ── */
-.dpm-layout {
-  display: flex;
-  min-height: 100vh;
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-/* ── Topbar mobile ── */
-@media (max-width: 767px) {
-  .dpm-app-topbar { padding-left: 60px !important; }
+html,
+body,
+#root,
+.App {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
 
-  /* ── Contenu principal ── */
-  .dpm-main {
-    padding: 12px !important;
-    padding-top: 70px !important;
-    min-height: 100vh;
-    overflow-x: hidden !important;
-  }
+body {
+  min-width: 0;
+}
 
-  /* ── Grilles → 1 colonne ── */
-  .dpm-main > .dpm-content-shell [style*="gridTemplateColumns"],
-  .dpm-main > .dpm-content-shell [style*="grid-template-columns"] {
-    grid-template-columns: 1fr !important;
-  }
+img,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+}
 
-  /* ── Titres ── */
-  [style*="fontSize: 22"], [style*="fontSize: 24"],
-  [style*="fontSize: 28"], [style*="fontSize: 32"],
-  [style*="fontSize: 36"], [style*="fontSize: 40"],
-  [style*="fontSize: 48"], [style*="fontSize: 56"] {
-    font-size: clamp(16px, 5vw, 22px) !important;
-  }
+svg {
+  flex-shrink: 0;
+}
 
-  /* ── Modals — plein écran ── */
-  [style*="position: fixed"][style*="inset"],
-  [style*="position:'fixed'"][style*="inset:'0'"] {
-    padding: 12px !important;
-    align-items: flex-end !important;
-  }
+button,
+a,
+[role="button"],
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
 
-  /* ── Cartes dans modals ── */
-  [style*="maxWidth: 480"], [style*="maxWidth: 520"],
-  [style*="maxWidth: 560"], [style*="maxWidth: 600"],
-  [style*="maxWidth: 640"], [style*="maxWidth: 680"],
-  [style*="maxWidth: 720"], [style*="maxWidth: 800"],
-  [style*="maxWidth: 900"], [style*="maxWidth: 1000"] {
-    max-width: 100% !important;
-    width: 100% !important;
-    border-radius: 20px 20px 0 0 !important;
-    max-height: 92vh !important;
-    overflow-y: auto !important;
-    margin: 0 !important;
-  }
+button,
+a,
+[role="button"] {
+  line-height: 1.2;
+}
 
-  /* ── Flex horizontal → vertical ── */
-  [style*="display: flex"][style*="gap"]:not([style*="flexDirection: column"]):not([style*="alignItems: center"]) {
-    flex-wrap: wrap !important;
-  }
+button svg,
+a svg,
+[role="button"] svg {
+  display: block;
+  flex: 0 0 auto;
+}
 
-  /* ── Tables → scroll horizontal ── */
-  table {
-    display: block !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    white-space: nowrap;
-  }
+.dpm-layout,
+.dpm-main,
+.dpm-content-shell,
+.dpm-page,
+.dpm-header,
+.dpm-header-left,
+.dpm-toolbar,
+.dpm-search,
+.dpm-card-item,
+.dpm-kpi,
+.dpm-tabs,
+.card,
+.glass-card {
+  min-width: 0;
+}
 
-  /* ── Boutons fullwidth sur mobile ── */
-  .dpm-btn-mobile { width: 100% !important; }
+.dpm-content-shell {
+  overflow-x: clip;
+}
 
-  /* ── Inputs ── */
-  input, select, textarea {
-    font-size: 16px !important; /* évite zoom iOS */
-    width: 100% !important;
-  }
+.dpm-table-wrap,
+.dpm-table-wrapper,
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-  button, a, [role="button"] {
-    min-height: 36px;
-  }
+table {
+  max-width: 100%;
+}
 
-  button svg, a svg, [role="button"] svg {
-    flex-shrink: 0 !important;
-    display: block !important;
-  }
+.dpm-table,
+.table {
+  min-width: max-content;
+}
 
-  img, svg, canvas, video, iframe {
-    max-width: 100%;
-  }
-
-  /* ── KPI cards → 2 colonnes ── */
-  .dpm-kpi-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* ── Masquer sidebar ── */
-  .dpm-sidebar-desktop { display: none !important; }
-
-  /* ── Subscription management sidebar ── */
-  [style*="gridTemplateColumns: '220px 1fr'"],
-  [style*="gridTemplateColumns: '220px 1fr'"] {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
-  /* ── Sticky nav SubscriptionManagement ── */
-  .dpm-main [style*="position: sticky"] {
-    position: relative !important;
-  }
-
-  /* ── Padding sections ── */
-  [style*="padding: '40px"], [style*="padding: '48px"],
-  [style*="padding: '56px"], [style*="padding: '64px"] {
-    padding: 20px 16px !important;
-  }
-
-  /* ── Cookie banner ── */
-  [style*="bottom: 24"][style*="maxWidth: 720"] {
-    bottom: 8px !important;
-    width: calc(100% - 16px) !important;
-  }
-
-  /* ── PWA Install Prompt ── */
-  [style*="bottom: 90"] {
-    bottom: 70px !important;
-    right: 10px !important;
-    max-width: calc(100vw - 20px) !important;
-  }
+.dpm-header-title,
+.dpm-header-sub,
+.dpm-kpi-label,
+.dpm-card-item,
+.dpm-empty p,
+td,
+th {
+  overflow-wrap: anywhere;
 }
 
 /* ── Tablette ── */
 @media (min-width: 768px) and (max-width: 1023px) {
-  .dpm-main { padding: 16px !important; }
-
-  [style*="gridTemplateColumns: 'repeat(4"],
-  [style*="gridTemplateColumns: 'repeat(3"] {
-    grid-template-columns: repeat(2, 1fr) !important;
+  .dpm-main {
+    padding: 16px 18px 72px !important;
   }
 
-  [style*="gridTemplateColumns: '220px 1fr'"] {
-    grid-template-columns: 180px 1fr !important;
-  }
-}
-
-/* ── Formulaires mobiles ── */
-@media (max-width: 640px) {
-  form [style*="gridTemplateColumns"] {
-    grid-template-columns: 1fr !important;
+  .dpm-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  /* Header pages → colonne */
-  .dpm-main [style*="justifyContent: 'space-between'"][style*="alignItems: 'center'"] {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 10px !important;
+  .dpm-header {
+    gap: 12px;
   }
 }
 
-/* ── Corrections spécifiques composants ── */
-
-/* Prescription modal scroll */
+/* ── Smartphone ── */
 @media (max-width: 767px) {
-  /* Modals - forcer bottom sheet */
-  [style*="position: 'fixed'"][style*="inset: '0'"],
-  [style*="position:fixed"][style*="inset:0"] {
-    align-items: flex-end !important;
-    padding: 0 !important;
+  .dpm-app-topbar {
+    height: 56px !important;
+    padding-left: 62px !important;
+    padding-right: 10px !important;
+    gap: 8px !important;
   }
 
-  /* Cards dans modals - coins en haut seulement */
-  [style*="borderRadius: 20"][style*="maxWidth"],
-  [style*="borderRadius:20"][style*="maxWidth"] {
-    border-radius: 20px 20px 0 0 !important;
-    max-width: 100% !important;
-    margin: 0 !important;
+  .dpm-main {
+    padding: 12px 10px 84px !important;
+    min-height: 100vh;
+    overflow-x: hidden !important;
   }
 
-  /* Headers de pages - empiler verticallement */
-  [style*="justifyContent:'space-between'"],
-  [style*="justify-content: space-between"] {
-    flex-wrap: wrap !important;
-    gap: 10px !important;
+  .dpm-content-shell {
+    width: 100%;
+    max-width: 100%;
   }
 
-  /* Boutons d'action header */
-  [style*="display:'flex'"][style*="gap:8"] button,
-  [style*="display:'flex'"][style*="gap:10"] button {
+  .dpm-page {
+    max-width: 100%;
+    padding-bottom: 80px;
+  }
+
+  .dpm-sidebar-desktop {
+    display: none !important;
+  }
+
+  .dpm-header {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .dpm-header-left {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .dpm-header-title {
+    font-size: clamp(18px, 6vw, 22px) !important;
+    line-height: 1.15;
+  }
+
+  .dpm-header-sub {
     font-size: 12px !important;
-    padding: 8px 12px !important;
+    line-height: 1.4;
   }
 
-  /* Stats/KPI cards */
-  [style*="gridTemplateColumns:'repeat(4"] {
-    grid-template-columns: repeat(2, 1fr) !important;
+  .dpm-toolbar {
+    padding: 10px;
+    align-items: stretch;
   }
 
-  /* Formulaires grille */
-  [style*="gridTemplateColumns:'1fr 1fr'"] {
-    grid-template-columns: 1fr !important;
+  .dpm-search {
+    flex-basis: 100%;
+    width: 100%;
   }
 
-  /* Subscription management */
-  [style*="gridTemplateColumns:'220px 1fr'"] {
-    grid-template-columns: 1fr !important;
+  input,
+  select,
+  textarea {
+    width: 100%;
+    font-size: 16px !important;
   }
 
-  /* Padding général pages */
-  [style*="paddingBottom:48"],
-  [style*="padding-bottom: 48px"] {
-    padding-bottom: 80px !important;
+  .dpm-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px;
   }
 
-  /* Tables overflow */
-  .dpm-table-wrapper {
+  .dpm-kpi {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .dpm-kpi-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .dpm-kpi-val {
+    font-size: 18px;
+  }
+
+  .card-body,
+  .card-header,
+  .dpm-card-item {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .dpm-tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .dpm-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  .dpm-modal-overlay,
+  [role="dialog"] {
+    max-width: 100vw;
+  }
+
+  .dpm-modal-overlay {
+    padding: 0 !important;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .dpm-modal {
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 16px;
+  }
+
+  .dpm-btn-primary,
+  .dpm-btn-secondary,
+  .btn {
+    min-height: 38px;
+    justify-content: center;
+  }
+
+  .dpm-btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dpm-filter-btn {
+    min-height: 32px;
+  }
+
+  .dpm-btn-mobile {
+    width: 100% !important;
+  }
+}
+
+/* ── Petit smartphone ── */
+@media (max-width: 420px) {
+  .dpm-app-topbar {
+    padding-left: 58px !important;
+    padding-right: 8px !important;
+    gap: 6px !important;
+  }
+
+  .dpm-main {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .dpm-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dpm-toolbar {
+    gap: 8px;
+  }
+
+  .dpm-filter-btn,
+  .dpm-btn-primary,
+  .dpm-btn-secondary,
+  .btn {
+    width: 100%;
+  }
+
+  .dpm-table th,
+  .dpm-table td,
+  .table th,
+  .table td {
+    padding: 9px 10px !important;
+  }
+}
+
+/* ── Ultra compact : très petits écrans / montres ── */
+@media (max-width: 300px) {
+  .dpm-app-topbar {
+    padding-left: 48px !important;
+    padding-right: 5px !important;
+    gap: 4px !important;
+  }
+
+  .dpm-main {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .dpm-header-title {
+    font-size: 17px !important;
+  }
+
+  .dpm-header-icon,
+  .dpm-kpi-icon {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 9px !important;
+  }
+
+  .dpm-kpi,
+  .dpm-card-item,
+  .card-body,
+  .card-header {
+    padding: 10px !important;
+  }
+
+  .dpm-header-sub,
+  .dpm-kpi-label,
+  .dpm-card-item,
+  .dpm-table,
+  .table,
+  .dpm-btn-primary,
+  .dpm-btn-secondary,
+  .btn {
+    font-size: 11px !important;
   }
 }
