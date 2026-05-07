@@ -412,7 +412,7 @@ const MainLayout = ({ children }) => {
   const padding   = isMobile ? '10px 10px 80px' : '20px 24px 64px';
 
   return (
-    <div style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden', position:'relative' }}>
+    <div className="dpm-layout" style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden', position:'relative' }}>
       <ModernSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       <div style={{
         display:'flex', flexDirection:'column', flex:1,
@@ -422,13 +422,13 @@ const MainLayout = ({ children }) => {
         maxWidth: isMobile ? '100vw' : `calc(100vw - ${sidebarW}px)`,
       }}>
         <ModernTopbar />
-        <main style={{
+        <main className="dpm-main" style={{
           flex:1, overflowY:'auto', overflowX:'hidden',
           padding: padding,
           background:'var(--bg)',
           WebkitOverflowScrolling:'touch',
         }}>
-          <div style={{ maxWidth:1280, margin:'0 auto', width:'100%' }}>
+          <div className="dpm-content-shell" style={{ maxWidth:1280, margin:'0 auto', width:'100%' }}>
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
