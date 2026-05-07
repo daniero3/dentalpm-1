@@ -81,7 +81,7 @@ const button = {
 
 const StepTitle = ({ number, title, subtitle }) => (
   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
-    <span style={{
+    <span className="mailing-step-icon" style={{
       width: 26,
       height: 26,
       borderRadius: 8,
@@ -257,24 +257,132 @@ const DentalMailingSuite = () => {
   ];
 
   return (
-    <div style={{ maxWidth: 1180, margin: '0 auto', paddingBottom: 48 }}>
+    <div className="mailing-root" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 clamp(10px, 2.5vw, 18px) 48px' }}>
       <style>{`
+        .mailing-root,
+        .mailing-root * {
+          box-sizing: border-box;
+        }
+        .mailing-root {
+          min-width: 0;
+          overflow-x: hidden;
+        }
+        .mailing-root button,
+        .mailing-root input,
+        .mailing-root textarea {
+          min-width: 0;
+        }
+        .mailing-root button {
+          line-height: 1.2;
+        }
+        .mailing-root svg {
+          flex: 0 0 auto;
+          display: block;
+        }
+        .mailing-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+        .mailing-title {
+          margin: 0 0 4px;
+          font-family: Plus Jakarta Sans, system-ui, sans-serif;
+          font-size: clamp(20px, 5vw, 24px);
+          color: #0F172A;
+          line-height: 1.15;
+        }
+        .mailing-subtitle {
+          margin: 0;
+          color: ${C.slate};
+          font-size: 13px;
+          line-height: 1.45;
+          max-width: 680px;
+        }
+        .mailing-kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+          gap: 12px;
+          margin-bottom: 18px;
+        }
         .mailing-main-grid {
           display: grid;
-          grid-template-columns: minmax(330px, 420px) minmax(0, 1fr);
+          grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
           gap: 16px;
           align-items: start;
+          min-width: 0;
         }
         .mailing-type-grid {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 10px;
         }
+        .mailing-form-grid,
+        .mailing-actions-grid,
+        .mailing-preview-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+          gap: 10px;
+        }
+        .mailing-actions-grid {
+          margin-top: 0;
+        }
+        .mailing-patient-row {
+          width: 100%;
+          border: none;
+          border-bottom: 1px solid #F1F5F9;
+          padding: 11px;
+          text-align: left;
+          cursor: pointer;
+          display: grid;
+          grid-template-columns: 22px minmax(0, 1fr) auto;
+          gap: 9px;
+          align-items: center;
+        }
+        .mailing-patient-text,
+        .mailing-campaign-text,
+        .mailing-footer-text {
+          min-width: 0;
+        }
+        .mailing-patient-name,
+        .mailing-patient-contact,
+        .mailing-campaign-title,
+        .mailing-campaign-status,
+        .mailing-footer-label,
+        .mailing-footer-detail {
+          overflow-wrap: anywhere;
+        }
+        .mailing-status-pill {
+          font-size: 11px;
+          font-weight: 900;
+          white-space: nowrap;
+          justify-self: end;
+        }
+        .mailing-selected-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 8px;
+        }
+        .mailing-meta-row {
+          display: grid;
+          grid-template-columns: minmax(100px, 150px) minmax(0, 1fr);
+          gap: 10px;
+          padding: 5px 0;
+          font-size: 13px;
+          min-width: 0;
+        }
         .mailing-footer-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 14px;
           margin-top: 16px;
+        }
+        .mailing-footer-row,
+        .mailing-campaign-row {
+          min-width: 0;
         }
         @media (max-width: 900px) {
           .mailing-main-grid,
@@ -283,18 +391,99 @@ const DentalMailingSuite = () => {
           }
         }
         @media (max-width: 560px) {
+          .mailing-root {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+          }
+          .mailing-header {
+            align-items: stretch;
+          }
+          .mailing-header > button {
+            width: 100% !important;
+          }
           .mailing-type-grid {
             grid-template-columns: 1fr;
+          }
+          .mailing-meta-row {
+            grid-template-columns: 1fr;
+            gap: 2px;
+          }
+          .mailing-preview-iframe {
+            height: 300px !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .mailing-root {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+          }
+          .mailing-card {
+            padding: 12px !important;
+            border-radius: 10px !important;
+          }
+          .mailing-kpi-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+          .mailing-patient-row {
+            grid-template-columns: 22px minmax(0, 1fr);
+            align-items: start;
+          }
+          .mailing-status-pill {
+            grid-column: 2;
+            justify-self: start;
+            margin-top: 2px;
+          }
+          .mailing-campaign-row {
+            grid-template-columns: 1fr !important;
+          }
+          .mailing-campaign-row button {
+            width: 100% !important;
+            height: 36px !important;
+          }
+          .mailing-root h2 {
+            font-size: 15px !important;
+          }
+          .mailing-root h3,
+          .mailing-root label,
+          .mailing-root summary {
+            font-size: 12px !important;
+          }
+        }
+        @media (max-width: 260px) {
+          .mailing-root {
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+          }
+          .mailing-card {
+            padding: 9px !important;
+          }
+          .mailing-title {
+            font-size: 18px;
+          }
+          .mailing-subtitle,
+          .mailing-root p,
+          .mailing-root div,
+          .mailing-root span,
+          .mailing-root button,
+          .mailing-root input,
+          .mailing-root textarea {
+            font-size: 11px !important;
+          }
+          .mailing-step-icon {
+            width: 22px !important;
+            height: 22px !important;
+          }
+          .mailing-preview-iframe {
+            height: 240px !important;
           }
         }
       `}</style>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div className="mailing-header">
         <div>
-          <h1 style={{ margin: '0 0 4px', fontFamily: 'Plus Jakarta Sans', fontSize: 24, color: '#0F172A' }}>
-            Gestion mailing
-          </h1>
-          <p style={{ margin: 0, color: C.slate, fontSize: 13 }}>
+          <h1 className="mailing-title">Gestion mailing</h1>
+          <p className="mailing-subtitle">
             Créez une campagne patient en 3 étapes, avec conformité et SMS de secours intégrés.
           </p>
         </div>
@@ -303,7 +492,7 @@ const DentalMailingSuite = () => {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 12, marginBottom: 18 }}>
+      <div className="mailing-kpi-grid">
         {[
           { icon: Users, label: 'Patients éligibles', value: kpis.eligible_patients || 0, color: C.blue },
           { icon: Send, label: 'Campagnes envoyées', value: kpis.campaigns_sent || 0, color: C.green },
@@ -312,7 +501,7 @@ const DentalMailingSuite = () => {
         ].map((item) => {
           const Icon = item.icon;
           return (
-            <div key={item.label} style={box}>
+            <div key={item.label} className="mailing-card" style={box}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{
                   width: 36,
@@ -338,7 +527,7 @@ const DentalMailingSuite = () => {
       </div>
 
       <div className="mailing-main-grid">
-        <section style={box}>
+        <section className="mailing-card" style={box}>
           <StepTitle number="1" title="Choisir une campagne" subtitle="Sélectionnez l’action utile aujourd’hui." />
           <div className="mailing-type-grid">
             {campaignTypes.map((type) => {
@@ -382,7 +571,7 @@ const DentalMailingSuite = () => {
             style={{ ...input, margin: '6px 0 12px', resize: 'vertical' }}
           />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 10, marginBottom: 12 }}>
+          <div className="mailing-form-grid" style={{ marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Segment</label>
               <input
@@ -402,7 +591,7 @@ const DentalMailingSuite = () => {
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 12, marginBottom: 12 }}>
+          <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 12, marginBottom: 12, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
               <label style={{ fontSize: 12, fontWeight: 900, color: '#475569' }}>Patients ciblés</label>
               <button
@@ -441,18 +630,9 @@ const DentalMailingSuite = () => {
                   <button
                     key={patient.id}
                     onClick={() => togglePatient(patient.id)}
+                    className="mailing-patient-row"
                     style={{
-                      width: '100%',
-                      border: 'none',
-                      borderBottom: '1px solid #F1F5F9',
                       background: checked ? '#F0FDFE' : '#fff',
-                      padding: 11,
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'grid',
-                      gridTemplateColumns: '22px 1fr auto',
-                      gap: 9,
-                      alignItems: 'center'
                     }}
                   >
                     <span style={{
@@ -467,19 +647,16 @@ const DentalMailingSuite = () => {
                     }}>
                       {checked && <CheckCircle2 size={13} color="#fff" />}
                     </span>
-                    <span>
-                      <span style={{ display: 'block', fontSize: 13, fontWeight: 900, color: '#0F172A' }}>
+                    <span className="mailing-patient-text">
+                      <span className="mailing-patient-name" style={{ display: 'block', fontSize: 13, fontWeight: 900, color: '#0F172A' }}>
                         {patient.first_name} {patient.last_name}
                       </span>
-                      <span style={{ display: 'block', fontSize: 11, color: C.slate }}>
+                      <span className="mailing-patient-contact" style={{ display: 'block', fontSize: 11, color: C.slate }}>
                         {patient.email || 'Email manquant'} · {patient.phone_primary || 'Téléphone manquant'}
                       </span>
                     </span>
-                    <span style={{
-                      fontSize: 11,
-                      fontWeight: 900,
+                    <span className="mailing-status-pill" style={{
                       color: eligible ? C.green : C.amber,
-                      whiteSpace: 'nowrap'
                     }}>
                       {eligible ? 'OK email' : 'À compléter'}
                     </span>
@@ -496,7 +673,7 @@ const DentalMailingSuite = () => {
             </div>
 
             {selectedPatients.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <div className="mailing-selected-tags">
                 {selectedPatients.slice(0, 6).map((patient) => (
                   <span key={patient.id} style={{ border: '1px solid #BAE6FD', background: '#F0FDFE', color: C.teal, borderRadius: 999, padding: '5px 8px', fontSize: 11, fontWeight: 900 }}>
                     {patient.first_name} {patient.last_name}
@@ -526,7 +703,7 @@ const DentalMailingSuite = () => {
           </details>
 
           <StepTitle number="3" title="Générer et valider" subtitle="Créez le brouillon après contrôle rapide." />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 10 }}>
+          <div className="mailing-actions-grid">
             <button onClick={generateEmail} style={{ ...button, background: '#F0FDFE', borderColor: '#7DD3DA', color: C.teal }}>
               <Sparkles size={16} /> Générer
             </button>
@@ -540,7 +717,7 @@ const DentalMailingSuite = () => {
           </div>
         </section>
 
-        <section style={box}>
+        <section className="mailing-card" style={box}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 17, color: '#0F172A' }}>Aperçu & validation</h2>
@@ -572,7 +749,7 @@ const DentalMailingSuite = () => {
                   ['Audience', generated.audience_description],
                   ['Destinataires estimés', generated.estimated_recipients ?? '-']
                 ].map(([label, value]) => (
-                  <div key={label} style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 10, padding: '5px 0', fontSize: 13 }}>
+                  <div key={label} className="mailing-meta-row">
                     <span style={{ color: C.slate }}>{label}</span>
                     <strong style={{ color: '#0F172A' }}>{value}</strong>
                   </div>
@@ -583,10 +760,11 @@ const DentalMailingSuite = () => {
                 title="Aperçu email"
                 sandbox=""
                 srcDoc={generated.body_html}
+                className="mailing-preview-iframe"
                 style={{ width: '100%', height: 340, border: '1px solid #E2E8F0', borderRadius: 12, background: '#fff' }}
               />
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, marginTop: 14 }}>
+              <div className="mailing-preview-grid" style={{ marginTop: 14 }}>
                 <div>
                   <h3 style={{ margin: '0 0 9px', fontSize: 14, color: '#0F172A' }}>Checklist</h3>
                   {coreChecks.map((item) => (
@@ -622,20 +800,20 @@ const DentalMailingSuite = () => {
       </div>
 
       <div className="mailing-footer-grid">
-        <section style={box}>
+        <section className="mailing-card" style={box}>
           <h2 style={{ margin: '0 0 12px', fontSize: 16, color: '#0F172A' }}>Base patients</h2>
           {(segments?.segments || []).slice(0, 5).map((segment) => (
-            <div key={segment.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '9px 0', borderTop: '1px solid #F1F5F9' }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{segment.label}</div>
-                <div style={{ fontSize: 11, color: C.slate }}>{segment.criteria}</div>
+            <div key={segment.key} className="mailing-footer-row" style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '9px 0', borderTop: '1px solid #F1F5F9' }}>
+              <div className="mailing-footer-text">
+                <div className="mailing-footer-label" style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>{segment.label}</div>
+                <div className="mailing-footer-detail" style={{ fontSize: 11, color: C.slate }}>{segment.criteria}</div>
               </div>
               <strong style={{ color: C.teal }}>{segment.count}</strong>
             </div>
           ))}
         </section>
 
-        <section style={box}>
+        <section className="mailing-card" style={box}>
           <h2 style={{ margin: '0 0 12px', fontSize: 16, color: '#0F172A' }}>Conformité</h2>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
             <ShieldCheck size={21} color={consentOk ? C.green : C.amber} />
@@ -652,15 +830,15 @@ const DentalMailingSuite = () => {
           ))}
         </section>
 
-        <section style={box}>
+        <section className="mailing-card" style={box}>
           <h2 style={{ margin: '0 0 12px', fontSize: 16, color: '#0F172A' }}>Campagnes récentes</h2>
           {campaigns.length === 0 ? (
             <div style={{ color: C.slate, fontSize: 13 }}>Aucune campagne créée.</div>
           ) : campaigns.slice(0, 4).map((campaign) => (
-            <div key={campaign.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center', padding: '10px 0', borderTop: '1px solid #F1F5F9' }}>
-              <div>
-                <div style={{ fontWeight: 900, color: '#0F172A', fontSize: 13 }}>{campaign.name}</div>
-                <div style={{ color: C.slate, fontSize: 12 }}>{campaign.status}</div>
+            <div key={campaign.id} className="mailing-campaign-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 10, alignItems: 'center', padding: '10px 0', borderTop: '1px solid #F1F5F9' }}>
+              <div className="mailing-campaign-text">
+                <div className="mailing-campaign-title" style={{ fontWeight: 900, color: '#0F172A', fontSize: 13 }}>{campaign.name}</div>
+                <div className="mailing-campaign-status" style={{ color: C.slate, fontSize: 12 }}>{campaign.status}</div>
               </div>
               <button
                 onClick={() => sendCampaign(campaign)}
@@ -683,7 +861,7 @@ const DentalMailingSuite = () => {
         </section>
       </div>
 
-      <div style={{ marginTop: 16, ...box, background: '#FFF7ED', borderColor: '#FED7AA', color: '#9A3412' }}>
+      <div className="mailing-card" style={{ marginTop: 16, ...box, background: '#FFF7ED', borderColor: '#FED7AA', color: '#9A3412' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12, lineHeight: 1.5 }}>
           <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
