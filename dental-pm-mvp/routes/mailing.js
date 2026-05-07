@@ -141,6 +141,9 @@ const getEmailEligibleWhere = (clinicId, filter = {}) => {
 
   if (filter.gender) where.gender = filter.gender;
   if (filter.city) where.city = filter.city;
+  if (Array.isArray(filter.patient_ids) && filter.patient_ids.length > 0) {
+    where.id = { [Op.in]: filter.patient_ids };
+  }
   if (filter.age_min || filter.age_max) {
     const today = new Date();
     if (filter.age_max) {
@@ -256,7 +259,10 @@ router.get('/suite/dashboard', requireClinicId, async (req, res) => {
 router.post('/suite/generate-email', requireClinicId, [
   requireRole('ADMIN', 'DENTIST', 'ASSISTANT'),
   body('type').isIn(Object.keys(CAMPAIGN_LIBRARY)),
-  body('context').optional().isObject()
+  body('context').optional().isObject(),
+  body('audience_filter').optional().isObject(),
+  body('audience_filter.patient_ids').optional().isArray({ max: 500 }),
+  body('audience_filter.patient_ids.*').optional().isUUID()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -276,7 +282,9 @@ router.post('/suite/quick-campaign', requireClinicId, [
   body('name').optional().isLength({ max: 100 }).trim(),
   body('scheduled_at').optional({ nullable: true }).isISO8601(),
   body('context').optional().isObject(),
-  body('audience_filter').optional().isObject()
+  body('audience_filter').optional().isObject(),
+  body('audience_filter.patient_ids').optional().isArray({ max: 500 }),
+  body('audience_filter.patient_ids.*').optional().isUUID()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -577,6 +585,10 @@ router.post('/campaigns', requireClinicId, [
       if (audience_filter.city) {
         whereClause.city = audience_filter.city;
       }
+
+      if (Array.isArray(audience_filter.patient_ids) && audience_filter.patient_ids.length > 0) {
+        whereClause.id = { [Op.in]: audience_filter.patient_ids };
+      }
       
       if (audience_filter.has_appointments !== undefined) {
         // This would require a more complex query with joins
@@ -676,6 +688,9 @@ router.post('/campaigns/:id/send', requireClinicId, [
       
       if (filter.gender) whereClause.gender = filter.gender;
       if (filter.city) whereClause.city = filter.city;
+      if (Array.isArray(filter.patient_ids) && filter.patient_ids.length > 0) {
+        whereClause.id = { [Op.in]: filter.patient_ids };
+      }
     }
 
     let eligiblePatients = await Patient.findAll({

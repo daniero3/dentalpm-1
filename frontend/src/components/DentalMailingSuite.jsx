@@ -12,9 +12,11 @@ import {
   Mail,
   MessageSquare,
   RefreshCw,
+  Search,
   Send,
   ShieldCheck,
   Sparkles,
+  UserCheck,
   Users
 } from 'lucide-react';
 
@@ -105,6 +107,9 @@ const DentalMailingSuite = () => {
   const [dashboard, setDashboard] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [segments, setSegments] = useState(null);
+  const [patients, setPatients] = useState([]);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [selectedPatientIds, setSelectedPatientIds] = useState([]);
   const [conformity, setConformity] = useState(null);
   const [generated, setGenerated] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -146,12 +151,51 @@ const DentalMailingSuite = () => {
 
   useEffect(() => { fetchAll(); }, []);
 
+  useEffect(() => {
+    const loadPatients = async () => {
+      try {
+        const params = new URLSearchParams({ limit: '80' });
+        if (patientSearch.trim()) params.set('search', patientSearch.trim());
+        const response = await axios.get(`${API}/patients?${params.toString()}`, authH());
+        setPatients(response.data.patients || []);
+      } catch {
+        toast.error('Erreur chargement patients');
+      }
+    };
+
+    const timer = setTimeout(loadPatients, 250);
+    return () => clearTimeout(timer);
+  }, [patientSearch]);
+
+  const audienceFilter = useMemo(() => (
+    selectedPatientIds.length > 0 ? { patient_ids: selectedPatientIds } : {}
+  ), [selectedPatientIds]);
+
+  const selectedPatients = useMemo(() => {
+    const byId = new Map(patients.map((patient) => [patient.id, patient]));
+    return selectedPatientIds.map((id) => byId.get(id)).filter(Boolean);
+  }, [patients, selectedPatientIds]);
+
+  const audienceLabel = selectedPatientIds.length > 0
+    ? `${selectedPatientIds.length} patient${selectedPatientIds.length > 1 ? 's' : ''} sélectionné${selectedPatientIds.length > 1 ? 's' : ''}`
+    : form.segment;
+
+  const togglePatient = (patientId) => {
+    setSelectedPatientIds((ids) => (
+      ids.includes(patientId) ? ids.filter((id) => id !== patientId) : [...ids, patientId]
+    ));
+  };
+
+  const patientIsEmailEligible = (patient) => Boolean(
+    patient?.is_active && patient?.email && patient?.consent_data_processing
+  );
+
   const generateEmail = async () => {
     try {
       const response = await axios.post(`${API}/mailing/suite/generate-email`, {
         type: form.type,
         context: form.context,
-        audience_filter: {}
+        audience_filter: audienceFilter
       }, authH());
       setGenerated(response.data);
       toast.success('Email généré');
@@ -168,7 +212,7 @@ const DentalMailingSuite = () => {
         name: `${selectedType.label} - ${new Date().toLocaleDateString('fr-FR')}`,
         scheduled_at: form.scheduled_at || null,
         context: form.context,
-        audience_filter: {}
+        audience_filter: audienceFilter
       }, authH());
       setGenerated(response.data.email_package);
       toast.success('Campagne créée');
@@ -358,6 +402,110 @@ const DentalMailingSuite = () => {
             </div>
           </div>
 
+          <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 12, marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 900, color: '#475569' }}>Patients ciblés</label>
+              <button
+                onClick={() => setSelectedPatientIds([])}
+                disabled={selectedPatientIds.length === 0}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: selectedPatientIds.length === 0 ? '#CBD5E1' : C.teal,
+                  fontSize: 12,
+                  fontWeight: 900,
+                  cursor: selectedPatientIds.length === 0 ? 'default' : 'pointer'
+                }}
+              >
+                Réinitialiser
+              </button>
+            </div>
+
+            <div style={{ position: 'relative', marginBottom: 8 }}>
+              <Search size={15} color={C.slate} style={{ position: 'absolute', left: 11, top: 12 }} />
+              <input
+                value={patientSearch}
+                onChange={(event) => setPatientSearch(event.target.value)}
+                placeholder="Rechercher un patient par nom, téléphone ou email"
+                style={{ ...input, paddingLeft: 34 }}
+              />
+            </div>
+
+            <div style={{ border: '1px solid #E2E8F0', borderRadius: 12, overflow: 'hidden', maxHeight: 250, overflowY: 'auto' }}>
+              {patients.length === 0 ? (
+                <div style={{ padding: 14, color: C.slate, fontSize: 13 }}>Aucun patient trouvé.</div>
+              ) : patients.slice(0, 12).map((patient) => {
+                const checked = selectedPatientIds.includes(patient.id);
+                const eligible = patientIsEmailEligible(patient);
+                return (
+                  <button
+                    key={patient.id}
+                    onClick={() => togglePatient(patient.id)}
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      borderBottom: '1px solid #F1F5F9',
+                      background: checked ? '#F0FDFE' : '#fff',
+                      padding: 11,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'grid',
+                      gridTemplateColumns: '22px 1fr auto',
+                      gap: 9,
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: 6,
+                      border: `1.5px solid ${checked ? C.teal : '#CBD5E1'}`,
+                      background: checked ? C.teal : '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {checked && <CheckCircle2 size={13} color="#fff" />}
+                    </span>
+                    <span>
+                      <span style={{ display: 'block', fontSize: 13, fontWeight: 900, color: '#0F172A' }}>
+                        {patient.first_name} {patient.last_name}
+                      </span>
+                      <span style={{ display: 'block', fontSize: 11, color: C.slate }}>
+                        {patient.email || 'Email manquant'} · {patient.phone_primary || 'Téléphone manquant'}
+                      </span>
+                    </span>
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: eligible ? C.green : C.amber,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {eligible ? 'OK email' : 'À compléter'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 9, color: selectedPatientIds.length > 0 ? C.teal : C.slate, fontSize: 12, fontWeight: 800 }}>
+              <UserCheck size={15} />
+              {selectedPatientIds.length > 0
+                ? `${selectedPatientIds.length} patient${selectedPatientIds.length > 1 ? 's' : ''} ciblé${selectedPatientIds.length > 1 ? 's' : ''} directement`
+                : 'Aucun patient choisi : la campagne utilisera le segment indiqué.'}
+            </div>
+
+            {selectedPatients.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {selectedPatients.slice(0, 6).map((patient) => (
+                  <span key={patient.id} style={{ border: '1px solid #BAE6FD', background: '#F0FDFE', color: C.teal, borderRadius: 999, padding: '5px 8px', fontSize: 11, fontWeight: 900 }}>
+                    {patient.first_name} {patient.last_name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           <details style={{ borderTop: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9', padding: '12px 0', marginBottom: 14 }}>
             <summary style={{ cursor: 'pointer', color: '#0F172A', fontWeight: 900, fontSize: 13 }}>
               Paramètres cabinet
@@ -396,7 +544,7 @@ const DentalMailingSuite = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 17, color: '#0F172A' }}>Aperçu & validation</h2>
-              <p style={{ margin: '4px 0 0', color: C.slate, fontSize: 12 }}>{selectedType.label} · {form.segment}</p>
+              <p style={{ margin: '4px 0 0', color: C.slate, fontSize: 12 }}>{selectedType.label} · {audienceLabel}</p>
             </div>
             {generated?.body_html && (
               <button
