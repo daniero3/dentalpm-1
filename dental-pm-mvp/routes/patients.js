@@ -59,6 +59,14 @@ const router = express.Router();
 // ✅ Subscription vérifiée côté frontend (LicensingGuard)
 router.use(auditLogger('patients'));
 
+const toHistoryDate = (value) => {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+};
+
+const practitionerName = (user) => user?.full_name || user?.username || 'Praticien non renseigné';
+
 // ── GET / — List patients ────────────────────────────────────────────────────
 router.get('/', requireClinicId, [
   query('search').optional().isLength({ min: 1 }),
@@ -159,6 +167,185 @@ router.get('/:id', requireClinicId, [
   } catch (error) {
     console.error('Get patient error:', error);
     res.status(500).json({ error: 'Erreur lors de la récupération du patient', message: error.message });
+  }
+});
+
+// ── GET /:id/history — Historique consolidé du patient ───────────────────────
+router.get('/:id/history', requireClinicId, [
+  param('id').isUUID().withMessage('ID patient invalide')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+
+    const clinicId = getClinicId(req);
+    const wherePatient = { id: req.params.id };
+    if (clinicId) wherePatient.clinic_id = clinicId;
+
+    const patient = await Patient.findOne({ where: wherePatient, attributes: ['id','first_name','last_name'] });
+    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
+
+    const {
+      Procedure,
+      Prescription,
+      ToothHistory,
+      Payment,
+      LabOrder
+    } = require('../models');
+
+    const scoped = (extra = {}) => ({ patient_id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}), ...extra });
+    const timeline = [];
+
+    const [appointments, treatments, prescriptions, toothHistory, invoices, labOrders] = await Promise.all([
+      Appointment.findAll({
+        where: scoped(),
+        include: [{ model: User, as: 'dentist', attributes: ['id','full_name','username'], required: false }],
+        order: [['appointment_date','DESC'], ['start_time','DESC']],
+        limit: 100
+      }).catch(() => []),
+      Treatment.findAll({
+        where: scoped(),
+        include: [
+          { model: User, as: 'performedBy', attributes: ['id','full_name','username'], required: false },
+          { model: Procedure, as: 'procedure', attributes: ['id','code','name','category'], required: false }
+        ],
+        order: [['treatment_date','DESC'], ['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      Prescription.findAll({
+        where: scoped(),
+        include: [{ model: User, as: 'prescriber', attributes: ['id','full_name','username'], required: false }],
+        order: [['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      ToothHistory.findAll({
+        where: scoped(),
+        include: [{ model: User, as: 'performedBy', attributes: ['id','full_name','username'], required: false }],
+        order: [['created_at','DESC']],
+        limit: 150
+      }).catch(() => []),
+      Invoice.findAll({
+        where: scoped(),
+        include: [{ model: Payment, as: 'payments', required: false }],
+        order: [['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      LabOrder.findAll({
+        where: scoped(),
+        include: [{ model: User, as: 'dentist', attributes: ['id','full_name','username'], required: false }],
+        order: [['created_at','DESC']],
+        limit: 100
+      }).catch(() => [])
+    ]);
+
+    appointments.forEach(a => timeline.push({
+      id: `appointment-${a.id}`,
+      source_id: a.id,
+      type: 'APPOINTMENT',
+      label: 'Rendez-vous',
+      title: a.reason || a.appointment_type || 'Rendez-vous',
+      status: a.status,
+      date: toHistoryDate(`${a.appointment_date}T${String(a.start_time || '00:00:00').slice(0, 8)}`) || toHistoryDate(a.created_at),
+      practitioner: practitionerName(a.dentist),
+      details: a.notes || null
+    }));
+
+    treatments.forEach(t => timeline.push({
+      id: `treatment-${t.id}`,
+      source_id: t.id,
+      type: 'TREATMENT',
+      label: 'Soin effectué',
+      title: t.procedure?.name || t.treatment_plan || t.diagnosis || 'Traitement',
+      status: t.status,
+      date: toHistoryDate(t.treatment_date || t.created_at),
+      practitioner: practitionerName(t.performedBy),
+      tooth_numbers: t.tooth_numbers || null,
+      amount_mga: parseFloat(t.cost_mga || 0),
+      details: t.treatment_notes || t.diagnosis || t.follow_up_notes || null
+    }));
+
+    prescriptions.forEach(p => {
+      const content = p.content_json || p.content || {};
+      const medNames = (content.items || []).map(i => (i.medication || i.name || '').toString().trim()).filter(Boolean);
+      timeline.push({
+        id: `prescription-${p.id}`,
+        source_id: p.id,
+        type: 'PRESCRIPTION',
+        label: 'Ordonnance',
+        title: p.number || 'Ordonnance',
+        status: p.status,
+        date: toHistoryDate(p.issued_at || p.created_at),
+        practitioner: practitionerName(p.prescriber),
+        details: medNames.length ? medNames.join(', ') : null
+      });
+    });
+
+    toothHistory.forEach(h => timeline.push({
+      id: `odontogram-${h.id}`,
+      source_id: h.id,
+      type: 'ODONTOGRAM',
+      label: 'Odontogramme',
+      title: `Dent ${h.tooth_fdi}${h.surface ? ` - ${h.surface}` : ''}`,
+      status: h.status,
+      date: toHistoryDate(h.created_at),
+      practitioner: practitionerName(h.performedBy),
+      details: h.note || h.action || null
+    }));
+
+    invoices.forEach(inv => {
+      timeline.push({
+        id: `invoice-${inv.id}`,
+        source_id: inv.id,
+        type: 'INVOICE',
+        label: 'Facture',
+        title: inv.invoice_number || 'Facture',
+        status: inv.status,
+        date: toHistoryDate(inv.invoice_date || inv.created_at),
+        practitioner: 'Cabinet',
+        amount_mga: parseFloat(inv.total_mga || 0),
+        details: inv.notes || null
+      });
+
+      (inv.payments || []).forEach(pay => {
+        if (pay.status !== 'COMPLETED') return;
+        timeline.push({
+          id: `payment-${pay.id}`,
+          source_id: pay.id,
+          type: 'PAYMENT',
+          label: 'Paiement reçu',
+          title: pay.payment_number || inv.invoice_number || 'Paiement',
+          status: pay.payment_method,
+          date: toHistoryDate(pay.payment_date || pay.created_at),
+          practitioner: 'Cabinet',
+          amount_mga: parseFloat(pay.amount_mga || 0),
+          details: pay.reference_number || null
+        });
+      });
+    });
+
+    labOrders.forEach(o => timeline.push({
+      id: `lab-${o.id}`,
+      source_id: o.id,
+      type: 'LAB',
+      label: 'Travail laboratoire',
+      title: o.order_number || o.work_type || 'Commande labo',
+      status: o.status,
+      date: toHistoryDate(o.created_at),
+      practitioner: practitionerName(o.dentist),
+      amount_mga: parseFloat(o.total_mga || 0),
+      details: o.notes || o.shade || null
+    }));
+
+    timeline.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    res.json({
+      patient: { id: patient.id, first_name: patient.first_name, last_name: patient.last_name },
+      count: timeline.length,
+      history: timeline
+    });
+  } catch (error) {
+    console.error('Patient history error:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération de l historique patient', message: error.message });
   }
 });
 

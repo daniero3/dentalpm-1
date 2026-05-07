@@ -108,6 +108,49 @@ router.get('/', [
   }
 });
 
+// ── GET /revenues — Toutes les recettes encaissées du cabinet ───────────────
+router.get('/revenues', async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const where = { status: 'COMPLETED' };
+    if (clinicId) where.clinic_id = clinicId;
+
+    const payments = await Payment.findAll({
+      where,
+      include: [{
+        model: Invoice,
+        as: 'invoice',
+        attributes: ['id','invoice_number','patient_id','total_mga','status'],
+        required: false,
+        include: [{ model: Patient, as: 'patient', attributes: ['id','first_name','last_name'], required: false }]
+      }],
+      order: [['payment_date','DESC'], ['created_at','DESC']],
+      limit: 200
+    });
+
+    const revenues = payments.map(p => ({
+      id: p.id,
+      payment_number: p.payment_number,
+      payment_date: p.payment_date,
+      amount_mga: parseFloat(p.amount_mga || 0),
+      payment_method: p.payment_method,
+      reference_number: p.reference_number,
+      invoice_number: p.invoice?.invoice_number || null,
+      invoice_id: p.invoice_id,
+      patient_name: p.invoice?.patient ? `${p.invoice.patient.first_name} ${p.invoice.patient.last_name}` : 'N/A'
+    }));
+
+    res.json({
+      revenues,
+      total_mga: revenues.reduce((sum, r) => sum + r.amount_mga, 0),
+      count: revenues.length
+    });
+  } catch (error) {
+    console.error('Get revenues error:', error);
+    res.status(500).json({ error:'Erreur serveur', message: error.message });
+  }
+});
+
 // ── GET /:id ──────────────────────────────────────────────────────────────────
 router.get('/:id', [param('id').isUUID()], async (req, res) => {
   try {

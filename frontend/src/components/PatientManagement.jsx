@@ -8,7 +8,7 @@ import {
   AlertTriangle, User, Calendar, FileText, ClipboardList,
   FlaskConical, X, Save, Loader2, ChevronRight, Filter,
   BarChart2, UserCheck, UserX, Heart, RefreshCw, Download,
-  MapPin, Shield, Pill, Eye, Grid, List, SortAsc, Upload
+  MapPin, Shield, Pill, Eye, Grid, List, SortAsc, Upload, History
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -20,6 +20,8 @@ const calcAge = dob => {
   return Math.floor((Date.now() - new Date(dob).getTime()) / (1000*60*60*24*365.25));
 };
 const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+const fdatetime = d => d ? new Date(d).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }) : '—';
+const fmt = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 const initials = (fn, ln) => `${(fn||'')[0]||''}${(ln||'')[0]||''}`.toUpperCase();
 
 const GENDER_COLOR = { M:'#3B82F6', F:'#EC4899', OTHER:'#8B5CF6' };
@@ -185,6 +187,9 @@ const PatientManagement = () => {
   const [saving,    setSaving]    = useState(false);
   const [importing, setImporting] = useState(false);
   const [detail,    setDetail]    = useState(null);
+  const [historyFor, setHistoryFor] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const mountedRef = useRef(true);
   const importInputRef = useRef(null);
   const canImportPatients = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
@@ -299,6 +304,20 @@ const PatientManagement = () => {
     } finally {
       setImporting(false);
       e.target.value = '';
+    }
+  };
+
+  const openHistory = async (patient) => {
+    setHistoryFor(patient);
+    setHistory([]);
+    setHistoryLoading(true);
+    try {
+      const response = await axios.get(`${API}/patients/${patient.id}/history`, authH());
+      setHistory(response.data.history || []);
+    } catch (error) {
+      toast.error('Erreur chargement historique patient');
+    } finally {
+      setHistoryLoading(false);
     }
   };
 
@@ -482,6 +501,7 @@ const PatientManagement = () => {
                 {/* Actions */}
                 <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
                   <ActionBtn icon={Eye}            label="Fiche détaillée"  onClick={()=>setDetail(p)}                           color="#0D7A87"/>
+                  <ActionBtn icon={History}        label="Historique"       onClick={()=>openHistory(p)}                         color="#DC2626"/>
                   <ActionBtn icon={Activity}       label="Odontogramme"     to={`/patients/${p.id}/odontogram`}                  color="#7C3AED"/>
                   <ActionBtn icon={FileText}       label="Documents"        to={`/patients/${p.id}/documents`}                   color="#3B82F6"/>
                   <ActionBtn icon={ClipboardList}  label="Ordonnances"      to={`/patients/${p.id}/prescriptions`}               color="#10B981"/>
@@ -519,6 +539,7 @@ const PatientManagement = () => {
                 </div>
                 <div style={{ display:'flex', gap:6, borderTop:'1px solid #F1F5F9', paddingTop:12 }}>
                   <button onClick={()=>setDetail(p)} style={{ flex:1, padding:'7px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#0D7A87', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}><Eye size={12}/>Fiche</button>
+                  <ActionBtn icon={History}       label="Historique"   onClick={()=>openHistory(p)}          color="#DC2626"/>
                   <ActionBtn icon={Activity}      label="Odontogramme" to={`/patients/${p.id}/odontogram`}  color="#7C3AED"/>
                   <ActionBtn icon={FileText}      label="Documents"    to={`/patients/${p.id}/documents`}   color="#3B82F6"/>
                   <ActionBtn icon={ClipboardList} label="Ordonnances"  to={`/patients/${p.id}/prescriptions`} color="#10B981"/>
@@ -569,6 +590,7 @@ const PatientManagement = () => {
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginTop:18 }}>
               {[
                 { icon:Activity,      l:'Odontogramme', to:`/patients/${detail.id}/odontogram`,    c:'#7C3AED' },
+                { icon:History,       l:'Historique',    onClick:()=>{setDetail(null);openHistory(detail);}, c:'#DC2626' },
                 { icon:FileText,      l:'Documents',    to:`/patients/${detail.id}/documents`,     c:'#3B82F6' },
                 { icon:ClipboardList, l:'Ordonnances',  to:`/patients/${detail.id}/prescriptions`, c:'#10B981' },
                 { icon:FlaskConical,  l:'Labo',          to:`/patients/${detail.id}/lab-orders`,   c:'#8B5CF6' },
@@ -591,6 +613,52 @@ const PatientManagement = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* ══ MODAL HISTORIQUE PATIENT ══ */}
+      <Modal open={!!historyFor} onClose={()=>{setHistoryFor(null);setHistory([]);}} title={`Historique patient — ${historyFor?.first_name||''} ${historyFor?.last_name||''}`} maxW={760}>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {historyLoading ? (
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'36px', color:'#64748B', gap:10 }}>
+              <Loader2 size={20} style={{ animation:'spin .8s linear infinite' }}/> Chargement de l'historique...
+            </div>
+          ) : history.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'36px', color:'#94A3B8' }}>
+              <History size={34} style={{ margin:'0 auto 10px', opacity:.35 }}/>
+              <p style={{ margin:0, fontWeight:700, color:'#64748B' }}>Aucune action enregistrée</p>
+            </div>
+          ) : (
+            history.map((item, index) => {
+              const color = {
+                TREATMENT:'#0D7A87', ODONTOGRAM:'#7C3AED', PRESCRIPTION:'#10B981',
+                APPOINTMENT:'#3B82F6', INVOICE:'#F59E0B', PAYMENT:'#059669', LAB:'#8B5CF6'
+              }[item.type] || '#64748B';
+              return (
+                <div key={item.id || index} style={{ display:'flex', gap:12, padding:'12px 14px', borderRadius:12, border:'1px solid #E2E8F0', background:'#fff' }}>
+                  <div style={{ width:34, height:34, borderRadius:10, background:`${color}14`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <History size={15} color={color}/>
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', gap:10, flexWrap:'wrap', marginBottom:4 }}>
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:800, color, textTransform:'uppercase', letterSpacing:1 }}>{item.label}</div>
+                        <div style={{ fontSize:14, fontWeight:800, color:'#0F172A' }}>{item.title}</div>
+                      </div>
+                      {item.amount_mga > 0 && <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:13, color:'#0F172A' }}>{fmt(item.amount_mga)}</div>}
+                    </div>
+                    <div style={{ display:'flex', gap:10, flexWrap:'wrap', fontSize:11, color:'#64748B', marginBottom:item.details?5:0 }}>
+                      <span>{fdatetime(item.date)}</span>
+                      {item.practitioner && <span>Praticien : {item.practitioner}</span>}
+                      {item.status && <span>Statut : {item.status}</span>}
+                      {item.tooth_numbers && <span>Dent(s) : {item.tooth_numbers}</span>}
+                    </div>
+                    {item.details && <div style={{ fontSize:12, color:'#475569', lineHeight:1.55, background:'#F8FAFC', borderRadius:8, padding:'7px 9px' }}>{item.details}</div>}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </Modal>
 
       {/* ══ MODAL CRÉER / MODIFIER ══ */}

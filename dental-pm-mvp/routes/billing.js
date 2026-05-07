@@ -480,9 +480,13 @@ router.post('/public-checkout', async (req, res) => {
     const sessionData = {
       mode: 'subscription',
       payment_method_types: ['card'],
+      payment_method_collection: 'always',
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: 7,
+        trial_settings: {
+          end_behavior: { missing_payment_method: 'cancel' }
+        },
         metadata: { plan: plan_code }
       },
       metadata: { plan: plan_code },
@@ -532,9 +536,13 @@ router.post('/create-checkout-session', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
+      payment_method_collection: 'always',
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: 7,
+        trial_settings: {
+          end_behavior: { missing_payment_method: 'cancel' }
+        },
         metadata: { clinic_id: clinicId, plan: plan_code }
       },
       customer_email: clinic.email,
@@ -666,6 +674,30 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
       }
     }
 
+    // ── invoice.payment_failed → fonds insuffisants ou carte refusée après essai ──
+    if (event.type === 'invoice.payment_failed') {
+      if (clinicId) {
+        const { Clinic, Subscription } = require('../models');
+        const Op = require('sequelize').Op;
+
+        await Subscription.update(
+          {
+            status: 'EXPIRED',
+            auto_renew: false,
+            end_date: new Date()
+          },
+          { where: { clinic_id: clinicId, status: { [Op.in]: ['TRIAL','ACTIVE','PAST_DUE'] } } }
+        ).catch(()=>{});
+
+        await Clinic.update(
+          { subscription_status: 'EXPIRED', is_active: false },
+          { where: { id: clinicId } }
+        ).catch(()=>{});
+
+        console.log(`[Stripe] Paiement échoué après essai → compte désactivé: clinic=${clinicId}`);
+      }
+    }
+
     // ── customer.subscription.trial_will_end → rappel J-3 avant fin essai ──
     if (event.type === 'customer.subscription.trial_will_end') {
       if (clinicId) {
@@ -690,6 +722,16 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
         const { activateSubscriptionAfterPayment } = require('../job/subscriptionManager');
         await activateSubscriptionAfterPayment(clinicId, planCode, null).catch(()=>{});
         console.log(`[Stripe] Subscription updated → active: clinic=${clinicId} plan=${planCode}`);
+      }
+      if (clinicId && ['past_due', 'unpaid', 'incomplete_expired'].includes(subObj.status) && !subObj.trial_end) {
+        const { Clinic, Subscription } = require('../models');
+        const Op = require('sequelize').Op;
+        await Subscription.update(
+          { status: 'EXPIRED', auto_renew: false, end_date: new Date() },
+          { where: { clinic_id: clinicId, status: { [Op.in]: ['TRIAL','ACTIVE','PAST_DUE'] } } }
+        ).catch(()=>{});
+        await Clinic.update({ subscription_status: 'EXPIRED', is_active: false }, { where: { id: clinicId } }).catch(()=>{});
+        console.log(`[Stripe] Subscription non payée après essai → compte désactivé: clinic=${clinicId}`);
       }
     }
 

@@ -239,6 +239,7 @@ const PurchaseManagement = () => {
 
   const draftCount    = purchases.filter(p => p.status === 'DRAFT').length;
   const receivedCount = purchases.filter(p => p.status === 'RECEIVED').length;
+  const totalExpenses = purchases.filter(p => p.status !== 'CANCELLED').reduce((s,p) => s + parseFloat(p.total_mga||0), 0);
   const totalReceived = purchases.filter(p => p.status === 'RECEIVED').reduce((s,p) => s + parseFloat(p.total_mga||0), 0);
 
   return (
@@ -253,7 +254,7 @@ const PurchaseManagement = () => {
           </div>
           <div>
             <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:22, color:'#0F172A', margin:0 }}>Achats</h1>
-            <p style={{ color:'#64748B', fontSize:13, margin:0 }}>{purchases.length} bon(s) · {PARTNER_CATALOG.length} fournisseurs partenaires</p>
+            <p style={{ color:'#64748B', fontSize:13, margin:0 }}>{purchases.length} bon(s) · {fmt(totalExpenses)} de dépenses cabinet</p>
           </div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -280,7 +281,8 @@ const PurchaseManagement = () => {
         {[
           { icon:'📄', l:'Brouillons',    v:draftCount,    c:'#F59E0B', bg:'#FFFBEB' },
           { icon:'✅', l:'Reçus',          v:receivedCount, c:'#10B981', bg:'#DCFCE7' },
-          { icon:'💰', l:'Total achats',   v:fmt(totalReceived), c:'#4F46E5', bg:'#EDE9FE', raw:true },
+          { icon:'💸', l:'Dépenses cabinet', v:fmt(totalExpenses), c:'#EF4444', bg:'#FEE2E2', raw:true },
+          { icon:'💰', l:'Achats reçus',      v:fmt(totalReceived), c:'#4F46E5', bg:'#EDE9FE', raw:true },
           { icon:'🛍️', l:'Fournisseurs',  v:suppliers.length,  c:'#0D7A87', bg:'#F0FDFE' },
         ].map((k,i) => (
           <div key={i} style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'16px 18px', display:'flex', alignItems:'center', gap:12 }}>

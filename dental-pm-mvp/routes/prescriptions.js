@@ -42,6 +42,32 @@ async function generatePrescriptionNumber(Prescription, clinicId) {
   }
 }
 
+function normalizePrescriptionContent(content = {}) {
+  const items = Array.isArray(content.items) ? content.items : [];
+  return {
+    ...content,
+    items: items.map(item => ({
+      ...item,
+      medication: (item.medication || item.name || item.drug || '').toString().trim().toUpperCase()
+    })).filter(item => item.medication)
+  };
+}
+
+function calculateAge(dateOfBirth) {
+  if (!dateOfBirth) return null;
+  const dob = new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age -= 1;
+  return age >= 0 ? age : null;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+
 // ── POST ─────────────────────────────────────────────────────────────────────
 router.post('/patients/:patientId/prescriptions', [
   param('patientId').isUUID()
@@ -70,7 +96,7 @@ router.post('/patients/:patientId/prescriptions', [
     };
     // Ajouter colonnes optionnelles une par une
     if (clinicId) baseData.clinic_id = clinicId;
-    baseData.content_json = content || {};
+    baseData.content_json = normalizePrescriptionContent(content || {});
     try { baseData.notes      = notes   || null; } catch(e) {}
     try { baseData.status     = status  || 'DRAFT'; } catch(e) {}
     try { baseData.issued_at  = new Date(); } catch(e) {}
@@ -173,7 +199,7 @@ router.put('/patients/:patientId/prescriptions/:id', [
     if (!prescription) return res.status(404).json({ error: 'Ordonnance non trouvée' });
 
     const updates = {};
-    if (req.body.content !== undefined) updates.content   = req.body.content;
+    if (req.body.content !== undefined) updates.content_json = normalizePrescriptionContent(req.body.content);
     if (req.body.notes   !== undefined) updates.notes     = req.body.notes;
     if (req.body.status  !== undefined) {
       updates.status = req.body.status;
@@ -219,15 +245,19 @@ router.get('/patients/:patientId/prescriptions/:id/print', [
     let patient = null;
     try { patient = await Patient.findByPk(req.params.patientId); } catch(e) {}
 
-    const items = prescription.content?.items || [];
+    const patientAge = calculateAge(patient?.date_of_birth);
+    const items = prescription.content_json?.items || prescription.content?.items || [];
     const html  = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Ordonnance ${prescription.number}</title>
     <style>body{font-family:Arial,sans-serif;padding:30px;font-size:13px}h1{color:#0D7A87}.patient{background:#f8fafc;padding:12px;border-radius:8px;margin:16px 0}.item{padding:8px 0;border-bottom:1px solid #eee}.item-name{font-weight:bold}@media print{body{padding:0}}</style>
     </head><body>
-    <h1>ORDONNANCE — ${prescription.number}</h1>
+    <h1>ORDONNANCE — ${escapeHtml(prescription.number)}</h1>
     <p>Date: ${new Date(prescription.issued_at || prescription.created_at).toLocaleDateString('fr-FR')}</p>
-    <div class="patient"><strong>Patient:</strong> ${patient?.first_name || ''} ${patient?.last_name || ''}</div>
-    ${items.map(item => `<div class="item"><div class="item-name">${item.medication||item.name||''}</div><div style="color:#555;font-size:12px;margin-top:3px">${item.dosage?'Dosage: '+item.dosage+' ':''} ${(item.posology||item.frequency)?'Posologie: '+(item.posology||item.frequency)+' ':''} ${item.duration?'Durée: '+item.duration:''}</div></div>`).join('')}
-    ${prescription.notes ? `<p><em>Notes: ${prescription.notes}</em></p>` : ''}
+    <div class="patient"><strong>Patient:</strong> ${escapeHtml(patient?.first_name || '')} ${escapeHtml(patient?.last_name || '')}${patientAge !== null ? ` — ${patientAge} ans` : ''}</div>
+    ${items.map(item => {
+      const med = (item.medication || item.name || '').toString().toUpperCase();
+      return `<div class="item"><div class="item-name">${escapeHtml(med)}</div><div style="color:#555;font-size:12px;margin-top:3px">${item.dosage?'Dosage: '+escapeHtml(item.dosage)+' ':''} ${(item.posology||item.frequency)?'Posologie: '+escapeHtml(item.posology||item.frequency)+' ':''} ${item.duration?'Durée: '+escapeHtml(item.duration):''}</div></div>`;
+    }).join('')}
+    ${prescription.notes ? `<p><em>Notes: ${escapeHtml(prescription.notes)}</em></p>` : ''}
     <div style="margin-top:40px;text-align:right"><p>Signature: ____________________</p></div>
     <script>window.print();</script></body></html>`;
 
@@ -285,6 +315,7 @@ router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
     let patient = null;
     try { patient = await Patient.findByPk(prescription.patient_id); } catch(e) {}
 
+    const patientAge = calculateAge(patient?.date_of_birth);
     const items = prescription.content_json?.items || prescription.content?.items || [];
     const html  = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
     <title>Ordonnance ${prescription.number}</title>
@@ -312,21 +343,21 @@ router.get('/:id/pdf', [param('id').isUUID()], async (req, res) => {
       </div>
     </div>
     <div class="patient">
-      <strong>Patient:</strong> ${patient?.first_name || ''} ${patient?.last_name || ''}
+      <strong>Patient:</strong> ${escapeHtml(patient?.first_name || '')} ${escapeHtml(patient?.last_name || '')}${patientAge !== null ? ` — ${patientAge} ans` : ''}
     </div>
     <div>
       ${items.length > 0 ? items.map(item => `
         <div class="item">
-          <div class="item-name">${item.medication || item.name || item.drug || ''}</div>
+          <div class="item-name">${escapeHtml((item.medication || item.name || item.drug || '').toString().toUpperCase())}</div>
           <div class="item-detail">
-            ${item.dosage ? `<span><strong>Dosage:</strong> ${item.dosage}</span>` : ''}
-            ${(item.posology || item.frequency) ? `<span> &bull; <strong>Posologie:</strong> ${item.posology || item.frequency}</span>` : ''}
-            ${item.duration ? `<span> &bull; <strong>Durée:</strong> ${item.duration}</span>` : ''}
+            ${item.dosage ? `<span><strong>Dosage:</strong> ${escapeHtml(item.dosage)}</span>` : ''}
+            ${(item.posology || item.frequency) ? `<span> &bull; <strong>Posologie:</strong> ${escapeHtml(item.posology || item.frequency)}</span>` : ''}
+            ${item.duration ? `<span> &bull; <strong>Durée:</strong> ${escapeHtml(item.duration)}</span>` : ''}
           </div>
-          ${item.instructions ? `<div class="item-detail" style="font-style:italic;color:#444">${item.instructions}</div>` : ''}
+          ${item.instructions ? `<div class="item-detail" style="font-style:italic;color:#444">${escapeHtml(item.instructions)}</div>` : ''}
         </div>`).join('') : '<p style="color:#999">Aucun médicament prescrit</p>'}
     </div>
-    ${prescription.notes ? `<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${prescription.notes}</p>` : ''}
+    ${prescription.notes ? `<p style="margin-top:16px;color:#666;font-style:italic">Notes: ${escapeHtml(prescription.notes)}</p>` : ''}
     <div style="margin-top:40px;display:flex;justify-content:space-between;align-items:flex-end">
       <div style="text-align:center">
         <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=${encodeURIComponent('DPM-ORD:'+prescription.number+' | Patient:'+((patient?.first_name||'')+' '+(patient?.last_name||'')).trim()+' | Date:'+new Date(prescription.created_at).toLocaleDateString('fr-FR'))}" 

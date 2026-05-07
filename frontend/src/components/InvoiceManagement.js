@@ -81,6 +81,7 @@ const InvoiceManagement = () => {
   const [isPayOpen, setIsPayOpen] = useState(false);
   const [payInv,    setPayInv]    = useState(null);
   const [payments,  setPayments]  = useState([]);
+  const [revenues,  setRevenues]  = useState([]);
   const [payStats,  setPayStats]  = useState({ total_mga:0, paid_total_mga:0, balance_mga:0 });
   const [saving,    setSaving]    = useState(false);
   const [payData,   setPayData]   = useState({ amount_mga:'', payment_method:'CASH', reference_number:'' });
@@ -96,7 +97,7 @@ const InvoiceManagement = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-    await Promise.all([fetchInvoices(), fetchPatients(), fetchSchedules()]);
+    await Promise.all([fetchInvoices(), fetchPatients(), fetchSchedules(), fetchRevenues()]);
     setLoading(false);
   };
 
@@ -111,6 +112,7 @@ const InvoiceManagement = () => {
   const fetchPatients  = async () => { try { const r=await axios.get(`${API}/patients`,authH()); setPatients(r.data.patients||[]); } catch {} };
   const fetchSchedules = async () => { try { const r=await axios.get(`${API}/pricing-schedules`,authH()); setSchedules(r.data.schedules||[]); } catch {} };
   const fetchFees = async id => { if(!id){setFees([]);return;} try { const r=await axios.get(`${API}/pricing-schedules/${id}/fees`,authH()); setFees(r.data.fees||[]); } catch { setFees([]); } };
+  const fetchRevenues = async () => { try { const r=await axios.get(`${API}/invoices/revenues`, authH()); setRevenues(r.data.revenues || []); } catch { setRevenues([]); } };
 
   const fetchPayments = async inv => {
     try {
@@ -154,6 +156,7 @@ const InvoiceManagement = () => {
       setPayData({ amount_mga:'', payment_method:'CASH', reference_number:'' });
       fetchPayments(payInv);
       fetchInvoices(statusF!=='ALL'?statusF:undefined);
+      fetchRevenues();
     } catch(e){ toast.error(e.response?.data?.error||'Erreur paiement'); }
   };
 
@@ -226,6 +229,7 @@ const InvoiceManagement = () => {
     pending:  invoices.filter(i=>['PENDING','PARTIAL','DRAFT'].includes(getStatus(i))).length,
     overdue:  invoices.filter(i=>getStatus(i)==='OVERDUE').length,
     revenue:  invoices.filter(i=>getStatus(i)==='PAID').reduce((s,i)=>s+parseFloat(i.total_mga||0),0),
+    receipts: revenues.reduce((s,r)=>s+parseFloat(r.amount_mga||0),0),
     balance:  invoices.filter(i=>['PENDING','PARTIAL','OVERDUE'].includes(getStatus(i))).reduce((s,i)=>s+parseFloat(i.total_mga||0),0),
   };
 
@@ -271,7 +275,8 @@ const InvoiceManagement = () => {
           {icon:'✅',l:'Payées',        v:stats.paid,    c:C.green, bg:'#DCFCE7'},
           {icon:'⏳',l:'En attente',   v:stats.pending, c:C.amber, bg:'#FFFBEB'},
           {icon:'🔴',l:'En retard',    v:stats.overdue, c:C.red,   bg:'#FEE2E2'},
-          {icon:'💰',l:'Encaissé',     v:fmt(stats.revenue), c:C.green,bg:'#DCFCE7',raw:true},
+          {icon:'💰',l:'Factures payées', v:fmt(stats.revenue), c:C.green,bg:'#DCFCE7',raw:true},
+          {icon:'🧾',l:'Recettes cabinet', v:fmt(stats.receipts), c:C.teal,bg:'#F0FDFE',raw:true},
           {icon:'💸',l:'À encaisser',  v:fmt(stats.balance), c:C.amber,bg:'#FFFBEB',raw:true},
         ].map((k,i)=>(
           <div key={i} style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'13px 15px',display:'flex',alignItems:'center',gap:11 }}>
@@ -307,6 +312,32 @@ const InvoiceManagement = () => {
       </div>
 
       {/* Liste */}
+      {revenues.length > 0 && (
+        <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',overflow:'hidden',marginBottom:16 }}>
+          <div style={{ padding:'14px 18px',borderBottom:'1px solid #F1F5F9',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,background:'#FAFBFC' }}>
+            <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+              <Receipt size={16} color={C.teal}/>
+              <div>
+                <div style={{ fontWeight:800,fontSize:14,color:'#0F172A' }}>Recettes du cabinet</div>
+                <div style={{ fontSize:11,color:'#94A3B8' }}>{revenues.length} encaissement(s)</div>
+              </div>
+            </div>
+            <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:15,color:C.teal }}>{fmt(stats.receipts)}</div>
+          </div>
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:8,padding:12 }}>
+            {revenues.slice(0, 8).map(r=>(
+              <div key={r.id} style={{ padding:'10px 12px',borderRadius:11,background:'#F0FDFE',border:'1px solid #7DD3DA',display:'flex',justifyContent:'space-between',gap:10,alignItems:'center' }}>
+                <div style={{ minWidth:0 }}>
+                  <div style={{ fontSize:12,fontWeight:800,color:'#0F172A' }}>{r.payment_number || r.invoice_number}</div>
+                  <div style={{ fontSize:11,color:'#64748B',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.patient_name} · {fdate(r.payment_date)} · {PMETHODS.find(m=>m.v===r.payment_method)?.l||r.payment_method}</div>
+                </div>
+                <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:13,color:C.green,whiteSpace:'nowrap' }}>{fmt(r.amount_mga)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {filtered.length===0?(
         <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',padding:'52px',textAlign:'center' }}>
           <FileText size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>

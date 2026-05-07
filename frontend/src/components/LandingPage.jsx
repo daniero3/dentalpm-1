@@ -384,7 +384,7 @@ const FEATURES_LIST = [
   {tag:'SMS',icon:'💬',title:'SMS automatiques',desc:"Rappels 24h avant RDV, messages d'anniversaire, relances patients inactifs. Zéro appel manuel inutile.",color:'#10B981'},
 ];
 const FAQS = [
-  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes, sans carte bancaire. Accès immédiat à toutes les fonctionnalités PRO. À la fin, choisissez votre plan et payez directement via Stripe."},
+  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes avec une carte bancaire enregistrée. Aucun prélèvement n'est effectué pendant les 7 jours d'essai; Stripe prélève automatiquement le plan choisi à la fin de l'essai."},
   {q:"Mes données patients sont-elles sécurisées ?",a:"Oui. Chiffrement de bout en bout, sauvegarde automatique quotidienne, hébergement sécurisé. Confidentialité médicale respectée, aucune donnée partagée avec des tiers."},
   {q:"Puis-je annuler à tout moment ?",a:"Oui, sans engagement ni pénalité. Annulez depuis votre espace cabinet en un clic. Vos données restent accessibles jusqu'à la fin de la période payée."},
   {q:"Combien de patients avec le plan ESSENTIAL ?",a:"Le plan ESSENTIAL gère jusqu'à 500 patients actifs pour 1 praticien + 1 assistant(e). Le plan PRO offre des patients illimités dès 199 000 Ar/mois."},
@@ -1009,7 +1009,7 @@ export default function LandingPage() {
       <section id="tarifs" style={{background:'var(--surface)',padding:`${py} ${px}`}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div className="sr" style={{textAlign:'center',marginBottom:isMobile?28:60}}>
-            <ST tag="💰 Tarifs" title="Simple et transparent" sub="7 jours d'essai gratuit, sans carte bancaire. Résiliable à tout moment."/>
+            <ST tag="💰 Tarifs" title="Simple et transparent" sub="7 jours d'essai gratuit avec carte bancaire, sans prélèvement immédiat. Résiliable à tout moment."/>
             <p style={{color:'var(--teal)',fontWeight:600,fontSize:isMobile?12:14,marginTop:-20}}>💳 MVola · Orange Money · Airtel Money · Virement Banquière</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:c3,gap:isMobile?12:20,alignItems:'start'}}>
@@ -1209,4 +1209,3 @@ export default function LandingPage() {
     </div>
   );
 }
-

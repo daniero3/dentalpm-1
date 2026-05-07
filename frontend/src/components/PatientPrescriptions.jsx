@@ -141,9 +141,9 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
         <div style={{ padding:'14px 16px' }}>
           <div style={{ marginBottom:14 }}>
             <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:6 }}>Médicament *</label>
-            <MedSearch value={item.medication} onChange={v => onUpdate(index,'medication',v)} suggestions={suggestions}
+            <MedSearch value={item.medication} onChange={v => onUpdate(index,'medication',v.toUpperCase())} suggestions={suggestions}
               onPick={m => {
-                onUpdate(index,'medication',m.name);
+                onUpdate(index,'medication',m.name.toUpperCase());
                 if(m.dosage)   onUpdate(index,'dosage',m.dosage);
                 if(m.posology) onUpdate(index,'posology',m.posology);
                 if(m.duration) onUpdate(index,'duration',m.duration);
@@ -217,7 +217,7 @@ const PrescriptionPreview = ({ items, notes, patient }) => {
               <div style={{ width:18, height:18, borderRadius:'50%', background:T, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 }}>
                 <span style={{ fontSize:9, fontWeight:700, color:'#fff', fontFamily:'sans-serif' }}>{i+1}</span>
               </div>
-              <div style={{ fontWeight:700, fontSize:13, color:'#0F172A', fontFamily:'sans-serif' }}>{item.medication}</div>
+              <div style={{ fontWeight:700, fontSize:13, color:'#0F172A', fontFamily:'sans-serif' }}>{item.medication.toUpperCase()}</div>
             </div>
             <div style={{ paddingLeft:26, display:'flex', flexDirection:'column', gap:2 }}>
               {item.dosage   && <div style={{ fontSize:11, color:'#475569', display:'flex', alignItems:'center', gap:5, fontFamily:'sans-serif' }}><ChevronRight size={9} color={T}/><span><strong>Dosage :</strong> {item.dosage}</span></div>}
@@ -266,7 +266,11 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
     setFormData(f => ({ ...f, items:f.items.length>1?f.items.filter((_,idx)=>idx!==i):[emptyItem()] }));
     setActiveIdx(Math.max(0, i-1));
   };
-  const updateItem = (i, field, val) => setFormData(f => { const it=[...f.items]; it[i]={...it[i],[field]:val}; return {...f,items:it}; });
+  const updateItem = (i, field, val) => setFormData(f => {
+    const it = [...f.items];
+    it[i] = { ...it[i], [field]: field === 'medication' ? val.toUpperCase() : val };
+    return { ...f, items: it };
+  });
 
   const filled   = formData.items.filter(i => i.medication.trim());
   const complete = filled.filter(i => i.medication && i.dosage && i.posology && i.duration);
@@ -561,7 +565,7 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
                     <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
                       {meds.slice(0, isExp ? meds.length : 3).map((m, mi) => (
                         <span key={mi} style={{ fontSize:11, background:'#F0FDFE', color:T, padding:'2px 9px', borderRadius:99, border:`1px solid ${T}25`, fontWeight:600 }}>
-                          <Pill size={9} style={{ marginRight:4, verticalAlign:'middle' }}/>{m.medication}{m.dosage?` ${m.dosage}`:''}
+                          <Pill size={9} style={{ marginRight:4, verticalAlign:'middle' }}/>{String(m.medication).toUpperCase()}{m.dosage?` ${m.dosage}`:''}
                         </span>
                       ))}
                       {!isExp && meds.length > 3 && (
@@ -577,7 +581,7 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
                     <div style={{ marginTop:10, padding:'10px 14px', background:'#F8FAFC', borderRadius:10, border:'1px solid #F1F5F9' }}>
                       {meds.map((m, mi) => (
                         <div key={mi} style={{ marginBottom:mi<meds.length-1?8:0, paddingBottom:mi<meds.length-1?8:0, borderBottom:mi<meds.length-1?'1px dashed #E2E8F0':'none' }}>
-                          <div style={{ fontWeight:700, fontSize:12, color:'#0F172A', marginBottom:2 }}>{m.medication}</div>
+                          <div style={{ fontWeight:700, fontSize:12, color:'#0F172A', marginBottom:2 }}>{String(m.medication).toUpperCase()}</div>
                           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
                             {m.dosage   && <span style={{ fontSize:11, color:'#64748B' }}>Dosage : <strong>{m.dosage}</strong></span>}
                             {m.posology && <span style={{ fontSize:11, color:'#64748B' }}>Posologie : <strong>{m.posology}</strong></span>}
@@ -648,7 +652,9 @@ const PatientPrescriptions = () => {
   };
 
   const handleCreate = async () => {
-    const valid = form.items.filter(i => i.medication.trim());
+    const valid = form.items
+      .filter(i => i.medication.trim())
+      .map(i => ({ ...i, medication: i.medication.trim().toUpperCase() }));
     if (!valid.length) { toast.error('Ajoutez au moins un médicament'); return; }
     setSaving(true);
     try {
@@ -666,7 +672,7 @@ const PatientPrescriptions = () => {
     try {
       await axios.put(
         `${API}/patients/${patientId}/prescriptions/${selPresc.id}`,
-        { content:{ items:form.items.filter(i=>i.medication.trim()), notes:form.notes } },
+        { content:{ items:form.items.filter(i=>i.medication.trim()).map(i => ({ ...i, medication: i.medication.trim().toUpperCase() })), notes:form.notes } },
         authH()
       );
       toast.success('Mise à jour'); setIsEditOpen(false); setSelPresc(null); setForm(emptyForm); fetchPrescriptions();

@@ -1,7 +1,7 @@
 const express = require('express');
 const { query, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
-const { Invoice, Payment, Patient } = require('../models');
+const { Invoice, Payment, Patient, PurchaseOrder, Supplier } = require('../models');
 
 const jwt = require('jsonwebtoken');
 const _getClinicId = (req) => {
@@ -72,6 +72,25 @@ router.get('/finance', [
     const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount_mga || 0), 0);
     const balance   = totalInvoiced - totalPaid;
 
+    const purchaseWhere = {
+      created_at: { [Op.between]: [fromDate, toDate] },
+      status: { [Op.ne]: 'CANCELLED' }
+    };
+    if (clinicId) purchaseWhere.clinic_id = clinicId;
+
+    const purchases = await PurchaseOrder.findAll({
+      where: purchaseWhere,
+      attributes: ['id','number','status','total_mga','created_at','received_at'],
+      include: [{ model: Supplier, as: 'supplier', attributes: ['id','name'], required: false }],
+      order: [['created_at','DESC']]
+    }).catch(() => []);
+
+    const totalExpenses = purchases.reduce((sum, p) => sum + parseFloat(p.total_mga || 0), 0);
+    const receivedExpenses = purchases
+      .filter(p => p.status === 'RECEIVED')
+      .reduce((sum, p) => sum + parseFloat(p.total_mga || 0), 0);
+    const netResult = totalPaid - totalExpenses;
+
     // Breakdown par méthode
     const methodBreakdown = {};
     payments.forEach(p => {
@@ -100,15 +119,33 @@ router.get('/finance', [
 
     res.json({
       period: { from: fromDate.toISOString().split('T')[0], to: toDate.toISOString().split('T')[0] },
-      totals: { invoiced_mga: totalInvoiced, paid_mga: totalPaid, balance_mga: balance },
+      totals: {
+        invoiced_mga: totalInvoiced,
+        paid_mga: totalPaid,
+        balance_mga: balance,
+        expenses_mga: totalExpenses,
+        received_expenses_mga: receivedExpenses,
+        net_result_mga: netResult
+      },
       breakdown_by_method: methodBreakdown,
       top_unpaid_invoices: unpaidInvoices,
+      expenses: purchases.map(p => ({
+        id: p.id,
+        number: p.number,
+        status: p.status,
+        supplier_name: p.supplier?.name || 'N/A',
+        total_mga: parseFloat(p.total_mga || 0),
+        created_at: p.created_at,
+        received_at: p.received_at
+      })).slice(0, 20),
       stats: {
         invoice_count: invoices.length,
         payment_count: payments.length,
+        purchase_count: purchases.length,
         unpaid_count: unpaidInvoices.length,
         fully_paid_count: invoices.length - unpaidInvoices.length,
-        collection_rate: totalInvoiced > 0 ? ((totalPaid / totalInvoiced) * 100).toFixed(1) : 0
+        collection_rate: totalInvoiced > 0 ? ((totalPaid / totalInvoiced) * 100).toFixed(1) : 0,
+        margin_rate: totalPaid > 0 ? ((netResult / totalPaid) * 100).toFixed(1) : 0
       }
     });
   } catch (error) {

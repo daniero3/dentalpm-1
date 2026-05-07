@@ -83,7 +83,7 @@ const ReportsManagement = () => {
           </div>
           <div>
             <h1 style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:22,color:'#0F172A',margin:0 }}>Rapports financiers</h1>
-            <p style={{ color:'#64748B',fontSize:13,margin:0 }}>Analyse des revenus et paiements</p>
+            <p style={{ color:'#64748B',fontSize:13,margin:0 }}>Analyse des recettes, dépenses et résultat net</p>
           </div>
         </div>
       </div>
@@ -112,6 +112,8 @@ const ReportsManagement = () => {
               {icon:'💰',l:'Total facturé',   v:fmt(report.totals?.invoiced_mga),  c:'#3B82F6', bg:'#EFF6FF', raw:true},
               {icon:'✅',l:'Total encaissé',  v:fmt(report.totals?.paid_mga),       c:'#10B981', bg:'#DCFCE7', raw:true},
               {icon:'⏳',l:'Solde impayé',    v:fmt(report.totals?.balance_mga),    c:'#EF4444', bg:'#FEE2E2', raw:true},
+              {icon:'💸',l:'Dépenses cabinet', v:fmt(report.totals?.expenses_mga), c:'#EF4444', bg:'#FEE2E2', raw:true},
+              {icon:'📈',l:'Résultat net',     v:fmt(report.totals?.net_result_mga), c:(report.totals?.net_result_mga||0)>=0?'#059669':'#DC2626', bg:(report.totals?.net_result_mga||0)>=0?'#D1FAE5':'#FEE2E2', raw:true},
               {icon:'📊',l:'Taux recouvrement',v:`${report.stats?.collection_rate||0}%`, c:'#7C3AED', bg:'#EDE9FE', raw:true},
             ].map((k,i)=>(
               <div key={i} className="rep-anim" style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'16px 18px',display:'flex',alignItems:'center',gap:12,animationDelay:`${i*.06}s` }}>
@@ -129,6 +131,7 @@ const ReportsManagement = () => {
             {[
               {l:'Factures',       v:report.stats?.invoice_count||0,    c:'#3B82F6', bg:'#EFF6FF'},
               {l:'Paiements',      v:report.stats?.payment_count||0,    c:'#10B981', bg:'#DCFCE7'},
+              {l:'Achats',         v:report.stats?.purchase_count||0,    c:'#7C3AED', bg:'#EDE9FE'},
               {l:'Impayées',       v:report.stats?.unpaid_count||0,     c:'#EF4444', bg:'#FEE2E2'},
               {l:'Soldées',        v:report.stats?.fully_paid_count||0, c:'#059669', bg:'#D1FAE5'},
             ].map((k,i)=>(
@@ -197,6 +200,28 @@ const ReportsManagement = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Dépenses cabinet */}
+          <div style={{ background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'18px 20px',marginTop:16 }}>
+            <div style={{ fontSize:14,fontWeight:700,color:'#0F172A',marginBottom:16,display:'flex',alignItems:'center',gap:7 }}>
+              <TrendingDown size={16} color="#EF4444"/> Dépenses du cabinet ({report.expenses?.length||0})
+            </div>
+            {!report.expenses?.length?(
+              <div style={{ textAlign:'center',padding:'22px',color:'#94A3B8' }}>Aucune dépense sur la période</div>
+            ):(
+              <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:8 }}>
+                {report.expenses.map(exp=>(
+                  <div key={exp.id} style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 12px',background:'#FFF5F5',borderRadius:10,border:'1px solid #FECACA',gap:10 }}>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:13,fontWeight:700,color:'#0F172A' }}>{exp.number}</div>
+                      <div style={{ fontSize:11,color:'#64748B',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{exp.supplier_name} · {fdate(exp.created_at)} · {exp.status}</div>
+                    </div>
+                    <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:13,color:'#EF4444',whiteSpace:'nowrap' }}>{fmt(exp.total_mga)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
