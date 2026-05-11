@@ -346,7 +346,7 @@ const PatientManagement = () => {
   };
 
   if (loading) return (
-    <div style={{ maxWidth: 1100, margin:'0 auto', paddingBottom:48 }}>
+    <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
         <Skel h={44} w={44} r={13}/><div style={{ flex:1 }}><Skel h={18} w={160} r={8}/><div style={{ marginTop:6 }}><Skel h={12} w={100} r={6}/></div></div>
@@ -361,9 +361,28 @@ const PatientManagement = () => {
     </div>
   );
 
+  const historySummary = history.reduce((acc, item) => {
+    acc.total += 1;
+    if (item.amount_mga > 0) acc.amount += item.amount_mga;
+    if (item.type === 'APPOINTMENT') acc.appointments += 1;
+    if (item.type === 'TREATMENT' || item.type === 'ODONTOGRAM') acc.care += 1;
+    if (item.type === 'INVOICE' || item.type === 'PAYMENT') acc.billing += 1;
+    return acc;
+  }, { total:0, amount:0, appointments:0, care:0, billing:0 });
+
+  const historyPalette = type => ({
+    TREATMENT:     { color:'#0D7A87', bg:'#E6FAFC', label:'Soin' },
+    ODONTOGRAM:   { color:'#7C3AED', bg:'#F3E8FF', label:'Odontogramme' },
+    PRESCRIPTION: { color:'#10B981', bg:'#ECFDF5', label:'Ordonnance' },
+    APPOINTMENT:  { color:'#3B82F6', bg:'#EFF6FF', label:'Rendez-vous' },
+    INVOICE:      { color:'#F59E0B', bg:'#FFFBEB', label:'Facture' },
+    PAYMENT:      { color:'#059669', bg:'#ECFDF5', label:'Paiement' },
+    LAB:          { color:'#8B5CF6', bg:'#F5F3FF', label:'Labo' }
+  }[type] || { color:'#64748B', bg:'#F8FAFC', label:'Activité' });
+
   return (
-    <div style={{ maxWidth: 1100, margin:'0 auto', paddingBottom:48 }}>
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.pt-card{animation:fadeUp .35s ease both}`}</style>
+    <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes historyLine{from{transform:scaleY(0);opacity:.2}to{transform:scaleY(1);opacity:1}}.pt-card{animation:fadeUp .35s ease both}.patient-box{box-shadow:0 18px 54px rgba(15,23,42,.08)}.history-item{animation:fadeUp .28s ease both}.history-item:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.1);border-color:#CBD5E1!important}`}</style>
 
       {/* ── En-tête ── */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22, flexWrap:'wrap', gap:12 }}>
@@ -409,7 +428,7 @@ const PatientManagement = () => {
       </div>
 
       {/* ── KPIs ── */}
-      <div className="pt-card" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:12, marginBottom:20 }}>
+      <div className="pt-card" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:14, marginBottom:22 }}>
         {[
           { icon:'👥', l:'Total',         v:stats.total,    c:'#0D7A87', bg:'#F0FDFE', action:()=>setGF('ALL') },
           { icon:'👨', l:'Hommes',         v:stats.men,      c:'#3B82F6', bg:'#EFF6FF', action:()=>setGF('M') },
@@ -430,7 +449,7 @@ const PatientManagement = () => {
       </div>
 
       {/* ── Barre de recherche + filtres ── */}
-      <div className="pt-card" style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'12px 16px', marginBottom:16, display:'flex', gap:10, flexWrap:'wrap', alignItems:'center', animationDelay:'.05s' }}>
+      <div className="pt-card patient-box" style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'14px 18px', marginBottom:18, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', animationDelay:'.05s' }}>
         {/* Search */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:220 }}>
           <Search size={14} color="#94A3B8"/>
@@ -469,14 +488,14 @@ const PatientManagement = () => {
         </div>
       ) : viewMode === 'list' ? (
         /* ── VUE LISTE ── */
-        <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', overflow:'hidden' }}>
+        <div className="patient-box" style={{ background:'#fff', borderRadius:22, border:'1px solid #E2E8F0', overflow:'hidden' }}>
           {filtered.map((p, idx) => {
             const age = calcAge(p.date_of_birth);
             const gc  = GENDER_COLOR[p.gender];
             const gb  = GENDER_BG[p.gender];
             return (
               <div key={p.id} className="pt-card"
-                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px', borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none', flexWrap:'wrap', gap:10, animationDelay:`${Math.min(idx,.2)*0.04}s`, transition:'background .15s', cursor:'default' }}
+                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:idx<filtered.length-1?'1px solid #F1F5F9':'none', flexWrap:'wrap', gap:14, animationDelay:`${Math.min(idx,.2)*0.04}s`, transition:'background .15s', cursor:'default' }}
                 onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'}
                 onMouseOut={e=>e.currentTarget.style.background='transparent'}>
                 {/* Avatar + infos */}
@@ -515,11 +534,11 @@ const PatientManagement = () => {
         </div>
       ) : (
         /* ── VUE GRILLE ── */
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:18 }}>
           {filtered.map((p, idx) => {
             const age = calcAge(p.date_of_birth);
             return (
-              <div key={p.id} className="pt-card" style={{ background:'#fff', borderRadius:18, border:'1.5px solid #E2E8F0', padding:'20px', boxShadow:'0 1px 4px rgba(0,0,0,.04)', transition:'all .2s', animationDelay:`${Math.min(idx,.2)*0.04}s` }}
+              <div key={p.id} className="pt-card patient-box" style={{ background:'#fff', borderRadius:22, border:'1.5px solid #E2E8F0', padding:'22px', transition:'all .2s', animationDelay:`${Math.min(idx,.2)*0.04}s` }}
                 onMouseOver={e=>{e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
                 onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}>
                 <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
@@ -616,48 +635,100 @@ const PatientManagement = () => {
       </Modal>
 
       {/* ══ MODAL HISTORIQUE PATIENT ══ */}
-      <Modal open={!!historyFor} onClose={()=>{setHistoryFor(null);setHistory([]);}} title={`Historique patient — ${historyFor?.first_name||''} ${historyFor?.last_name||''}`} maxW={760}>
-        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+      <Modal open={!!historyFor} onClose={()=>{setHistoryFor(null);setHistory([]);}} title="" maxW={920}>
+        <div style={{ margin:-28 }}>
+          <div style={{
+            position:'relative',
+            overflow:'hidden',
+            padding:'26px 30px 24px',
+            background:'linear-gradient(135deg,#082F49 0%,#0D7A87 52%,#13A3B4 100%)',
+            borderRadius:'22px 22px 0 0'
+          }}>
+            <div style={{ position:'absolute', inset:'auto -70px -110px auto', width:260, height:260, borderRadius:'50%', background:'rgba(255,255,255,.13)' }}/>
+            <div style={{ position:'absolute', inset:'-80px auto auto 45%', width:190, height:190, borderRadius:'50%', background:'rgba(255,255,255,.08)' }}/>
+            <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'space-between', gap:18, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:16, minWidth:0 }}>
+                {historyFor && <Avatar p={historyFor} size={64}/>}
+                <div style={{ minWidth:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:6 }}>
+                    <span style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 10px', borderRadius:99, background:'rgba(255,255,255,.15)', color:'#E0F7FA', fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:1.2 }}>
+                      <History size={13}/> Dossier clinique
+                    </span>
+                    {historyFor?.patient_number && <span style={{ color:'rgba(255,255,255,.76)', fontSize:12, fontWeight:700 }}>{historyFor.patient_number}</span>}
+                  </div>
+                  <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:24, fontWeight:800, color:'#fff', margin:'0 0 4px' }}>
+                    {historyFor?.first_name||''} {historyFor?.last_name||''}
+                  </h2>
+                  <p style={{ color:'rgba(255,255,255,.78)', fontSize:13, margin:0 }}>
+                    Historique patient centralisé, soins, rendez-vous et activité financière.
+                  </p>
+                </div>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(110px,1fr))', gap:10 }}>
+                {[
+                  { label:'Événements', value:historySummary.total },
+                  { label:'Soins', value:historySummary.care },
+                  { label:'RDV', value:historySummary.appointments },
+                  { label:'Montant', value:fmt(historySummary.amount) },
+                ].map((s,i) => (
+                  <div key={i} style={{ background:'rgba(255,255,255,.14)', border:'1px solid rgba(255,255,255,.22)', borderRadius:14, padding:'10px 12px', backdropFilter:'blur(10px)' }}>
+                    <div style={{ fontSize:10, color:'rgba(255,255,255,.68)', fontWeight:800, textTransform:'uppercase', letterSpacing:1 }}>{s.label}</div>
+                    <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:i===3?15:20, color:'#fff', marginTop:2, whiteSpace:'nowrap' }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background:'linear-gradient(180deg,#F8FAFC 0%,#FFFFFF 100%)', padding:'22px 30px 30px', borderRadius:'0 0 22px 22px' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:12, position:'relative' }}>
           {historyLoading ? (
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'36px', color:'#64748B', gap:10 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'46px', color:'#64748B', gap:10, background:'#fff', border:'1px solid #E2E8F0', borderRadius:18 }}>
               <Loader2 size={20} style={{ animation:'spin .8s linear infinite' }}/> Chargement de l'historique...
             </div>
           ) : history.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'36px', color:'#94A3B8' }}>
-              <History size={34} style={{ margin:'0 auto 10px', opacity:.35 }}/>
+            <div style={{ textAlign:'center', padding:'48px 24px', color:'#94A3B8', background:'#fff', border:'1px solid #E2E8F0', borderRadius:20, boxShadow:'0 10px 30px rgba(15,23,42,.06)' }}>
+              <div style={{ width:58, height:58, borderRadius:18, margin:'0 auto 14px', background:'#F1F5F9', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <History size={30} color="#94A3B8"/>
+              </div>
               <p style={{ margin:0, fontWeight:700, color:'#64748B' }}>Aucune action enregistrée</p>
+              <p style={{ margin:'6px 0 0', fontSize:13, color:'#94A3B8' }}>Les soins, factures et rendez-vous apparaitront ici.</p>
             </div>
           ) : (
-            history.map((item, index) => {
-              const color = {
-                TREATMENT:'#0D7A87', ODONTOGRAM:'#7C3AED', PRESCRIPTION:'#10B981',
-                APPOINTMENT:'#3B82F6', INVOICE:'#F59E0B', PAYMENT:'#059669', LAB:'#8B5CF6'
-              }[item.type] || '#64748B';
+            <>
+              <div style={{ position:'absolute', left:20, top:12, bottom:12, width:2, background:'linear-gradient(180deg,#0D7A87,#CBD5E1)', transformOrigin:'top', animation:'historyLine .45s ease both' }}/>
+              {history.map((item, index) => {
+              const tone = historyPalette(item.type);
               return (
-                <div key={item.id || index} style={{ display:'flex', gap:12, padding:'12px 14px', borderRadius:12, border:'1px solid #E2E8F0', background:'#fff' }}>
-                  <div style={{ width:34, height:34, borderRadius:10, background:`${color}14`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <History size={15} color={color}/>
+                <div key={item.id || index} className="history-item" style={{ position:'relative', display:'flex', gap:14, padding:'16px 18px 16px 58px', borderRadius:18, border:'1px solid #E2E8F0', background:'#fff', boxShadow:'0 8px 26px rgba(15,23,42,.055)', transition:'all .2s', animationDelay:`${Math.min(index,8)*0.035}s` }}>
+                  <div style={{ position:'absolute', left:3, top:16, width:36, height:36, borderRadius:13, background:tone.bg, border:`2px solid #fff`, boxShadow:`0 0 0 1px ${tone.color}30, 0 8px 18px ${tone.color}20`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    <History size={16} color={tone.color}/>
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ display:'flex', justifyContent:'space-between', gap:10, flexWrap:'wrap', marginBottom:4 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', gap:12, flexWrap:'wrap', marginBottom:8 }}>
                       <div>
-                        <div style={{ fontSize:11, fontWeight:800, color, textTransform:'uppercase', letterSpacing:1 }}>{item.label}</div>
-                        <div style={{ fontSize:14, fontWeight:800, color:'#0F172A' }}>{item.title}</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
+                          <span style={{ fontSize:10, fontWeight:900, color:tone.color, textTransform:'uppercase', letterSpacing:1.1, background:tone.bg, padding:'3px 8px', borderRadius:99 }}>{item.label || tone.label}</span>
+                          <span style={{ fontSize:11, color:'#94A3B8', fontWeight:700 }}>{fdatetime(item.date)}</span>
+                        </div>
+                        <div style={{ fontFamily:'Plus Jakarta Sans', fontSize:15, fontWeight:800, color:'#0F172A', lineHeight:1.25 }}>{item.title}</div>
                       </div>
-                      {item.amount_mga > 0 && <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:13, color:'#0F172A' }}>{fmt(item.amount_mga)}</div>}
+                      {item.amount_mga > 0 && <div style={{ alignSelf:'flex-start', background:'#0F172A', color:'#fff', borderRadius:12, padding:'7px 10px', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:13, whiteSpace:'nowrap' }}>{fmt(item.amount_mga)}</div>}
                     </div>
-                    <div style={{ display:'flex', gap:10, flexWrap:'wrap', fontSize:11, color:'#64748B', marginBottom:item.details?5:0 }}>
-                      <span>{fdatetime(item.date)}</span>
-                      {item.practitioner && <span>Praticien : {item.practitioner}</span>}
-                      {item.status && <span>Statut : {item.status}</span>}
-                      {item.tooth_numbers && <span>Dent(s) : {item.tooth_numbers}</span>}
+                    <div style={{ display:'flex', gap:8, flexWrap:'wrap', fontSize:11, color:'#64748B', marginBottom:item.details?9:0 }}>
+                      {item.practitioner && <span style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:99, padding:'4px 8px', fontWeight:700 }}>Praticien : {item.practitioner}</span>}
+                      {item.status && <span style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:99, padding:'4px 8px', fontWeight:700 }}>Statut : {item.status}</span>}
+                      {item.tooth_numbers && <span style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:99, padding:'4px 8px', fontWeight:700 }}>Dent(s) : {item.tooth_numbers}</span>}
                     </div>
-                    {item.details && <div style={{ fontSize:12, color:'#475569', lineHeight:1.55, background:'#F8FAFC', borderRadius:8, padding:'7px 9px' }}>{item.details}</div>}
+                    {item.details && <div style={{ fontSize:12, color:'#475569', lineHeight:1.55, background:'linear-gradient(180deg,#F8FAFC,#FFFFFF)', border:'1px solid #F1F5F9', borderRadius:12, padding:'10px 12px' }}>{item.details}</div>}
                   </div>
                 </div>
               );
-            })
+            })}
+            </>
           )}
+            </div>
+          </div>
         </div>
       </Modal>
 
