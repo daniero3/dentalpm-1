@@ -189,13 +189,13 @@ const PricingSettings = () => {
     e.target.value = '';
   };
 
-  const handleImportTemplateMAEVA = async () => {
+  const handleImportTemplateTarifs = async () => {
     if (!canExecuteSchedule(selectedSchedule)) {
       toast.error('Permission exécution requise pour importer le template');
       return;
     }
     
-    if (!confirm('Importer le template MAEVA 2026 ?\nCela remplacera les tarifs actuels.')) return;
+    if (!confirm('Importer le modèle de tarifs 2026 ?\nCela remplacera les tarifs actuels.')) return;
 
     try {
       const response = await axios.post(
@@ -203,10 +203,10 @@ const PricingSettings = () => {
         null,
         authH()
       );
-      toast.success(`Template MAEVA importé: ${response.data.stats.inserted} ajoutés, ${response.data.stats.updated} mis à jour`);
+      toast.success(`Modèle de tarifs importé: ${response.data.stats.inserted} ajoutés, ${response.data.stats.updated} mis à jour`);
       fetchFees(selectedSchedule.id);
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur lors de l\'import du template');
+      toast.error(error.response?.data?.error || 'Erreur lors de l\'import du modèle');
     }
   };
 
@@ -328,16 +328,16 @@ const PricingSettings = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Exporter CSV
                     </Button>
-                    {/* Import Template MAEVA */}
+                    {/* Import modèle de tarifs */}
                     {canExecuteSchedule(schedule) && (
                       <Button 
                         variant="outline" 
-                        onClick={handleImportTemplateMAEVA}
+                        onClick={handleImportTemplateTarifs}
                         data-testid="import-maeva-btn"
                         className="bg-green-50 hover:bg-green-100 border-green-300"
                       >
                         <FileText className="h-4 w-4 mr-2 text-green-600" />
-                        Template MAEVA
+                        Modèle de tarifs
                       </Button>
                     )}
                     {/* Import Button */}

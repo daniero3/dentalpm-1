@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import { User, Lock, Eye, EyeOff, Building2, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  User, Lock, Eye, EyeOff, Building2, ChevronRight, ArrowLeft, Loader2,
+  ShieldCheck, Sparkles, Activity, CalendarCheck, Receipt, Wifi
+} from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -30,13 +33,16 @@ const syncPlanCache = (value) => {
   }
 };
 
-// ── Logo statique premium ──
+// ── Logo premium animé ──
 const LogoAnim = () => (
-  <div style={{ width:96, height:96, margin:'0 auto 18px' }}>
-    <div style={{ width:96, height:96, borderRadius:'50%', overflow:'hidden', flexShrink:0,
-        boxShadow:'0 0 0 4px rgba(13,122,135,.15), 0 8px 24px rgba(13,122,135,.25)' }}>
+  <div className="login-logo-orbit" style={{ width:104, height:104, margin:'0 auto 20px', position:'relative' }}>
+    <div className="login-logo-pulse" style={{ width:104, height:104, borderRadius:'50%', overflow:'hidden', flexShrink:0,
+        boxShadow:'0 0 0 6px rgba(13,122,135,.12), 0 18px 42px rgba(13,122,135,.26)', position:'relative', zIndex:2 }}>
       <img src="/fix-logo.jpeg" alt="DPM Madagascar"
         style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
+    </div>
+    <div style={{ position:'absolute', right:-2, bottom:8, width:28, height:28, borderRadius:'50%', background:'#10B981', border:'4px solid #fff', display:'flex', alignItems:'center', justifyContent:'center', zIndex:3, boxShadow:'0 8px 18px rgba(16,185,129,.28)' }}>
+      <ShieldCheck size={14} color="#fff"/>
     </div>
   </div>
 );
@@ -181,17 +187,66 @@ const LoginForm = () => {
   );
 
   return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0fdf4 100%)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16 }}>
+    <div className="login-premium-page" style={{ minHeight:'100vh', background:'#F8FAFC', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16, position:'relative', overflow:'hidden' }}>
+      <style>{`
+        @keyframes loginFloat { 0%,100%{ transform:translate3d(0,0,0) scale(1); } 50%{ transform:translate3d(0,-16px,0) scale(1.03); } }
+        @keyframes loginGlow { 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.9; transform:scale(1.08); } }
+        @keyframes loginSlideUp { from{ opacity:0; transform:translateY(22px); } to{ opacity:1; transform:translateY(0); } }
+        @keyframes loginLogoRing { to{ transform:rotate(360deg); } }
+        @keyframes loginPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.035); } }
+        .login-premium-page::before {
+          content:'';
+          position:absolute;
+          inset:0;
+          background:
+            radial-gradient(circle at 18% 22%, rgba(13,122,135,.18), transparent 28%),
+            radial-gradient(circle at 84% 16%, rgba(59,79,216,.16), transparent 24%),
+            radial-gradient(circle at 72% 82%, rgba(14,165,112,.16), transparent 26%),
+            linear-gradient(135deg,#F8FAFC 0%,#EEF7F8 45%,#F5F7FF 100%);
+          z-index:0;
+        }
+        .login-premium-page::after {
+          content:'';
+          position:absolute;
+          inset:0;
+          background-image:
+            linear-gradient(rgba(13,122,135,.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(13,122,135,.045) 1px, transparent 1px);
+          background-size:42px 42px;
+          mask-image:linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+          z-index:0;
+        }
+        .login-floating-a { animation:loginFloat 7s ease-in-out infinite; }
+        .login-floating-b { animation:loginFloat 8s ease-in-out infinite reverse; }
+        .login-glow { animation:loginGlow 5s ease-in-out infinite; }
+        .login-card-anim { animation:loginSlideUp .52s cubic-bezier(.16,1,.3,1) both; }
+        .login-logo-orbit::before {
+          content:'';
+          position:absolute;
+          inset:-7px;
+          border-radius:50%;
+          background:conic-gradient(from 0deg, rgba(13,122,135,0), rgba(13,122,135,.55), rgba(59,79,216,.45), rgba(13,122,135,0));
+          animation:loginLogoRing 7s linear infinite;
+          z-index:1;
+        }
+        .login-logo-pulse { animation:loginPulse 3.2s ease-in-out infinite; }
+        @media (max-width: 920px) {
+          .login-premium-grid { grid-template-columns: 1fr !important; max-width: 480px !important; }
+          .login-showcase { display:none !important; }
+        }
+      `}</style>
 
-      {/* Logo premium */}
-      <div style={{ textAlign:'center', marginBottom:24 }}>
-        <LogoAnim/>
-        <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:26, color:'#0F172A', margin:'0 0 3px', letterSpacing:'-0.025em' }}>DPM Madagascar</h1>
-        <p style={{ color:'#64748B', fontSize:13, margin:0, fontWeight:500 }}>Logiciel de gestion de cabinet dentaire</p>
-      </div>
+      <div className="login-glow" style={{ position:'absolute', width:360, height:360, borderRadius:'50%', background:'rgba(13,122,135,.16)', left:-120, top:-120, filter:'blur(18px)', zIndex:1 }}/>
+      <div className="login-glow" style={{ position:'absolute', width:420, height:420, borderRadius:'50%', background:'rgba(59,79,216,.14)', right:-150, bottom:-160, filter:'blur(22px)', zIndex:1 }}/>
 
-      {/* Card */}
-      <div style={{ background:'#fff', borderRadius:20, padding:32, width:'100%', maxWidth:440, boxShadow:'0 20px 60px rgba(15,23,42,0.12)', border:'1px solid #E2E8F0' }}>
+      <div className="login-premium-grid" style={{ width:'100%', maxWidth:1040, display:'grid', gridTemplateColumns:'1.1fr .9fr', gap:18, alignItems:'stretch', position:'relative', zIndex:2 }}>
+        <div className="login-card-anim" style={{ background:'rgba(255,255,255,.86)', backdropFilter:'blur(22px)', borderRadius:26, padding:34, width:'100%', boxShadow:'0 28px 80px rgba(15,23,42,0.16)', border:'1px solid rgba(255,255,255,.78)' }}>
+          {/* Logo premium */}
+          <div style={{ textAlign:'center', marginBottom:26 }}>
+            <LogoAnim/>
+            <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:900, fontSize:28, color:'#0F172A', margin:'0 0 5px', letterSpacing:0 }}>DPM Madagascar</h1>
+            <p style={{ color:'#64748B', fontSize:13, margin:0, fontWeight:700 }}>Espace sécurisé de gestion de cabinet dentaire</p>
+          </div>
 
         {/* ── LOGIN ── */}
         {step === STEP_LOGIN && (
@@ -225,7 +280,9 @@ const LoginForm = () => {
                 </div>
               </div>
               <button type="submit" disabled={loading}
-                style={{ width:'100%', padding:'12px', borderRadius:10, border:'none', background:loading?'#94A3B8':'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, cursor:loading?'not-allowed':'pointer', boxShadow:'0 4px 16px rgba(13,122,135,0.3)', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                style={{ width:'100%', padding:'13px', borderRadius:13, border:'none', background:loading?'#94A3B8':'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, cursor:loading?'not-allowed':'pointer', boxShadow:'0 12px 28px rgba(13,122,135,0.28)', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'transform .18s ease, box-shadow .18s ease' }}
+                onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow='0 16px 34px rgba(13,122,135,0.34)'; }}}
+                onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 12px 28px rgba(13,122,135,0.28)'; }}>
                 {loading ? <><Loader2 size={16} style={{ animation:'spin 0.75s linear infinite' }} />Connexion...</> : 'Se connecter'}
               </button>
             </form>
@@ -363,9 +420,53 @@ const LoginForm = () => {
             </form>
           </>
         )}
+        </div>
+
+        <aside className="login-showcase login-card-anim" style={{ animationDelay:'.08s', background:'linear-gradient(160deg, rgba(12,35,50,.96), rgba(13,61,74,.94))', borderRadius:26, padding:28, color:'#fff', position:'relative', overflow:'hidden', border:'1px solid rgba(255,255,255,.12)', boxShadow:'0 28px 80px rgba(15,23,42,0.18)' }}>
+          <div className="login-floating-a" style={{ position:'absolute', right:-58, top:-58, width:170, height:170, borderRadius:'50%', background:'rgba(45,196,213,.18)', filter:'blur(2px)' }}/>
+          <div className="login-floating-b" style={{ position:'absolute', left:-54, bottom:-70, width:210, height:210, borderRadius:'50%', background:'rgba(59,79,216,.16)', filter:'blur(3px)' }}/>
+          <div style={{ position:'relative', zIndex:1 }}>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'7px 11px', borderRadius:99, background:'rgba(255,255,255,.10)', border:'1px solid rgba(255,255,255,.12)', fontSize:12, fontWeight:800, color:'#BFF7FF', marginBottom:26 }}>
+              <Sparkles size={14}/> Version cabinet premium
+            </div>
+            <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:30, lineHeight:1.12, fontWeight:900, color:'#fff', margin:'0 0 12px', letterSpacing:0 }}>
+              Pilotez le cabinet avec une interface claire, rapide et sécurisée.
+            </h2>
+            <p style={{ color:'rgba(226,232,240,.78)', fontSize:14, lineHeight:1.65, margin:'0 0 24px' }}>
+              Rendez-vous, patients, factures, achats, dépenses et rapports restent accessibles dans un environnement fluide et pensé pour le travail quotidien.
+            </p>
+
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:22 }}>
+              {[
+                { icon:CalendarCheck, label:'Agenda', value:'Temps réel' },
+                { icon:Receipt, label:'Finance', value:'Suivi précis' },
+                { icon:Activity, label:'Activité', value:'Vue globale' },
+                { icon:Wifi, label:'Session', value:'Sécurisée' },
+              ].map(item => (
+                <div key={item.label} style={{ padding:14, borderRadius:16, background:'rgba(255,255,255,.09)', border:'1px solid rgba(255,255,255,.10)' }}>
+                  <item.icon size={18} color="#7DD3FC"/>
+                  <div style={{ fontSize:12, color:'rgba(226,232,240,.66)', marginTop:10 }}>{item.label}</div>
+                  <div style={{ fontSize:15, fontWeight:900, color:'#fff', marginTop:2 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ padding:16, borderRadius:18, background:'rgba(255,255,255,.10)', border:'1px solid rgba(255,255,255,.12)' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                <span style={{ fontSize:12, color:'rgba(226,232,240,.72)', fontWeight:700 }}>Disponibilité plateforme</span>
+                <span style={{ display:'inline-flex', alignItems:'center', gap:6, color:'#86EFAC', fontSize:12, fontWeight:900 }}>
+                  <span style={{ width:7, height:7, borderRadius:'50%', background:'#22C55E', boxShadow:'0 0 0 4px rgba(34,197,94,.16)' }}/> Active
+                </span>
+              </div>
+              <div style={{ height:8, borderRadius:99, background:'rgba(255,255,255,.12)', overflow:'hidden' }}>
+                <div style={{ width:'92%', height:'100%', borderRadius:99, background:'linear-gradient(90deg,#2DD4BF,#38BDF8)' }}/>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <footer style={{ marginTop:24, fontSize:12, color:'#94A3B8', textAlign:'center' }}>
+      <footer style={{ marginTop:22, fontSize:12, color:'#64748B', textAlign:'center', position:'relative', zIndex:2, fontWeight:700 }}>
         © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
       </footer>
     </div>
