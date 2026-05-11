@@ -4,6 +4,12 @@ const {
   Procedure
 } = require('../models');
 
+function requireSafeSeedPermission() {
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_TEST_ACCOUNTS !== 'true') {
+    throw new Error('Seed bloqué en production: activez ENABLE_TEST_ACCOUNTS=true uniquement pour des comptes de test volontaires.');
+  }
+}
+
 const seedData = {
   users: [
     {
@@ -81,6 +87,7 @@ const seedData = {
 
 async function seedDatabase() {
   try {
+    requireSafeSeedPermission();
     console.log('🌱 Démarrage du seeding...');
 
     // Sync sans modifier les tables existantes

@@ -68,8 +68,30 @@ const PatientLabOrders = () => {
     }
   };
 
-  const handlePrint = (orderId) => {
-    window.open(`${API}/labs/orders/${orderId}/print`, '_blank');
+  const handlePrint = async (orderId) => {
+    const popup = window.open('', '_blank');
+    if (!popup) {
+      toast.error('Autorisez les fenêtres contextuelles pour imprimer');
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/labs/orders/${orderId}/print`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!res.ok) {
+        popup.close();
+        toast.error('Erreur impression');
+        return;
+      }
+      const html = await res.text();
+      popup.document.open();
+      popup.document.write(html);
+      popup.document.close();
+      popup.focus();
+    } catch {
+      popup.close();
+      toast.error('Erreur impression');
+    }
   };
 
   const formatDate     = (date)   => new Date(date).toLocaleDateString('fr-FR');

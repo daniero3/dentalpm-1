@@ -70,8 +70,27 @@ const BillingRenew = () => {
     }
   };
 
-  const downloadInvoice = (year, month) => {
-    window.open(`${API}/billing/invoice/${year}/${month}`, '_blank');
+  const downloadInvoice = async (year, month) => {
+    try {
+      const res = await fetch(`${API}/billing/invoice/${year}/${month}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!res.ok) {
+        toast.error('Erreur téléchargement facture');
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-abonnement-${year}-${String(month).padStart(2, '0')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Erreur téléchargement facture');
+    }
   };
 
   const formatMoney = (val) => new Intl.NumberFormat('fr-MG').format(val || 0);

@@ -119,7 +119,33 @@ const QuoteManagement = () => {
     catch(e){ toast.error(e.response?.data?.error||'Erreur conversion'); }
   };
 
-  const handlePrint = id => window.open(`${API}/quotes/${id}/print`,'_blank');
+  const handlePrint = async id => {
+    const popup = window.open('', '_blank');
+    if (!popup) {
+      toast.error('Autorisez les fenêtres contextuelles pour imprimer le devis');
+      return;
+    }
+
+    try {
+      const r = await fetch(`${API}/quotes/${id}/print`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (!r.ok) {
+        popup.close();
+        toast.error('Erreur impression devis');
+        return;
+      }
+
+      const html = await r.text();
+      popup.document.open();
+      popup.document.write(html);
+      popup.document.close();
+      popup.focus();
+    } catch {
+      popup.close();
+      toast.error('Erreur impression devis');
+    }
+  };
   const handlePDF = async (id, num) => {
     try {
       const r=await fetch(`${API}/quotes/${id}/pdf`,{headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});

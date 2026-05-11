@@ -6,8 +6,15 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   logging: false
 });
 
+function requireDestructiveDbResetPermission() {
+  if (process.env.ALLOW_DESTRUCTIVE_DB_RESET !== 'true') {
+    throw new Error('Script bloqué: définissez ALLOW_DESTRUCTIVE_DB_RESET=true uniquement pour recréer ces tables volontairement.');
+  }
+}
+
 async function fixToothTables() {
   try {
+    requireDestructiveDbResetPermission();
     console.log('🦷 Correction des tables odontogramme...');
 
     // Supprimer et recréer tooth_histories

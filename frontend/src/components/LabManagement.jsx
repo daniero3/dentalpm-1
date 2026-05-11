@@ -79,6 +79,29 @@ const PARTNER_LABS = [
 ];
 
 const authH = () => ({headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});
+const openAuthenticatedPrint = async (url) => {
+  const popup = window.open('', '_blank');
+  if (!popup) {
+    toast.error('Autorisez les fenêtres contextuelles pour imprimer');
+    return;
+  }
+  try {
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+    if (!r.ok) {
+      popup.close();
+      toast.error('Erreur impression');
+      return;
+    }
+    const html = await r.text();
+    popup.document.open();
+    popup.document.write(html);
+    popup.document.close();
+    popup.focus();
+  } catch {
+    popup.close();
+    toast.error('Erreur impression');
+  }
+};
 const fmt   = v => new Intl.NumberFormat('fr-MG').format(v||0)+' Ar';
 const fdate = d => new Date(d).toLocaleDateString('fr-FR');
 
@@ -293,7 +316,7 @@ const LabManagement = () => {
                         <div style={{width:6,height:6,borderRadius:'50%',background:c.dot}}/>{c.label}
                       </span>
                       <button onClick={()=>{setSelOrder(o);setIsStatOpen(true);}} style={{padding:'6px 12px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#475569'}}>Statut</button>
-                      <button onClick={()=>window.open(`${API}/labs/orders/${o.id}/print`,'_blank')} style={{padding:'6px 10px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer'}}>
+                      <button onClick={()=>openAuthenticatedPrint(`${API}/labs/orders/${o.id}/print`)} style={{padding:'6px 10px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer'}}>
                         <Printer size={13} color="#64748B"/>
                       </button>
                     </div>

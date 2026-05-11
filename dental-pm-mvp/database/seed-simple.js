@@ -12,8 +12,15 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   logging: false
 });
 
+function requireDestructiveDbResetPermission() {
+  if (process.env.ALLOW_DESTRUCTIVE_DB_RESET !== 'true') {
+    throw new Error('Script bloqué: définissez ALLOW_DESTRUCTIVE_DB_RESET=true uniquement pour réinitialiser les utilisateurs volontairement.');
+  }
+}
+
 async function seedSimple() {
   try {
+    requireDestructiveDbResetPermission();
     console.log('🌱 Seed simple démarrage...');
 
     await sequelize.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);

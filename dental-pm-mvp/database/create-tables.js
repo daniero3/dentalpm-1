@@ -7,8 +7,15 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   logging: false
 });
 
+function requireDestructiveDbResetPermission() {
+  if (process.env.ALLOW_DESTRUCTIVE_DB_RESET !== 'true') {
+    throw new Error('Script bloqué: définissez ALLOW_DESTRUCTIVE_DB_RESET=true uniquement pour une réinitialisation DB volontaire.');
+  }
+}
+
 async function createAllTables() {
   try {
+    requireDestructiveDbResetPermission();
     console.log('🚀 Création de toutes les tables DentalPM...');
 
     await sequelize.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
