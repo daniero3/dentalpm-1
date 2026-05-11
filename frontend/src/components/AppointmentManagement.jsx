@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
+import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
@@ -272,7 +273,7 @@ const AppointmentManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const r = await axios.get(`${API}/patients?limit=500`, authH());
+      const r = await cachedGet(`${API}/patients?limit=500`, authH(), { ttl: CACHE_TTL.medium });
       const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
       setPatients(list);
     } catch (e) {
@@ -718,4 +719,3 @@ const AppointmentManagement = () => {
 };
 
 export default AppointmentManagement;
-

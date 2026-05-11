@@ -202,6 +202,20 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 100 }));
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
+  const startedAt = process.hrtime.bigint();
+  res.on('finish', () => {
+    const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    const threshold = parseInt(process.env.SLOW_API_THRESHOLD_MS || '750', 10);
+    if (durationMs >= threshold) {
+      console.warn('[SLOW_API]', {
+        method: req.method,
+        path: req.originalUrl,
+        status: res.statusCode,
+        duration_ms: Math.round(durationMs),
+        request_id: req.requestId
+      });
+    }
+  });
 
   const originalJson = res.json.bind(res);
   res.json = (payload) => {

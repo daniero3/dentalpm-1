@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import {
   ShoppingCart, Plus, Truck, Package, Check, FileText,
   RefreshCw, Trash2, Printer, X, Search, Star, Zap,
@@ -171,10 +172,10 @@ const PurchaseManagement = () => {
     try { const r = await axios.get(`${API}/purchases`, authH()); setPurchases(r.data.purchases || []); } catch {}
   };
   const fetchSuppliers = async () => {
-    try { const r = await axios.get(`${API}/suppliers`, authH()); setSuppliers(r.data.suppliers || []); } catch {}
+    try { const r = await cachedGet(`${API}/suppliers`, authH(), { ttl: CACHE_TTL.medium }); setSuppliers(r.data.suppliers || []); } catch {}
   };
   const fetchProducts = async () => {
-    try { const r = await axios.get(`${API}/inventory/products`, authH()); setProducts(r.data.products || []); } catch {}
+    try { const r = await cachedGet(`${API}/inventory/products`, authH(), { ttl: CACHE_TTL.medium }); setProducts(r.data.products || []); } catch {}
   };
 
   /* Bons de commande manuels */

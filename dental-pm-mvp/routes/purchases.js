@@ -76,19 +76,31 @@ router.get('/', async (req, res) => {
 
     const clinicId = getClinicId(req);
     const where    = clinicId ? { clinic_id: clinicId } : {};
-    const { status, supplier_id } = req.query;
+    const { status, supplier_id, page = 1, limit = 50 } = req.query;
+    const parsedPage = Math.max(parseInt(page, 10) || 1, 1);
+    const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
     if (status)      where.status      = status;
     if (supplier_id) where.supplier_id = supplier_id;
 
-    const purchases = await Purchase.findAll({
+    const { count, rows: purchases } = await Purchase.findAndCountAll({
       where,
       attributes: schemaState.attributes,
       include: purchaseIncludes(models),
       order: [['created_at','DESC']],
-      limit: 100
+      limit: parsedLimit,
+      offset: (parsedPage - 1) * parsedLimit
     });
 
-    res.json({ purchases, count: purchases.length });
+    res.json({
+      purchases,
+      count,
+      pagination: {
+        current_page: parsedPage,
+        total_pages: Math.ceil(count / parsedLimit),
+        total_count: count,
+        per_page: parsedLimit
+      }
+    });
   } catch (error) {
     console.error('Get purchases error:', error);
     res.status(500).json({ error:'Erreur serveur', details: error.message });

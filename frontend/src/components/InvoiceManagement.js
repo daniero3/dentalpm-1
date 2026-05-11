@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
   Clock, CheckCircle, AlertCircle, DollarSign, CreditCard,
@@ -109,9 +110,9 @@ const InvoiceManagement = () => {
       if (mountedRef.current) setInvoices(r.data.invoices || r.data.data || []);
     } catch {}
   };
-  const fetchPatients  = async () => { try { const r=await axios.get(`${API}/patients`,authH()); setPatients(r.data.patients||[]); } catch {} };
-  const fetchSchedules = async () => { try { const r=await axios.get(`${API}/pricing-schedules`,authH()); setSchedules(r.data.schedules||[]); } catch {} };
-  const fetchFees = async id => { if(!id){setFees([]);return;} try { const r=await axios.get(`${API}/pricing-schedules/${id}/fees`,authH()); setFees(r.data.fees||[]); } catch { setFees([]); } };
+  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
+  const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
+  const fetchFees = async id => { if(!id){setFees([]);return;} try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
   const fetchRevenues = async () => { try { const r=await axios.get(`${API}/invoices/revenues`, authH()); setRevenues(r.data.revenues || []); } catch { setRevenues([]); } };
 
   const fetchPayments = async inv => {

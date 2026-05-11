@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { invalidateClientCache } from '../utils/clientCache';
 import {
   Package, AlertTriangle, ArrowUp, ArrowDown, X,
   RefreshCw, Plus, Search, BarChart2, TrendingUp, Edit2
@@ -56,6 +57,7 @@ const InventoryManagement = () => {
     e.preventDefault(); setSaving(true);
     try {
       await axios.post(`${API}/inventory/products`, { ...form, unit_cost_mga:parseFloat(form.unit_cost_mga)||0, sale_price_mga:parseFloat(form.sale_price_mga)||0, current_qty:parseInt(form.current_qty)||0, min_qty:parseInt(form.min_qty)||5 }, authH());
+      invalidateClientCache('/inventory/products');
       toast.success('Produit ajouté'); setIsAdd(false); setForm(emptyForm); fetchAll();
     } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
     finally { setSaving(false); }
@@ -69,6 +71,7 @@ const InventoryManagement = () => {
     setSaving(true);
     try {
       await axios.post(`${API}/inventory/products/${selP.id}/movement`, { type:movType, quantity:qty, reason }, authH());
+      invalidateClientCache('/inventory/products');
       toast.success('Mouvement enregistré'); setIsMov(false); setSelP(null); fetchAll();
     } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
     finally { setSaving(false); }

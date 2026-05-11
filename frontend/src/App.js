@@ -53,11 +53,11 @@ import { toast } from "sonner";
 // Theme Provider
 import { ThemeProvider } from "./components/theme-provider";
 
-// Components
-import LoginForm from "./components/LoginForm";
+// Route components are lazy-loaded so the first bundle stays light.
+const LoginForm = React.lazy(() => import("./components/LoginForm"));
 const LandingPage = React.lazy(() => import("./components/LandingPage"));
-import SubscriptionManagement from './components/SubscriptionManagement';
-import Dashboard from "./components/Dashboard";
+const SubscriptionManagement = React.lazy(() => import('./components/SubscriptionManagement'));
+const Dashboard = React.lazy(() => import("./components/Dashboard"));
 const PatientManagement = React.lazy(() => import("./components/PatientManagement"));
 const DentalChart = React.lazy(() => import("./components/DentalChart"));
 const InvoiceManagement = React.lazy(() => import("./components/InvoiceManagement"));
@@ -73,21 +73,35 @@ import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
 
 // SaaS Components
-import BillingSettings from "./components/BillingSettings";
+const BillingSettings = React.lazy(() => import("./components/BillingSettings"));
 const SuperAdminClinics = React.lazy(() => import("./components/SuperAdminClinics"));
 import LicensingGuard from "./components/LicensingGuard";
-import SubscriptionExpiredPage from "./components/SubscriptionExpiredPage";
+const SubscriptionExpiredPage = React.lazy(() => import("./components/SubscriptionExpiredPage"));
 const AppointmentManagement = React.lazy(() => import("./components/AppointmentManagement"));
 const PaymentValidationPage = React.lazy(() => import("./components/PaymentValidationPage"));
 const LegalPages = React.lazy(() => import("./components/LegalPages"));
 const PricingSettings = React.lazy(() => import("./components/PricingSettings"));
-import CabinetSettings from "./components/CabinetSettings";
+const CabinetSettings = React.lazy(() => import("./components/CabinetSettings"));
 const DentalMailingSuite = React.lazy(() => import("./components/DentalMailingSuite"));
 const SupplierManagement = React.lazy(() => import("./components/SupplierManagement"));
 const PurchaseManagement = React.lazy(() => import("./components/PurchaseManagement"));
-import OnboardingWizard from "./components/OnboardingWizard";
+const OnboardingWizard = React.lazy(() => import("./components/OnboardingWizard"));
 const RegisterPage = React.lazy(() => import("./components/RegisterPage"));
 const AdminPartners = React.lazy(() => import("./components/AdminPartners"));
+
+const prefetchCoreRoutes = () => {
+  const run = () => {
+    import("./components/PatientManagement");
+    import("./components/AppointmentManagement");
+    import("./components/InvoiceManagement");
+    import("./components/ReportsManagement");
+  };
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(run, { timeout: 5000 });
+  } else {
+    window.setTimeout(run, 1800);
+  }
+};
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = BACKEND_URL
@@ -221,6 +235,7 @@ const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       authExpiryHandled = false;
+      prefetchCoreRoutes();
       toast.success("Connexion réussie!");
       return { success: true };
     } catch (error) {

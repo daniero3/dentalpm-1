@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useResponsive, modalOverlay, getModalStyle } from '../utils/responsive';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
+import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import {
   FileText, Plus, Search, Eye, Printer, Download, ArrowRight,
   Clock, CheckCircle, XCircle, AlertCircle, X, RefreshCw,
@@ -85,9 +86,9 @@ const QuoteManagement = () => {
     setLoading(false);
   };
   const fetchQuotes    = async () => { try { const r=await axios.get(`${API}/quotes`,authH()); setQuotes(r.data.quotes||[]); } catch {} };
-  const fetchPatients  = async () => { try { const r=await axios.get(`${API}/patients`,authH()); setPatients(r.data.patients||[]); } catch {} };
-  const fetchSchedules = async () => { try { const r=await axios.get(`${API}/pricing-schedules`,authH()); setSchedules(r.data.schedules||[]); } catch {} };
-  const fetchFees = async id => { try { const r=await axios.get(`${API}/pricing-schedules/${id}/fees`,authH()); setFees(r.data.fees||[]); } catch { setFees([]); } };
+  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
+  const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
+  const fetchFees = async id => { try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
 
   const addItem    = () => setForm(f=>({...f,items:[...f.items,{description:'',quantity:1,unit_price_mga:'',tooth_number:''}]}));
   const removeItem = i => { if(form.items.length>1) setForm(f=>({...f,items:f.items.filter((_,idx)=>idx!==i)})); };

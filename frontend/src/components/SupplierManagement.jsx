@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { invalidateClientCache } from '../utils/clientCache';
 import {
   Truck, Plus, Search, Edit, Power, Phone, Mail, MapPin,
   Building2, Star, RefreshCw, X, Award, ExternalLink, Zap,
@@ -130,6 +131,7 @@ const SupplierManagement = () => {
     try{
       if(editing) await axios.put(`${API}/suppliers/${editing.id}`,form);
       else await axios.post(`${API}/suppliers`,form);
+      invalidateClientCache('/suppliers');
       toast.success(editing?'Fournisseur mis à jour':'Fournisseur créé');
       resetForm();setIsOpen(false);fetchSuppliers();
     }catch(e){toast.error(e.response?.data?.error||'Erreur');}
@@ -137,7 +139,7 @@ const SupplierManagement = () => {
 
   const handleDisable = async sup=>{
     if(!window.confirm(`Désactiver "${sup.name}" ?`)) return;
-    try{await axios.patch(`${API}/suppliers/${sup.id}/disable`);toast.success('Désactivé');fetchSuppliers();}
+    try{await axios.patch(`${API}/suppliers/${sup.id}/disable`);invalidateClientCache('/suppliers');toast.success('Désactivé');fetchSuppliers();}
     catch{toast.error('Erreur');}
   };
 

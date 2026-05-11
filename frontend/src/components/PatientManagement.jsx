@@ -181,6 +181,8 @@ const PatientManagement = () => {
   const [search,    setSearch]    = useState('');
   const [genderFilter, setGF]    = useState('ALL');
   const [sortBy,    setSort]      = useState('name');
+  const [page,      setPage]      = useState(1);
+  const [pagination,setPagination]= useState({ current_page:1, total_pages:1, total_count:0, per_page:50 });
   const [viewMode,  setView]      = useState('list'); // list | grid
   const [isOpen,    setIsOpen]    = useState(false);
   const [selP,      setSelP]      = useState(null);
@@ -199,15 +201,23 @@ const PatientManagement = () => {
 
   useEffect(() => {
     mountedRef.current = true;
-    fetchPatients();
     return () => { mountedRef.current = false; };
   }, []);
 
-  const fetchPatients = async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => fetchPatients(page), search ? 250 : 0);
+    return () => clearTimeout(timer);
+  }, [page, search]);
+
+  const fetchPatients = async (targetPage = page) => {
     try {
-      const r = await axios.get(`${API}/patients`, authH());
+      setLoading(true);
+      const params = { page: targetPage, limit: 50 };
+      if (search.trim()) params.search = search.trim();
+      const r = await axios.get(`${API}/patients`, { params, ...authH() });
       const list = r.data.patients || r.data.data || r.data || [];
       if (mountedRef.current) setPatients(Array.isArray(list) ? list : []);
+      if (mountedRef.current && r.data.pagination) setPagination(r.data.pagination);
     } catch (e) { if (!axios.isCancel(e)) toast.error('Erreur chargement patients'); }
     finally { if (mountedRef.current) setLoading(false); }
   };
@@ -338,7 +348,7 @@ const PatientManagement = () => {
 
   /* Stats */
   const stats = {
-    total:    patients.length,
+    total:    pagination.total_count || patients.length,
     men:      patients.filter(p => p.gender==='M').length,
     women:    patients.filter(p => p.gender==='F').length,
     allergies:patients.filter(p => p.allergies).length,
@@ -459,9 +469,9 @@ const PatientManagement = () => {
         {/* Search */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:220 }}>
           <Search size={14} color="#94A3B8"/>
-          <input placeholder="Rechercher par nom, téléphone, email, adresse..." value={search} onChange={e=>setSearch(e.target.value)}
+          <input placeholder="Rechercher par nom, téléphone, email, adresse..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
             style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, fontFamily:'inherit', color:'#0F172A' }}/>
-          {search && <button onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:2 }}><X size={13}/></button>}
+          {search && <button onClick={()=>{setPage(1);setSearch('');}} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:2 }}><X size={13}/></button>}
         </div>
         <div style={{ width:1, height:24, background:'#E2E8F0' }}/>
         {/* Tri */}
@@ -573,6 +583,22 @@ const PatientManagement = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {pagination.total_pages > 1 && (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginTop:18 }}>
+          <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page <= 1}
+            style={{ padding:'9px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:page<=1?'#F8FAFC':'#fff', color:page<=1?'#CBD5E1':'#475569', fontWeight:700, cursor:page<=1?'not-allowed':'pointer' }}>
+            Précédent
+          </button>
+          <span style={{ fontSize:13, fontWeight:700, color:'#64748B' }}>
+            Page {pagination.current_page} / {pagination.total_pages}
+          </span>
+          <button onClick={()=>setPage(p=>Math.min(pagination.total_pages,p+1))} disabled={page >= pagination.total_pages}
+            style={{ padding:'9px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:page>=pagination.total_pages?'#F8FAFC':'#fff', color:page>=pagination.total_pages?'#CBD5E1':'#475569', fontWeight:700, cursor:page>=pagination.total_pages?'not-allowed':'pointer' }}>
+            Suivant
+          </button>
         </div>
       )}
 

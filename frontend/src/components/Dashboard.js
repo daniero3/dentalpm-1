@@ -147,41 +147,22 @@ const Dashboard = () => {
   const [invs,   setInvs]   = useState([]);
   const [loading,setLoad]   = useState(true);
   const [err,    setErr]    = useState(null);
-  const [period, setPeriod] = useState('monthly');
   const [activeTab, setTab] = useState('rdv'); // rdv | factures
 
   const load = async () => {
     setLoad(true); setErr(null);
     try {
-      const [kpiR, actR, revenueChartR, patientChartR, apptR, invR] = await Promise.allSettled([
-        axios.get(`${API}/dashboard/kpi`, authH()),
-        axios.get(`${API}/dashboard/recent-activities`, authH()),
-        axios.get(`${API}/dashboard/revenue-chart?period=${period}`, authH()),
-        axios.get(`${API}/dashboard/patients-chart`, authH()),
-        axios.get(`${API}/appointments`, authH()),
-        axios.get(`${API}/invoices`, authH()),
-      ]);
-      if (kpiR.status === 'fulfilled') setKpi(kpiR.value.data);
-      if (actR.status === 'fulfilled') setActs(actR.value.data);
-      if (revenueChartR.status === 'fulfilled' || patientChartR.status === 'fulfilled') {
-        setChart(buildChart(
-          revenueChartR.status === 'fulfilled' ? revenueChartR.value.data?.data || [] : [],
-          patientChartR.status === 'fulfilled' ? patientChartR.value.data?.data || [] : []
-        ));
-      }
-      if (apptR.status === 'fulfilled') {
-        const list = apptR.value.data?.appointments || apptR.value.data?.data || [];
-        setAppts(list.slice(0, 8));
-      }
-      if (invR.status === 'fulfilled') {
-        const list = invR.value.data?.invoices || invR.value.data?.data || [];
-        setInvs(list.filter(i => ['SENT','PARTIAL','OVERDUE','DRAFT'].includes(i.status)).slice(0, 8));
-      }
+      const { data } = await axios.get(`${API}/dashboard/overview`, authH());
+      setKpi(data.kpi || null);
+      setActs(data.recent_activities || null);
+      setChart(buildChart(data.chart || [], data.chart || []));
+      setAppts((data.appointments || []).slice(0, 8));
+      setInvs((data.invoices || []).slice(0, 8));
     } catch (e) { setErr('Erreur de connexion'); }
     finally { setLoad(false); }
   };
 
-  useEffect(() => { load(); }, [period]);
+  useEffect(() => { load(); }, []);
 
   /* Construire données graphique revenue sur 12 mois */
   const buildChart = (revenueData, patientData) => {
@@ -285,14 +266,7 @@ const Dashboard = () => {
                 <div style={{ fontSize:11, color:'#94A3B8' }}>12 derniers mois</div>
               </div>
             </div>
-            <div style={{ display:'flex', gap:4 }}>
-              {['monthly','weekly'].map(p => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  style={{ padding:'4px 10px', borderRadius:8, border:'none', cursor:'pointer', fontSize:11, fontWeight:600, background:period===p?C.teal:'#F1F5F9', color:period===p?'#fff':'#64748B', transition:'all .2s' }}>
-                  {p === 'monthly' ? 'Mois' : 'Semaine'}
-                </button>
-              ))}
-            </div>
+            <div style={{ padding:'4px 10px', borderRadius:8, fontSize:11, fontWeight:700, background:C.teal, color:'#fff' }}>Mois</div>
           </div>
           <div style={{ marginBottom:8, fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:22, color:'#0F172A' }}>
             {loading ? <Skel h={22} w={160}/> : fmt(kpi?.revenue?.monthly || 0)}

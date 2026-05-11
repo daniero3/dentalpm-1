@@ -361,14 +361,18 @@ router.get('/', [
   query('start_date').optional().isISO8601(),
   query('end_date').optional().isISO8601(),
   query('dentist_id').optional().isUUID(),
-  query('status').optional().isIn(APPOINTMENT_STATUSES)
+  query('status').optional().isIn(APPOINTMENT_STATUSES),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 200 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ error:'Paramètres invalides', details: errors.array() });
 
     const where = buildWhere(req);
-    const { date_from, date_to, start_date, end_date, dentist_id, status } = req.query;
+    const { date_from, date_to, start_date, end_date, dentist_id, status, page = 1, limit = 100 } = req.query;
+    const parsedPage = parseInt(page, 10);
+    const parsedLimit = parseInt(limit, 10);
     const fromDate = date_from || start_date;
     const toDate   = date_to   || end_date;
 
@@ -379,16 +383,27 @@ router.get('/', [
     if (dentist_id) where.dentist_id = dentist_id;
     if (status)     where.status     = status;
 
-    const appointments = await Appointment.findAll({
+    const { count, rows: appointments } = await Appointment.findAndCountAll({
       where,
       include: [
         { model: Patient, as: 'patient', attributes: ['id','first_name','last_name','phone_primary'], required: false },
         { model: User,    as: 'dentist', attributes: ['id','full_name','specialization'],            required: false }
       ],
-      order: [['appointment_date','ASC'],['start_time','ASC']]
+      order: [['appointment_date','ASC'],['start_time','ASC']],
+      limit: parsedLimit,
+      offset: (parsedPage - 1) * parsedLimit
     });
 
-    res.json({ appointments, count: appointments.length });
+    res.json({
+      appointments,
+      count,
+      pagination: {
+        current_page: parsedPage,
+        total_pages: Math.ceil(count / parsedLimit),
+        total_count: count,
+        per_page: parsedLimit
+      }
+    });
   } catch (error) {
     console.error('Get appointments error:', error);
     res.status(500).json({ error:'Erreur récupération rendez-vous', details: extractErrors(error) });
