@@ -13,6 +13,7 @@ async function runMigrations() {
     '../migrations/20260505-subscription-price-mga-fix',
     '../migrations/20260505-counters-table-fix',
     '../migrations/20260506-invoice-schema-fix',
+    '../migrations/20260511-purchase-general-expenses',
   ];
 
   for (const migrationPath of migrations) {

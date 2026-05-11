@@ -214,8 +214,10 @@ const ReportsManagement = () => {
                 {report.expenses.map(exp=>(
                   <div key={exp.id} style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 12px',background:'#FFF5F5',borderRadius:10,border:'1px solid #FECACA',gap:10 }}>
                     <div style={{ minWidth:0 }}>
-                      <div style={{ fontSize:13,fontWeight:700,color:'#0F172A' }}>{exp.number}</div>
-                      <div style={{ fontSize:11,color:'#64748B',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{exp.supplier_name} · {fdate(exp.created_at)} · {exp.status}</div>
+                      <div style={{ fontSize:13,fontWeight:700,color:'#0F172A' }}>{exp.expense_label || exp.number}</div>
+                      <div style={{ fontSize:11,color:'#64748B',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
+                        {(exp.expense_category || exp.supplier_name)} · {fdate(exp.expense_date || exp.created_at)} · {exp.status}
+                      </div>
                     </div>
                     <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:13,color:'#EF4444',whiteSpace:'nowrap' }}>{fmt(exp.total_mga)}</span>
                   </div>

@@ -73,6 +73,10 @@ const PARTNER_CATALOG = [
 ];
 
 const CATS = ['Tous', 'Composite', 'Anesthésie', 'Ciment', 'Consommable', 'Équipement', 'Matériel', 'Antibiotique', 'Antidouleur', 'Antiseptique', 'Solution', 'Soins'];
+const EXPENSE_CATEGORIES = [
+  'Loyer', 'Électricité', 'Eau', 'Internet', 'Téléphone', 'Salaire',
+  'Entretien', 'Transport', 'Fournitures bureau', 'Impôts & taxes', 'Autre'
+];
 const TYPE_COLOR = { DENTAL:'#1D4ED8', EQUIPMENT:'#7C3AED', PHARMA:'#166534', GENERAL:'#475569' };
 const TYPE_BG    = { DENTAL:'#EFF6FF', EQUIPMENT:'#EDE9FE', PHARMA:'#DCFCE7', GENERAL:'#F1F5F9' };
 const TYPE_LABEL = { DENTAL:'Dentaire', EQUIPMENT:'Équipement', PHARMA:'Pharmacie', GENERAL:'Général' };
@@ -81,6 +85,14 @@ const STATUS = {
   DRAFT:     { bg:'#FFFBEB', c:'#B45309', dot:'#F59E0B', l:'Brouillon' },
   RECEIVED:  { bg:'#DCFCE7', c:'#166534', dot:'#22C55E', l:'Reçu' },
   CANCELLED: { bg:'#F1F5F9', c:'#475569', dot:'#94A3B8', l:'Annulé' },
+};
+
+const emptyExpense = {
+  expense_label: '',
+  expense_category: 'Loyer',
+  amount_mga: '',
+  expense_date: new Date().toISOString().split('T')[0],
+  notes: ''
 };
 
 /* ── Modal ── */
@@ -136,9 +148,11 @@ const PurchaseManagement = () => {
   const [products,   setProducts]   = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [isOpen,     setIsOpen]     = useState(false);
+  const [formMode,    setFormMode]   = useState('purchase'); // purchase | expense
   const [selSup,     setSelSup]     = useState('');
   const [items,      setItems]      = useState([]);
   const [notes,      setNotes]      = useState('');
+  const [expense,    setExpense]    = useState(emptyExpense);
   const [tab,        setTab]        = useState('orders');   // orders | catalog | partners
   const [catSearch,  setCatSearch]  = useState('');
   const [catFilter,  setCatFilter]  = useState('Tous');
@@ -188,13 +202,33 @@ const PurchaseManagement = () => {
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
 
+  const handleCreateExpense = async () => {
+    const amount = parseFloat(expense.amount_mga || 0);
+    if (!expense.expense_label.trim() || amount <= 0) {
+      toast.error('Libellé et montant requis');
+      return;
+    }
+    try {
+      const r = await axios.post(`${API}/purchases`, {
+        expense_type: 'GENERAL_EXPENSE',
+        expense_label: expense.expense_label.trim(),
+        expense_category: expense.expense_category,
+        amount_mga: amount,
+        expense_date: expense.expense_date,
+        notes: expense.notes
+      }, authH());
+      toast.success(`Dépense ${r.data.purchase.number} enregistrée`);
+      resetForm(); setIsOpen(false); fetchPurchases();
+    } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
+  };
+
   const handleReceive = async p => {
     if (!window.confirm(`Réceptionner le bon ${p.number} ? Le stock sera mis à jour.`)) return;
     try { await axios.post(`${API}/purchases/${p.id}/receive`, {}, authH()); toast.success('Commande réceptionnée, stock mis à jour'); fetchPurchases(); }
     catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
   const handlePrint = p => window.open(`${API}/purchases/${p.id}/print`, '_blank');
-  const resetForm   = () => { setSelSup(''); setItems([]); setNotes(''); };
+  const resetForm   = () => { setSelSup(''); setItems([]); setNotes(''); setExpense(emptyExpense); setFormMode('purchase'); };
 
   /* Catalogue partenaires */
   const addToCart = (art, sup) => {
@@ -239,6 +273,7 @@ const PurchaseManagement = () => {
 
   const draftCount    = purchases.filter(p => p.status === 'DRAFT').length;
   const receivedCount = purchases.filter(p => p.status === 'RECEIVED').length;
+  const generalExpenseTotal = purchases.filter(p => p.expense_type === 'GENERAL_EXPENSE' && p.status !== 'CANCELLED').reduce((s,p) => s + parseFloat(p.total_mga||0), 0);
   const totalExpenses = purchases.filter(p => p.status !== 'CANCELLED').reduce((s,p) => s + parseFloat(p.total_mga||0), 0);
   const totalReceived = purchases.filter(p => p.status === 'RECEIVED').reduce((s,p) => s + parseFloat(p.total_mga||0), 0);
 
@@ -270,7 +305,10 @@ const PurchaseManagement = () => {
           <button onClick={fetchAll} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>Actualiser
           </button>
-          <button onClick={() => { resetForm(); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(79,70,229,.3)' }}>
+          <button onClick={() => { resetForm(); setFormMode('expense'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(239,68,68,.25)' }}>
+            <Plus size={15}/>Nouvelle dépense
+          </button>
+          <button onClick={() => { resetForm(); setFormMode('purchase'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(79,70,229,.3)' }}>
             <Plus size={15}/>Nouveau bon
           </button>
         </div>
@@ -282,7 +320,8 @@ const PurchaseManagement = () => {
           { icon:'📄', l:'Brouillons',    v:draftCount,    c:'#F59E0B', bg:'#FFFBEB' },
           { icon:'✅', l:'Reçus',          v:receivedCount, c:'#10B981', bg:'#DCFCE7' },
           { icon:'💸', l:'Dépenses cabinet', v:fmt(totalExpenses), c:'#EF4444', bg:'#FEE2E2', raw:true },
-          { icon:'💰', l:'Achats reçus',      v:fmt(totalReceived), c:'#4F46E5', bg:'#EDE9FE', raw:true },
+          { icon:'🏠', l:'Dépenses générales', v:fmt(generalExpenseTotal), c:'#DC2626', bg:'#FEF2F2', raw:true },
+          { icon:'💰', l:'Dépenses validées', v:fmt(totalReceived), c:'#4F46E5', bg:'#EDE9FE', raw:true },
           { icon:'🛍️', l:'Fournisseurs',  v:suppliers.length,  c:'#0D7A87', bg:'#F0FDFE' },
         ].map((k,i) => (
           <div key={i} style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'16px 18px', display:'flex', alignItems:'center', gap:12 }}>
@@ -298,7 +337,7 @@ const PurchaseManagement = () => {
       {/* ── Tabs ── */}
       <div style={{ display:'flex', gap:4, marginBottom:20, background:'#F8FAFC', borderRadius:12, padding:4, border:'1px solid #E2E8F0' }}>
         {[
-          { k:'orders',  l:'📋 Mes commandes',          n:purchases.length },
+          { k:'orders',  l:'📋 Dépenses & commandes',   n:purchases.length },
           { k:'catalog', l:'🛒 Catalogue partenaires',  n:allArticles.length },
           { k:'partners',l:'🤝 Fournisseurs',            n:PARTNER_CATALOG.length },
         ].map(t => (
@@ -317,9 +356,10 @@ const PurchaseManagement = () => {
             <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'48px', textAlign:'center' }}>
               <ShoppingCart size={40} style={{ margin:'0 auto 12px', color:'#CBD5E1' }}/>
               <p style={{ fontWeight:700, color:'#475569', fontSize:15, margin:'0 0 6px' }}>Aucun bon de commande</p>
-              <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 18px' }}>Créez un bon ou commandez via le catalogue partenaire</p>
+              <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 18px' }}>Ajoutez une dépense cabinet ou créez un bon de commande</p>
               <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
-                <button onClick={() => { resetForm(); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouveau bon</button>
+                <button onClick={() => { resetForm(); setFormMode('expense'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouvelle dépense</button>
+                <button onClick={() => { resetForm(); setFormMode('purchase'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouveau bon</button>
                 <button onClick={() => setTab('catalog')} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', color:'#475569', cursor:'pointer', fontSize:13, fontWeight:600 }}>Voir le catalogue</button>
               </div>
             </div>
@@ -327,23 +367,25 @@ const PurchaseManagement = () => {
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               {purchases.map((p, idx) => {
                 const st = STATUS[p.status] || STATUS.CANCELLED;
+                const isExpense = p.expense_type === 'GENERAL_EXPENSE';
                 return (
                   <div key={p.id} className="pu-card" style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, animationDelay:`${idx*.04}s`, boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                       <div style={{ width:42, height:42, borderRadius:12, background:st.bg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        <ShoppingCart size={18} color={st.c}/>
+                        {isExpense ? <FileText size={18} color={st.c}/> : <ShoppingCart size={18} color={st.c}/>}
                       </div>
                       <div>
                         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-                          <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A' }}>{p.number}</span>
+                          <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A' }}>{isExpense ? (p.expense_label || p.number) : p.number}</span>
                           <span style={{ background:st.bg, color:st.c, borderRadius:99, padding:'2px 10px', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', gap:4 }}>
                             <div style={{ width:5, height:5, borderRadius:'50%', background:st.dot }}/>{st.l}
                           </span>
                         </div>
                         <div style={{ fontSize:12, color:'#64748B', display:'flex', gap:14, flexWrap:'wrap' }}>
-                          <span style={{ display:'flex', alignItems:'center', gap:4 }}><Truck size={11}/>{p.supplier?.name || '—'}</span>
-                          <span>{p.items_count || p.items?.length || 0} article(s)</span>
-                          <span>{fdate(p.created_at)}</span>
+                          <span style={{ display:'flex', alignItems:'center', gap:4 }}><Truck size={11}/>{isExpense ? (p.expense_category || 'Dépense générale') : (p.supplier?.name || '—')}</span>
+                          {!isExpense && <span>{p.items_count || p.items?.length || 0} article(s)</span>}
+                          <span>{fdate(p.expense_date || p.created_at)}</span>
+                          {isExpense && <span>{p.number}</span>}
                         </div>
                       </div>
                     </div>
@@ -538,66 +580,119 @@ const PurchaseManagement = () => {
         </>
       )}
 
-      {/* ══ MODAL NOUVEAU BON ══ */}
-      <Modal open={isOpen} onClose={() => { setIsOpen(false); resetForm(); }} title="Nouveau bon de commande" maxW={660}>
+      {/* ══ MODAL ACHAT / DÉPENSE ══ */}
+      <Modal open={isOpen} onClose={() => { setIsOpen(false); resetForm(); }} title={formMode === 'expense' ? 'Nouvelle dépense cabinet' : 'Nouveau bon de commande'} maxW={660}>
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          <div>
-            <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fournisseur *</label>
-            <select value={selSup} onChange={e => setSelSup(e.target.value)} style={inp} onFocus={fi} onBlur={bi}>
-              <option value="">Sélectionner un fournisseur...</option>
-              <optgroup label="── Mes fournisseurs ──">
-                {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({TYPE_LABEL[s.type]||s.type})</option>)}
-              </optgroup>
-            </select>
+          <div style={{ display:'flex', gap:6, background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:12, padding:4 }}>
+            {[
+              { k:'expense', l:'Dépense générale' },
+              { k:'purchase', l:'Bon fournisseur' }
+            ].map(m => (
+              <button key={m.k} onClick={() => setFormMode(m.k)}
+                style={{ flex:1, padding:'8px 10px', borderRadius:9, border:'none', cursor:'pointer', fontSize:13, fontWeight:700, background:formMode===m.k?'#fff':'transparent', color:formMode===m.k?'#0F172A':'#64748B', boxShadow:formMode===m.k?'0 1px 6px rgba(0,0,0,.08)':'none' }}>
+                {m.l}
+              </button>
+            ))}
           </div>
 
-          {/* Articles */}
-          <div>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-              <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Articles</label>
-              <button onClick={addItem} style={{ padding:'5px 12px', borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', gap:5 }}>
-                <Plus size={12}/>Ajouter
-              </button>
-            </div>
-            {items.length === 0 ? (
-              <div style={{ border:'2px dashed #E2E8F0', borderRadius:12, padding:'20px', textAlign:'center', color:'#94A3B8', fontSize:13 }}>
-                Ajoutez des articles ou utilisez le <button onClick={() => { setIsOpen(false); setTab('catalog'); }} style={{ color:'#4F46E5', fontWeight:700, background:'none', border:'none', cursor:'pointer', fontSize:13 }}>catalogue partenaires</button>
-              </div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {items.map((item, idx) => (
-                  <div key={idx} style={{ display:'flex', gap:8, alignItems:'center', background:'#F8FAFC', borderRadius:11, padding:'10px 12px' }}>
-                    <select value={item.product_id} onChange={e => updateItem(idx, 'product_id', e.target.value)}
-                      style={{ ...inp, flex:1 }} onFocus={fi} onBlur={bi}>
-                      <option value="">Produit...</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
-                    </select>
-                    <input type="number" min="1" value={item.qty} onChange={e => updateItem(idx,'qty',parseInt(e.target.value)||1)}
-                      style={{ ...inp, width:60 }} placeholder="Qté" onFocus={fi} onBlur={bi}/>
-                    <input type="number" min="0" value={item.unit_price_mga} onChange={e => updateItem(idx,'unit_price_mga',parseFloat(e.target.value)||0)}
-                      style={{ ...inp, width:110 }} placeholder="Prix Ar" onFocus={fi} onBlur={bi}/>
-                    <span style={{ fontSize:12, color:'#0D7A87', fontWeight:700, whiteSpace:'nowrap', minWidth:90 }}>{fmt(item.qty*item.unit_price_mga)}</span>
-                    <button onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
-                  </div>
-                ))}
-                <div style={{ display:'flex', justifyContent:'flex-end', padding:'10px 12px', background:'#F0FDFE', borderRadius:11, border:'1px solid #7DD3DA' }}>
-                  <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#0D7A87' }}>Total : {fmt(total())}</span>
+          {formMode === 'expense' ? (
+            <>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 160px', gap:12 }}>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Libellé *</label>
+                  <input value={expense.expense_label} onChange={e => setExpense(p => ({ ...p, expense_label:e.target.value }))} placeholder="Ex: Facture JIRAMA, loyer du cabinet..."
+                    style={inp} onFocus={fi} onBlur={bi}/>
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date</label>
+                  <input type="date" value={expense.expense_date} onChange={e => setExpense(p => ({ ...p, expense_date:e.target.value }))}
+                    style={inp} onFocus={fi} onBlur={bi}/>
                 </div>
               </div>
-            )}
-          </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 180px', gap:12 }}>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Catégorie</label>
+                  <select value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
+                    {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Montant *</label>
+                  <input type="number" min="0" value={expense.amount_mga} onChange={e => setExpense(p => ({ ...p, amount_mga:e.target.value }))} placeholder="Ar"
+                    style={inp} onFocus={fi} onBlur={bi}/>
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
+                <textarea value={expense.notes} onChange={e => setExpense(p => ({ ...p, notes:e.target.value }))} rows={2} placeholder="Référence facture, période concernée, remarque..."
+                  style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+              </div>
+              <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:12, padding:'12px 14px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontWeight:700, color:'#991B1B', fontSize:13 }}>Total dépense</span>
+                <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:17, color:'#DC2626' }}>{fmt(expense.amount_mga)}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fournisseur *</label>
+                <select value={selSup} onChange={e => setSelSup(e.target.value)} style={inp} onFocus={fi} onBlur={bi}>
+                  <option value="">Sélectionner un fournisseur...</option>
+                  <optgroup label="── Mes fournisseurs ──">
+                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({TYPE_LABEL[s.type]||s.type})</option>)}
+                  </optgroup>
+                </select>
+              </div>
 
-          <div>
-            <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Instructions de livraison, notes..."
-              style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
-          </div>
+              {/* Articles */}
+              <div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+                  <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Articles</label>
+                  <button onClick={addItem} style={{ padding:'5px 12px', borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', gap:5 }}>
+                    <Plus size={12}/>Ajouter
+                  </button>
+                </div>
+                {items.length === 0 ? (
+                  <div style={{ border:'2px dashed #E2E8F0', borderRadius:12, padding:'20px', textAlign:'center', color:'#94A3B8', fontSize:13 }}>
+                    Ajoutez des articles ou utilisez le <button onClick={() => { setIsOpen(false); setTab('catalog'); }} style={{ color:'#4F46E5', fontWeight:700, background:'none', border:'none', cursor:'pointer', fontSize:13 }}>catalogue partenaires</button>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {items.map((item, idx) => (
+                      <div key={idx} style={{ display:'flex', gap:8, alignItems:'center', background:'#F8FAFC', borderRadius:11, padding:'10px 12px' }}>
+                        <select value={item.product_id} onChange={e => updateItem(idx, 'product_id', e.target.value)}
+                          style={{ ...inp, flex:1 }} onFocus={fi} onBlur={bi}>
+                          <option value="">Produit...</option>
+                          {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
+                        </select>
+                        <input type="number" min="1" value={item.qty} onChange={e => updateItem(idx,'qty',parseInt(e.target.value)||1)}
+                          style={{ ...inp, width:60 }} placeholder="Qté" onFocus={fi} onBlur={bi}/>
+                        <input type="number" min="0" value={item.unit_price_mga} onChange={e => updateItem(idx,'unit_price_mga',parseFloat(e.target.value)||0)}
+                          style={{ ...inp, width:110 }} placeholder="Prix Ar" onFocus={fi} onBlur={bi}/>
+                        <span style={{ fontSize:12, color:'#0D7A87', fontWeight:700, whiteSpace:'nowrap', minWidth:90 }}>{fmt(item.qty*item.unit_price_mga)}</span>
+                        <button onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
+                      </div>
+                    ))}
+                    <div style={{ display:'flex', justifyContent:'flex-end', padding:'10px 12px', background:'#F0FDFE', borderRadius:11, border:'1px solid #7DD3DA' }}>
+                      <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#0D7A87' }}>Total : {fmt(total())}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Instructions de livraison, notes..."
+                  style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+              </div>
+            </>
+          )}
 
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
             <button onClick={() => { setIsOpen(false); resetForm(); }} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-            <button onClick={handleCreate} disabled={!selSup || items.length === 0}
-              style={{ padding:'9px 22px', borderRadius:10, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:(!selSup||!items.length)?.5:1 }}>
-              <Check size={14}/>Créer le bon
+            <button onClick={formMode === 'expense' ? handleCreateExpense : handleCreate} disabled={formMode === 'expense' ? (!expense.expense_label.trim() || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup || items.length === 0)}
+              style={{ padding:'9px 22px', borderRadius:10, background:formMode === 'expense' ? '#EF4444' : 'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:(formMode === 'expense' ? (!expense.expense_label.trim() || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup||!items.length))?.5:1 }}>
+              <Check size={14}/>{formMode === 'expense' ? 'Enregistrer la dépense' : 'Créer le bon'}
             </button>
           </div>
         </div>

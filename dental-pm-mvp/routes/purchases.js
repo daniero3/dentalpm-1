@@ -19,6 +19,14 @@ const getUserId = (req) => {
 
 async function getModels() { return require('../models'); }
 
+const purchaseIncludes = (models) => {
+  const include = [];
+  if (models.Supplier) {
+    include.push({ model: models.Supplier, as: 'supplier', attributes: ['id', 'name', 'type'], required: false });
+  }
+  return include;
+};
+
 // ── GET /api/purchases ────────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
@@ -34,6 +42,7 @@ router.get('/', async (req, res) => {
 
     const purchases = await Purchase.findAll({
       where,
+      include: purchaseIncludes(models),
       order: [['created_at','DESC']],
       limit: 100
     });
@@ -48,35 +57,65 @@ router.get('/', async (req, res) => {
 // ── POST /api/purchases ───────────────────────────────────────────────────────
 router.post('/', [
   body('supplier_id').optional().isUUID(),
-  body('items').optional().isArray()
+  body('items').optional().isArray(),
+  body('expense_type').optional().isIn(['PURCHASE', 'GENERAL_EXPENSE']),
+  body('expense_category').optional().isString().trim().isLength({ max: 50 }),
+  body('expense_label').optional().isString().trim().isLength({ max: 150 }),
+  body('amount_mga').optional().isFloat({ min: 0 }),
+  body('expense_date').optional().isISO8601()
 ], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
+
     const models   = await getModels();
     const Purchase = models.Purchase || models.PurchaseOrder;
     if (!Purchase) return res.status(500).json({ error:'Modèle Purchase non disponible' });
 
     const clinicId = getClinicId(req);
     const userId   = getUserId(req);
-    const { supplier_id, items, notes, expected_delivery_date } = req.body;
+    const {
+      supplier_id,
+      items = [],
+      notes,
+      expected_delivery_date,
+      expense_type = 'PURCHASE',
+      expense_category,
+      expense_label,
+      amount_mga,
+      expense_date
+    } = req.body;
+    const isGeneralExpense = expense_type === 'GENERAL_EXPENSE';
 
     const year  = new Date().getFullYear();
     // Utiliser timestamp pour garantir l'unicité
     const ts    = Date.now().toString().slice(-6);
-    const order_number = `PO-${year}-${ts}`;
+    const order_number = `${isGeneralExpense ? 'DEP' : 'PO'}-${year}-${ts}`;
 
-    const total_mga = (items || []).reduce((sum, i) => sum + ((i.quantity || 0) * (i.unit_price_mga || 0)), 0);
+    const total_mga = isGeneralExpense
+      ? parseFloat(amount_mga || 0)
+      : (items || []).reduce((sum, i) => sum + ((i.quantity || i.qty || 0) * (i.unit_price_mga || 0)), 0);
+
+    if (isGeneralExpense && (!expense_label || total_mga <= 0)) {
+      return res.status(400).json({ error:'Libellé et montant requis pour une dépense générale' });
+    }
 
     // Colonnes exactes de la table purchase_orders
     const purchaseData = {
       number:     order_number,   // colonne 'number' pas 'order_number'
       created_by: userId,         // colonne 'created_by' pas 'created_by_user_id'
-      status:     'DRAFT',
+      status:     isGeneralExpense ? 'RECEIVED' : 'DRAFT',
+      expense_type,
     };
     if (clinicId)               purchaseData.clinic_id              = clinicId;
     if (supplier_id)            purchaseData.supplier_id            = supplier_id;
     if (total_mga)              purchaseData.total_mga              = total_mga;
     if (notes)                  purchaseData.notes                  = notes;
     if (expected_delivery_date) purchaseData.expected_delivery_date = expected_delivery_date;
+    if (expense_category)       purchaseData.expense_category       = expense_category;
+    if (expense_label)          purchaseData.expense_label          = expense_label;
+    if (expense_date)           purchaseData.expense_date           = expense_date;
+    if (isGeneralExpense)       purchaseData.received_at            = new Date();
 
     // Essayer aussi order_number au cas où
     let purchase;
@@ -92,20 +131,18 @@ router.post('/', [
     }
 
     // Créer les items si PurchaseItem existe
-    if (items?.length > 0 && models.PurchaseItem) {
+    if (!isGeneralExpense && items?.length > 0 && models.PurchaseOrderItem) {
       try {
-        await Promise.all(items.map(item => models.PurchaseItem.create({
-          purchase_id:    purchase.id,
+        await Promise.all(items.map(item => models.PurchaseOrderItem.create({
+          purchase_order_id: purchase.id,
           product_id:     item.product_id || null,
-          description:    item.description || item.name || 'Article',
-          quantity:       item.quantity || 1,
+          qty:            item.quantity || item.qty || 1,
           unit_price_mga: item.unit_price_mga || 0,
-          total_mga:      (item.quantity || 1) * (item.unit_price_mga || 0)
         })));
       } catch(e) { console.warn('PurchaseItem create (non-fatal):', e.message); }
     }
 
-    res.status(201).json({ message:'Commande créée', purchase });
+    res.status(201).json({ message: isGeneralExpense ? 'Dépense créée' : 'Commande créée', purchase });
   } catch (error) {
     console.error('Create purchase error:', error);
     res.status(500).json({ error:'Erreur serveur', details: error.message });
@@ -121,7 +158,7 @@ router.get('/:id', [param('id').isUUID()], async (req, res) => {
 
     const clinicId = getClinicId(req);
     const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
-    const purchase = await Purchase.findOne({ where });
+    const purchase = await Purchase.findOne({ where, include: purchaseIncludes(models) });
     if (!purchase) return res.status(404).json({ error:'Commande non trouvée' });
 
     res.json({ purchase });
@@ -173,9 +210,9 @@ router.post('/:id/receive', requirePermission('purchases', 'execute'), [param('i
     await purchase.update({ status: 'RECEIVED', received_at: new Date() });
 
     // Mettre à jour le stock des produits si items disponibles
-    if (models.PurchaseItem && models.Product) {
+    if (models.PurchaseOrderItem && models.Product) {
       try {
-        const items = await models.PurchaseItem.findAll({ where: { purchase_id: purchase.id } });
+        const items = await models.PurchaseOrderItem.findAll({ where: { purchase_order_id: purchase.id } });
         for (const item of items) {
           if (item.product_id) {
             const product = await models.Product.findByPk(item.product_id);

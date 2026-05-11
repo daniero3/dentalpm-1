@@ -14,8 +14,25 @@ const PurchaseOrder = sequelize.define('purchase_orders', {
   },
   supplier_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true,
     references: { model: 'suppliers', key: 'id' }
+  },
+  expense_type: {
+    type: DataTypes.STRING(30),
+    allowNull: false,
+    defaultValue: 'PURCHASE'
+  },
+  expense_category: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  expense_label: {
+    type: DataTypes.STRING(150),
+    allowNull: true
+  },
+  expense_date: {
+    type: DataTypes.DATEONLY,
+    allowNull: true
   },
   number: {
     type: DataTypes.STRING(20),

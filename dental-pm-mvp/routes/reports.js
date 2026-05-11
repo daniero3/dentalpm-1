@@ -73,14 +73,17 @@ router.get('/finance', [
     const balance   = totalInvoiced - totalPaid;
 
     const purchaseWhere = {
-      created_at: { [Op.between]: [fromDate, toDate] },
+      [Op.or]: [
+        { created_at: { [Op.between]: [fromDate, toDate] } },
+        { expense_date: { [Op.between]: [fromDate, toDate] } }
+      ],
       status: { [Op.ne]: 'CANCELLED' }
     };
     if (clinicId) purchaseWhere.clinic_id = clinicId;
 
     const purchases = await PurchaseOrder.findAll({
       where: purchaseWhere,
-      attributes: ['id','number','status','total_mga','created_at','received_at'],
+      attributes: ['id','number','status','total_mga','created_at','received_at','expense_type','expense_category','expense_label','expense_date'],
       include: [{ model: Supplier, as: 'supplier', attributes: ['id','name'], required: false }],
       order: [['created_at','DESC']]
     }).catch(() => []);
@@ -133,9 +136,13 @@ router.get('/finance', [
         id: p.id,
         number: p.number,
         status: p.status,
-        supplier_name: p.supplier?.name || 'N/A',
+        expense_type: p.expense_type || 'PURCHASE',
+        expense_category: p.expense_category || null,
+        expense_label: p.expense_label || null,
+        supplier_name: p.supplier?.name || (p.expense_type === 'GENERAL_EXPENSE' ? 'Dépense générale' : 'N/A'),
         total_mga: parseFloat(p.total_mga || 0),
         created_at: p.created_at,
+        expense_date: p.expense_date,
         received_at: p.received_at
       })).slice(0, 20),
       stats: {
