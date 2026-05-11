@@ -178,11 +178,11 @@
 /* ✅ font-size et letter-spacing déclarés ICI — hors de @layer */
 body {
   font-size: 15px;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 h1, h2, h3, h4, h5 {
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 /* ═══════════════════════════════════════
@@ -268,7 +268,7 @@ h1, h2, h3, h4, h5 {
 }
 .card:hover, [class*="Card"]:hover { transform: translateY(-3px) !important; box-shadow: var(--shadow-lg) !important; }
 .card-header, [class*="CardHeader"] { border-bottom: 1px solid var(--color-border-light); padding: 18px 22px 14px; }
-.card-title, [class*="CardTitle"] { font-family: var(--font-heading); font-weight: 700; font-size: 15px; color: var(--color-text); letter-spacing: -0.02em; }
+.card-title, [class*="CardTitle"] { font-family: var(--font-heading); font-weight: 700; font-size: 15px; color: var(--color-text); letter-spacing: 0; }
 .card-description, [class*="CardDescription"] { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
 
 button[class*="bg-primary"], button.bg-primary {
@@ -389,6 +389,44 @@ tbody tr td {
 
 h1, h2, h3, h4, h5 { font-family: var(--font-heading) !important; color: var(--color-text) !important; }
 hr, [class*="Separator"] { border-color: var(--color-border-light) !important; }
+
+.dpm-layout {
+  background:
+    linear-gradient(180deg, rgba(248,250,252,0.98) 0%, rgba(241,245,249,0.96) 100%),
+    linear-gradient(135deg, rgba(13,122,135,0.08), rgba(59,79,216,0.05), rgba(14,165,112,0.04)) !important;
+}
+
+.dpm-app-topbar {
+  box-shadow: 0 1px 0 rgba(226,232,240,0.8), 0 12px 32px rgba(15,23,42,0.035) !important;
+}
+
+.dpm-main {
+  scrollbar-gutter: stable;
+}
+
+.dpm-content-shell {
+  animation: fadeIn 0.22s ease both;
+}
+
+.dpm-premium-surface,
+.dash-card > div,
+.dash-card[style*="background"] {
+  outline: 1px solid rgba(255,255,255,0.68);
+  outline-offset: -2px;
+}
+
+button, a, input, textarea, select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(13,122,135,0.22) !important;
+  outline-offset: 2px !important;
+}
 
 /* ✅ Transition globale — SANS font-size ni letter-spacing */
 *, *::before, *::after {

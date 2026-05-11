@@ -12,7 +12,11 @@ import {
 } from 'recharts';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = BACKEND_URL
+  ? `${BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const C = {
@@ -149,7 +153,7 @@ const Dashboard = () => {
   const load = async () => {
     setLoad(true); setErr(null);
     try {
-      const [kpiR, actR, chartR, apptR, invR] = await Promise.allSettled([
+      const [kpiR, actR, revenueChartR, patientChartR, apptR, invR] = await Promise.allSettled([
         axios.get(`${API}/dashboard/kpi`, authH()),
         axios.get(`${API}/dashboard/recent-activities`, authH()),
         axios.get(`${API}/dashboard/revenue-chart?period=${period}`, authH()),
@@ -157,14 +161,19 @@ const Dashboard = () => {
         axios.get(`${API}/appointments`, authH()),
         axios.get(`${API}/invoices`, authH()),
       ]);
-      if (kpiR.status   === 'fulfilled') setKpi(kpiR.value.data);
-      if (actR.status   === 'fulfilled') setActs(actR.value.data);
-      if (chartR.status === 'fulfilled') setChart(buildChart(chartR.value.data?.data || []));
-      if (apptR.status  === 'fulfilled') {
+      if (kpiR.status === 'fulfilled') setKpi(kpiR.value.data);
+      if (actR.status === 'fulfilled') setActs(actR.value.data);
+      if (revenueChartR.status === 'fulfilled' || patientChartR.status === 'fulfilled') {
+        setChart(buildChart(
+          revenueChartR.status === 'fulfilled' ? revenueChartR.value.data?.data || [] : [],
+          patientChartR.status === 'fulfilled' ? patientChartR.value.data?.data || [] : []
+        ));
+      }
+      if (apptR.status === 'fulfilled') {
         const list = apptR.value.data?.appointments || apptR.value.data?.data || [];
         setAppts(list.slice(0, 8));
       }
-      if (invR.status   === 'fulfilled') {
+      if (invR.status === 'fulfilled') {
         const list = invR.value.data?.invoices || invR.value.data?.data || [];
         setInvs(list.filter(i => ['SENT','PARTIAL','OVERDUE','DRAFT'].includes(i.status)).slice(0, 8));
       }
@@ -175,16 +184,17 @@ const Dashboard = () => {
   useEffect(() => { load(); }, [period]);
 
   /* Construire données graphique revenue sur 12 mois */
-  const buildChart = (data) => {
+  const buildChart = (revenueData, patientData) => {
     const now = new Date();
     return Array.from({ length: 12 }, (_, i) => {
       const m = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
       const key = `${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`;
-      const found = data.find(d => d.period === key);
+      const revenue = revenueData.find(d => d.period === key);
+      const patients = patientData.find(d => d.period === key);
       return {
         mois: MOIS[m.getMonth()],
-        revenue: found?.amount || 0,
-        patients: patChartRes?.data?.data?.find(d => d.period === key)?.count || 0,
+        revenue: revenue?.amount || 0,
+        patients: patients?.count || 0,
       };
     });
   };
