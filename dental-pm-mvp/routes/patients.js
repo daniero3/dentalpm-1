@@ -190,13 +190,18 @@ router.get('/:id/history', requireClinicId, [
       Prescription,
       ToothHistory,
       Payment,
-      LabOrder
+      LabOrder,
+      Document,
+      SmsLog,
+      MessageLog,
+      MailingLog,
+      MailingCampaign
     } = require('../models');
 
     const scoped = (extra = {}) => ({ patient_id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}), ...extra });
     const timeline = [];
 
-    const [appointments, treatments, prescriptions, toothHistory, invoices, labOrders] = await Promise.all([
+    const [appointments, treatments, prescriptions, toothHistory, invoices, labOrders, documents, smsLogs, messageLogs, mailingLogs] = await Promise.all([
       Appointment.findAll({
         where: scoped(),
         include: [{ model: User, as: 'dentist', attributes: ['id','full_name','username'], required: false }],
@@ -233,6 +238,34 @@ router.get('/:id/history', requireClinicId, [
       LabOrder.findAll({
         where: scoped(),
         include: [{ model: User, as: 'dentist', attributes: ['id','full_name','username'], required: false }],
+        order: [['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      Document.findAll({
+        where: scoped({ is_deleted: false }),
+        include: [{ model: User, as: 'uploadedBy', attributes: ['id','full_name','username'], required: false }],
+        order: [['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      SmsLog.findAll({
+        where: scoped(),
+        order: [['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      MessageLog.findAll({
+        where: scoped(),
+        order: [['sent_at','DESC'], ['created_at','DESC']],
+        limit: 100
+      }).catch(() => []),
+      MailingLog.findAll({
+        where: { patient_id: req.params.id },
+        include: [{
+          model: MailingCampaign,
+          as: 'campaign',
+          attributes: ['id','name','subject','template_type','clinic_id'],
+          required: false,
+          ...(clinicId ? { where: { clinic_id: clinicId } } : {})
+        }],
         order: [['created_at','DESC']],
         limit: 100
       }).catch(() => [])
@@ -335,6 +368,58 @@ router.get('/:id/history', requireClinicId, [
       amount_mga: parseFloat(o.total_mga || 0),
       details: o.notes || o.shade || null
     }));
+
+    documents.forEach(d => timeline.push({
+      id: `document-${d.id}`,
+      source_id: d.id,
+      type: 'DOCUMENT',
+      label: 'Document',
+      title: d.original_filename || 'Document patient',
+      status: d.category,
+      date: toHistoryDate(d.created_at),
+      practitioner: practitionerName(d.uploadedBy),
+      details: d.description || d.mime_type || null
+    }));
+
+    smsLogs.forEach(s => timeline.push({
+      id: `sms-${s.id}`,
+      source_id: s.id,
+      type: 'SMS',
+      label: 'SMS',
+      title: typeof s.getMessageTypeLabel === 'function' ? s.getMessageTypeLabel() : (s.message_type || 'SMS patient'),
+      status: typeof s.getStatusLabel === 'function' ? s.getStatusLabel() : s.status,
+      date: toHistoryDate(s.sent_at || s.delivered_at || s.created_at),
+      practitioner: s.carrier || 'Communication',
+      amount_mga: parseFloat(s.cost_mga || 0),
+      details: s.failed_reason || s.message_content || null
+    }));
+
+    messageLogs.forEach(m => timeline.push({
+      id: `message-${m.id}`,
+      source_id: m.id,
+      type: 'MESSAGE',
+      label: m.channel === 'EMAIL' ? 'Email' : 'Message',
+      title: m.message_type || `${m.channel || 'Message'} patient`,
+      status: m.status,
+      date: toHistoryDate(m.sent_at || m.created_at),
+      practitioner: m.channel || 'Communication',
+      details: m.text || m.provider_response || null
+    }));
+
+    mailingLogs.forEach(m => {
+      if (clinicId && !m.campaign) return;
+      timeline.push({
+        id: `mailing-${m.id}`,
+        source_id: m.id,
+        type: 'MAILING',
+        label: 'Campagne email',
+        title: m.campaign?.subject || m.campaign?.name || 'Emailing patient',
+        status: typeof m.getStatusLabel === 'function' ? m.getStatusLabel() : m.status,
+        date: toHistoryDate(m.sent_at || m.delivered_at || m.opened_at || m.clicked_at || m.created_at),
+        practitioner: 'Communication',
+        details: m.error_message || m.email || null
+      });
+    });
 
     timeline.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 

@@ -367,8 +367,10 @@ const PatientManagement = () => {
     if (item.type === 'APPOINTMENT') acc.appointments += 1;
     if (item.type === 'TREATMENT' || item.type === 'ODONTOGRAM') acc.care += 1;
     if (item.type === 'INVOICE' || item.type === 'PAYMENT') acc.billing += 1;
+    if (item.type === 'DOCUMENT') acc.documents += 1;
+    if (['SMS', 'MESSAGE', 'MAILING'].includes(item.type)) acc.communications += 1;
     return acc;
-  }, { total:0, amount:0, appointments:0, care:0, billing:0 });
+  }, { total:0, amount:0, appointments:0, care:0, billing:0, documents:0, communications:0 });
 
   const historyPalette = type => ({
     TREATMENT:     { color:'#0D7A87', bg:'#E6FAFC', label:'Soin' },
@@ -377,7 +379,11 @@ const PatientManagement = () => {
     APPOINTMENT:  { color:'#3B82F6', bg:'#EFF6FF', label:'Rendez-vous' },
     INVOICE:      { color:'#F59E0B', bg:'#FFFBEB', label:'Facture' },
     PAYMENT:      { color:'#059669', bg:'#ECFDF5', label:'Paiement' },
-    LAB:          { color:'#8B5CF6', bg:'#F5F3FF', label:'Labo' }
+    LAB:          { color:'#8B5CF6', bg:'#F5F3FF', label:'Labo' },
+    DOCUMENT:     { color:'#2563EB', bg:'#EFF6FF', label:'Document' },
+    SMS:          { color:'#0891B2', bg:'#ECFEFF', label:'SMS' },
+    MESSAGE:      { color:'#4F46E5', bg:'#EEF2FF', label:'Message' },
+    MAILING:      { color:'#DB2777', bg:'#FDF2F8', label:'Emailing' }
   }[type] || { color:'#64748B', bg:'#F8FAFC', label:'Activité' });
 
   return (
@@ -664,16 +670,18 @@ const PatientManagement = () => {
                   </p>
                 </div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(110px,1fr))', gap:10 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,minmax(104px,1fr))', gap:10 }}>
                 {[
                   { label:'Événements', value:historySummary.total },
                   { label:'Soins', value:historySummary.care },
                   { label:'RDV', value:historySummary.appointments },
+                  { label:'Documents', value:historySummary.documents },
+                  { label:'Messages', value:historySummary.communications },
                   { label:'Montant', value:fmt(historySummary.amount) },
                 ].map((s,i) => (
                   <div key={i} style={{ background:'rgba(255,255,255,.14)', border:'1px solid rgba(255,255,255,.22)', borderRadius:14, padding:'10px 12px', backdropFilter:'blur(10px)' }}>
                     <div style={{ fontSize:10, color:'rgba(255,255,255,.68)', fontWeight:800, textTransform:'uppercase', letterSpacing:1 }}>{s.label}</div>
-                    <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:i===3?15:20, color:'#fff', marginTop:2, whiteSpace:'nowrap' }}>{s.value}</div>
+                    <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:i===5?15:20, color:'#fff', marginTop:2, whiteSpace:'nowrap' }}>{s.value}</div>
                   </div>
                 ))}
               </div>
