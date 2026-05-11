@@ -475,7 +475,13 @@ router.post('/public-checkout', async (req, res) => {
     const priceId = STRIPE_PRICE_IDS[plan_code];
     if (!priceId) return res.status(400).json({ error: 'Plan invalide' });
 
-    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
+    const normalizePublicUrl = (value) => {
+      const raw = String(value || '').trim().replace(/\/+$/, '');
+      if (!raw) return 'https://dentalpracticemada.com';
+      if (/^https?:\/\//i.test(raw)) return raw;
+      return `https://${raw}`;
+    };
+    const FRONT = normalizePublicUrl(process.env.FRONTEND_URL);
     let clinic = null;
     let customerId = null;
 

@@ -324,11 +324,14 @@ router.post('/register-clinic', [
     // Créer l'abonnement en attente. L'essai démarre uniquement après
     // validation Stripe: carte enregistrée, sans prélèvement immédiat.
     const now = new Date();
+    const pendingEndDate = new Date(now);
+    pendingEndDate.setDate(pendingEndDate.getDate() + 7);
     await require('../models').Subscription.create({
       clinic_id:         clinic.id,
       plan,
       status:            'PENDING',
       start_date:        now,
+      end_date:          pendingEndDate,
       billing_cycle:     'MONTHLY',
       price_mga:         PLAN_PRICES[plan] || 199000,
       monthly_price_mga: PLAN_PRICES[plan] || 199000,
