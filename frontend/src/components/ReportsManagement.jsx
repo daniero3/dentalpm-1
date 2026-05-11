@@ -1,12 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { BarChart3, RefreshCw, TrendingUp, TrendingDown, DollarSign, AlertCircle, CheckCircle, PieChart, Calendar, Download } from 'lucide-react';
+import { BarChart3, RefreshCw, TrendingUp, TrendingDown, AlertCircle, PieChart as PieIcon, Activity } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API  = `${BACKEND_URL}/api`;
+const API = BACKEND_URL
+  ? `${BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 const fmt  = v => new Intl.NumberFormat('fr-MG',{maximumFractionDigits:0}).format(v||0) + ' Ar';
+const fmtShort = v => {
+  const n = Number(v || 0);
+  if (Math.abs(n) >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (Math.abs(n) >= 1000) return `${Math.round(n / 1000)}k`;
+  return String(Math.round(n));
+};
 const fdate = d => new Date(d).toLocaleDateString('fr-FR');
 
 const METHODS = {
@@ -17,9 +40,37 @@ const MCOLORS = {
   CASH:'#10B981', BANK_TRANSFER:'#3B82F6', CHEQUE:'#F59E0B',
   MVOLA:'#EF4444', ORANGE_MONEY:'#F97316', AIRTEL_MONEY:'#EC4899', CARD:'#8B5CF6'
 };
+const FLOW_COLORS = { CREDIT:'#10B981', DEBIT:'#EF4444' };
+const PIE_COLORS = ['#0D7A87', '#3B4FD8', '#8B5CF6', '#F59E0B', '#EF4444', '#10B981', '#EC4899', '#14B8A6'];
 
 const inp = { padding:'9px 12px',borderRadius:10,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none',transition:'border-color .2s' };
 const fi  = e=>e.target.style.borderColor='#0D7A87', bi=e=>e.target.style.borderColor='#E2E8F0';
+
+const MoneyTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'10px 12px', boxShadow:'0 12px 30px rgba(15,23,42,.14)' }}>
+      <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', marginBottom:6 }}>{label}</div>
+      {payload.map(item => (
+        <div key={item.dataKey} style={{ display:'flex', justifyContent:'space-between', gap:18, color:item.color, fontSize:12, fontWeight:700 }}>
+          <span>{item.name}</span>
+          <span>{fmt(item.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const PieTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+  return (
+    <div style={{ background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'9px 11px', boxShadow:'0 12px 30px rgba(15,23,42,.14)', fontSize:12 }}>
+      <div style={{ fontWeight:800, color:'#0F172A' }}>{item.name}</div>
+      <div style={{ color:item.payload.fill || item.color, fontWeight:800 }}>{fmt(item.value)}</div>
+    </div>
+  );
+};
 
 const ReportsManagement = () => {
   const [report,   setReport]   = useState(null);
@@ -70,10 +121,23 @@ const ReportsManagement = () => {
 
   const breakdown = report?.breakdown_by_method || {};
   const totalMethod = Object.values(breakdown).reduce((s,d)=>s+(d.total_mga||0),0);
+  const cashflow = report?.cashflow_by_month || [];
+  const flowSummary = (report?.flow_summary || []).map(item => ({
+    name: item.label,
+    value: item.total_mga || 0,
+    fill: FLOW_COLORS[item.type] || '#64748B'
+  }));
+  const expensesByCategory = (report?.expenses_by_category || []).map((item, index) => ({
+    name: item.label,
+    value: item.total_mga || 0,
+    count: item.count || 0,
+    fill: PIE_COLORS[index % PIE_COLORS.length]
+  }));
+  const netPositive = (report.totals?.net_result_mga || 0) >= 0;
 
   return (
-    <div style={{ maxWidth: 1100,margin:'0 auto',paddingBottom:48 }}>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.rep-anim{animation:fadeUp .3s ease both}`}</style>
+    <div style={{ maxWidth: 1200,margin:'0 auto',paddingBottom:48 }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.rep-anim{animation:fadeUp .3s ease both}.finance-card{background:#fff;border:1px solid #E2E8F0;border-radius:18px;box-shadow:0 10px 30px rgba(15,23,42,.055)}@media(max-width:860px){.finance-grid-2{grid-template-columns:1fr!important}}`}</style>
 
       {/* Header */}
       <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:22,flexWrap:'wrap',gap:12 }}>
@@ -142,13 +206,113 @@ const ReportsManagement = () => {
             ))}
           </div>
 
+          {/* Vue gestion débit / crédit */}
+          <div className="finance-card rep-anim" style={{ padding:'20px', marginBottom:20, overflow:'hidden' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:18, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:40, height:40, borderRadius:13, background:'linear-gradient(135deg,#0D7A87,#3B4FD8)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 10px 22px rgba(13,122,135,.22)' }}>
+                  <Activity size={19} color="#fff"/>
+                </div>
+                <div>
+                  <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:900, fontSize:16, color:'#0F172A' }}>Flux financier du cabinet</div>
+                  <div style={{ fontSize:12, color:'#64748B' }}>Crédit encaissé, débit sorti et résultat net par mois</div>
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99, background:netPositive?'#ECFDF5':'#FEF2F2', color:netPositive?'#047857':'#B91C1C', fontSize:12, fontWeight:900 }}>
+                {netPositive ? <TrendingUp size={14}/> : <TrendingDown size={14}/>}
+                Net: {fmt(report.totals?.net_result_mga)}
+              </div>
+            </div>
+            {cashflow.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'40px', color:'#94A3B8' }}>Aucun flux financier sur cette période</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={310}>
+                <BarChart data={cashflow} margin={{ top:8, right:8, bottom:0, left:0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F7" vertical={false}/>
+                  <XAxis dataKey="label" tick={{ fill:'#64748B', fontSize:11 }} axisLine={false} tickLine={false}/>
+                  <YAxis tick={{ fill:'#94A3B8', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={fmtShort} width={42}/>
+                  <Tooltip content={<MoneyTooltip/>}/>
+                  <Legend wrapperStyle={{ fontSize:12, fontWeight:700 }} />
+                  <Bar dataKey="credit_mga" name="Crédit entrant" fill="#10B981" radius={[8,8,0,0]} maxBarSize={36}/>
+                  <Bar dataKey="debit_mga" name="Débit sortant" fill="#EF4444" radius={[8,8,0,0]} maxBarSize={36}/>
+                  <Bar dataKey="net_mga" name="Résultat net" fill="#3B4FD8" radius={[8,8,0,0]} maxBarSize={30}/>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          {/* Diagrammes circulaires */}
+          <div className="finance-grid-2" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:20 }}>
+            <div className="finance-card rep-anim" style={{ padding:'18px 20px' }}>
+              <div style={{ fontSize:14,fontWeight:800,color:'#0F172A',marginBottom:12,display:'flex',alignItems:'center',gap:7 }}>
+                <PieIcon size={16} color="#10B981"/> Crédit vs débit
+              </div>
+              {flowSummary.every(item => !item.value) ? (
+                <div style={{ textAlign:'center',padding:'50px 16px',color:'#94A3B8' }}>Aucune donnée</div>
+              ) : (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, alignItems:'center' }}>
+                  <ResponsiveContainer width="100%" height={210}>
+                    <PieChart>
+                      <Pie data={flowSummary} innerRadius={52} outerRadius={86} paddingAngle={4} dataKey="value" nameKey="name">
+                        {flowSummary.map((entry, index) => <Cell key={index} fill={entry.fill}/>)}
+                      </Pie>
+                      <Tooltip content={<PieTooltip/>}/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                    {flowSummary.map(item => (
+                      <div key={item.name} style={{ padding:'10px 12px', borderRadius:12, background:'#F8FAFC', border:'1px solid #EEF2F7' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:7, fontSize:12, color:'#64748B', fontWeight:800 }}>
+                          <span style={{ width:9, height:9, borderRadius:3, background:item.fill }}/>
+                          {item.name}
+                        </div>
+                        <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:900, fontSize:16, color:'#0F172A', marginTop:4 }}>{fmt(item.value)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="finance-card rep-anim" style={{ padding:'18px 20px' }}>
+              <div style={{ fontSize:14,fontWeight:800,color:'#0F172A',marginBottom:12,display:'flex',alignItems:'center',gap:7 }}>
+                <PieIcon size={16} color="#EF4444"/> Dépenses par catégorie
+              </div>
+              {expensesByCategory.length === 0 ? (
+                <div style={{ textAlign:'center',padding:'50px 16px',color:'#94A3B8' }}>Aucune dépense</div>
+              ) : (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, alignItems:'center' }}>
+                  <ResponsiveContainer width="100%" height={210}>
+                    <PieChart>
+                      <Pie data={expensesByCategory} innerRadius={46} outerRadius={84} paddingAngle={3} dataKey="value" nameKey="name">
+                        {expensesByCategory.map((entry, index) => <Cell key={index} fill={entry.fill}/>)}
+                      </Pie>
+                      <Tooltip content={<PieTooltip/>}/>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display:'flex', flexDirection:'column', gap:7, maxHeight:210, overflowY:'auto' }}>
+                    {expensesByCategory.slice(0, 7).map(item => (
+                      <div key={item.name} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, fontSize:12 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:7, minWidth:0 }}>
+                          <span style={{ width:9, height:9, borderRadius:3, background:item.fill, flexShrink:0 }}/>
+                          <span style={{ color:'#475569', fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</span>
+                        </div>
+                        <span style={{ color:'#0F172A', fontWeight:900, whiteSpace:'nowrap' }}>{fmtShort(item.value)} Ar</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Répartition paiements + Factures impayées */}
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:16 }}>
+          <div className="finance-grid-2" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:16 }}>
 
             {/* Méthodes de paiement */}
             <div style={{ background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'18px 20px' }}>
               <div style={{ fontSize:14,fontWeight:700,color:'#0F172A',marginBottom:16,display:'flex',alignItems:'center',gap:7 }}>
-                <PieChart size={16} color="#3B82F6"/> Répartition par méthode
+                <PieIcon size={16} color="#3B82F6"/> Répartition par méthode
               </div>
               {Object.keys(breakdown).length===0?(
                 <div style={{ textAlign:'center',padding:'24px',color:'#94A3B8' }}>Aucune donnée</div>

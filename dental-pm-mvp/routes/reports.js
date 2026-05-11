@@ -19,6 +19,18 @@ const router = express.Router();
 
 // ✅ Pas de requireValidSubscription ni requireClinicId bloquant
 const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
+const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+const monthKey = (dateValue) => {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const monthLabel = (key) => {
+  const [year, month] = key.split('-').map(Number);
+  return `${MONTHS_FR[month - 1]} ${String(year).slice(-2)}`;
+};
 
 // ── GET /finance ──────────────────────────────────────────────────────────────
 router.get('/finance', [
@@ -94,6 +106,33 @@ router.get('/finance', [
       .reduce((sum, p) => sum + parseFloat(p.total_mga || 0), 0);
     const netResult = totalPaid - totalExpenses;
 
+    const cashflowByMonth = {};
+    payments.forEach(p => {
+      const key = monthKey(p.payment_date || p.created_at);
+      if (!key) return;
+      if (!cashflowByMonth[key]) cashflowByMonth[key] = { month: key, label: monthLabel(key), credit_mga: 0, debit_mga: 0, net_mga: 0 };
+      cashflowByMonth[key].credit_mga += parseFloat(p.amount_mga || 0);
+    });
+
+    purchases.forEach(p => {
+      const key = monthKey(p.expense_date || p.created_at);
+      if (!key) return;
+      if (!cashflowByMonth[key]) cashflowByMonth[key] = { month: key, label: monthLabel(key), credit_mga: 0, debit_mga: 0, net_mga: 0 };
+      cashflowByMonth[key].debit_mga += parseFloat(p.total_mga || 0);
+    });
+
+    const cashflow = Object.values(cashflowByMonth)
+      .map(item => ({ ...item, net_mga: item.credit_mga - item.debit_mga }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    const expenseBreakdown = {};
+    purchases.forEach(p => {
+      const label = p.expense_category || p.supplier?.name || (p.expense_type === 'GENERAL_EXPENSE' ? 'Dépenses générales' : 'Achats médicaments');
+      if (!expenseBreakdown[label]) expenseBreakdown[label] = { label, count: 0, total_mga: 0 };
+      expenseBreakdown[label].count++;
+      expenseBreakdown[label].total_mga += parseFloat(p.total_mga || 0);
+    });
+
     // Breakdown par méthode
     const methodBreakdown = {};
     payments.forEach(p => {
@@ -131,6 +170,13 @@ router.get('/finance', [
         net_result_mga: netResult
       },
       breakdown_by_method: methodBreakdown,
+      cashflow_by_month: cashflow,
+      flow_summary: [
+        { type: 'CREDIT', label: 'Crédit encaissé', total_mga: totalPaid },
+        { type: 'DEBIT', label: 'Débit sorti', total_mga: totalExpenses }
+      ],
+      expenses_by_category: Object.values(expenseBreakdown)
+        .sort((a, b) => b.total_mga - a.total_mga),
       top_unpaid_invoices: unpaidInvoices,
       expenses: purchases.map(p => ({
         id: p.id,
