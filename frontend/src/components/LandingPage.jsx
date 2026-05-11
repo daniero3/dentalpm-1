@@ -416,8 +416,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
         const created = await axios.post(`${API_URL}/auth/register-clinic`,{...form,plan:plan?.name||'PRO'});
         clinicId = created.data?.clinic?.id;
       } catch(e) {
-        if (e.response?.status === 409 && e.response?.data?.clinic?.id) clinicId = e.response.data.clinic.id;
-        else throw e;
+        throw e;
       }
       const checkout = await axios.post(`${API_URL}/billing/public-checkout`, {
         plan_code: plan?.name || 'PRO',

@@ -292,6 +292,7 @@ const LoginForm = () => {
                 <div style={{ position:'relative' }}>
                   <FieldIcon icon={User} />
                   <input className="login-premium-input" style={inputStyle} type="text" placeholder="admin"
+                    autoComplete="username"
                     value={loginData.username} onChange={e => setLoginData({...loginData, username:e.target.value})}
                     onFocus={e => e.target.style.borderColor='#0D7A87'}
                     onBlur={e => e.target.style.borderColor='#E2E8F0'} required />

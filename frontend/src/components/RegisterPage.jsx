@@ -31,13 +31,9 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
         if (r.data.temp_password) setTempPwd && setTempPwd(r.data.temp_password);
         clinicId = r.data.clinic?.id;
       } catch(e) {
-        if (e.response?.status === 409 && e.response?.data?.clinic?.id) {
-          clinicId = e.response.data.clinic.id;
-        } else {
-          alert(e.response?.data?.error || 'Erreur création cabinet');
-          setLoading(false);
-          return;
-        }
+        alert(e.response?.data?.error || 'Erreur création cabinet');
+        setLoading(false);
+        return;
       }
 
       const planName = plan?.name || 'PRO';
