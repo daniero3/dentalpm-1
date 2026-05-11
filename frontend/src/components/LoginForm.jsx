@@ -192,6 +192,11 @@ const LoginForm = () => {
         @keyframes loginFloat { 0%,100%{ transform:translate3d(0,0,0) scale(1); } 50%{ transform:translate3d(0,-16px,0) scale(1.03); } }
         @keyframes loginGlow { 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.9; transform:scale(1.08); } }
         @keyframes loginSlideUp { from{ opacity:0; transform:translateY(22px); } to{ opacity:1; transform:translateY(0); } }
+        @keyframes loginFieldIn { from{ opacity:0; transform:translateX(-12px); } to{ opacity:1; transform:translateX(0); } }
+        @keyframes loginShine { 0%{ transform:translateX(-130%) skewX(-18deg); } 45%,100%{ transform:translateX(165%) skewX(-18deg); } }
+        @keyframes loginGridDrift { from{ background-position:0 0, 0 0; } to{ background-position:42px 42px, 42px 42px; } }
+        @keyframes loginProgress { 0%{ width:38%; } 50%{ width:92%; } 100%{ width:72%; } }
+        @keyframes loginCardHover { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-6px); } }
         @keyframes loginLogoRing { to{ transform:rotate(360deg); } }
         @keyframes loginPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.035); } }
         .login-premium-page::before {
@@ -213,6 +218,7 @@ const LoginForm = () => {
             linear-gradient(rgba(13,122,135,.045) 1px, transparent 1px),
             linear-gradient(90deg, rgba(13,122,135,.045) 1px, transparent 1px);
           background-size:42px 42px;
+          animation:loginGridDrift 18s linear infinite;
           mask-image:linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
           z-index:0;
         }
@@ -220,6 +226,32 @@ const LoginForm = () => {
         .login-floating-b { animation:loginFloat 8s ease-in-out infinite reverse; }
         .login-glow { animation:loginGlow 5s ease-in-out infinite; }
         .login-card-anim { animation:loginSlideUp .52s cubic-bezier(.16,1,.3,1) both; }
+        .login-field-anim { animation:loginFieldIn .45s cubic-bezier(.16,1,.3,1) both; }
+        .login-premium-input:focus {
+          transform:translateY(-1px);
+          box-shadow:0 0 0 4px rgba(13,122,135,.11), 0 10px 24px rgba(15,23,42,.08) !important;
+        }
+        .login-submit-shine { position:relative; overflow:hidden; }
+        .login-submit-shine::after {
+          content:'';
+          position:absolute;
+          top:-40%;
+          bottom:-40%;
+          left:0;
+          width:44%;
+          background:linear-gradient(90deg, transparent, rgba(255,255,255,.34), transparent);
+          animation:loginShine 3.2s ease-in-out infinite;
+          pointer-events:none;
+        }
+        .login-feature-card {
+          transition:transform .22s ease, background .22s ease, border-color .22s ease;
+        }
+        .login-feature-card:hover {
+          transform:translateY(-4px);
+          background:rgba(255,255,255,.14) !important;
+          border-color:rgba(125,211,252,.28) !important;
+        }
+        .login-showcase { animation:loginSlideUp .56s cubic-bezier(.16,1,.3,1) both, loginCardHover 7s ease-in-out 1.2s infinite; }
         .login-logo-orbit::before {
           content:'';
           position:absolute;
@@ -255,21 +287,21 @@ const LoginForm = () => {
             <p style={{ color:'#64748B', fontSize:13, marginBottom:24 }}>Accédez à votre espace de gestion</p>
             <ErrorBox msg={error} />
             <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:16 }}>
-              <div>
+              <div className="login-field-anim" style={{ animationDelay:'.08s' }}>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Nom d'utilisateur</label>
                 <div style={{ position:'relative' }}>
                   <FieldIcon icon={User} />
-                  <input style={inputStyle} type="text" placeholder="admin"
+                  <input className="login-premium-input" style={inputStyle} type="text" placeholder="admin"
                     value={loginData.username} onChange={e => setLoginData({...loginData, username:e.target.value})}
                     onFocus={e => e.target.style.borderColor='#0D7A87'}
                     onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
                 </div>
               </div>
-              <div>
+              <div className="login-field-anim" style={{ animationDelay:'.16s' }}>
                 <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Mot de passe</label>
                 <div style={{ position:'relative' }}>
                   <FieldIcon icon={Lock} />
-                  <input style={{ ...inputStyle, paddingRight:42 }} type={showPassword?'text':'password'} placeholder="••••••••"
+                  <input className="login-premium-input" style={{ ...inputStyle, paddingRight:42 }} type={showPassword?'text':'password'} placeholder="••••••••"
                     value={loginData.password} onChange={e => setLoginData({...loginData, password:e.target.value})}
                     onFocus={e => e.target.style.borderColor='#0D7A87'}
                     onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
@@ -280,7 +312,8 @@ const LoginForm = () => {
                 </div>
               </div>
               <button type="submit" disabled={loading}
-                style={{ width:'100%', padding:'13px', borderRadius:13, border:'none', background:loading?'#94A3B8':'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, cursor:loading?'not-allowed':'pointer', boxShadow:'0 12px 28px rgba(13,122,135,0.28)', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'transform .18s ease, box-shadow .18s ease' }}
+                className="login-submit-shine"
+                style={{ width:'100%', padding:'13px', borderRadius:13, border:'none', background:loading?'#94A3B8':'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, cursor:loading?'not-allowed':'pointer', boxShadow:'0 12px 28px rgba(13,122,135,0.28)', display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'transform .18s ease, box-shadow .18s ease', animation:'loginFieldIn .45s cubic-bezier(.16,1,.3,1) .24s both' }}
                 onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow='0 16px 34px rgba(13,122,135,0.34)'; }}}
                 onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 12px 28px rgba(13,122,135,0.28)'; }}>
                 {loading ? <><Loader2 size={16} style={{ animation:'spin 0.75s linear infinite' }} />Connexion...</> : 'Se connecter'}
@@ -443,7 +476,7 @@ const LoginForm = () => {
                 { icon:Activity, label:'Activité', value:'Vue globale' },
                 { icon:Wifi, label:'Session', value:'Sécurisée' },
               ].map(item => (
-                <div key={item.label} style={{ padding:14, borderRadius:16, background:'rgba(255,255,255,.09)', border:'1px solid rgba(255,255,255,.10)' }}>
+                <div key={item.label} className="login-feature-card" style={{ padding:14, borderRadius:16, background:'rgba(255,255,255,.09)', border:'1px solid rgba(255,255,255,.10)' }}>
                   <item.icon size={18} color="#7DD3FC"/>
                   <div style={{ fontSize:12, color:'rgba(226,232,240,.66)', marginTop:10 }}>{item.label}</div>
                   <div style={{ fontSize:15, fontWeight:900, color:'#fff', marginTop:2 }}>{item.value}</div>
@@ -459,7 +492,7 @@ const LoginForm = () => {
                 </span>
               </div>
               <div style={{ height:8, borderRadius:99, background:'rgba(255,255,255,.12)', overflow:'hidden' }}>
-                <div style={{ width:'92%', height:'100%', borderRadius:99, background:'linear-gradient(90deg,#2DD4BF,#38BDF8)' }}/>
+                <div style={{ width:'92%', height:'100%', borderRadius:99, background:'linear-gradient(90deg,#2DD4BF,#38BDF8)', animation:'loginProgress 4.6s ease-in-out infinite' }}/>
               </div>
             </div>
           </div>
