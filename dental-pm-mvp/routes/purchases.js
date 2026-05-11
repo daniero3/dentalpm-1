@@ -19,6 +19,35 @@ const getUserId = (req) => {
 
 async function getModels() { return require('../models'); }
 
+const EXPENSE_COLUMNS = ['expense_type', 'expense_category', 'expense_label', 'expense_date'];
+let purchaseSchemaCache = null;
+
+const getPurchaseSchemaState = async (models, Purchase) => {
+  const now = Date.now();
+  if (purchaseSchemaCache && now - purchaseSchemaCache.checkedAt < 30000) return purchaseSchemaCache;
+
+  try {
+    const schema = await models.sequelize.getQueryInterface().describeTable('purchase_orders');
+    const attributes = Object.keys(Purchase.rawAttributes || {}).filter(attr => schema[attr]);
+    purchaseSchemaCache = {
+      checkedAt: now,
+      attributes: attributes.length ? attributes : undefined,
+      expenseReady: EXPENSE_COLUMNS.every(column => Boolean(schema[column])),
+    };
+  } catch (error) {
+    purchaseSchemaCache = { checkedAt: now, attributes: undefined, expenseReady: true };
+  }
+
+  return purchaseSchemaCache;
+};
+
+const ensureGeneralExpenseSchema = async (models) => {
+  await models.sequelize.query(
+    'ALTER TABLE "purchase_orders" ALTER COLUMN "supplier_id" DROP NOT NULL;'
+  );
+  purchaseSchemaCache = null;
+};
+
 const purchaseIncludes = (models) => {
   const include = [];
   if (models.Supplier) {
@@ -33,6 +62,7 @@ router.get('/', async (req, res) => {
     const models   = await getModels();
     const Purchase = models.Purchase || models.PurchaseOrder;
     if (!Purchase) return res.json({ purchases: [], count: 0 });
+    const schemaState = await getPurchaseSchemaState(models, Purchase);
 
     const clinicId = getClinicId(req);
     const where    = clinicId ? { clinic_id: clinicId } : {};
@@ -42,6 +72,7 @@ router.get('/', async (req, res) => {
 
     const purchases = await Purchase.findAll({
       where,
+      attributes: schemaState.attributes,
       include: purchaseIncludes(models),
       order: [['created_at','DESC']],
       limit: 100
@@ -71,6 +102,7 @@ router.post('/', [
     const models   = await getModels();
     const Purchase = models.Purchase || models.PurchaseOrder;
     if (!Purchase) return res.status(500).json({ error:'Modèle Purchase non disponible' });
+    const schemaState = await getPurchaseSchemaState(models, Purchase);
 
     const clinicId = getClinicId(req);
     const userId   = getUserId(req);
@@ -99,14 +131,20 @@ router.post('/', [
     if (isGeneralExpense && (!expense_label || total_mga <= 0)) {
       return res.status(400).json({ error:'Libellé et montant requis pour une dépense générale' });
     }
+    if (isGeneralExpense && !schemaState.expenseReady) {
+      return res.status(503).json({
+        error:'Base de données non migrée pour les dépenses générales. Relancez le déploiement ou exécutez npm run db:migrate.',
+        code:'PURCHASE_EXPENSE_SCHEMA_MISSING'
+      });
+    }
 
     // Colonnes exactes de la table purchase_orders
     const purchaseData = {
       number:     order_number,   // colonne 'number' pas 'order_number'
       created_by: userId,         // colonne 'created_by' pas 'created_by_user_id'
       status:     isGeneralExpense ? 'RECEIVED' : 'DRAFT',
-      expense_type,
     };
+    if (schemaState.expenseReady) purchaseData.expense_type = expense_type;
     if (clinicId)               purchaseData.clinic_id              = clinicId;
     if (supplier_id)            purchaseData.supplier_id            = supplier_id;
     if (total_mga)              purchaseData.total_mga              = total_mga;
@@ -122,7 +160,10 @@ router.post('/', [
     try {
       purchase = await Purchase.create(purchaseData);
     } catch(e1) {
-      if (e1.message?.includes('number')) {
+      if (isGeneralExpense && e1.original?.code === '23502' && e1.original?.column === 'supplier_id') {
+        await ensureGeneralExpenseSchema(models);
+        purchase = await Purchase.create(purchaseData);
+      } else if (e1.message?.includes('number')) {
         // Essayer avec order_number
         delete purchaseData.number;
         purchaseData.order_number = order_number;
@@ -155,10 +196,11 @@ router.get('/:id', [param('id').isUUID()], async (req, res) => {
     const models   = await getModels();
     const Purchase = models.Purchase || models.PurchaseOrder;
     if (!Purchase) return res.status(404).json({ error:'Modèle non disponible' });
+    const schemaState = await getPurchaseSchemaState(models, Purchase);
 
     const clinicId = getClinicId(req);
     const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
-    const purchase = await Purchase.findOne({ where, include: purchaseIncludes(models) });
+    const purchase = await Purchase.findOne({ where, attributes: schemaState.attributes, include: purchaseIncludes(models) });
     if (!purchase) return res.status(404).json({ error:'Commande non trouvée' });
 
     res.json({ purchase });

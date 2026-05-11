@@ -60,6 +60,11 @@ module.exports = {
       references: { model: 'suppliers', key: 'id' },
       onDelete: 'SET NULL'
     });
+    await queryInterface.sequelize.query(
+      'ALTER TABLE "purchase_orders" ALTER COLUMN "supplier_id" DROP NOT NULL;'
+    ).catch((error) => {
+      if (!/does not exist|not-null/i.test(error.message)) throw error;
+    });
 
     await addIndexIfMissing('purchase_orders', ['expense_type'], {
       name: 'purchase_orders_expense_type_idx'

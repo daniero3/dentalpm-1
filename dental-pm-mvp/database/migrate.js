@@ -19,7 +19,13 @@ async function runMigrations() {
   for (const migrationPath of migrations) {
     const migration = require(migrationPath);
     if (typeof migration?.up === 'function') {
-      await migration.up(qi, Sequelize).catch(() => {});
+      try {
+        await migration.up(qi, Sequelize);
+        console.log(`✅ Migration OK: ${migrationPath}`);
+      } catch (error) {
+        console.error(`❌ Migration failed: ${migrationPath}`, error.message);
+        throw error;
+      }
     }
   }
 
