@@ -45,6 +45,7 @@ const PIE_COLORS = ['#0D7A87', '#3B4FD8', '#8B5CF6', '#F59E0B', '#EF4444', '#10B
 
 const inp = { padding:'9px 12px',borderRadius:10,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none',transition:'border-color .2s' };
 const fi  = e=>e.target.style.borderColor='#0D7A87', bi=e=>e.target.style.borderColor='#E2E8F0';
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const MoneyTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -85,7 +86,17 @@ const ReportsManagement = () => {
     setLoading(true);
     setError(null);
     try {
-      const r = await axios.get(`${API}/reports/finance?from=${from}&to=${to}`, authH());
+      let r;
+      try {
+        r = await axios.get(`${API}/reports/finance?from=${from}&to=${to}`, authH());
+      } catch (err) {
+        if (err.response?.status === 503) {
+          await wait(900);
+          r = await axios.get(`${API}/reports/finance?from=${from}&to=${to}`, authH());
+        } else {
+          throw err;
+        }
+      }
       if (r.data) { setReport(r.data); setError(null); }
       else setError('Réponse vide du serveur');
     } catch (err) {

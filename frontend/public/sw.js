@@ -1,6 +1,6 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
 // Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
-const BUILD_TIME = '2026-05-12-performance-cache-fix-1';
+const BUILD_TIME = '2026-05-12-api-pass-through-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
@@ -53,20 +53,14 @@ self.addEventListener('fetch', e => {
 
   const url = new URL(e.request.url);
 
-  // API Railway → toujours réseau, jamais de cache
-  if (
-    url.hostname.includes('railway.app') ||
-    url.pathname.startsWith('/api/')
-  ) {
-    e.respondWith(
-      fetch(e.request).catch(() =>
-        new Response(JSON.stringify({ error: 'Hors ligne', code: 'OFFLINE' }), {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'application/json' }
-        })
-      )
-    );
+  // Laisser les API cross-origin parler directement au backend.
+  // Sinon le SW peut fabriquer un faux 503 "Hors ligne" qui masque l'erreur réelle.
+  if (url.origin !== self.location.origin) return;
+
+  // API same-origin → toujours réseau, jamais de cache.
+  // En cas d'échec réseau, ne pas retourner un faux JSON applicatif.
+  if (url.pathname.startsWith('/api/')) {
+    e.respondWith(fetch(e.request));
     return;
   }
 
