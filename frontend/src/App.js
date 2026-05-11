@@ -1,5 +1,26 @@
 import React, { useState, useEffect } from "react";
 
+const handleChunkFailure = async (event) => {
+  const message = String(event?.reason?.message || event?.message || '');
+  if (!/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/i.test(message)) return;
+  if (sessionStorage.getItem('dpm_chunk_reload_done') === '1') return;
+  sessionStorage.setItem('dpm_chunk_reload_done', '1');
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(key => key.startsWith('dentalpm-')).map(key => caches.delete(key)));
+    }
+    const registration = await navigator.serviceWorker?.getRegistration?.();
+    await registration?.update?.();
+  } catch (_) {}
+  window.location.reload();
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', handleChunkFailure);
+  window.addEventListener('error', handleChunkFailure);
+}
+
 // ── Service Worker PWA — Cache Busting ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

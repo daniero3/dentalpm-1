@@ -1,6 +1,6 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
 // Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
-const BUILD_TIME = '2026-05-06-invoice-print-blob-fix-1';
+const BUILD_TIME = '2026-05-12-performance-cache-fix-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
@@ -83,7 +83,10 @@ self.addEventListener('fetch', e => {
             caches.open(CACHE).then(c => c.put(e.request, res.clone())).catch(() => {});
           } catch(_) {}
           return res;
-        });
+        }).catch(() => new Response('', {
+          status: 504,
+          statusText: 'Asset unavailable'
+        }));
       })
     );
     return;
