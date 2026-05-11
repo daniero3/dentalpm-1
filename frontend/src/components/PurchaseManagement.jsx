@@ -227,7 +227,32 @@ const PurchaseManagement = () => {
     try { await axios.post(`${API}/purchases/${p.id}/receive`, {}, authH()); toast.success('Commande réceptionnée, stock mis à jour'); fetchPurchases(); }
     catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
-  const handlePrint = p => window.open(`${API}/purchases/${p.id}/print`, '_blank');
+  const handlePrint = async p => {
+    try {
+      const popup = window.open('', '_blank');
+      if (!popup) {
+        toast.error('Autorisez les fenêtres contextuelles pour imprimer');
+        return;
+      }
+
+      const response = await fetch(`${API}/purchases/${p.id}/print`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      if (!response.ok) {
+        popup.close();
+        throw new Error('print_failed');
+      }
+
+      const html = await response.text();
+      popup.document.open();
+      popup.document.write(html);
+      popup.document.close();
+      popup.focus();
+    } catch {
+      toast.error('Erreur impression');
+    }
+  };
   const resetForm   = () => { setSelSup(''); setItems([]); setNotes(''); setExpense(emptyExpense); setFormMode('purchase'); };
 
   /* Catalogue partenaires */

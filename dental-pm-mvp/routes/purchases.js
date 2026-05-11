@@ -48,6 +48,16 @@ const ensureGeneralExpenseSchema = async (models) => {
   purchaseSchemaCache = null;
 };
 
+const escapeHtml = (value = '') => String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const fmtMga = value => new Intl.NumberFormat('fr-MG', { maximumFractionDigits: 0 }).format(value || 0) + ' Ar';
+const fmtDate = value => value ? new Date(value).toLocaleDateString('fr-FR') : '—';
+
 const purchaseIncludes = (models) => {
   const include = [];
   if (models.Supplier) {
@@ -206,6 +216,50 @@ router.get('/:id', [param('id').isUUID()], async (req, res) => {
     res.json({ purchase });
   } catch (error) {
     res.status(500).json({ error:'Erreur serveur', details: error.message });
+  }
+});
+
+// ── GET /api/purchases/:id/print ──────────────────────────────────────────────
+router.get('/:id/print', [param('id').isUUID()], async (req, res) => {
+  try {
+    const models   = await getModels();
+    const Purchase = models.Purchase || models.PurchaseOrder;
+    if (!Purchase) return res.status(404).send('Modèle non disponible');
+
+    const schemaState = await getPurchaseSchemaState(models, Purchase);
+    const clinicId = getClinicId(req);
+    const where    = { id: req.params.id, ...(clinicId ? { clinic_id: clinicId } : {}) };
+    const purchase = await Purchase.findOne({ where, attributes: schemaState.attributes, include: purchaseIncludes(models) });
+    if (!purchase) return res.status(404).send('Dépense non trouvée');
+
+    const data = purchase.toJSON ? purchase.toJSON() : purchase;
+    const isExpense = data.expense_type === 'GENERAL_EXPENSE';
+    const title = isExpense ? 'Dépense cabinet' : 'Bon de commande';
+    const label = isExpense ? (data.expense_label || data.number) : data.number;
+    const category = isExpense ? (data.expense_category || 'Dépense générale') : (data.supplier?.name || 'Fournisseur non renseigné');
+    const date = data.expense_date || data.created_at;
+
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>${escapeHtml(title)} ${escapeHtml(data.number)}</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#0f172a;margin:0;padding:28px;background:#fff;font-size:13px}.sheet{max-width:760px;margin:0 auto}.header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #0D7A87;padding-bottom:18px;margin-bottom:24px}.brand{font-size:22px;font-weight:800;color:#0D7A87}.doc-title{text-align:right}.doc-title h1{margin:0;font-size:24px}.doc-title div{color:#64748b;margin-top:4px}.box{border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px}.label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:700;margin-bottom:5px}.value{font-size:15px;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.amount{background:#fef2f2;border-color:#fecaca}.amount .value{font-size:24px;color:#dc2626}.notes{white-space:pre-wrap;line-height:1.6}.footer{border-top:1px solid #e2e8f0;margin-top:28px;padding-top:12px;text-align:center;color:#64748b;font-size:11px}@media print{body{padding:0}.sheet{max-width:none}}
+</style></head><body><div class="sheet">
+<div class="header"><div><div class="brand">DentalPM</div><div>Gestion cabinet dentaire</div></div><div class="doc-title"><h1>${escapeHtml(title)}</h1><div>${escapeHtml(data.number)}</div></div></div>
+<div class="grid">
+  <div class="box"><div class="label">${isExpense ? 'Libellé' : 'Bon'}</div><div class="value">${escapeHtml(label)}</div></div>
+  <div class="box"><div class="label">${isExpense ? 'Catégorie' : 'Fournisseur'}</div><div class="value">${escapeHtml(category)}</div></div>
+  <div class="box"><div class="label">Date</div><div class="value">${escapeHtml(fmtDate(date))}</div></div>
+  <div class="box"><div class="label">Statut</div><div class="value">${escapeHtml(data.status || '—')}</div></div>
+</div>
+<div class="box amount"><div class="label">Montant</div><div class="value">${escapeHtml(fmtMga(parseFloat(data.total_mga || 0)))}</div></div>
+${data.notes ? `<div class="box"><div class="label">Notes</div><div class="notes">${escapeHtml(data.notes)}</div></div>` : ''}
+<div class="footer">Document généré depuis DentalPM le ${escapeHtml(fmtDate(new Date()))}</div>
+</div><script>window.print();</script></body></html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (error) {
+    console.error('Print purchase error:', error);
+    res.status(500).send('Erreur impression');
   }
 });
 
