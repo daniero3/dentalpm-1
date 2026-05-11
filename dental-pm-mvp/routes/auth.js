@@ -270,9 +270,22 @@ router.post('/register-clinic', [
     // Vérifier si email déjà utilisé
     const existing = await Clinic.findOne({ where: { email } });
     if (existing) {
-      // Retourner l'ID existant pour permettre la suite du flux
+      if (['PENDING', 'EXPIRED', 'TRIAL_EXPIRED'].includes(existing.subscription_status)) {
+        await existing.update({
+          name: cabinet || existing.name,
+          phone: phone || existing.phone,
+          city: city || existing.city,
+          current_plan: plan || existing.current_plan || 'PRO'
+        }).catch(() => {});
+        return res.json({
+          message: 'Cabinet déjà créé. Continuez vers Stripe pour activer l’essai.',
+          clinic: { id: existing.id, name: existing.name, email: existing.email, plan: existing.current_plan || plan || 'PRO' },
+          existing: true
+        });
+      }
+
       return res.status(409).json({ 
-        error: 'Un cabinet avec cet email existe deja',
+        error: 'Un cabinet actif existe déjà avec cet email',
         clinic: { id: existing.id, name: existing.name, email: existing.email }
       });
     }

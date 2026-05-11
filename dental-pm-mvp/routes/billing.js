@@ -467,20 +467,39 @@ router.post('/public-checkout', async (req, res) => {
     const { plan_code, clinic_id, email } = req.body;
 
     const STRIPE_PRICE_IDS = {
-      ESSENTIAL: 'price_1TM2Yr4zCGinpjiEssURjhxa',
-      PRO:       'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
-      GROUP:     'price_1TM2m34zCGinpjiEOo3nR5CQ',
+      ESSENTIAL: process.env.STRIPE_PRICE_ESSENTIAL || 'price_1TM2Yr4zCGinpjiEssURjhxa',
+      PRO:       process.env.STRIPE_PRICE_PRO       || 'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
+      GROUP:     process.env.STRIPE_PRICE_GROUP     || 'price_1TM2m34zCGinpjiEOo3nR5CQ',
     };
 
     const priceId = STRIPE_PRICE_IDS[plan_code];
     if (!priceId) return res.status(400).json({ error: 'Plan invalide' });
 
     const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
+    let clinic = null;
+    let customerId = null;
+
+    if (clinic_id) {
+      clinic = await Clinic.findByPk(clinic_id);
+      if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
+
+      customerId = clinic.stripe_customer_id;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: clinic.email || email,
+          name: clinic.name,
+          metadata: { clinic_id }
+        });
+        customerId = customer.id;
+        await clinic.update({ stripe_customer_id: customerId });
+      }
+    }
 
     const sessionData = {
       mode: 'subscription',
       payment_method_types: ['card'],
       payment_method_collection: 'always',
+      client_reference_id: clinic_id || undefined,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: 7,
@@ -499,13 +518,23 @@ router.post('/public-checkout', async (req, res) => {
       sessionData.metadata.clinic_id = clinic_id;
       sessionData.subscription_data.metadata.clinic_id = clinic_id;
     }
-    if (email) sessionData.customer_email = email;
+    if (customerId) sessionData.customer = customerId;
+    else if (email) sessionData.customer_email = email;
 
     const session = await stripe.checkout.sessions.create(sessionData);
     res.json({ url: session.url, session_id: session.id });
   } catch (error) {
-    console.error('Public checkout error:', error.message);
-    res.status(500).json({ error: 'Erreur Stripe', details: error.message });
+    console.error('Public checkout error:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      param: error.param
+    });
+    res.status(500).json({
+      error: 'Erreur Stripe',
+      code: error.code || 'STRIPE_CHECKOUT_ERROR',
+      details: error.message
+    });
   }
 });
 

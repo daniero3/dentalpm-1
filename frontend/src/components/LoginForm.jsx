@@ -302,6 +302,7 @@ const LoginForm = () => {
                 <div style={{ position:'relative' }}>
                   <FieldIcon icon={Lock} />
                   <input className="login-premium-input" style={{ ...inputStyle, paddingRight:42 }} type={showPassword?'text':'password'} placeholder="••••••••"
+                    autoComplete="current-password"
                     value={loginData.password} onChange={e => setLoginData({...loginData, password:e.target.value})}
                     onFocus={e => e.target.style.borderColor='#0D7A87'}
                     onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
