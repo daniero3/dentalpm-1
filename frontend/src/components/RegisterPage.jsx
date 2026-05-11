@@ -18,42 +18,40 @@ const PLANS = [
 const T = '#0D7A87';
 
 
-// Liens Stripe statiques par plan (trial 7 jours configuré dans Stripe Dashboard)
-const STRIPE_LINKS = {
-  ESSENTIAL: 'https://buy.stripe.com/eVqeV66VS1S84A43NDcfK01',
-  PRO:       'https://buy.stripe.com/aFa9AM4NK54k1nSfwlcfK00',
-  GROUP:     'https://buy.stripe.com/9B614gbc8aoE3w05VLcfK02',
-};
-
 const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
   const [loading, setLoading] = React.useState(false);
-  const [step, setStep]       = React.useState('stripe'); // 'stripe' | 'done'
 
   const handleClick = async () => {
     setLoading(true);
     try {
       // 1. Créer le cabinet en DB
+      let clinicId = null;
       try {
         const r = await axios.post(`${apiUrl}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
         if (r.data.temp_password) setTempPwd && setTempPwd(r.data.temp_password);
+        clinicId = r.data.clinic?.id;
       } catch(e) {
-        if (e.response?.status !== 409) {
+        if (e.response?.status === 409 && e.response?.data?.clinic?.id) {
+          clinicId = e.response.data.clinic.id;
+        } else {
           alert(e.response?.data?.error || 'Erreur création cabinet');
           setLoading(false);
           return;
         }
-        // 409 = cabinet existant, on continue vers Stripe
       }
 
-      // 2. Redirection directe vers Stripe Payment Link (aucun backend requis)
       const planName = plan?.name || 'PRO';
-      const stripeUrl = STRIPE_LINKS[planName] || STRIPE_LINKS.PRO;
-
-      // Pré-remplir l'email dans Stripe si possible
-      const url = new URL(stripeUrl);
-      if (form.email) url.searchParams.set('prefilled_email', form.email);
-
-      window.location.href = url.toString();
+      const checkout = await axios.post(`${apiUrl}/billing/public-checkout`, {
+        plan_code: planName,
+        clinic_id: clinicId,
+        email: form.email
+      });
+      if (checkout.data?.url) {
+        window.location.href = checkout.data.url;
+      } else {
+        alert('Impossible d’ouvrir Stripe. Réessayez.');
+        setLoading(false);
+      }
     } catch(e) {
       alert('Erreur inattendue. Réessayez.');
       setLoading(false);
@@ -63,7 +61,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
   return (
     <button onClick={handleClick} disabled={loading}
       style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:loading?'#94A3B8':'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, border:'none', cursor:loading?'not-allowed':'pointer', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box', transition:'all .2s' }}>
-      {loading ? '⏳ Redirection vers Stripe...' : '💳 Payer avec Stripe — 7 jours gratuits'}
+      {loading ? '⏳ Redirection vers Stripe...' : '💳 Enregistrer ma carte — 7 jours gratuits'}
     </button>
   );
 };
@@ -109,7 +107,7 @@ export default function RegisterPage() {
         <div style={{ textAlign:'center', marginBottom:28 }}>
           <img src="/fix-logo.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', boxShadow:`0 0 0 4px ${T}20, 0 8px 24px ${T}30`, marginBottom:14 }}/>
           <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:'0 0 4px' }}>Créer votre cabinet</h1>
-          <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Essai gratuit 7 jours — sans carte bancaire</p>
+          <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Essai gratuit 7 jours — carte enregistrée, aucun prélèvement immédiat</p>
         </div>
 
         {/* Card principale */}
@@ -212,21 +210,16 @@ export default function RegisterPage() {
                     <span>Cabinet : {form.cabinet}</span>
                     <span>{plan?.price} Ar/mois</span>
                   </div>
-                  <div style={{ fontSize:12, color:'#64748B', marginTop:4 }}>7 jours d&apos;essai gratuit inclus — accès immédiat</div>
+                  <div style={{ fontSize:12, color:'#64748B', marginTop:4 }}>7 jours d&apos;essai gratuit inclus — carte requise, aucun prélèvement aujourd’hui</div>
                 </div>
 
                 <p style={{ color:'#475569', fontSize:13, lineHeight:1.7, marginBottom:14 }}>
-                  Après votre essai, continuez avec l&apos;un de ces modes de paiement :
+                  Stripe enregistre votre carte pour activer l&apos;essai. Aucun montant n&apos;est prélevé maintenant; le plan choisi sera facturé automatiquement à la fin des 7 jours.
                 </p>
 
                 {/* Bouton Stripe en premier */}
                 <StripeCheckoutBtn plan={plan} form={form} apiUrl={API_URL}/>
 
-                {/* Bouton confirmer inscription */}
-                <button onClick={submit} disabled={loading}
-                  style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:loading?'not-allowed':'pointer', opacity:loading?.6:1, boxShadow:`0 4px 16px ${T}40`, transition:'all .2s' }}>
-                  {loading ? '⏳ Création en cours...' : '✓ Confirmer mon inscription'}
-                </button>
                 <p style={{ textAlign:'center', fontSize:11, color:'#94A3B8', marginTop:12, marginBottom:0 }}>
                   En confirmant, vous acceptez nos <a href="/legal/cgu" style={{ color:T }}>CGU</a>
                 </p>

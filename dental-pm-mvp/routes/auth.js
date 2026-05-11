@@ -286,9 +286,9 @@ router.post('/register-clinic', [
       email,
       phone,
       city:                city || 'Madagascar',
-      subscription_status: 'TRIAL',
+      subscription_status: 'PENDING',
       current_plan:        plan,
-      is_active:           true,
+      is_active:           false,
       is_verified:         false,
       onboarding_completed: false,
       max_users:           PLAN_USERS[plan] || 5,
@@ -308,16 +308,14 @@ router.post('/register-clinic', [
       onboarding_completed: false,
     });
 
-    // Créer l'abonnement trial 7 jours
+    // Créer l'abonnement en attente. L'essai démarre uniquement après
+    // validation Stripe: carte enregistrée, sans prélèvement immédiat.
     const now = new Date();
-    const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     await require('../models').Subscription.create({
       clinic_id:         clinic.id,
       plan,
-      status:            'TRIAL',
+      status:            'PENDING',
       start_date:        now,
-      trial_end_date:    trialEnd,
-      end_date:          trialEnd,
       billing_cycle:     'MONTHLY',
       price_mga:         PLAN_PRICES[plan] || 199000,
       monthly_price_mga: PLAN_PRICES[plan] || 199000,
@@ -325,15 +323,9 @@ router.post('/register-clinic', [
       max_practitioners: PLAN_USERS[plan] || 5,
     });
 
-    // Email de bienvenue
-    try {
-      const { sendWelcomeTrial } = require('../utils/mailer');
-      await sendWelcomeTrial(email, cabinet, plan, trialEnd);
-    } catch(e) { console.warn('Welcome email (non-fatal):', e.message); }
-
     res.status(201).json({
-      message: 'Cabinet créé avec succès. Essai de 7 jours activé.',
-      clinic: { id: clinic.id, name: clinic.name, plan, trial_end: trialEnd },
+      message: 'Cabinet créé avec succès. Carte requise pour activer l’essai de 7 jours.',
+      clinic: { id: clinic.id, name: clinic.name, plan },
       temp_password: tempPassword,
     });
   } catch (error) {

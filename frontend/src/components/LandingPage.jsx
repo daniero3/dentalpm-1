@@ -410,7 +410,23 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
   const blur = e=>{e.target.style.borderColor='var(--border)';e.target.style.boxShadow='none';};
   const submit = async()=>{
     setLoading(true);
-    try{await axios.post(`${API_URL}/auth/register-clinic`,{...form,plan:plan?.name||'PRO'});setDone(true);}
+    try{
+      let clinicId = null;
+      try {
+        const created = await axios.post(`${API_URL}/auth/register-clinic`,{...form,plan:plan?.name||'PRO'});
+        clinicId = created.data?.clinic?.id;
+      } catch(e) {
+        if (e.response?.status === 409 && e.response?.data?.clinic?.id) clinicId = e.response.data.clinic.id;
+        else throw e;
+      }
+      const checkout = await axios.post(`${API_URL}/billing/public-checkout`, {
+        plan_code: plan?.name || 'PRO',
+        clinic_id: clinicId,
+        email: form.email
+      });
+      if (checkout.data?.url) window.location.href = checkout.data.url;
+      else alert('Impossible d’ouvrir Stripe. Réessayez.');
+    }
     catch(e){alert(e.response?.data?.error||'Erreur. Vérifiez vos informations.');}
     finally{setLoading(false);}
   };
@@ -454,25 +470,16 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
             )}
             {step===2&&(
               <div>
-                <p style={{color:'var(--slate)',fontSize:14,lineHeight:1.7,marginBottom:14}}>Votre <strong>essai de 7 jours</strong> commence immédiatement. À la fin, payez par :</p>
-                {[{n:'MVola',num:'034 XX XXX XX',c:'#E30613'},{n:'Orange Money',num:'032 XX XXX XX',c:'#FF6600'},{n:'Airtel Money',num:'033 XX XXX XX',c:'#E4002B'},{n:'Virement Banquière',num:'Carte Mastercard',c:'#EB001B'}].map(p=>(
-                  <div key={p.n} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:11,padding:'10px 14px',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                    <span style={{fontWeight:700,color:p.c,fontSize:14}}>{p.n}</span>
-                    <span style={{color:'var(--muted)',fontSize:13}}>{p.num}</span>
-                  </div>
-                ))}
-                {plan?.stripe && (
-                  <a href={plan.stripe} target="_blank" rel="noopener noreferrer"
-                    style={{display:'block',width:'100%',marginTop:14,padding:'14px',borderRadius:13,background:'#635BFF',color:'#fff',fontWeight:700,fontSize:15,textDecoration:'none',textAlign:'center',boxSizing:'border-box'}}>
-                    💳 Payer directement avec Stripe →
-                  </a>
-                )}
-                <div style={{display:'flex',alignItems:'center',gap:8,margin:'10px 0',color:'var(--muted)',fontSize:12}}>
-                  <div style={{flex:1,height:1,background:'var(--border)'}}/><span>ou</span><div style={{flex:1,height:1,background:'var(--border)'}}/>
+                <p style={{color:'var(--slate)',fontSize:14,lineHeight:1.7,marginBottom:14}}>
+                  Votre <strong>essai de 7 jours</strong> démarre après l’enregistrement sécurisé de votre carte sur Stripe.
+                  <br/>Aucun prélèvement n’est effectué aujourd’hui.
+                </p>
+                <div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:12,padding:'12px 14px',marginBottom:14,color:'var(--teal)',fontSize:13,fontWeight:700,lineHeight:1.5}}>
+                  Carte requise pour activer l’essai. Stripe prélèvera automatiquement le plan choisi uniquement à la fin des 7 jours.
                 </div>
                 <button className="btn-main" onClick={submit} disabled={loading}
-                  style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
-                  {loading?'⏳ Création...':'✓ Confirmer mon inscription (paiement Mobile Money)'}
+                  style={{width:'100%',padding:'15px',borderRadius:13,background:'#635BFF',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
+                  {loading?'⏳ Redirection vers Stripe...':'💳 Enregistrer ma carte — 7 jours gratuits'}
                 </button>
                 <button onClick={()=>setStep(1)} style={{width:'100%',marginTop:8,padding:9,background:'none',color:'var(--muted)',border:'none',cursor:'pointer',fontSize:13}}>← Retour</button>
               </div>
@@ -484,8 +491,8 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
             <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:22,color:'var(--ink)',marginBottom:8}}>Bienvenue sur DPM !</h2>
             <p style={{color:'var(--slate)',lineHeight:1.8,marginBottom:18}}>Cabinet <strong>{form.cabinet}</strong> créé !<br/>Identifiants envoyés à <strong>{form.email}</strong></p>
             <div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:14,padding:'13px 16px',marginBottom:18,textAlign:'left'}}>
-              <p style={{margin:0,fontSize:13,color:'var(--teal)',fontWeight:700}}>🕐 Votre essai de 7 jours est activé !</p>
-              <p style={{margin:'4px 0 0',color:'var(--slate)',fontSize:13}}>Connectez-vous avec les identifiants reçus par email.</p>
+              <p style={{margin:0,fontSize:13,color:'var(--teal)',fontWeight:700}}>🕐 Votre essai de 7 jours sera activé après l’enregistrement de la carte.</p>
+              <p style={{margin:'4px 0 0',color:'var(--slate)',fontSize:13}}>Connectez-vous après validation Stripe avec les identifiants reçus.</p>
             </div>
             <button className="btn-main" onClick={()=>navigate('/login')}
               style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer'}}>
