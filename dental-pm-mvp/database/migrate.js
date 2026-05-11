@@ -14,6 +14,7 @@ async function runMigrations() {
     '../migrations/20260505-counters-table-fix',
     '../migrations/20260506-invoice-schema-fix',
     '../migrations/20260511-purchase-general-expenses',
+    '../migrations/20260512-clinic-subscription-status-pending',
   ];
 
   for (const migrationPath of migrations) {
