@@ -915,13 +915,28 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
     // ── customer.subscription.updated → trial → actif après paiement J+7 ──
     if (event.type === 'customer.subscription.updated') {
       const subObj = obj;
-      if (clinicId && subObj.status === 'active' && !subObj.trial_end) {
+      if (clinicId && subObj.cancel_at_period_end) {
+        const { Clinic, Subscription } = require('../models');
+        const Op = require('sequelize').Op;
+        await Subscription.update(
+          {
+            status: 'CANCELLED',
+            auto_renew: false,
+            cancelled_at: new Date(),
+            cancellation_reason: 'Annulation programmée depuis Stripe'
+          },
+          { where: { clinic_id: clinicId, status: { [Op.in]: ['TRIAL','ACTIVE'] } } }
+        ).catch(()=>{});
+        await Clinic.update({ subscription_status: 'CANCELLED', is_active: false }, { where: { id: clinicId } }).catch(()=>{});
+        console.log(`[Stripe] Annulation programmée → compte désactivé: clinic=${clinicId}`);
+      }
+      else if (clinicId && subObj.status === 'active' && !subObj.trial_end) {
         // Trial terminé, abonnement maintenant actif (Stripe a prélevé)
         const { activateSubscriptionAfterPayment } = require('../job/subscriptionManager');
         await activateSubscriptionAfterPayment(clinicId, planCode, null).catch(()=>{});
         console.log(`[Stripe] Subscription updated → active: clinic=${clinicId} plan=${planCode}`);
       }
-      if (clinicId && ['past_due', 'unpaid', 'incomplete_expired'].includes(subObj.status) && !subObj.trial_end) {
+      else if (clinicId && ['past_due', 'unpaid', 'incomplete_expired'].includes(subObj.status) && !subObj.trial_end) {
         const { Clinic, Subscription } = require('../models');
         const Op = require('sequelize').Op;
         await Subscription.update(
@@ -938,7 +953,7 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
       if (clinicId) {
         const { Clinic, Subscription } = require('../models');
         await Subscription.update({ status: 'CANCELLED' }, { where: { clinic_id: clinicId, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL'] } } });
-        await Clinic.update({ subscription_status: 'CANCELLED' }, { where: { id: clinicId } });
+        await Clinic.update({ subscription_status: 'CANCELLED', is_active: false }, { where: { id: clinicId } });
         console.log(`[Stripe] Abonnement annulé: clinic=${clinicId}`);
       }
     }

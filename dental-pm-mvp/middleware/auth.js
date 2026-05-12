@@ -1,5 +1,28 @@
 const jwt  = require('jsonwebtoken');
-const { User } = require('../models');
+const { User, Clinic } = require('../models');
+
+const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['ACTIVE', 'TRIAL']);
+
+function buildClinicAccessError(clinic) {
+  return {
+    error: 'Abonnement annulé ou inactif. Accès à la plateforme désactivé.',
+    code: 'SUBSCRIPTION_INACTIVE',
+    subscription_status: clinic?.subscription_status || null
+  };
+}
+
+function hasActiveClinicAccess(clinic) {
+  return !!clinic
+    && clinic.is_active === true
+    && ACTIVE_SUBSCRIPTION_STATUSES.has(clinic.subscription_status);
+}
+
+async function loadClinicAccess(clinicId) {
+  if (!clinicId) return null;
+  return Clinic.findByPk(clinicId, {
+    attributes: ['id', 'name', 'is_active', 'subscription_status', 'current_plan']
+  });
+}
 
 const authenticateToken = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -35,6 +58,13 @@ const authenticateToken = async (req, res, next) => {
     // ✅ Si clinic_id encore null, setter aussi dans req.user pour cohérence
     if (req.clinic_id) {
       user.clinic_id = req.clinic_id;
+    }
+
+    if (user.role !== 'SUPER_ADMIN') {
+      const clinic = await loadClinicAccess(req.clinic_id);
+      if (!hasActiveClinicAccess(clinic)) {
+        return res.status(403).json(buildClinicAccessError(clinic));
+      }
     }
 
     next();
@@ -132,4 +162,14 @@ const blockSuperAdminFromMedicalData = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, requireRole, optionalAuth, requireClinicScope, requireSuperAdmin, blockSuperAdminFromMedicalData };
+module.exports = {
+  authenticateToken,
+  requireRole,
+  optionalAuth,
+  requireClinicScope,
+  requireSuperAdmin,
+  blockSuperAdminFromMedicalData,
+  hasActiveClinicAccess,
+  buildClinicAccessError,
+  loadClinicAccess
+};

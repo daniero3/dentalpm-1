@@ -11,6 +11,7 @@ function buildAuthApp() {
   const models = {
     Clinic: {
       findOne: jest.fn(),
+      findByPk: jest.fn(),
       create: jest.fn()
     },
     User: {
@@ -165,6 +166,39 @@ describe('subscription trial flow', () => {
     const createdSub = models.Subscription.create.mock.calls[0][0];
     const diffDays = Math.round((new Date(createdSub.end_date) - new Date(createdSub.start_date)) / 86400000);
     expect(diffDays).toBe(7);
+  });
+
+  test('blocks login when the clinic subscription is cancelled', async () => {
+    process.env.JWT_SECRET = 'jwt_test_secret';
+    const { app, models } = buildAuthApp();
+    const user = {
+      id: userId,
+      username: 'dr_test',
+      email: 'test@cabinet.mg',
+      full_name: 'Jean Rakoto',
+      role: 'ADMIN',
+      clinic_id: clinicId,
+      is_active: true,
+      validatePassword: jest.fn().mockResolvedValue(true),
+      update: jest.fn().mockResolvedValue()
+    };
+
+    models.User.findOne.mockResolvedValue(user);
+    models.Clinic.findByPk.mockResolvedValue({
+      id: clinicId,
+      name: 'Cabinet Test',
+      is_active: false,
+      subscription_status: 'CANCELLED',
+      current_plan: 'PRO'
+    });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'dr_test', password: 'ValidPassword1!' });
+
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe('SUBSCRIPTION_INACTIVE');
+    expect(user.update).not.toHaveBeenCalled();
   });
 
   test('creates a Stripe checkout session with a 7-day trial', async () => {
@@ -414,6 +448,99 @@ describe('subscription trial flow', () => {
         is_active: true
       }),
       expect.objectContaining({ where: { id: clinicId } })
+    );
+  });
+
+  test('deactivates clinic access when Stripe subscription is deleted', async () => {
+    const stripeMock = {
+      checkout: {
+        sessions: {
+          create: jest.fn()
+        }
+      },
+      webhooks: {
+        constructEvent: jest.fn((body, sig, secret) => ({
+          type: 'customer.subscription.deleted',
+          data: {
+            object: {
+              id: 'sub_test_123',
+              metadata: { clinic_id: clinicId, plan: 'PRO' }
+            }
+          }
+        }))
+      }
+    };
+
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+    const { app, models } = buildBillingApp(stripeMock);
+
+    const res = await request(app)
+      .post('/api/billing/webhook/stripe')
+      .set('Content-Type', 'application/json')
+      .set('stripe-signature', 'sig_test')
+      .send(JSON.stringify({ id: 'evt_123' }));
+
+    expect(res.status).toBe(200);
+    expect(models.Subscription.update).toHaveBeenCalledWith(
+      { status: 'CANCELLED' },
+      expect.objectContaining({
+        where: expect.objectContaining({ clinic_id: clinicId })
+      })
+    );
+    expect(models.Clinic.update).toHaveBeenCalledWith(
+      { subscription_status: 'CANCELLED', is_active: false },
+      { where: { id: clinicId } }
+    );
+  });
+
+  test('deactivates clinic access when Stripe cancellation is scheduled', async () => {
+    const stripeMock = {
+      checkout: {
+        sessions: {
+          create: jest.fn()
+        }
+      },
+      webhooks: {
+        constructEvent: jest.fn((body, sig, secret) => ({
+          type: 'customer.subscription.updated',
+          data: {
+            object: {
+              id: 'sub_test_123',
+              status: 'active',
+              trial_end: null,
+              cancel_at_period_end: true,
+              metadata: { clinic_id: clinicId, plan: 'PRO' }
+            }
+          }
+        }))
+      }
+    };
+
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test';
+    const { app, models } = buildBillingApp(stripeMock);
+
+    const res = await request(app)
+      .post('/api/billing/webhook/stripe')
+      .set('Content-Type', 'application/json')
+      .set('stripe-signature', 'sig_test')
+      .send(JSON.stringify({ id: 'evt_123' }));
+
+    expect(res.status).toBe(200);
+    expect(models.Subscription.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'CANCELLED',
+        auto_renew: false,
+        cancellation_reason: 'Annulation programmée depuis Stripe'
+      }),
+      expect.objectContaining({
+        where: expect.objectContaining({ clinic_id: clinicId })
+      })
+    );
+    expect(models.Clinic.update).toHaveBeenCalledWith(
+      { subscription_status: 'CANCELLED', is_active: false },
+      { where: { id: clinicId } }
     );
   });
 });

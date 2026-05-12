@@ -435,6 +435,11 @@ router.post('/:id/cancel', [
       cancellation_reason: reason || 'Annulation demandée'
     });
 
+    await Clinic.update(
+      { subscription_status: 'CANCELLED', is_active: false },
+      { where: { id: subscription.clinic_id } }
+    );
+
     res.json({
       message: 'Abonnement annulé avec succès',
       subscription

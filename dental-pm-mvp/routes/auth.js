@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { User, Clinic, AuditLog } = require('../models');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, hasActiveClinicAccess, buildClinicAccessError } = require('../middleware/auth');
 const { loginRateLimiter, resetLoginAttempts } = require('../middleware/rateLimiter');
 const { getCurrentPlanForClinic, getCurrentSubscriptionForClinic } = require('../utils/subscriptionResolver');
 const { Op } = require('sequelize');
@@ -100,10 +100,9 @@ router.post('/login', loginRateLimiter, [
     const isValid = await user.validatePassword(password);
     if (!isValid) return res.status(401).json({ error:"Nom d'utilisateur ou mot de passe incorrect" });
 
-    await user.update({ last_login_at: new Date() });
-
     // SUPER_ADMIN → token direct
     if (user.role === 'SUPER_ADMIN') {
+      await user.update({ last_login_at: new Date() });
       const token = jwt.sign(
         { userId: user.id, username: user.username, role: user.role, clinic_id: null },
         process.env.JWT_SECRET,
@@ -125,7 +124,7 @@ router.post('/login', loginRateLimiter, [
       // Si l'utilisateur a une clinique assignée
       if (user.clinic_id) {
         const clinic = await Clinic.findByPk(user.clinic_id, {
-          attributes: ['id', 'name', 'city', 'phone', 'subscription_status', 'current_plan']
+          attributes: ['id', 'name', 'city', 'phone', 'is_active', 'subscription_status', 'current_plan']
         });
         if (clinic) availableClinics = [clinic];
       }
@@ -146,12 +145,19 @@ router.post('/login', loginRateLimiter, [
       });
     }
 
+    const selectedClinic = availableClinics.find(c => c.id === resolvedClinicId) || availableClinics[0] || null;
+    if (!hasActiveClinicAccess(selectedClinic)) {
+      return res.status(403).json(buildClinicAccessError(selectedClinic));
+    }
+
     const tokenPayload = {
       userId:    user.id,
       username:  user.username,
       role:      user.role,
       clinic_id: resolvedClinicId
     };
+
+    await user.update({ last_login_at: new Date() });
 
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '24h' });
 
