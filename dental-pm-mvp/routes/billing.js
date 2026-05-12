@@ -164,6 +164,73 @@ function generateRef(clinicId) {
   return `DPM-${ts}-${rand}`;
 }
 
+async function activateStripeTrial({ clinicId, planCode = 'PRO', stripeSubscriptionId = null, trialEnd = null }) {
+  if (!clinicId) throw new Error('clinic_id manquant');
+
+  const now = new Date();
+  const endDate = trialEnd || new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const PLAN_USERS = { ESSENTIAL: 2, PRO: 5, GROUP: 50 };
+  const normalizedPlan = PLAN_PRICES[planCode] ? planCode : 'PRO';
+
+  let existingActive = await Subscription.findOne({
+    where: {
+      clinic_id: clinicId,
+      status: { [Op.in]: ['ACTIVE', 'TRIAL'] },
+      ...(stripeSubscriptionId ? { stripe_subscription_id: stripeSubscriptionId } : {})
+    },
+    order: [['created_at', 'DESC']]
+  });
+
+  if (!existingActive) {
+    existingActive = await Subscription.findOne({
+      where: {
+        clinic_id: clinicId,
+        status: { [Op.in]: ['ACTIVE', 'TRIAL'] },
+        end_date: { [Op.gte]: now }
+      },
+      order: [['created_at', 'DESC']]
+    });
+  }
+
+  if (existingActive) {
+    if (stripeSubscriptionId && !existingActive.stripe_subscription_id) {
+      await existingActive.update({ stripe_subscription_id: stripeSubscriptionId }).catch(() => {});
+    }
+    await Clinic.update(
+      { subscription_status: existingActive.status, current_plan: existingActive.plan, is_active: true },
+      { where: { id: clinicId } }
+    );
+    return existingActive;
+  }
+
+  await Subscription.update(
+    { status: 'SUPERSEDED' },
+    { where: { clinic_id: clinicId, status: { [Op.in]: ['PENDING', 'ACTIVE', 'TRIAL', 'EXPIRED', 'TRIAL_EXPIRED'] } } }
+  );
+
+  const subscription = await Subscription.create({
+    clinic_id:         clinicId,
+    plan:              normalizedPlan,
+    status:            'TRIAL',
+    billing_cycle:     'MONTHLY',
+    start_date:        now,
+    trial_end_date:    endDate,
+    end_date:          endDate,
+    max_practitioners: PLAN_USERS[normalizedPlan] || 5,
+    price_mga:         PLAN_PRICES[normalizedPlan] || PLAN_PRICES.PRO,
+    monthly_price_mga: PLAN_PRICES[normalizedPlan] || PLAN_PRICES.PRO,
+    annual_price_mga:  (PLAN_PRICES[normalizedPlan] || PLAN_PRICES.PRO) * 12,
+    stripe_subscription_id: stripeSubscriptionId,
+  });
+
+  await Clinic.update(
+    { subscription_status: 'TRIAL', current_plan: normalizedPlan, is_active: true },
+    { where: { id: clinicId } }
+  );
+
+  return subscription;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // GET /api/billing/status — Statut abonnement actuel
 // ═══════════════════════════════════════════════════════════════════════════
@@ -515,7 +582,7 @@ router.post('/public-checkout', async (req, res) => {
         metadata: { plan: plan_code }
       },
       metadata: { plan: plan_code },
-      success_url: FRONT + '/login?checkout=success&plan=' + plan_code,
+      success_url: FRONT + '/login?checkout=success&plan=' + plan_code + '&session_id={CHECKOUT_SESSION_ID}',
       cancel_url:  FRONT + '/register?checkout=cancelled',
       locale: 'fr',
     };
@@ -541,6 +608,67 @@ router.post('/public-checkout', async (req, res) => {
       code: error.code || 'STRIPE_CHECKOUT_ERROR',
       details: error.message
     });
+  }
+});
+
+// ── POST /api/billing/finalize-public-checkout ───────────────────────────────
+// Filet de sécurité après retour Stripe: active l'essai même si le webhook est
+// retardé ou mal configuré.
+router.post('/finalize-public-checkout', [
+  body('session_id').isString().isLength({ min: 10, max: 255 })
+], async (req, res) => {
+  try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Paiement Stripe non configuré' });
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Session Stripe invalide', details: errors.array() });
+    }
+
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const session = await stripe.checkout.sessions.retrieve(req.body.session_id, {
+      expand: ['subscription']
+    });
+
+    if (session.mode !== 'subscription' || session.status !== 'complete') {
+      return res.status(400).json({ error: 'Checkout Stripe non terminé' });
+    }
+
+    const stripeSub = session.subscription && typeof session.subscription === 'object'
+      ? session.subscription
+      : null;
+    const clinicId = session.metadata?.clinic_id
+      || session.client_reference_id
+      || stripeSub?.metadata?.clinic_id;
+    const planCode = session.metadata?.plan || stripeSub?.metadata?.plan || 'PRO';
+
+    if (!clinicId) {
+      return res.status(400).json({ error: 'Cabinet non identifié dans la session Stripe' });
+    }
+
+    const trialEnd = stripeSub?.trial_end
+      ? new Date(stripeSub.trial_end * 1000)
+      : null;
+
+    const subscription = await activateStripeTrial({
+      clinicId,
+      planCode,
+      stripeSubscriptionId: stripeSub?.id || (typeof session.subscription === 'string' ? session.subscription : null),
+      trialEnd
+    });
+
+    res.json({
+      activated: true,
+      status: subscription.status,
+      plan: subscription.plan,
+      clinic_id: clinicId,
+      end_date: subscription.end_date
+    });
+  } catch (error) {
+    console.error('Finalize public checkout error:', error.message);
+    res.status(500).json({ error: 'Erreur activation essai Stripe', details: error.message });
   }
 });
 
@@ -640,39 +768,13 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
         try {
           const { Clinic, Subscription } = require('../models');
 
-          // Mettre à jour ou créer l'abonnement TRIAL dans notre DB
-          const now      = new Date();
-          const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-          const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
-          const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };
-
-          // Superseder l'ancien abonnement
-          await Subscription.update(
-            { status: 'SUPERSEDED' },
-            { where: { clinic_id: clinicId, status: { [require('sequelize').Op.in]: ['ACTIVE','TRIAL','EXPIRED','TRIAL_EXPIRED'] } } }
-          ).catch(()=>{});
-
-          // Créer abonnement TRIAL (Stripe prélèvera au J+7)
-          await Subscription.create({
-            clinic_id:         clinicId,
-            plan:              planCode,
-            status:            'TRIAL',
-            billing_cycle:     'MONTHLY',
-            start_date:        now,
-            trial_end_date:    trialEnd,
-            end_date:          trialEnd,
-            max_practitioners: PLAN_USERS[planCode] || 5,
-            price_mga:         PLAN_PRICES[planCode] || 199000,
-            monthly_price_mga: PLAN_PRICES[planCode] || 199000,
-            annual_price_mga:  (PLAN_PRICES[planCode] || 199000) * 12,
-            stripe_subscription_id: obj.subscription || null,
-          }).catch(()=>{});
-
-          // Mettre à jour le cabinet
-          await Clinic.update(
-            { subscription_status: 'TRIAL', current_plan: planCode, is_active: true },
-            { where: { id: clinicId } }
-          ).catch(()=>{});
+          const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          await activateStripeTrial({
+            clinicId,
+            planCode,
+            stripeSubscriptionId: obj.subscription || null,
+            trialEnd
+          });
 
           // Email de bienvenue
           try {

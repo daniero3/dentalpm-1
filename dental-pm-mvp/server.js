@@ -299,7 +299,7 @@ app.use('/api/media',            requireAuth, requireClinicScope, blockMedical, 
 app.use('/api/subscriptions',    requireAuth, subscriptionsRoutes);
 // Webhooks de paiement et checkout public restent sans auth; le reste de billing est protégé.
 app.use('/api/billing', (req, res, next) => {
-  const publicPaths = new Set(['/public-checkout', '/webhook/stripe', '/webhook/mvola', '/webhook/orange', '/webhook/generic']);
+  const publicPaths = new Set(['/public-checkout', '/finalize-public-checkout', '/webhook/stripe', '/webhook/mvola', '/webhook/orange', '/webhook/generic']);
   if (publicPaths.has(req.path)) return next();
   return requireAuth(req, res, next);
 }, billingRoutes);

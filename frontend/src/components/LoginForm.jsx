@@ -77,6 +77,7 @@ const LoginForm = () => {
   const [loading, setLoading]             = useState(false);
   const [loadingClinics, setLoadingClinics] = useState(false);
   const [error, setError]                 = useState('');
+  const [checkoutNotice, setCheckoutNotice] = useState('');
   const [showPassword, setShowPassword]   = useState(false);
   const [registerData, setRegisterData]   = useState({
     username:'', email:'', password:'', role:'', full_name:'', clinic_id:''
@@ -85,7 +86,25 @@ const LoginForm = () => {
   useEffect(() => {
     // Charger les cabinets disponibles pour l'inscription
     fetchAllClinics();
+    finalizeStripeCheckout();
   }, []);
+
+  const finalizeStripeCheckout = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (params.get('checkout') !== 'success' || !sessionId) return;
+
+    setCheckoutNotice('Activation de votre essai en cours...');
+    try {
+      await axios.post(`${API}/billing/finalize-public-checkout`, { session_id: sessionId });
+      setCheckoutNotice('Votre essai est actif. Connectez-vous avec les identifiants reçus lors de l’inscription.');
+      const cleanUrl = `${window.location.pathname}?checkout=success`;
+      window.history.replaceState({}, '', cleanUrl);
+      fetchAllClinics();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Impossible de confirmer automatiquement l’essai Stripe.');
+    }
+  };
 
   const fetchAllClinics = async () => {
     setLoadingClinics(true);
@@ -178,6 +197,12 @@ const LoginForm = () => {
 
   const ErrorBox = ({ msg }) => msg ? (
     <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', color:'#B91C1C', padding:'10px 14px', borderRadius:8, fontSize:13, marginBottom:16 }}>
+      {msg}
+    </div>
+  ) : null;
+
+  const NoticeBox = ({ msg }) => msg ? (
+    <div style={{ background:'#F0FDFE', border:'1px solid #99F6E4', color:'#0F766E', padding:'10px 14px', borderRadius:8, fontSize:13, marginBottom:16 }}>
       {msg}
     </div>
   ) : null;
@@ -285,6 +310,7 @@ const LoginForm = () => {
           <>
             <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:20, color:'#0F172A', margin:'0 0 4px' }}>Connexion</h2>
             <p style={{ color:'#64748B', fontSize:13, marginBottom:24 }}>Accédez à votre espace de gestion</p>
+            <NoticeBox msg={checkoutNotice} />
             <ErrorBox msg={error} />
             <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:16 }}>
               <div className="login-field-anim" style={{ animationDelay:'.08s' }}>

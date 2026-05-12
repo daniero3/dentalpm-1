@@ -96,7 +96,7 @@ describe('subscription trial flow', () => {
     if (global.clearInterval.mockRestore) global.clearInterval.mockRestore();
   });
 
-  test('creates a cabinet with a 7-day trial', async () => {
+  test('creates a cabinet with a pending subscription before Stripe checkout', async () => {
     const { app, models } = buildAuthApp();
     const existingClinic = null;
     models.Clinic.findOne.mockResolvedValue(existingClinic);
@@ -115,23 +115,23 @@ describe('subscription trial flow', () => {
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.message).toMatch(/Essai de 7 jours activé/i);
+    expect(res.body.message).toMatch(/Carte requise pour activer l’essai de 7 jours/i);
     expect(models.Clinic.create).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Cabinet Test',
       email: 'test@cabinet.mg',
-      subscription_status: 'TRIAL',
+      subscription_status: 'PENDING',
       current_plan: 'PRO',
-      is_active: true
+      is_active: false
     }));
     expect(models.Subscription.create).toHaveBeenCalledWith(expect.objectContaining({
       clinic_id: clinicId,
       plan: 'PRO',
-      status: 'TRIAL',
+      status: 'PENDING',
       billing_cycle: 'MONTHLY'
     }));
 
     const createdSub = models.Subscription.create.mock.calls[0][0];
-    const diffDays = Math.round((new Date(createdSub.trial_end_date) - new Date(createdSub.start_date)) / 86400000);
+    const diffDays = Math.round((new Date(createdSub.end_date) - new Date(createdSub.start_date)) / 86400000);
     expect(diffDays).toBe(7);
   });
 
@@ -151,7 +151,13 @@ describe('subscription trial flow', () => {
     };
 
     process.env.STRIPE_SECRET_KEY = 'sk_test_123';
-    const { app } = buildBillingApp(stripeMock);
+    const { app, models } = buildBillingApp(stripeMock);
+    models.Clinic.findByPk.mockResolvedValue({
+      id: clinicId,
+      name: 'Cabinet Test',
+      email: 'test@cabinet.mg',
+      stripe_customer_id: 'cus_test_123'
+    });
 
     const res = await request(app)
       .post('/api/billing/public-checkout')
@@ -167,8 +173,74 @@ describe('subscription trial flow', () => {
         metadata: expect.objectContaining({ plan: 'PRO', clinic_id: clinicId })
       }),
       metadata: expect.objectContaining({ plan: 'PRO', clinic_id: clinicId }),
-      customer_email: 'test@cabinet.mg'
+      customer: 'cus_test_123',
+      success_url: expect.stringContaining('session_id={CHECKOUT_SESSION_ID}')
     }));
+  });
+
+  test('finalizes Stripe checkout and activates the trial from session_id', async () => {
+    const stripeMock = {
+      checkout: {
+        sessions: {
+          retrieve: jest.fn().mockResolvedValue({
+            mode: 'subscription',
+            status: 'complete',
+            client_reference_id: clinicId,
+            metadata: { clinic_id: clinicId, plan: 'PRO' },
+            subscription: {
+              id: 'sub_test_123',
+              trial_end: Math.floor((Date.now() + 7 * 86400000) / 1000),
+              metadata: { clinic_id: clinicId, plan: 'PRO' }
+            }
+          })
+        }
+      },
+      webhooks: {
+        constructEvent: jest.fn()
+      }
+    };
+
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    const { app, models } = buildBillingApp(stripeMock);
+    models.Subscription.findOne.mockResolvedValue(null);
+    models.Subscription.create.mockResolvedValue({
+      id: 'sub_new',
+      status: 'TRIAL',
+      plan: 'PRO',
+      end_date: '2026-05-19'
+    });
+
+    const res = await request(app)
+      .post('/api/billing/finalize-public-checkout')
+      .send({ session_id: 'cs_test_123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.activated).toBe(true);
+    expect(stripeMock.checkout.sessions.retrieve).toHaveBeenCalledWith('cs_test_123', {
+      expand: ['subscription']
+    });
+    expect(models.Subscription.update).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'SUPERSEDED' }),
+      expect.objectContaining({
+        where: expect.objectContaining({
+          clinic_id: clinicId
+        })
+      })
+    );
+    expect(models.Subscription.create).toHaveBeenCalledWith(expect.objectContaining({
+      clinic_id: clinicId,
+      plan: 'PRO',
+      status: 'TRIAL',
+      stripe_subscription_id: 'sub_test_123'
+    }));
+    expect(models.Clinic.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subscription_status: 'TRIAL',
+        current_plan: 'PRO',
+        is_active: true
+      }),
+      expect.objectContaining({ where: { id: clinicId } })
+    );
   });
 
   test('activates the trial after Stripe checkout completion', async () => {
