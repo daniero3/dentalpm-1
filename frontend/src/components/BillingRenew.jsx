@@ -99,7 +99,12 @@ const BillingRenew = () => {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="dpm-card w-full max-w-md">
+          <div className="dpm-skeleton h-5 w-1/2 mb-4" />
+          <div className="dpm-skeleton h-3 w-full mb-2" />
+          <div className="dpm-skeleton h-3 w-3/4 mb-6" />
+          <div className="dpm-skeleton h-10 w-full" />
+        </div>
       </div>
     );
   }
@@ -242,7 +247,7 @@ const BillingRenew = () => {
             className="w-full bg-blue-600 hover:bg-blue-700"
             data-testid="submit-payment-btn"
           >
-            {submitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+            {submitting ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
             Soumettre le paiement
           </Button>
         </CardContent>

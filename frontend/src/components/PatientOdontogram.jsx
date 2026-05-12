@@ -188,8 +188,11 @@ const PatientOdontogram = () => {
   ].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 8);
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Loader2 className="h-8 w-8 animate-spin" style={{ color:'#0D7A87' }} />
+    <div className="dpm-card mx-auto my-6 grid max-w-xl gap-3">
+      <div className="dpm-skeleton h-5 w-1/3" />
+      <div className="dpm-skeleton h-3 w-full" />
+      <div className="dpm-skeleton h-3 w-4/5" />
+      <div className="dpm-skeleton h-10 w-full" />
     </div>
   );
 
@@ -207,7 +210,7 @@ const PatientOdontogram = () => {
           <Button variant="outline" onClick={fetchOdontogram}><RefreshCw className="h-4 w-4 mr-2" />Recharger</Button>
           <Button onClick={handleSaveAll} disabled={saving || !Object.keys(pendingChanges).length}
             className="bg-green-600 hover:bg-green-700 text-white" data-testid="save-all-btn">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saving ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             Sauvegarder ({Object.keys(pendingChanges).length})
           </Button>
           {Object.keys(pendingChanges).length > 0 && (

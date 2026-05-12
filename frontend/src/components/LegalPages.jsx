@@ -140,8 +140,11 @@ const LegalPages = () => {
                   <ScrollArea className="h-[600px]">
                     <div className="p-6 prose prose-slate dark:prose-invert max-w-none">
                       {doc.loading ? (
-                        <div className="flex items-center justify-center py-12">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <div className="space-y-3 py-12">
+                          <div className="dpm-skeleton h-4 w-3/4" />
+                          <div className="dpm-skeleton h-4 w-full" />
+                          <div className="dpm-skeleton h-4 w-5/6" />
+                          <div className="dpm-skeleton h-4 w-2/3" />
                         </div>
                       ) : (
                         <ReactMarkdown>{doc.content}</ReactMarkdown>

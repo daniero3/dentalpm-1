@@ -26,7 +26,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
       .then(reg => {
-        console.log('[PWA] SW enregistré:', reg.scope);
+        if (process.env.NODE_ENV !== 'production') console.log('[PWA] SW enregistré:', reg.scope);
 
         // Vérifier les mises à jour toutes les 60 secondes
         setInterval(() => reg.update(), 60 * 1000);
@@ -36,7 +36,7 @@ if ('serviceWorker' in navigator) {
           const worker = reg.installing;
           worker?.addEventListener('statechange', () => {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Nouvelle version disponible — rechargement...');
+              if (process.env.NODE_ENV !== 'production') console.log('[PWA] Nouvelle version disponible — rechargement...');
               // Forcer la mise à jour immédiate
               worker.postMessage('SKIP_WAITING');
             }
@@ -45,14 +45,14 @@ if ('serviceWorker' in navigator) {
 
         // Recharger quand le SW prend le contrôle
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('[PWA] Nouveau SW actif — rechargement page');
+          if (process.env.NODE_ENV !== 'production') console.log('[PWA] Nouveau SW actif — rechargement page');
           window.location.reload();
         });
 
         // Écouter les messages du SW
         navigator.serviceWorker.addEventListener('message', e => {
           if (e.data?.type === 'SW_UPDATED') {
-            console.log('[PWA] Cache mis à jour:', e.data.cache);
+            if (process.env.NODE_ENV !== 'production') console.log('[PWA] Cache mis à jour:', e.data.cache);
           }
         });
       })
@@ -302,29 +302,28 @@ const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// ── Loading Spinner ────────────────────────────────────────────────────────
-const LoadingSpinner = () => (
+// ── Loading Skeleton ───────────────────────────────────────────────────────
+const LoadingSkeleton = () => (
   <div style={{
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '20px',
-    background: 'var(--bg)',
+    gap: 'var(--space-4)',
+    background: 'var(--bg-base)',
     animation: 'fadeIn 0.3s ease both'
   }}>
-    <div style={{
-      width: 48, height: 48,
-      border: '3px solid var(--border)',
-      borderTopColor: 'var(--primary)',
-      borderRadius: '50%',
-      animation: 'spin 0.75s linear infinite'
-    }} />
-    <div className="loading-dots" style={{ display: 'flex', gap: 6 }}>
-      <span /><span /><span />
+    <div className="dpm-card" style={{ width: 'min(420px, calc(100vw - 32px))' }}>
+      <div className="dpm-skeleton" style={{ height: 18, width: '42%', marginBottom: 'var(--space-4)' }} />
+      <div className="dpm-skeleton" style={{ height: 12, width: '86%', marginBottom: 'var(--space-2)' }} />
+      <div className="dpm-skeleton" style={{ height: 12, width: '70%', marginBottom: 'var(--space-6)' }} />
+      <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
+        <div className="dpm-skeleton" style={{ height: 42 }} />
+        <div className="dpm-skeleton" style={{ height: 42 }} />
+      </div>
     </div>
-    <p style={{ color: 'var(--text-muted)', fontSize: 14, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+    <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-base)', fontFamily: 'var(--font-sans)' }}>
       Chargement...
     </p>
   </div>
@@ -333,14 +332,14 @@ const LoadingSpinner = () => (
 // Si déjà connecté et va sur /landing → rediriger vers dashboard
 const LandingRedirect = () => {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSkeleton />;
   return user ? <Navigate to="/" /> : <LandingPage />;
 };
 
 // Si déjà connecté et va sur /login → rediriger vers dashboard
 const LoginRedirect = () => {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSkeleton />;
   return user ? <Navigate to="/" /> : <LoginForm />;
 };
 
@@ -351,7 +350,7 @@ const MEDICAL_PATHS = ['/', '/patients', '/appointments', '/invoices', '/quotes'
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSkeleton />;
   if (!user) return <Navigate to="/landing" />;
   // SUPER_ADMIN ne peut pas accéder aux pages médicales des cabinets
   if (user.role === 'SUPER_ADMIN' && MEDICAL_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'))) {
@@ -362,7 +361,7 @@ const ProtectedRoute = ({ children }) => {
 
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSkeleton />;
   if (!user) return <Navigate to="/landing" />;
   if (!['SUPER_ADMIN', 'ADMIN'].includes(user.role)) return <Navigate to="/" />;
   return children;
@@ -412,9 +411,9 @@ const OfflineBanner = () => {
       zIndex:9999,
       padding:'10px 14px',
       borderRadius:12,
-      background:'#7F1D1D',
-      color:'#fff',
-      boxShadow:'0 12px 32px rgba(15,23,42,.22)',
+      background:'var(--danger)',
+      color:'var(--text-primary)',
+      boxShadow:'var(--shadow-md)',
       fontSize:13,
       fontWeight:700,
       textAlign:'center'
@@ -448,7 +447,7 @@ const MainLayout = ({ children }) => {
   const padding   = isMobile ? '10px 10px 80px' : '20px 24px 64px';
 
   return (
-    <div className="dpm-layout" style={{ display:'flex', height:'100vh', background:'var(--bg)', overflow:'hidden', position:'relative' }}>
+    <div className="dpm-layout" style={{ display:'flex', height:'100vh', background:'var(--bg-base)', overflow:'hidden', position:'relative' }}>
       <ModernSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       <div style={{
         display:'flex', flexDirection:'column', flex:1,
@@ -461,7 +460,7 @@ const MainLayout = ({ children }) => {
         <main className="dpm-main" style={{
           flex:1, overflowY:'auto', overflowX:'hidden',
           padding: padding,
-          background:'var(--bg)',
+          background:'var(--bg-base)',
           WebkitOverflowScrolling:'touch',
         }}>
           <div className="dpm-content-shell" style={{ maxWidth:1280, margin:'0 auto', width:'100%' }}>
@@ -469,7 +468,7 @@ const MainLayout = ({ children }) => {
           </div>
         </main>
         {!isMobile && (
-          <footer style={{ background:'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', borderTop:'1px solid var(--border)', padding:'10px 24px', textAlign:'center', fontSize:11, color:'var(--text-muted)', fontFamily:'DM Sans,sans-serif' }}>
+          <footer style={{ background:'var(--bg-surface)', backdropFilter:'blur(12px)', borderTop:'1px solid var(--border-subtle)', padding:'10px 24px', textAlign:'center', fontSize:'var(--text-xs)', color:'var(--text-secondary)', fontFamily:'var(--font-sans)' }}>
             © {new Date().getFullYear()} Daniero Global LLC — DentalPM Madagascar
           </footer>
         )}
@@ -481,13 +480,7 @@ const MainLayout = ({ children }) => {
 function App() {
   return (
     <React.Suspense fallback={
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#F5F7FA' }}>
-        <div style={{ textAlign:'center' }}>
-          <div style={{ width:48, height:48, border:'3px solid #E2E8F0', borderTopColor:'#0D7A87', borderRadius:'50%', animation:'spin .8s linear infinite', margin:'0 auto 16px' }}/>
-          <p style={{ color:'#64748B', fontSize:14 }}>Chargement DentalPM...</p>
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        </div>
-      </div>
+      <LoadingSkeleton />
     }>
       <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
         <AuthProvider>

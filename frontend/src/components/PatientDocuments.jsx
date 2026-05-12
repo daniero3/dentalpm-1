@@ -177,8 +177,11 @@ const PatientDocuments = () => {
   });
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 256 }}>
-      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    <div className="dpm-card" style={{ display: 'grid', gap: 'var(--space-3)', margin: 'var(--space-6) auto', maxWidth: 520 }}>
+      <div className="dpm-skeleton" style={{ height: 18, width: '40%' }} />
+      <div className="dpm-skeleton" style={{ height: 12, width: '90%' }} />
+      <div className="dpm-skeleton" style={{ height: 12, width: '72%' }} />
+      <div className="dpm-skeleton" style={{ height: 42, width: '100%' }} />
     </div>
   );
 
@@ -296,7 +299,7 @@ const PatientDocuments = () => {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #F1F5F9' }}>
             <Button type="button" variant="outline" onClick={() => setIsUploadOpen(false)}>Annuler</Button>
             <Button type="submit" disabled={uploading || !uploadForm.file}>
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload size={14} style={{ marginRight: 8 }} />}
+              {uploading ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <Upload size={14} style={{ marginRight: 8 }} />}
               Envoyer
             </Button>
           </div>

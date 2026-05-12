@@ -272,7 +272,7 @@ const OnboardingWizard = () => {
                   </div>
                 </div>
                 <Button onClick={handleStep1} disabled={loading} className="w-full mt-4">
-                  {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                  {loading ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : null}
                   Continuer <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </>
@@ -303,7 +303,7 @@ const OnboardingWizard = () => {
                     <ChevronLeft className="h-4 w-4 mr-2" /> Retour
                   </Button>
                   <Button onClick={handleStep2} disabled={loading} className="flex-1">
-                    {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                    {loading ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : null}
                     {logoUrl ? 'Continuer' : 'Passer'} <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -339,7 +339,7 @@ const OnboardingWizard = () => {
                     <ChevronLeft className="h-4 w-4 mr-2" /> Retour
                   </Button>
                   <Button onClick={handleStep3} disabled={loading} className="flex-1">
-                    {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                    {loading ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : null}
                     Continuer <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -373,7 +373,7 @@ const OnboardingWizard = () => {
                     <ChevronLeft className="h-4 w-4 mr-2" /> Retour
                   </Button>
                   <Button onClick={handleStep4} disabled={loading} className="flex-1">
-                    {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                    {loading ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : null}
                     {csvData.trim() ? 'Importer & Continuer' : 'Passer'} <ChevronRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -423,7 +423,7 @@ const OnboardingWizard = () => {
                 </div>
                 
                 <Button onClick={handleStep5} disabled={loading} variant="outline" className="w-full">
-                  {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Users className="h-4 w-4 mr-2" />}
+                  {loading ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <Users className="h-4 w-4 mr-2" />}
                   Ajouter cet utilisateur
                 </Button>
 
@@ -441,7 +441,7 @@ const OnboardingWizard = () => {
                     <ChevronLeft className="h-4 w-4 mr-2" /> Retour
                   </Button>
                   <Button onClick={handleComplete} disabled={completing} className="flex-1 bg-green-600 hover:bg-green-700">
-                    {completing ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                    {completing ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                     Terminer & Activer l'essai 7 jours
                   </Button>
                 </div>

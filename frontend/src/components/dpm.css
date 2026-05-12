@@ -180,8 +180,7 @@
 
 /* ── Loading ── */
 .dpm-loading { display: flex; align-items: center; justify-content: center; height: 220px; }
-@keyframes dpm-spin { to { transform: rotate(360deg); } }
-.dpm-spinner { width: 36px; height: 36px; border: 4px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: dpm-spin .8s linear infinite; }
+.dpm-spinner { width: 36px; height: 36px; border: 0; border-radius: var(--radius-md); background: linear-gradient(90deg, var(--bg-elevated), var(--pressed-surface), var(--bg-elevated)); background-size: 200% 100%; animation: dpm-shimmer 1.35s ease-in-out infinite; }
 
 /* ── Tabs ── */
 .dpm-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 12px; padding: 4px; border: 1px solid var(--border); }

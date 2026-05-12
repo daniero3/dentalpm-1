@@ -15,6 +15,27 @@ const API = process.env.REACT_APP_BACKEND_URL
     ? 'http://localhost:8001/api'
     : '/api'
 
+const theme = {
+  bgBase: 'var(--bg-base)',
+  bgSurface: 'var(--bg-surface)',
+  bgElevated: 'var(--bg-elevated)',
+  borderSubtle: 'var(--border-subtle)',
+  borderDefault: 'var(--border-default)',
+  accent: 'var(--accent-primary)',
+  accentGlow: 'var(--accent-glow)',
+  textPrimary: 'var(--text-primary)',
+  textSecondary: 'var(--text-secondary)',
+  textMuted: 'var(--text-muted)',
+  success: 'var(--success)',
+  hover: 'var(--hover-subtle)',
+  pressed: 'var(--pressed-surface)',
+  shadow: 'var(--shadow-md)',
+  radiusSm: 'var(--radius-sm)',
+  radiusMd: 'var(--radius-md)',
+  radiusLg: 'var(--radius-lg)',
+  transition: 'var(--transition)'
+}
+
 const normalizePlan = (value) => {
   const raw = typeof value === 'string'
     ? value
@@ -44,26 +65,26 @@ const ALL_NAV = [
 
 // ── Navigation SUPER_ADMIN — gestion plateforme uniquement ────────────────────
 const SUPER_ADMIN_NAV = [
-  { name:'Dashboard revenus',       href:'/subscription',   icon:LayoutDashboard, color:'#8B5CF6' },
-  { name:'Cabinets abonnés',        href:'/admin/clinics',  icon:Building2,       color:'#0D7A87' },
-  { name:'Validation paiements',    href:'/admin/payments', icon:CreditCard,      color:'#F59E0B' },
-  { name:'Fournisseurs partenaires',href:'/admin/partners', icon:Truck,           color:'#10B981' },
+  { name:'Dashboard revenus',       href:'/subscription',   icon:LayoutDashboard },
+  { name:'Cabinets abonnés',        href:'/admin/clinics',  icon:Building2 },
+  { name:'Validation paiements',    href:'/admin/payments', icon:CreditCard },
+  { name:'Fournisseurs partenaires',href:'/admin/partners', icon:Truck },
 ]
 
 const NAV_COLORS = {
-  '/':            '#0D7A87',
-  '/patients':    '#3B4FD8',
-  '/appointments':'#8B5CF6',
-  '/quotes':      '#F59E0B',
-  '/invoices':    '#0EA570',
-  '/reports':     '#06B6D4',
-  '/inventory':   '#F05A28',
-  '/purchases':   '#EC4899',
-  '/suppliers':   '#84CC16',
-  '/lab':         '#A855F7',
-  '/mailing':     '#14B8A6',
-  '/settings':    '#6B7280',
-  '/settings/pricing': '#6B7280',
+  '/': theme.accent,
+  '/patients': theme.accent,
+  '/appointments': theme.accent,
+  '/quotes': theme.accent,
+  '/invoices': theme.accent,
+  '/reports': theme.accent,
+  '/inventory': theme.accent,
+  '/purchases': theme.accent,
+  '/suppliers': theme.accent,
+  '/lab': theme.accent,
+  '/mailing': theme.accent,
+  '/settings': theme.accent,
+  '/settings/pricing': theme.accent,
 }
 
 // ── Plan requis par item verrouillé ───────────────────────────────────────────
@@ -86,7 +107,7 @@ const LogoCSS = () => <style>{`
 
 const DentalLogo = ({ size=36 }) => (
   <div style={{ width:size, height:size, borderRadius:'50%', overflow:'hidden', flexShrink:0, display:'block',
-    boxShadow:'0 2px 10px rgba(255,255,255,.2), 0 4px 18px rgba(0,0,0,.25)' }}>
+    boxShadow: theme.shadow }}>
     <img src="/fix-logo.jpeg" alt="DPM"
       style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
   </div>
@@ -96,9 +117,9 @@ const sidebarShell = {
   height:'100%',
   display:'flex',
   flexDirection:'column',
-  background:'linear-gradient(180deg,#0C2332 0%,#102F42 56%,#0D3D4A 100%)',
-  boxShadow:'10px 0 36px rgba(15,23,42,.18)',
-  borderRight:'1px solid rgba(255,255,255,.08)',
+  background: theme.bgSurface,
+  boxShadow: theme.shadow,
+  borderRight:`1px solid ${theme.borderSubtle}`,
   position:'relative',
   overflow:'hidden'
 }
@@ -179,24 +200,24 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   const NavItem = ({ item }) => {
     const active = isActive(item.href)
     const Icon   = item.icon
-    const color  = NAV_COLORS[item.href] || '#0D7A87'
+    const color  = NAV_COLORS[item.href] || theme.accent
     return (
       <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div title={collapsed ? item.name : ''}
-          style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px',
-            borderRadius:12, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
-            background: active ? '#FFFFFF' : 'transparent',
-            border: active ? '1px solid rgba(255,255,255,.7)' : '1px solid transparent',
-            boxShadow: active ? '0 8px 22px rgba(15,23,42,.18)' : 'none',
-            transition:'all .18s', position:'relative' }}
-          onMouseEnter={e=>{ if(!active){ e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor='rgba(255,255,255,.12)'; }}}
+          style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
+            borderRadius:theme.radiusSm, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
+            background: active ? theme.accentGlow : 'transparent',
+            border: active ? `1px solid ${theme.borderDefault}` : '1px solid transparent',
+            boxShadow: active ? 'var(--shadow-sm)' : 'none',
+            transition:theme.transition, position:'relative' }}
+          onMouseEnter={e=>{ if(!active){ e.currentTarget.style.background=theme.hover; e.currentTarget.style.borderColor=theme.borderSubtle; }}}
           onMouseLeave={e=>{ if(!active){ e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='transparent'; }}}>
-          {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:3, borderRadius:'0 4px 4px 0', background:color, boxShadow:`0 0 10px ${color}66` }}/>}
-          <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? `${color}14` : 'rgba(255,255,255,.08)', transition:'all .18s' }}>
-            <Icon size={16} color={active ? color : 'rgba(226,232,240,.72)'}/>
+          {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:2, borderRadius:'0 4px 4px 0', background:color, boxShadow:'0 0 12px var(--accent-glow)' }}/>}
+          <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? theme.accentGlow : theme.pressed, transition:theme.transition }}>
+            <Icon size={16} color={active ? color : theme.textSecondary}/>
           </div>
           {!collapsed && (
-            <span style={{ fontSize:13, fontWeight: active ? 800 : 600, color: active ? '#0F172A' : 'rgba(226,232,240,.78)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'all .18s' }}>
+            <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? theme.accent : theme.textSecondary, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:theme.transition }}>
               {item.name}
             </span>
           )}
@@ -209,22 +230,23 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   const AdminItem = ({ item }) => {
     const active = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
     const Icon   = item.icon
+    const color = theme.accent
     return (
       <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px',
-          borderRadius:12, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
-          background: active ? '#FFFFFF' : 'transparent',
-          border: active ? '1px solid rgba(255,255,255,.7)' : '1px solid transparent',
-          boxShadow: active ? '0 8px 22px rgba(15,23,42,.18)' : 'none',
-          transition:'all .18s', position:'relative' }}
-          onMouseEnter={e=>{ if(!active) e.currentTarget.style.background='rgba(255,255,255,.08)'; }}
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
+          borderRadius:theme.radiusSm, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
+          background: active ? theme.accentGlow : 'transparent',
+          border: active ? `1px solid ${theme.borderDefault}` : '1px solid transparent',
+          boxShadow: active ? 'var(--shadow-sm)' : 'none',
+          transition:theme.transition, position:'relative' }}
+          onMouseEnter={e=>{ if(!active) e.currentTarget.style.background=theme.hover; }}
           onMouseLeave={e=>{ if(!active) e.currentTarget.style.background='transparent'; }}>
-          {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:3, borderRadius:'0 4px 4px 0', background:item.color }}/>}
-          <div style={{ width:32, height:32, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? `${item.color}14` : 'rgba(255,255,255,.08)' }}>
-            <Icon size={16} color={active ? item.color : 'rgba(226,232,240,.72)'}/>
+          {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:2, borderRadius:'0 4px 4px 0', background:color }}/>}
+          <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? theme.accentGlow : theme.pressed }}>
+            <Icon size={16} color={active ? color : theme.textSecondary}/>
           </div>
           {!collapsed && (
-            <span style={{ fontSize:13, fontWeight: active ? 800 : 600, color: active ? '#0F172A' : 'rgba(226,232,240,.78)', whiteSpace:'nowrap' }}>
+            <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? color : theme.textSecondary, whiteSpace:'nowrap' }}>
               {item.name}
             </span>
           )}
@@ -238,14 +260,14 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       <LogoCSS/>
 
       {/* Logo */}
-      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:'1px solid rgba(255,255,255,.10)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64, position:'relative', zIndex:1 }}>
+      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:`1px solid ${theme.borderSubtle}`, display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64, position:'relative', zIndex:1 }}>
         <DentalLogo size={40}/>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
-            <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, color:'#fff', margin:0, whiteSpace:'nowrap' }}>DPM Madagascar</p>
+            <p style={{ fontFamily:'var(--font-sans)', fontWeight:800, fontSize:15, color:theme.textPrimary, margin:0, whiteSpace:'nowrap' }}>DPM Madagascar</p>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
-              <div style={{ width:5, height:5, borderRadius:'50%', background:'#22C55E', animation:'logoBadge 2s ease-in-out infinite' }}/>
-              <p style={{ fontSize:10, color:'rgba(255,255,255,.55)', margin:0, fontWeight:600 }}>
+              <div style={{ width:5, height:5, borderRadius:'50%', background:theme.success, animation:'logoBadge 2s ease-in-out infinite' }}/>
+              <p style={{ fontSize:10, color:theme.textSecondary, margin:0, fontWeight:600 }}>
                 {isSuperAdmin ? 'Administration' : 'Cabinet dentaire'}
               </p>
             </div>
@@ -261,8 +283,8 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           <>
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 10px' }}>
-                <Sparkles size={10} color="#C4B5FD"/>
-                <p style={{ fontSize:10, fontWeight:800, color:'#C4B5FD', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Administration plateforme</p>
+                <Sparkles size={10} color={theme.accent}/>
+                <p style={{ fontSize:10, fontWeight:800, color:theme.accent, textTransform:'uppercase', letterSpacing:0, margin:0 }}>Administration plateforme</p>
               </div>
             )}
             {SUPER_ADMIN_NAV.map(item => <AdminItem key={item.href} item={item}/>)}
@@ -274,8 +296,8 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           <>
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 8px 8px' }}>
-                <p style={{ fontSize:10, fontWeight:800, color:'rgba(226,232,240,.48)', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>Navigation</p>
-                {plan && <span style={{ fontSize:9, fontWeight:800, background:'rgba(255,255,255,.10)', color:'rgba(226,232,240,.78)', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(255,255,255,.08)' }}>{planLabel}</span>}
+                <p style={{ fontSize:10, fontWeight:800, color:theme.textMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>Navigation</p>
+                {plan && <span style={{ fontSize:9, fontWeight:800, background:theme.pressed, color:theme.textSecondary, padding:'2px 7px', borderRadius:99, border:`1px solid ${theme.borderSubtle}` }}>{planLabel}</span>}
               </div>
             )}
 
@@ -288,8 +310,8 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                 {/* Séparateur */}
                 {!collapsed && (
                   <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 6px', opacity:.5 }}>
-                    <Lock size={9} color="rgba(255,255,255,.5)"/>
-                    <p style={{ fontSize:9, fontWeight:700, color:'rgba(255,255,255,.4)', textTransform:'uppercase', letterSpacing:'.1em', margin:0 }}>
+                    <Lock size={9} color={theme.textMuted}/>
+                    <p style={{ fontSize:9, fontWeight:700, color:theme.textMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>
                       Disponible en {PLAN_REQUIRED(lockedItems[0])}
                     </p>
                   </div>
@@ -299,18 +321,18 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                   {lockedItems.map(item => {
                     const Icon = item.icon
                     return (
-                      <div key={item.href} style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '9px 10px', borderRadius:10, marginBottom:2, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-                        <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(255,255,255,.08)' }}>
-                          <Icon size={16} color='rgba(255,255,255,.5)'/>
+                      <div key={item.href} style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px', borderRadius:theme.radiusSm, marginBottom:2, justifyContent: collapsed ? 'center' : 'flex-start' }}>
+                        <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:theme.pressed }}>
+                          <Icon size={16} color={theme.textMuted}/>
                         </div>
-                        {!collapsed && <span style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,.5)', flex:1 }}>{item.name}</span>}
+                        {!collapsed && <span style={{ fontSize:'var(--text-sm)', fontWeight:500, color:theme.textMuted, flex:1 }}>{item.name}</span>}
                       </div>
                     )
                   })}
                 </div>
                 {/* Bouton upgrade */}
                 {!collapsed && (
-                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'8px 0 4px', padding:'9px', borderRadius:12, background:'rgba(255,255,255,.08)', border:'1px solid rgba(196,181,253,.24)', color:'#DDD6FE', fontSize:11, fontWeight:800, textDecoration:'none' }}>
+                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'8px 0 4px', padding:'9px', borderRadius:theme.radiusMd, background:theme.accentGlow, border:`1px solid ${theme.borderDefault}`, color:theme.accent, fontSize:11, fontWeight:800, textDecoration:'none' }}>
                     <Sparkles size={12}/> Upgrader mon plan
                   </a>
                 )}
@@ -318,14 +340,14 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             )}
 
             {/* Abonnement */}
-            <div style={{ height:1, background:'rgba(255,255,255,.10)', margin:'12px 0 10px' }}/>
-            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:'rgba(226,232,240,.42)', textTransform:'uppercase', letterSpacing:'.1em', padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
+            <div style={{ height:1, background:theme.borderSubtle, margin:'12px 0 10px' }}/>
+            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:theme.textMuted, textTransform:'uppercase', letterSpacing:0, padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
             {!collapsed && !isSuperAdmin && subscriptionLoaded && (
-              <div style={{ margin:'0 4px 8px', padding:'10px 12px', borderRadius:14, background:'rgba(255,255,255,.07)', border:'1px solid rgba(255,255,255,.08)', color:'rgba(226,232,240,.78)', fontSize:11, lineHeight:1.4 }}>
-                <div style={{ fontWeight:700, color:'#fff', marginBottom:2 }}>{planLabel}</div>
+              <div style={{ margin:'0 4px 8px', padding:'10px 12px', borderRadius:theme.radiusLg, background:theme.bgElevated, border:`1px solid ${theme.borderSubtle}`, color:theme.textSecondary, fontSize:11, lineHeight:1.4 }}>
+                <div style={{ fontWeight:700, color:theme.textPrimary, marginBottom:2 }}>{planLabel}</div>
                 {planPrice && <div>{planPrice}</div>}
                 {subscription?.status && (
-                  <div style={{ marginTop:4, fontSize:10, color:'rgba(226,232,240,.55)' }}>
+                  <div style={{ marginTop:4, fontSize:10, color:theme.textMuted }}>
                     Statut: {subscription.status}
                   </div>
                 )}
@@ -338,19 +360,19 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       </nav>
 
       {/* User */}
-      <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop:'1px solid rgba(255,255,255,.12)', display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, position:'relative', zIndex:1, background:'rgba(4,18,28,.22)' }}>
-        <div style={{ width:36, height:36, borderRadius:10, flexShrink:0, background:'rgba(255,255,255,.2)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:14, color:'#fff', border:'1.5px solid rgba(255,255,255,.3)' }}>
+      <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop:`1px solid ${theme.borderSubtle}`, display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, position:'relative', zIndex:1, background:theme.bgElevated }}>
+        <div style={{ width:36, height:36, borderRadius:theme.radiusMd, flexShrink:0, background:theme.accentGlow, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sans)', fontWeight:800, fontSize:14, color:theme.textPrimary, border:`1.5px solid ${theme.borderDefault}` }}>
           {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
         </div>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
-            <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:13, color:'#fff', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
-            <p style={{ fontSize:11, color:'rgba(255,255,255,.45)', margin:'1px 0 0' }}>
+            <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.textPrimary, margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
+            <p style={{ fontSize:11, color:theme.textMuted, margin:'1px 0 0' }}>
               {isSuperAdmin ? 'Super Administrateur' : user?.role}
             </p>
           </div>
         )}
-        <div style={{ width:8, height:8, borderRadius:'50%', background:'#22C55E', flexShrink:0, boxShadow:'0 0 0 2px rgba(255,255,255,.3)' }}/>
+        <div style={{ width:8, height:8, borderRadius:'50%', background:theme.success, flexShrink:0, boxShadow:'0 0 0 2px var(--border-default)' }}/>
       </div>
     </div>
   )
@@ -376,13 +398,13 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
     return (
       <>
         <button onClick={() => setMobileOpen(true)}
-          style={{ position:'fixed', top:14, left:14, zIndex:1000, width:40, height:40, borderRadius:10, background:'linear-gradient(135deg,#064E56,#0D7A87)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 16px rgba(13,122,135,.35)' }}>
-          <Menu size={20} color="#fff"/>
+          style={{ position:'fixed', top:14, left:14, zIndex:1000, width:40, height:40, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow }}>
+          <Menu size={20} color={theme.textPrimary}/>
         </button>
-        {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'rgba(15,23,42,.55)', zIndex:1001, backdropFilter:'blur(3px)' }}/>}
+        {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:1001, backdropFilter:'blur(8px)' }}/>}
         <div style={{ position:'fixed', left:0, top:0, bottom:0, width:280, zIndex:1002, transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)', transition:'transform .3s cubic-bezier(.4,0,.2,1)' }}>
           <button onClick={() => setMobileOpen(false)}
-            style={{ position:'absolute', top:14, right:14, zIndex:1, width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.25)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+            style={{ position:'absolute', top:14, right:14, zIndex:1, width:32, height:32, borderRadius:theme.radiusSm, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:theme.textPrimary }}>
             <X size={16}/>
           </button>
           <SidebarContent collapsed={false} onNavClick={() => setMobileOpen(false)}/>
@@ -395,10 +417,10 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
     <div className="dpm-sidebar-desktop" style={{ position:'fixed', left:0, top:0, bottom:0, width: collapsed ? 72 : 264, zIndex:100, transition:'width .25s cubic-bezier(.4,0,.2,1)', flexShrink:0 }}>
       <SidebarContent collapsed={collapsed} onNavClick={null}/>
       <button onClick={() => setCollapsed(!collapsed)}
-        style={{ position:'absolute', top:72, right:-12, width:24, height:24, borderRadius:'50%', background:'#fff', border:'1.5px solid #E2E8F0', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(15,23,42,.12)', zIndex:101 }}
-        onMouseEnter={e=>e.currentTarget.style.background='#F8FAFC'}
-        onMouseLeave={e=>e.currentTarget.style.background='#fff'}>
-        {collapsed ? <ChevronRight size={12} color="#475569"/> : <ChevronLeft size={12} color="#475569"/>}
+        style={{ position:'absolute', top:72, right:-12, width:24, height:24, borderRadius:'50%', background:theme.bgElevated, border:`1.5px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow, zIndex:101 }}
+        onMouseEnter={e=>e.currentTarget.style.background=theme.pressed}
+        onMouseLeave={e=>e.currentTarget.style.background=theme.bgElevated}>
+        {collapsed ? <ChevronRight size={12} color={theme.textSecondary}/> : <ChevronLeft size={12} color={theme.textSecondary}/>}
       </button>
     </div>
   )

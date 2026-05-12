@@ -98,8 +98,11 @@ const PatientLabOrders = () => {
   const formatCurrency = (amount) => new Intl.NumberFormat('fr-MG').format(amount || 0) + ' MGA';
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#0D7A87' }} />
+    <div className="dpm-card mx-auto my-6 grid max-w-xl gap-3">
+      <div className="dpm-skeleton h-5 w-1/3" />
+      <div className="dpm-skeleton h-3 w-full" />
+      <div className="dpm-skeleton h-3 w-4/5" />
+      <div className="dpm-skeleton h-10 w-full" />
     </div>
   );
 
