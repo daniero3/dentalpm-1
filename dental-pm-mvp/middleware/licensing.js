@@ -4,8 +4,8 @@ const { Op } = require('sequelize');
 
 const PLAN_FEATURES = {
   ESSENTIAL: ['patients','appointments','invoicing','basic_reports'],
-  PRO:       ['patients','appointments','invoicing','inventory','lab_orders','patient_mailing','advanced_reports','basic_reports'],
-  GROUP:     ['patients','appointments','invoicing','inventory','lab_orders','patient_mailing','advanced_reports','basic_reports','multi_site','api_access']
+  PRO:       ['patients','appointments','invoicing','inventory','suppliers','purchases','lab_orders','patient_mailing','advanced_reports','basic_reports'],
+  GROUP:     ['patients','appointments','invoicing','inventory','suppliers','purchases','lab_orders','patient_mailing','advanced_reports','basic_reports','multi_site','api_access']
 };
 
 const PLAN_MAX_USERS = { ESSENTIAL: 2, PRO: 5, GROUP: 50 };
