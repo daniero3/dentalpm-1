@@ -34,6 +34,14 @@ const QUICK_COMMANDS = [
   { label:'Paramètres cabinet', desc:'Profil, équipe et configuration', href:'/settings', icon:Settings, group:'Administration' },
 ]
 
+const MADAGASCAR_TIME_ZONE = 'Indian/Antananarivo'
+const formatMadagascarTime = (date) =>
+  date.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: MADAGASCAR_TIME_ZONE
+  })
+
 const theme = {
   bgBase: 'var(--bg-base)',
   bgSurface: 'var(--bg-surface)',
@@ -71,6 +79,7 @@ export function ModernTopbar() {
   const profileRef = useRef(null)
   const notifRef   = useRef(null)
   const searchRef  = useRef(null)
+  const clockTimerRef = useRef(null)
 
   useEffect(() => {
     const handler = (e) => {
@@ -105,8 +114,16 @@ export function ModernTopbar() {
   }, [])
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 30000)
-    return () => window.clearInterval(timer)
+    const syncClock = () => setNow(new Date())
+    const timeout = window.setTimeout(() => {
+      syncClock()
+      clockTimerRef.current = window.setInterval(syncClock, 60000)
+    }, 60000 - (Date.now() % 60000))
+
+    return () => {
+      window.clearTimeout(timeout)
+      if (clockTimerRef.current) window.clearInterval(clockTimerRef.current)
+    }
   }, [])
 
   const handleLogout = () => { logout(); navigate('/login'); }
@@ -232,7 +249,7 @@ export function ModernTopbar() {
 
         {!isMobile && !isTablet && (
           <div style={{ padding:'6px 10px', borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, fontSize:12, fontWeight:800, color:theme.textSecondary, whiteSpace:'nowrap' }}>
-            {now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' })}
+            {formatMadagascarTime(now)} Madagascar
           </div>
         )}
 
