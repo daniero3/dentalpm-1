@@ -259,12 +259,21 @@ router.put('/profile', authenticateToken, [
 // ── POST /api/auth/register-clinic — Création cabinet depuis RegisterPage ──
 router.post('/register-clinic', [
   require('express-validator').body('cabinet').notEmpty(),
+  require('express-validator').body('practitioner_identifier').optional({ nullable: true }).isLength({ min: 3, max: 50 }).matches(/^[a-zA-Z0-9_-]+$/),
+  require('express-validator').body('first_name').optional({ nullable: true }).isLength({ min: 2, max: 60 }),
+  require('express-validator').body('last_name').optional({ nullable: true }).isLength({ min: 2, max: 60 }),
   require('express-validator').body('email').isEmail().normalizeEmail(),
   require('express-validator').body('phone').notEmpty(),
   require('express-validator').body('plan').optional().isIn(['ESSENTIAL','PRO','GROUP']),
 ], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
+
     const { cabinet, email, phone, city, dentists, plan = 'PRO' } = req.body;
+    const firstName = String(req.body.first_name || '').trim();
+    const lastName = String(req.body.last_name || '').trim();
+    const requestedIdentifier = String(req.body.practitioner_identifier || '').trim();
     if (!cabinet || !email || !phone) return res.status(400).json({ error: 'Champs requis manquants' });
 
     // Vérifier si email déjà utilisé
@@ -292,6 +301,16 @@ router.post('/register-clinic', [
 
     const PLAN_PRICES = { ESSENTIAL:149000, PRO:199000, GROUP:299000 };
     const PLAN_USERS  = { ESSENTIAL:2, PRO:5, GROUP:50 };
+    const adminUsername = requestedIdentifier
+      || email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,30) + '_' + Date.now().toString().slice(-4);
+    const adminFullName = [firstName, lastName].filter(Boolean).join(' ').trim() || cabinet;
+
+    const existingUser = await User.findOne({ where: { [Op.or]: [{ username: adminUsername }, { email }] } });
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'Un utilisateur existe déjà avec cet identifiant praticien ou cet email'
+      });
+    }
 
     // Créer le cabinet
     const clinic = await Clinic.create({
@@ -309,11 +328,11 @@ router.post('/register-clinic', [
 
     // Mot de passe temporaire généré avec une source cryptographique.
     const tempPassword = crypto.randomBytes(18).toString('base64url') + 'A1!';
-    await User.create({
-      username:     email.split('@')[0].replace(/[^a-zA-Z0-9]/g,'_').slice(0,30) + '_' + Date.now().toString().slice(-4),
+    const adminUser = await User.create({
+      username:     adminUsername,
       email,
       password_hash: tempPassword,
-      full_name:    cabinet,
+      full_name:    adminFullName,
       role:         'ADMIN',
       clinic_id:    clinic.id,
       is_active:    true,
@@ -342,6 +361,7 @@ router.post('/register-clinic', [
     res.status(201).json({
       message: 'Cabinet créé avec succès. Carte requise pour activer l’essai de 7 jours.',
       clinic: { id: clinic.id, name: clinic.name, plan },
+      admin_user: { username: adminUser.username, full_name: adminUser.full_name, email: adminUser.email },
       temp_password: tempPassword,
     });
   } catch (error) {

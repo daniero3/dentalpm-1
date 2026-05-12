@@ -13,6 +13,7 @@ function buildAuthApp() {
       create: jest.fn()
     },
     User: {
+      findOne: jest.fn(),
       create: jest.fn()
     },
     Subscription: {
@@ -101,13 +102,22 @@ describe('subscription trial flow', () => {
     const existingClinic = null;
     models.Clinic.findOne.mockResolvedValue(existingClinic);
     models.Clinic.create.mockResolvedValue({ id: clinicId, name: 'Cabinet Test', email: 'test@cabinet.mg' });
-    models.User.create.mockResolvedValue({ id: userId });
+    models.User.findOne.mockResolvedValue(null);
+    models.User.create.mockResolvedValue({
+      id: userId,
+      username: 'dr_test',
+      full_name: 'Jean Rakoto',
+      email: 'test@cabinet.mg'
+    });
     models.Subscription.create.mockResolvedValue({ id: 'sub_trial' });
 
     const res = await request(app)
       .post('/api/auth/register-clinic')
       .send({
         cabinet: 'Cabinet Test',
+        practitioner_identifier: 'dr_test',
+        first_name: 'Jean',
+        last_name: 'Rakoto',
         email: 'test@cabinet.mg',
         phone: '0340000000',
         city: 'Antananarivo',
@@ -122,6 +132,18 @@ describe('subscription trial flow', () => {
       subscription_status: 'PENDING',
       current_plan: 'PRO',
       is_active: false
+    }));
+    expect(models.User.create).toHaveBeenCalledWith(expect.objectContaining({
+      username: 'dr_test',
+      email: 'test@cabinet.mg',
+      full_name: 'Jean Rakoto',
+      role: 'ADMIN',
+      clinic_id: clinicId
+    }));
+    expect(res.body.admin_user).toEqual(expect.objectContaining({
+      username: 'dr_test',
+      full_name: 'Jean Rakoto',
+      email: 'test@cabinet.mg'
     }));
     expect(models.Subscription.create).toHaveBeenCalledWith(expect.objectContaining({
       clinic_id: clinicId,

@@ -62,6 +62,22 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
   );
 };
 
+const Field = ({ label, name, placeholder, type = 'text', value, onChange, style, onFocus, onBlur, delay = 0 }) => (
+  <div className="premium-field" style={{ animationDelay:`${delay}ms` }}>
+    <label style={{ display:'block', fontSize:13, fontWeight:700, color:'#475569', marginBottom:5 }}>{label}</label>
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={e => onChange(name, e.target.value)}
+      style={style}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      required
+    />
+  </div>
+);
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
@@ -70,7 +86,17 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [done,    setDone]    = useState(false);
   const [tempPwd, setTempPwd] = useState('');
-  const [form,    setForm]    = useState({ cabinet:'', email:'', phone:'', city:'', dentists:'1' });
+  const [adminUser, setAdminUser] = useState(null);
+  const [form,    setForm]    = useState({
+    cabinet:'',
+    practitioner_identifier:'',
+    last_name:'',
+    first_name:'',
+    email:'',
+    phone:'',
+    city:'',
+    dentists:'1'
+  });
 
   const inp = {
     width:'100%', padding:'12px 14px', borderRadius:12,
@@ -79,40 +105,54 @@ export default function RegisterPage() {
   };
   const focus = e => { e.target.style.borderColor=T; e.target.style.boxShadow=`0 0 0 3px ${T}18`; };
   const blur  = e => { e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none'; };
+  const updateField = (name, value) => setForm(p => ({ ...p, [name]: value }));
 
   const submit = async () => {
     setLoading(true);
     try {
       const resp = await axios.post(`${API_URL}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
       setTempPwd(resp.data.temp_password || '');
+      setAdminUser(resp.data.admin_user || null);
       setDone(true);
     } catch (e) {
       alert(e.response?.data?.error || 'Erreur. Vérifiez vos informations.');
     } finally { setLoading(false); }
   };
 
-  const stepValid = form.cabinet && form.email && form.phone && form.city;
+  const stepValid = form.cabinet && form.practitioner_identifier && form.last_name && form.first_name && form.email && form.phone && form.city;
 
   return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#F0FDFE 0%,#E8F7F8 50%,#F8FAFC 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'DM Sans,sans-serif' }}>
-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#F0FDFE 0%,#E8F7F8 46%,#F8FAFC 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'DM Sans,sans-serif', position:'relative', overflow:'hidden' }}>
+      <style>{`
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes softShine{0%{transform:translateX(-120%)}45%,100%{transform:translateX(140%)}}
+        @keyframes logoPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 4px ${T}20,0 8px 24px ${T}30}50%{transform:scale(1.035);box-shadow:0 0 0 8px ${T}14,0 14px 34px ${T}34}}
+        @keyframes fieldIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes progressGlow{0%,100%{filter:saturate(1)}50%{filter:saturate(1.5) brightness(1.05)}}
+        .premium-card{position:relative}
+        .premium-card:before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.72) 48%,transparent 58%);transform:translateX(-120%);animation:softShine 4.8s ease-in-out infinite}
+        .premium-logo{animation:logoPulse 3.4s ease-in-out infinite}
+        .premium-field{animation:fieldIn .38s cubic-bezier(.16,1,.3,1) both}
+        .premium-plan:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(13,122,135,.12)}
+        .premium-primary:hover{transform:translateY(-1px);box-shadow:0 12px 30px ${T}42!important}
+      `}</style>
 
-      <div style={{ width:'100%', maxWidth:520, animation:'fadeUp .3s ease' }}>
+      <div style={{ width:'100%', maxWidth:isMobile ? 520 : 620, animation:'fadeUp .3s ease', position:'relative', zIndex:1 }}>
 
         {/* Logo + titre */}
         <div style={{ textAlign:'center', marginBottom:28 }}>
-          <img src="/fix-logo.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', boxShadow:`0 0 0 4px ${T}20, 0 8px 24px ${T}30`, marginBottom:14 }}/>
+          <img className="premium-logo" src="/fix-logo.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', marginBottom:14 }}/>
           <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:'0 0 4px' }}>Créer votre cabinet</h1>
           <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Essai gratuit 7 jours — carte enregistrée, aucun prélèvement immédiat</p>
         </div>
 
         {/* Card principale */}
-        <div style={{ background:'#fff', borderRadius:20, boxShadow:'0 24px 60px rgba(0,0,0,.1)', border:'1px solid #E2E8F0', overflow:'hidden' }}>
+        <div className="premium-card" style={{ background:'rgba(255,255,255,.94)', backdropFilter:'blur(18px)', borderRadius:20, boxShadow:'0 24px 60px rgba(0,0,0,.1)', border:'1px solid rgba(226,232,240,.9)', overflow:'hidden' }}>
 
           {/* Barre de progression */}
           <div style={{ display:'flex', gap:0 }}>
             {['Plan','Informations','Paiement'].map((s,i) => (
-              <div key={i} style={{ flex:1, height:4, background: step>i ? T : step===i ? `${T}60` : '#E2E8F0', transition:'background .4s' }}/>
+              <div key={i} style={{ flex:1, height:4, background: step>i ? T : step===i ? `${T}60` : '#E2E8F0', transition:'background .4s', animation: step===i ? 'progressGlow 2s ease-in-out infinite' : 'none' }}/>
             ))}
           </div>
 
@@ -125,7 +165,7 @@ export default function RegisterPage() {
                 <p style={{ color:'#64748B', fontSize:13, margin:'0 0 20px' }}>Commencez avec un essai gratuit de 7 jours.</p>
                 <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                   {PLANS.map(p => (
-                    <div key={p.name} onClick={() => setPlan(p)}
+                    <div className="premium-plan" key={p.name} onClick={() => setPlan(p)}
                       style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${plan?.name===p.name ? T : '#E2E8F0'}`, background:plan?.name===p.name ? '#F0FDFE' : '#fff', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all .15s', position:'relative' }}
                       onMouseOver={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#7DD3DA';e.currentTarget.style.background='#FAFFFE';}}}
                       onMouseOut={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}}>
@@ -141,7 +181,7 @@ export default function RegisterPage() {
                     </div>
                   ))}
                 </div>
-                <button disabled={!plan} onClick={() => setStep(1)}
+                <button className="premium-primary" disabled={!plan} onClick={() => setStep(1)}
                   style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:plan ? `linear-gradient(135deg,${T},#13A3B4)` : '#E2E8F0', color:plan?'#fff':'#94A3B8', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:plan?'pointer':'not-allowed', boxShadow:plan?`0 4px 16px ${T}40`:'none', transition:'all .2s' }}>
                   Continuer →
                 </button>
@@ -158,21 +198,17 @@ export default function RegisterPage() {
                     <p style={{ color:'#64748B', fontSize:12, margin:0 }}>Plan {plan?.name} — {plan?.price} Ar/mois</p>
                   </div>
                 </div>
-                <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:20 }}>
-                  {[
-                    { label:'Nom du cabinet *',           name:'cabinet', ph:'Cabinet Dentaire Dr. Rakoto', type:'text'  },
-                    { label:'Email professionnel *',       name:'email',   ph:'contact@cabinet.mg',         type:'email' },
-                    { label:'Téléphone *',  name:'phone',   ph:'034 XX XXX XX',              type:'tel'   },
-                    { label:'Ville *',                     name:'city',    ph:'Antananarivo',                type:'text'  },
-                  ].map(f => (
-                    <div key={f.name}>
-                      <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
-                      <input type={f.type} placeholder={f.ph} value={form[f.name]}
-                        onChange={e => setForm(p => ({ ...p, [f.name]:e.target.value }))}
-                        style={inp} onFocus={focus} onBlur={blur} required/>
-                    </div>
-                  ))}
-                  <div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile ? '1fr' : '1fr 1fr', gap:12, marginBottom:20 }}>
+                  <div style={{ gridColumn:'1 / -1' }}>
+                    <Field label="Nom du cabinet *" name="cabinet" placeholder="Cabinet Dentaire Dr. Rakoto" value={form.cabinet} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={0}/>
+                  </div>
+                  <Field label="Identifiant praticien *" name="practitioner_identifier" placeholder="dr_rakoto" value={form.practitioner_identifier} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={60}/>
+                  <Field label="Nom *" name="last_name" placeholder="Rakoto" value={form.last_name} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={100}/>
+                  <Field label="Prénom *" name="first_name" placeholder="Jean" value={form.first_name} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={140}/>
+                  <Field label="Email *" name="email" placeholder="contact@cabinet.mg" type="email" value={form.email} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={180}/>
+                  <Field label="Téléphone *" name="phone" placeholder="034 XX XXX XX" type="tel" value={form.phone} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={220}/>
+                  <Field label="Ville *" name="city" placeholder="Antananarivo" value={form.city} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={260}/>
+                  <div className="premium-field" style={{ animationDelay:'300ms' }}>
                     <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Nombre de praticiens</label>
                     <select value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))}
                       style={{ ...inp, cursor:'pointer', background:'#fff' }}>
@@ -182,7 +218,7 @@ export default function RegisterPage() {
                     </select>
                   </div>
                 </div>
-                <button disabled={!stepValid} onClick={() => setStep(2)}
+                <button className="premium-primary" disabled={!stepValid} onClick={() => setStep(2)}
                   style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:stepValid?`linear-gradient(135deg,${T},#13A3B4)`:'#E2E8F0', color:stepValid?'#fff':'#94A3B8', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:stepValid?'pointer':'not-allowed', boxShadow:stepValid?`0 4px 16px ${T}40`:'none', transition:'all .2s' }}>
                   Continuer →
                 </button>
@@ -233,6 +269,7 @@ export default function RegisterPage() {
                 {tempPwd && (
                   <div style={{ background:'#F0FDFE', border:'1.5px solid #7DD3DA', borderRadius:12, padding:'14px 18px', marginBottom:20, textAlign:'left' }}>
                     <div style={{ fontSize:12, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Identifiants de connexion</div>
+                    <div style={{ fontSize:13, color:'#0F172A', marginBottom:4 }}>Identifiant : <strong>{adminUser?.username || form.practitioner_identifier}</strong></div>
                     <div style={{ fontSize:13, color:'#0F172A', marginBottom:4 }}>Email : <strong>{form.email}</strong></div>
                     <div style={{ fontSize:13, color:'#0F172A', marginBottom:8 }}>Mot de passe temporaire : <strong style={{ fontFamily:'monospace', background:'#fff', padding:'2px 8px', borderRadius:6, border:'1px solid #E2E8F0' }}>{tempPwd}</strong></div>
                     <div style={{ fontSize:11, color:'#F59E0B', fontWeight:600 }}>⚠️ Notez ce mot de passe — changez-le dès votre première connexion</div>
