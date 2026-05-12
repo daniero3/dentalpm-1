@@ -23,6 +23,14 @@ const theme = {
   borderDefault: 'var(--border-default)',
   accent: 'var(--accent-primary)',
   accentGlow: 'var(--accent-glow)',
+  sidebarBg: 'var(--sidebar-bg)',
+  sidebarBgElevated: 'var(--sidebar-bg-elevated)',
+  sidebarHover: 'var(--sidebar-hover)',
+  sidebarActiveBg: 'var(--sidebar-active-bg)',
+  sidebarActiveText: 'var(--sidebar-active-text)',
+  sidebarText: 'var(--sidebar-text)',
+  sidebarTextMuted: 'var(--sidebar-text-muted)',
+  sidebarBorder: 'var(--sidebar-border)',
   textPrimary: 'var(--text-primary)',
   textSecondary: 'var(--text-secondary)',
   textMuted: 'var(--text-muted)',
@@ -117,9 +125,9 @@ const sidebarShell = {
   height:'100%',
   display:'flex',
   flexDirection:'column',
-  background: theme.bgSurface,
+  background: theme.sidebarBg,
   boxShadow: theme.shadow,
-  borderRight:`1px solid ${theme.borderSubtle}`,
+  borderRight:`1px solid ${theme.sidebarBorder}`,
   position:'relative',
   overflow:'hidden'
 }
@@ -206,18 +214,18 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
         <div title={collapsed ? item.name : ''}
           style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
             borderRadius:theme.radiusSm, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
-            background: active ? theme.accentGlow : 'transparent',
-            border: active ? `1px solid ${theme.borderDefault}` : '1px solid transparent',
+            background: active ? theme.sidebarActiveBg : 'transparent',
+            border: active ? `1px solid ${theme.sidebarBorder}` : '1px solid transparent',
             boxShadow: active ? 'var(--shadow-sm)' : 'none',
             transition:theme.transition, position:'relative' }}
-          onMouseEnter={e=>{ if(!active){ e.currentTarget.style.background=theme.hover; e.currentTarget.style.borderColor=theme.borderSubtle; }}}
+          onMouseEnter={e=>{ if(!active){ e.currentTarget.style.background=theme.sidebarHover; e.currentTarget.style.borderColor=theme.sidebarBorder; }}}
           onMouseLeave={e=>{ if(!active){ e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='transparent'; }}}>
           {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:2, borderRadius:'0 4px 4px 0', background:color, boxShadow:'0 0 12px var(--accent-glow)' }}/>}
-          <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? theme.accentGlow : theme.pressed, transition:theme.transition }}>
-            <Icon size={16} color={active ? color : theme.textSecondary}/>
+          <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? theme.accentGlow : theme.sidebarHover, transition:theme.transition }}>
+            <Icon size={16} color={active ? color : theme.sidebarText}/>
           </div>
           {!collapsed && (
-            <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? theme.accent : theme.textSecondary, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:theme.transition }}>
+            <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? theme.sidebarActiveText : theme.sidebarText, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:theme.transition }}>
               {item.name}
             </span>
           )}
@@ -235,18 +243,18 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
           borderRadius:theme.radiusSm, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
-          background: active ? theme.accentGlow : 'transparent',
-          border: active ? `1px solid ${theme.borderDefault}` : '1px solid transparent',
+          background: active ? theme.sidebarActiveBg : 'transparent',
+          border: active ? `1px solid ${theme.sidebarBorder}` : '1px solid transparent',
           boxShadow: active ? 'var(--shadow-sm)' : 'none',
           transition:theme.transition, position:'relative' }}
-          onMouseEnter={e=>{ if(!active) e.currentTarget.style.background=theme.hover; }}
+          onMouseEnter={e=>{ if(!active) e.currentTarget.style.background=theme.sidebarHover; }}
           onMouseLeave={e=>{ if(!active) e.currentTarget.style.background='transparent'; }}>
           {active && <div style={{ position:'absolute', left:0, top:'22%', bottom:'22%', width:2, borderRadius:'0 4px 4px 0', background:color }}/>}
-          <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? theme.accentGlow : theme.pressed }}>
-            <Icon size={16} color={active ? color : theme.textSecondary}/>
+          <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background: active ? theme.accentGlow : theme.sidebarHover }}>
+            <Icon size={16} color={active ? color : theme.sidebarText}/>
           </div>
           {!collapsed && (
-            <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? color : theme.textSecondary, whiteSpace:'nowrap' }}>
+            <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? color : theme.sidebarText, whiteSpace:'nowrap' }}>
               {item.name}
             </span>
           )}
@@ -260,14 +268,14 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       <LogoCSS/>
 
       {/* Logo */}
-      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:`1px solid ${theme.borderSubtle}`, display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64, position:'relative', zIndex:1 }}>
+      <div style={{ padding: collapsed ? '16px 0' : '16px 14px', borderBottom:`1px solid ${theme.sidebarBorder}`, display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, minHeight:64, position:'relative', zIndex:1 }}>
         <DentalLogo size={40}/>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
-            <p style={{ fontFamily:'var(--font-sans)', fontWeight:800, fontSize:15, color:theme.textPrimary, margin:0, whiteSpace:'nowrap' }}>DPM Madagascar</p>
+            <p style={{ fontFamily:'var(--font-sans)', fontWeight:800, fontSize:15, color:theme.sidebarText, margin:0, whiteSpace:'nowrap' }}>DPM Madagascar</p>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:theme.success, animation:'logoBadge 2s ease-in-out infinite' }}/>
-              <p style={{ fontSize:10, color:theme.textSecondary, margin:0, fontWeight:600 }}>
+              <p style={{ fontSize:10, color:theme.sidebarTextMuted, margin:0, fontWeight:600 }}>
                 {isSuperAdmin ? 'Administration' : 'Cabinet dentaire'}
               </p>
             </div>
@@ -296,8 +304,8 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           <>
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 8px 8px' }}>
-                <p style={{ fontSize:10, fontWeight:800, color:theme.textMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>Navigation</p>
-                {plan && <span style={{ fontSize:9, fontWeight:800, background:theme.pressed, color:theme.textSecondary, padding:'2px 7px', borderRadius:99, border:`1px solid ${theme.borderSubtle}` }}>{planLabel}</span>}
+                <p style={{ fontSize:10, fontWeight:800, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>Navigation</p>
+                {plan && <span style={{ fontSize:9, fontWeight:800, background:theme.sidebarHover, color:theme.sidebarText, padding:'2px 7px', borderRadius:99, border:`1px solid ${theme.sidebarBorder}` }}>{planLabel}</span>}
               </div>
             )}
 
@@ -310,8 +318,8 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                 {/* Séparateur */}
                 {!collapsed && (
                   <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 6px', opacity:.5 }}>
-                    <Lock size={9} color={theme.textMuted}/>
-                    <p style={{ fontSize:9, fontWeight:700, color:theme.textMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>
+                    <Lock size={9} color={theme.sidebarTextMuted}/>
+                    <p style={{ fontSize:9, fontWeight:700, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>
                       Disponible en {PLAN_REQUIRED(lockedItems[0])}
                     </p>
                   </div>
@@ -322,17 +330,17 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                     const Icon = item.icon
                     return (
                       <div key={item.href} style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px', borderRadius:theme.radiusSm, marginBottom:2, justifyContent: collapsed ? 'center' : 'flex-start' }}>
-                        <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:theme.pressed }}>
-                          <Icon size={16} color={theme.textMuted}/>
+                        <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:theme.sidebarHover }}>
+                          <Icon size={16} color={theme.sidebarTextMuted}/>
                         </div>
-                        {!collapsed && <span style={{ fontSize:'var(--text-sm)', fontWeight:500, color:theme.textMuted, flex:1 }}>{item.name}</span>}
+                        {!collapsed && <span style={{ fontSize:'var(--text-sm)', fontWeight:500, color:theme.sidebarTextMuted, flex:1 }}>{item.name}</span>}
                       </div>
                     )
                   })}
                 </div>
                 {/* Bouton upgrade */}
                 {!collapsed && (
-                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'8px 0 4px', padding:'9px', borderRadius:theme.radiusMd, background:theme.accentGlow, border:`1px solid ${theme.borderDefault}`, color:theme.accent, fontSize:11, fontWeight:800, textDecoration:'none' }}>
+                  <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'8px 0 4px', padding:'9px', borderRadius:theme.radiusMd, background:theme.sidebarActiveBg, border:`1px solid ${theme.sidebarBorder}`, color:theme.sidebarActiveText, fontSize:11, fontWeight:800, textDecoration:'none' }}>
                     <Sparkles size={12}/> Upgrader mon plan
                   </a>
                 )}
@@ -340,14 +348,14 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             )}
 
             {/* Abonnement */}
-            <div style={{ height:1, background:theme.borderSubtle, margin:'12px 0 10px' }}/>
-            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:theme.textMuted, textTransform:'uppercase', letterSpacing:0, padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
+            <div style={{ height:1, background:theme.sidebarBorder, margin:'12px 0 10px' }}/>
+            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
             {!collapsed && !isSuperAdmin && subscriptionLoaded && (
-              <div style={{ margin:'0 4px 8px', padding:'10px 12px', borderRadius:theme.radiusLg, background:theme.bgElevated, border:`1px solid ${theme.borderSubtle}`, color:theme.textSecondary, fontSize:11, lineHeight:1.4 }}>
-                <div style={{ fontWeight:700, color:theme.textPrimary, marginBottom:2 }}>{planLabel}</div>
+              <div style={{ margin:'0 4px 8px', padding:'10px 12px', borderRadius:theme.radiusLg, background:theme.sidebarBgElevated, border:`1px solid ${theme.sidebarBorder}`, color:theme.sidebarTextMuted, fontSize:11, lineHeight:1.4 }}>
+                <div style={{ fontWeight:700, color:theme.sidebarText, marginBottom:2 }}>{planLabel}</div>
                 {planPrice && <div>{planPrice}</div>}
                 {subscription?.status && (
-                  <div style={{ marginTop:4, fontSize:10, color:theme.textMuted }}>
+                  <div style={{ marginTop:4, fontSize:10, color:theme.sidebarTextMuted }}>
                     Statut: {subscription.status}
                   </div>
                 )}
@@ -360,14 +368,14 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
       </nav>
 
       {/* User */}
-      <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop:`1px solid ${theme.borderSubtle}`, display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, position:'relative', zIndex:1, background:theme.bgElevated }}>
-        <div style={{ width:36, height:36, borderRadius:theme.radiusMd, flexShrink:0, background:theme.accentGlow, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sans)', fontWeight:800, fontSize:14, color:theme.textPrimary, border:`1.5px solid ${theme.borderDefault}` }}>
+      <div style={{ padding: collapsed ? '16px 0' : '16px', borderTop:`1px solid ${theme.sidebarBorder}`, display:'flex', alignItems:'center', justifyContent: collapsed ? 'center' : 'flex-start', gap:10, position:'relative', zIndex:1, background:theme.sidebarBgElevated }}>
+        <div style={{ width:36, height:36, borderRadius:theme.radiusMd, flexShrink:0, background:theme.sidebarActiveBg, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sans)', fontWeight:800, fontSize:14, color:theme.sidebarActiveText, border:`1.5px solid ${theme.sidebarBorder}` }}>
           {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
         </div>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
-            <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.textPrimary, margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
-            <p style={{ fontSize:11, color:theme.textMuted, margin:'1px 0 0' }}>
+            <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.sidebarText, margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
+            <p style={{ fontSize:11, color:theme.sidebarTextMuted, margin:'1px 0 0' }}>
               {isSuperAdmin ? 'Super Administrateur' : user?.role}
             </p>
           </div>
@@ -398,8 +406,8 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
     return (
       <>
         <button onClick={() => setMobileOpen(true)}
-          style={{ position:'fixed', top:14, left:14, zIndex:1000, width:40, height:40, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow }}>
-          <Menu size={20} color={theme.textPrimary}/>
+          style={{ position:'fixed', top:14, left:14, zIndex:1000, width:40, height:40, borderRadius:theme.radiusMd, background:theme.sidebarBg, border:`1px solid ${theme.sidebarBorder}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow }}>
+          <Menu size={20} color={theme.sidebarText}/>
         </button>
         {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:1001, backdropFilter:'blur(8px)' }}/>}
         <div style={{ position:'fixed', left:0, top:0, bottom:0, width:280, zIndex:1002, transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)', transition:'transform .3s cubic-bezier(.4,0,.2,1)' }}>
