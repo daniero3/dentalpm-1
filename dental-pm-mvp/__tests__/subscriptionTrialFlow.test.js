@@ -1,5 +1,6 @@
 const express = require('express');
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 
 const clinicId = '11111111-1111-4111-8111-111111111111';
 const userId = '99999999-9999-4999-8999-999999999999';
@@ -82,6 +83,15 @@ function buildBillingApp(stripeMock) {
 
   const app = express();
   app.use(express.json());
+  app.use((req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token && process.env.JWT_SECRET) {
+      try {
+        req.user = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (e) {}
+    }
+    next();
+  });
   app.use('/api/billing', billingRouter);
   return { app, models };
 }
@@ -198,6 +208,98 @@ describe('subscription trial flow', () => {
       customer: 'cus_test_123',
       success_url: expect.stringContaining('session_id={CHECKOUT_SESSION_ID}')
     }));
+  });
+
+  test('recreates a missing Stripe customer before opening the customer portal', async () => {
+    const stripeMock = {
+      customers: {
+        create: jest.fn().mockResolvedValue({ id: 'cus_recreated_123' })
+      },
+      billingPortal: {
+        sessions: {
+          create: jest.fn()
+            .mockRejectedValueOnce({
+              code: 'resource_missing',
+              param: 'customer',
+              message: "No such customer: 'cus_deleted_123'"
+            })
+            .mockResolvedValueOnce({
+              url: 'https://billing.stripe.com/session/test_123'
+            })
+        }
+      },
+      webhooks: {
+        constructEvent: jest.fn()
+      }
+    };
+
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.JWT_SECRET = 'jwt_test_secret';
+    process.env.FRONTEND_URL = 'dentalpm-1-production.up.railway.app/';
+    const token = jwt.sign({ userId, clinic_id: clinicId }, process.env.JWT_SECRET);
+    const { app, models } = buildBillingApp(stripeMock);
+    const clinic = {
+      id: clinicId,
+      name: 'Cabinet Test',
+      email: 'test@cabinet.mg',
+      stripe_customer_id: 'cus_deleted_123',
+      update: jest.fn().mockResolvedValue()
+    };
+    models.Clinic.findByPk.mockResolvedValue(clinic);
+
+    const res = await request(app)
+      .post('/api/billing/customer-portal')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(res.status).toBe(200);
+    expect(res.body.url).toBe('https://billing.stripe.com/session/test_123');
+    expect(stripeMock.customers.create).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'test@cabinet.mg',
+      metadata: { clinic_id: clinicId }
+    }));
+    expect(clinic.update).toHaveBeenCalledWith({ stripe_customer_id: 'cus_recreated_123' });
+    expect(stripeMock.billingPortal.sessions.create).toHaveBeenLastCalledWith({
+      customer: 'cus_recreated_123',
+      return_url: 'https://dentalpm-1-production.up.railway.app/subscription?portal=returned'
+    });
+  });
+
+  test('returns 503 when Stripe customer portal is not configured', async () => {
+    const stripeMock = {
+      customers: {
+        create: jest.fn()
+      },
+      billingPortal: {
+        sessions: {
+          create: jest.fn().mockRejectedValue({
+            message: 'No configuration provided and your test mode default configuration has not been created.'
+          })
+        }
+      },
+      webhooks: {
+        constructEvent: jest.fn()
+      }
+    };
+
+    process.env.STRIPE_SECRET_KEY = 'sk_test_123';
+    process.env.JWT_SECRET = 'jwt_test_secret';
+    const token = jwt.sign({ userId, clinic_id: clinicId }, process.env.JWT_SECRET);
+    const { app, models } = buildBillingApp(stripeMock);
+    models.Clinic.findByPk.mockResolvedValue({
+      id: clinicId,
+      name: 'Cabinet Test',
+      email: 'test@cabinet.mg',
+      stripe_customer_id: 'cus_test_123'
+    });
+
+    const res = await request(app)
+      .post('/api/billing/customer-portal')
+      .set('Authorization', `Bearer ${token}`)
+      .send({});
+
+    expect(res.status).toBe(503);
+    expect(res.body.error).toBe('Portail client Stripe non configuré');
   });
 
   test('finalizes Stripe checkout and activates the trial from session_id', async () => {

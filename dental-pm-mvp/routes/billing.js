@@ -22,6 +22,30 @@ const PLAN_PRICES = { ESSENTIAL: 149000, PRO: 199000, GROUP: 299000 };
 const PLAN_DAYS   = 30;
 const { Op } = require('sequelize');
 
+const normalizePublicUrl = (value) => {
+  const raw = String(value || '').trim().replace(/\/+$/, '');
+  if (!raw) return 'https://dentalpracticemada.com';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://${raw}`;
+};
+
+const isMissingStripeCustomerError = (error) =>
+  error?.code === 'resource_missing'
+  && (error?.param === 'customer' || /No such customer/i.test(error?.message || ''));
+
+const isStripePortalConfigurationError = (error) =>
+  /billing portal|configuration|No configuration provided/i.test(error?.message || '');
+
+async function createStripeCustomerForClinic(stripe, clinic, clinicId) {
+  const customer = await stripe.customers.create({
+    email: clinic.email,
+    name:  clinic.name,
+    metadata: { clinic_id: clinicId }
+  });
+  await clinic.update({ stripe_customer_id: customer.id });
+  return customer.id;
+}
+
 async function activateSubscriptionAfterPayment(clinicId, planCode, paymentRequestId) {
   try {
     const now     = new Date();
@@ -443,30 +467,46 @@ router.post('/customer-portal', async (req, res) => {
     const clinic = await Clinic.findByPk(clinicId);
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouvé' });
 
-    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
+    const FRONT = normalizePublicUrl(process.env.FRONTEND_URL);
 
     let customerId = clinic.stripe_customer_id;
 
     // Créer le customer Stripe si pas encore fait
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: clinic.email,
-        name:  clinic.name,
-        metadata: { clinic_id: clinicId }
-      });
-      customerId = customer.id;
-      await clinic.update({ stripe_customer_id: customerId });
+      customerId = await createStripeCustomerForClinic(stripe, clinic, clinicId);
     }
 
     // Créer la session du portail Stripe
-    const session = await stripe.billingPortal.sessions.create({
-      customer:   customerId,
+    const createPortalSession = (id) => stripe.billingPortal.sessions.create({
+      customer:   id,
       return_url: `${FRONT}/subscription?portal=returned`,
     });
 
+    let session;
+    try {
+      session = await createPortalSession(customerId);
+    } catch (error) {
+      if (!isMissingStripeCustomerError(error)) throw error;
+      customerId = await createStripeCustomerForClinic(stripe, clinic, clinicId);
+      session = await createPortalSession(customerId);
+    }
+
     res.json({ url: session.url });
   } catch (error) {
-    console.error('Customer portal error:', error.message);
+    console.error('Customer portal error:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      param: error.param
+    });
+
+    if (isStripePortalConfigurationError(error)) {
+      return res.status(503).json({
+        error: 'Portail client Stripe non configuré',
+        details: 'Activez et configurez le Customer Portal dans le dashboard Stripe, puis réessayez.'
+      });
+    }
+
     res.status(500).json({ error: 'Erreur Stripe Portal', details: error.message });
   }
 });
@@ -550,12 +590,6 @@ router.post('/public-checkout', async (req, res) => {
     const priceId = STRIPE_PRICE_IDS[plan_code];
     if (!priceId) return res.status(400).json({ error: 'Plan invalide' });
 
-    const normalizePublicUrl = (value) => {
-      const raw = String(value || '').trim().replace(/\/+$/, '');
-      if (!raw) return 'https://dentalpracticemada.com';
-      if (/^https?:\/\//i.test(raw)) return raw;
-      return `https://${raw}`;
-    };
     const FRONT = normalizePublicUrl(process.env.FRONTEND_URL);
     let clinic = null;
     let customerId = null;
