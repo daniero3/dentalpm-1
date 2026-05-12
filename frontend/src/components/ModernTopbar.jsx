@@ -6,7 +6,7 @@ import {
   Command, Wifi, WifiOff, ArrowRight
 } from "lucide-react"
 import { useAuth } from "../App"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
 const useScreenSize = () => {
@@ -60,6 +60,7 @@ const theme = {
 export function ModernTopbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const { isMobile, isTablet } = useScreenSize()
   const [searchTerm, setSearchTerm]       = useState('')
   const [searchOpen, setSearchOpen]       = useState(false)
@@ -128,6 +129,25 @@ export function ModernTopbar() {
 
   const topbarHeight = isMobile ? 56 : 64
   const topbarPL     = isMobile ? 62 : 24 // espace pour le bouton hamburger
+  const clinicName = user?.clinic_name || user?.clinic?.name || user?.cabinet_name || 'Cabinet DentalPM'
+  const breadcrumb = ({
+    '/':'Tableau de bord',
+    '/patients':'Patients',
+    '/appointments':'Rendez-vous',
+    '/quotes':'Devis',
+    '/invoices':'Factures',
+    '/reports':'Rapports',
+    '/inventory':'Inventaire',
+    '/purchases':'Achats',
+    '/suppliers':'Fournisseurs',
+    '/lab':'Laboratoire',
+    '/mailing':'Mailing',
+    '/settings':'Paramètres',
+    '/subscription':'Abonnement',
+    '/admin/clinics':'Cabinets',
+    '/admin/payments':'Paiements',
+    '/admin/partners':'Partenaires'
+  })[location.pathname] || QUICK_COMMANDS.find(item => location.pathname.startsWith(item.href))?.label || 'DentalPM'
   const filteredCommands = QUICK_COMMANDS.filter(c => {
     const q = searchTerm.trim().toLowerCase()
     if (!q) return true
@@ -153,9 +173,16 @@ export function ModernTopbar() {
         boxShadow: theme.shadow,
       }}>
 
+        {!isMobile && (
+          <div style={{ minWidth: 150, maxWidth: 240 }}>
+            <p style={{ margin:0, fontSize:'var(--text-xs)', fontWeight:'var(--font-medium)', color:theme.textSecondary }}>DentalPM</p>
+            <p style={{ margin:0, fontSize:'var(--text-base)', fontWeight:'var(--font-semibold)', color:theme.textPrimary, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{breadcrumb}</p>
+          </div>
+        )}
+
         {/* ── Search — desktop/tablette ── */}
         {!isMobile && (
-          <div style={{ flex:1, maxWidth: isTablet ? 280 : 440, position:'relative' }}>
+          <div style={{ flex:1, maxWidth: isTablet ? 240 : 380, position:'relative' }}>
             <Search size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:theme.textSecondary, pointerEvents:'none' }} />
             <input type="text" placeholder="Rechercher patients, factures..."
               value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
@@ -183,6 +210,18 @@ export function ModernTopbar() {
         )}
 
         <div style={{ flex:1 }} />
+
+        {!isMobile && (
+          <button type="button" onClick={() => navigate('/appointments')}
+            style={{ height:38, display:'inline-flex', alignItems:'center', justifyContent:'center', gap:'var(--space-2)', padding:'0 var(--space-4)', borderRadius:theme.radiusMd, border:`1px solid ${theme.accent}`, background:theme.accent, color:theme.bgSurface, fontSize:'var(--text-sm)', fontWeight:'var(--font-semibold)', cursor:'pointer', boxShadow:'var(--shadow-sm)', transition:theme.transition }}
+            onMouseEnter={e => { e.currentTarget.style.background=theme.accentHover; e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow=theme.shadow }}
+            onMouseLeave={e => { e.currentTarget.style.background=theme.accent; e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow-sm)' }}
+            onMouseDown={e => { e.currentTarget.style.transform='scale(0.97)' }}
+            onMouseUp={e => { e.currentTarget.style.transform='translateY(-1px)' }}>
+            <CalendarPlus size={16} />
+            Nouveau RDV
+          </button>
+        )}
 
         {!isMobile && (
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 10px', borderRadius:theme.radiusMd, border:`1px solid ${theme.borderDefault}`, background:theme.bgElevated, color: online ? theme.success : theme.danger, fontSize:12, fontWeight:800, whiteSpace:'nowrap' }}>
@@ -239,17 +278,17 @@ export function ModernTopbar() {
             className='dpm-topbar-control' style={{ display:'flex', alignItems:'center', gap: isMobile ? 0 : 8, padding: isMobile ? 4 : '6px 10px 6px 6px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, cursor:'pointer', transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=theme.accent; e.currentTarget.style.background=theme.pressed; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor=theme.borderDefault; e.currentTarget.style.background=theme.bgElevated; }}>
-            <div style={{ width:32, height:32, borderRadius:theme.radiusSm, flexShrink:0, background:theme.accentGlow, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sans)', fontWeight:800, fontSize:13, color:theme.textPrimary }}>
-              {user?.full_name?.charAt(0)?.toUpperCase() || 'A'}
+            <div style={{ width:32, height:32, borderRadius:theme.radiusSm, flexShrink:0, background:theme.accentGlow, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sans)', fontWeight:800, fontSize:13, color:theme.accent }}>
+              {clinicName?.charAt(0)?.toUpperCase() || 'D'}
             </div>
             {!isMobile && (
               <>
                 <div style={{ textAlign:'left' }}>
                   <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.textPrimary, margin:0, lineHeight:1.2, whiteSpace:'nowrap' }}>
-                    {user?.full_name?.split(' ')[0] || 'Utilisateur'}
+                    {clinicName}
                   </p>
                   <p style={{ fontSize:10, margin:0, color: getRoleColor(user?.role), fontWeight:700 }}>
-                    {getRoleLabel(user?.role)}
+                    {user?.full_name?.split(' ')[0] || getRoleLabel(user?.role)}
                   </p>
                 </div>
                 <ChevronDown size={13} color={theme.textSecondary} style={{ transition:'transform 0.2s', transform: isProfileOpen ? 'rotate(180deg)' : 'none' }} />
