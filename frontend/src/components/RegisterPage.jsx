@@ -95,7 +95,9 @@ export default function RegisterPage() {
     email:'',
     phone:'',
     city:'',
-    dentists:'1'
+    dentists:'1',
+    password:'',
+    confirm_password:''
   });
 
   const inp = {
@@ -119,7 +121,9 @@ export default function RegisterPage() {
     } finally { setLoading(false); }
   };
 
-  const stepValid = form.cabinet && form.practitioner_identifier && form.last_name && form.first_name && form.email && form.phone && form.city;
+  const passwordStrong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(form.password);
+  const passwordMatch = form.password && form.password === form.confirm_password;
+  const stepValid = form.cabinet && form.practitioner_identifier && form.last_name && form.first_name && form.email && form.phone && form.city && passwordStrong && passwordMatch;
 
   return (
     <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#F0FDFE 0%,#E8F7F8 46%,#F8FAFC 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'DM Sans,sans-serif', position:'relative', overflow:'hidden' }}>
@@ -208,6 +212,18 @@ export default function RegisterPage() {
                   <Field label="Email *" name="email" placeholder="contact@cabinet.mg" type="email" value={form.email} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={180}/>
                   <Field label="Téléphone *" name="phone" placeholder="034 XX XXX XX" type="tel" value={form.phone} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={220}/>
                   <Field label="Ville *" name="city" placeholder="Antananarivo" value={form.city} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={260}/>
+                  <Field label="Mot de passe *" name="password" placeholder="Minimum 10 caractères" type="password" value={form.password} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={300}/>
+                  <Field label="Confirmer le mot de passe *" name="confirm_password" placeholder="Répétez le mot de passe" type="password" value={form.confirm_password} onChange={updateField} style={inp} onFocus={focus} onBlur={blur} delay={340}/>
+                  {form.password && !passwordStrong && (
+                    <div style={{ gridColumn:'1 / -1', fontSize:12, color:'#DC2626', fontWeight:600, marginTop:-4 }}>
+                      Le mot de passe doit contenir au moins 10 caractères, une majuscule, une minuscule, un chiffre et un symbole.
+                    </div>
+                  )}
+                  {form.confirm_password && !passwordMatch && (
+                    <div style={{ gridColumn:'1 / -1', fontSize:12, color:'#DC2626', fontWeight:600, marginTop:-4 }}>
+                      Les deux mots de passe ne correspondent pas.
+                    </div>
+                  )}
                   <div className="premium-field" style={{ animationDelay:'300ms' }}>
                     <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Nombre de praticiens</label>
                     <select value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))}
@@ -266,13 +282,11 @@ export default function RegisterPage() {
                 <p style={{ color:'#64748B', fontSize:14, lineHeight:1.7, margin:'0 0 16px' }}>
                   Votre essai gratuit de 7 jours est actif. Un email de bienvenue vous a été envoyé.
                 </p>
-                {tempPwd && (
+                {adminUser && (
                   <div style={{ background:'#F0FDFE', border:'1.5px solid #7DD3DA', borderRadius:12, padding:'14px 18px', marginBottom:20, textAlign:'left' }}>
                     <div style={{ fontSize:12, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Identifiants de connexion</div>
                     <div style={{ fontSize:13, color:'#0F172A', marginBottom:4 }}>Identifiant : <strong>{adminUser?.username || form.practitioner_identifier}</strong></div>
                     <div style={{ fontSize:13, color:'#0F172A', marginBottom:4 }}>Email : <strong>{form.email}</strong></div>
-                    <div style={{ fontSize:13, color:'#0F172A', marginBottom:8 }}>Mot de passe temporaire : <strong style={{ fontFamily:'monospace', background:'#fff', padding:'2px 8px', borderRadius:6, border:'1px solid #E2E8F0' }}>{tempPwd}</strong></div>
-                    <div style={{ fontSize:11, color:'#F59E0B', fontWeight:600 }}>⚠️ Notez ce mot de passe — changez-le dès votre première connexion</div>
                   </div>
                 )}
                 <button onClick={() => navigate('/login')}

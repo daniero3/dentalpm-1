@@ -132,6 +132,7 @@ describe('subscription trial flow', () => {
         email: 'test@cabinet.mg',
         phone: '0340000000',
         city: 'Antananarivo',
+        password: 'StrongPass1!',
         plan: 'PRO'
       });
 
@@ -149,13 +150,15 @@ describe('subscription trial flow', () => {
       email: 'test@cabinet.mg',
       full_name: 'Jean Rakoto',
       role: 'ADMIN',
-      clinic_id: clinicId
+      clinic_id: clinicId,
+      password_hash: 'StrongPass1!'
     }));
     expect(res.body.admin_user).toEqual(expect.objectContaining({
       username: 'dr_test',
       full_name: 'Jean Rakoto',
       email: 'test@cabinet.mg'
     }));
+    expect(res.body.temp_password).toBeUndefined();
     expect(models.Subscription.create).toHaveBeenCalledWith(expect.objectContaining({
       clinic_id: clinicId,
       plan: 'PRO',

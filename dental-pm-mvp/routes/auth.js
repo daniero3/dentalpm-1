@@ -1,6 +1,5 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const { body, validationResult } = require('express-validator');
 const { User, Clinic, AuditLog } = require('../models');
 const { authenticateToken, hasActiveClinicAccess, buildClinicAccessError } = require('../middleware/auth');
@@ -277,15 +276,40 @@ router.post('/register-clinic', [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides', details: errors.array() });
 
     const { cabinet, email, phone, city, dentists, plan = 'PRO' } = req.body;
+    const password = String(req.body.password || '');
     const firstName = String(req.body.first_name || '').trim();
     const lastName = String(req.body.last_name || '').trim();
     const requestedIdentifier = String(req.body.practitioner_identifier || '').trim();
     if (!cabinet || !email || !phone) return res.status(400).json({ error: 'Champs requis manquants' });
 
+    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+
     // Vérifier si email déjà utilisé
     const existing = await Clinic.findOne({ where: { email } });
     if (existing) {
       if (['PENDING', 'EXPIRED', 'TRIAL_EXPIRED'].includes(existing.subscription_status)) {
+        if (!strongPassword.test(password)) {
+          return res.status(400).json({
+            error: 'Le mot de passe doit contenir au moins 10 caractères, une majuscule, une minuscule, un chiffre et un symbole.'
+          });
+        }
+
+        const adminUser = await User.findOne({
+          where: {
+            [Op.or]: [
+              { clinic_id: existing.id, role: 'ADMIN' },
+              { email }
+            ]
+          }
+        });
+        if (adminUser) {
+          await adminUser.update({
+            ...(requestedIdentifier ? { username: requestedIdentifier } : {}),
+            password_hash: password,
+            full_name: [firstName, lastName].filter(Boolean).join(' ').trim() || adminUser.full_name
+          });
+        }
+
         await existing.update({
           name: cabinet || existing.name,
           phone: phone || existing.phone,
@@ -295,6 +319,7 @@ router.post('/register-clinic', [
         return res.json({
           message: 'Cabinet déjà créé. Continuez vers Stripe pour activer l’essai.',
           clinic: { id: existing.id, name: existing.name, email: existing.email, plan: existing.current_plan || plan || 'PRO' },
+          admin_user: adminUser ? { username: adminUser.username, full_name: adminUser.full_name, email: adminUser.email } : null,
           existing: true
         });
       }
@@ -302,6 +327,12 @@ router.post('/register-clinic', [
       return res.status(409).json({ 
         error: 'Un cabinet actif existe déjà avec cet email',
         clinic: { id: existing.id, name: existing.name, email: existing.email }
+      });
+    }
+
+    if (!strongPassword.test(password)) {
+      return res.status(400).json({
+        error: 'Le mot de passe doit contenir au moins 10 caractères, une majuscule, une minuscule, un chiffre et un symbole.'
       });
     }
 
@@ -332,12 +363,10 @@ router.post('/register-clinic', [
       max_users:           PLAN_USERS[plan] || 5,
     });
 
-    // Mot de passe temporaire généré avec une source cryptographique.
-    const tempPassword = crypto.randomBytes(18).toString('base64url') + 'A1!';
     const adminUser = await User.create({
       username:     adminUsername,
       email,
-      password_hash: tempPassword,
+      password_hash: password,
       full_name:    adminFullName,
       role:         'ADMIN',
       clinic_id:    clinic.id,
@@ -368,7 +397,6 @@ router.post('/register-clinic', [
       message: 'Cabinet créé avec succès. Carte requise pour activer l’essai de 7 jours.',
       clinic: { id: clinic.id, name: clinic.name, plan },
       admin_user: { username: adminUser.username, full_name: adminUser.full_name, email: adminUser.email },
-      temp_password: tempPassword,
     });
   } catch (error) {
     console.error('Register clinic error:', error);

@@ -404,7 +404,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({cabinet:'',email:'',phone:'',city:'',dentists:'1'});
+  const [form, setForm] = useState({cabinet:'',email:'',phone:'',city:'',dentists:'1',password:'',confirm_password:''});
   const inp = {width:'100%',padding:'12px 14px',borderRadius:12,border:'1.5px solid var(--border)',fontSize:16,fontFamily:'Inter,sans-serif',outline:'none',transition:'border-color .2s,box-shadow .2s'};
   const focus = e=>{e.target.style.borderColor='var(--teal)';e.target.style.boxShadow='0 0 0 3px rgba(13,122,135,.1)';};
   const blur = e=>{e.target.style.borderColor='var(--border)';e.target.style.boxShadow='none';};
@@ -429,6 +429,9 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
     catch(e){alert(e.response?.data?.error||'Erreur. Vérifiez vos informations.');}
     finally{setLoading(false);}
   };
+  const passwordStrong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(form.password);
+  const passwordMatch = form.password && form.password === form.confirm_password;
+  const canContinue = form.cabinet && form.email && form.phone && form.city && passwordStrong && passwordMatch;
   if(!show) return null;
   return (
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(10,15,20,.75)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn .2s ease'}}>
@@ -449,20 +452,30 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
             </div>}
             {step===1&&(
               <div>
-                {[{label:'Nom du cabinet',name:'cabinet',ph:'Cabinet Dentaire Dr. Rakoto',type:'text'},{label:'Email professionnel',name:'email',ph:'contact@cabinet.mg',type:'email'},{label:'Téléphone MVola / Orange',name:'phone',ph:'034 XX XXX XX',type:'tel'},{label:'Ville',name:'city',ph:'Antananarivo',type:'text'}].map(f=>(
+                {[{label:'Nom du cabinet',name:'cabinet',ph:'Cabinet Dentaire Dr. Rakoto',type:'text'},{label:'Email professionnel',name:'email',ph:'contact@cabinet.mg',type:'email'},{label:'Téléphone MVola / Orange',name:'phone',ph:'034 XX XXX XX',type:'tel'},{label:'Ville',name:'city',ph:'Antananarivo',type:'text'},{label:'Mot de passe',name:'password',ph:'Minimum 10 caractères',type:'password'},{label:'Confirmer le mot de passe',name:'confirm_password',ph:'Répétez le mot de passe',type:'password'}].map(f=>(
                   <div key={f.name} style={{marginBottom:12}}>
                     <label style={{display:'block',fontSize:13,fontWeight:600,color:'var(--slate)',marginBottom:5}}>{f.label} *</label>
                     <input type={f.type} placeholder={f.ph} required value={form[f.name]} onChange={e=>setForm(p=>({...p,[f.name]:e.target.value}))} style={inp} onFocus={focus} onBlur={blur}/>
                   </div>
                 ))}
+                {form.password && !passwordStrong && (
+                  <div style={{fontSize:12,color:'#DC2626',fontWeight:600,margin:'-4px 0 10px'}}>
+                    Le mot de passe doit contenir au moins 10 caractères, une majuscule, une minuscule, un chiffre et un symbole.
+                  </div>
+                )}
+                {form.confirm_password && !passwordMatch && (
+                  <div style={{fontSize:12,color:'#DC2626',fontWeight:600,margin:'-4px 0 10px'}}>
+                    Les deux mots de passe ne correspondent pas.
+                  </div>
+                )}
                 <div style={{marginBottom:18}}>
                   <label style={{display:'block',fontSize:13,fontWeight:600,color:'var(--slate)',marginBottom:5}}>Nombre de praticiens</label>
                   <select value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))} style={{...inp,cursor:'pointer',background:'#fff'}}>
                     {['1 praticien','2-3 praticiens','4-5 praticiens','5+ praticiens'].map((o,i)=><option key={i} value={[1,'2-3','4-5','5+'][i]}>{o}</option>)}
                   </select>
                 </div>
-                <button className="btn-main" disabled={!form.cabinet||!form.email||!form.phone||!form.city} onClick={()=>setStep(2)}
-                  style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:(!form.cabinet||!form.email||!form.phone||!form.city)?.5:1}}>
+                <button className="btn-main" disabled={!canContinue} onClick={()=>setStep(2)}
+                  style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:canContinue?'pointer':'not-allowed',opacity:canContinue?1:.5}}>
                   Continuer →
                 </button>
               </div>
