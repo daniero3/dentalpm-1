@@ -7,12 +7,45 @@ import {
   RefreshCw, Plus, Search, BarChart2, TrendingUp, Edit2
 } from 'lucide-react';
 
-const API  = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 const fmt  = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 
-const CATS   = { CONSUMABLE:'Consommable', EQUIPMENT:'Équipement', MEDICATION:'Médicament', OTHER:'Autre' };
-const CATCLR = { CONSUMABLE:['#0D7A87','#F0FDFE'], EQUIPMENT:['#7C3AED','#EDE9FE'], MEDICATION:['#10B981','#DCFCE7'], OTHER:['#64748B','#F1F5F9'] };
+const CATS = {
+  CONSUMABLES: 'Consommables',
+  MATERIALS: 'Matériaux',
+  EQUIPMENT: 'Équipement',
+  INSTRUMENTS: 'Instruments',
+  PROSTHETICS: 'Prothèses',
+  ORTHODONTICS: 'Orthodontie',
+  HYGIENE: 'Hygiène',
+  ANESTHESIA: 'Anesthésie',
+  RADIOLOGY: 'Radiologie',
+  OTHER: 'Autre'
+};
+const CATCLR = {
+  CONSUMABLES: ['#0D7A87', '#F0FDFE'],
+  MATERIALS: ['#10B981', '#DCFCE7'],
+  EQUIPMENT: ['#7C3AED', '#EDE9FE'],
+  INSTRUMENTS: ['#2563EB', '#DBEAFE'],
+  PROSTHETICS: ['#D97706', '#FEF3C7'],
+  ORTHODONTICS: ['#C026D3', '#FAE8FF'],
+  HYGIENE: ['#059669', '#D1FAE5'],
+  ANESTHESIA: ['#DC2626', '#FEE2E2'],
+  RADIOLOGY: ['#475569', '#E2E8F0'],
+  OTHER: ['#64748B', '#F1F5F9']
+};
+
+const apiErrorMessage = (error, fallback = 'Erreur') => {
+  const data = error.response?.data;
+  if (!data) return fallback;
+  const code = data.code ? ` (${data.code})` : '';
+  return `${data.error || fallback}${code}`;
+};
 
 const Modal = ({ open, onClose, title, children, maxW=520 }) => {
   if (!open) return null;
@@ -45,13 +78,28 @@ const InventoryManagement = () => {
   const qtyRef    = useRef();
   const reasonRef = useRef();
 
-  const emptyForm = { name:'',sku:'',category:'CONSUMABLE',unit:'PIECE',unit_cost_mga:0,sale_price_mga:0,current_qty:0,min_qty:5 };
+  const emptyForm = { name:'',sku:'',category:'CONSUMABLES',unit:'PIECE',unit_cost_mga:0,sale_price_mga:0,current_qty:0,min_qty:5 };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { fetchAll(); }, []);
   const fetchAll      = async () => { setLoading(true); await Promise.all([fetchProducts(), fetchAlerts()]); setLoading(false); };
-  const fetchProducts = async () => { try { const r=await axios.get(`${API}/inventory/products`,authH()); setProducts(r.data.products||r.data||[]); } catch {} };
-  const fetchAlerts   = async () => { try { const r=await axios.get(`${API}/inventory/alerts`,authH()); setAlerts(r.data.alerts||r.data||[]); } catch {} };
+  const fetchProducts = async () => {
+    try {
+      const r = await axios.get(`${API}/inventory/products`, authH());
+      setProducts(r.data.products || r.data || []);
+    } catch (e) {
+      toast.error(apiErrorMessage(e, 'Erreur chargement produits'));
+      setProducts([]);
+    }
+  };
+  const fetchAlerts = async () => {
+    try {
+      const r = await axios.get(`${API}/inventory/alerts`, authH());
+      setAlerts(r.data.alerts || r.data || []);
+    } catch {
+      setAlerts([]);
+    }
+  };
 
   const handleAdd = async e => {
     e.preventDefault(); setSaving(true);
@@ -59,7 +107,7 @@ const InventoryManagement = () => {
       await axios.post(`${API}/inventory/products`, { ...form, unit_cost_mga:parseFloat(form.unit_cost_mga)||0, sale_price_mga:parseFloat(form.sale_price_mga)||0, current_qty:parseInt(form.current_qty)||0, min_qty:parseInt(form.min_qty)||5 }, authH());
       invalidateClientCache('/inventory/products');
       toast.success('Produit ajouté'); setIsAdd(false); setForm(emptyForm); fetchAll();
-    } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
+    } catch(e){ toast.error(apiErrorMessage(e, 'Erreur création produit')); }
     finally { setSaving(false); }
   };
 
@@ -73,7 +121,7 @@ const InventoryManagement = () => {
       await axios.post(`${API}/inventory/products/${selP.id}/movement`, { type:movType, quantity:qty, reason }, authH());
       invalidateClientCache('/inventory/products');
       toast.success('Mouvement enregistré'); setIsMov(false); setSelP(null); fetchAll();
-    } catch(e){ toast.error(e.response?.data?.error||'Erreur'); }
+    } catch(e){ toast.error(apiErrorMessage(e, 'Erreur mouvement stock')); }
     finally { setSaving(false); }
   };
 
