@@ -176,6 +176,7 @@ function UserView({ user }) {
   const [patients, setPatients] = useState(0);
   const [loading,  setLoading]  = useState(true);
   const [sideTab,  setSideTab]  = useState('overview');
+  const [checkoutFinalized, setCheckoutFinalized] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -193,6 +194,23 @@ function UserView({ user }) {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (checkoutFinalized || params.get('checkout') !== 'success' || !sessionId) return;
+
+    setCheckoutFinalized(true);
+    axios.post(`${API}/billing/finalize-public-checkout`, { session_id: sessionId }, authH())
+      .then(() => {
+        toast.success('Carte validée. Essai gratuit activé automatiquement.');
+        window.history.replaceState({}, '', window.location.pathname);
+        load();
+      })
+      .catch((e) => {
+        toast.error(e.response?.data?.error || 'Impossible de finaliser automatiquement Stripe');
+      });
+  }, [checkoutFinalized, load]);
 
   if (loading) {
     return (

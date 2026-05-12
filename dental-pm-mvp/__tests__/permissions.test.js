@@ -44,6 +44,7 @@ describe('RBAC permission matrix', () => {
 
   test('execute permissions remain stricter than regular write permissions', () => {
     expect(hasPermission('DENTIST', 'invoices', 'write')).toBe(true);
+    expect(hasPermission('DENTIST', 'inventory', 'write')).toBe(true);
     expect(hasPermission('DENTIST', 'payments', 'execute')).toBe(true);
     expect(hasPermission('ASSISTANT', 'lab_orders', 'write')).toBe(true);
     expect(hasPermission('ASSISTANT', 'lab_orders', 'execute')).toBe(false);

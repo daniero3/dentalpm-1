@@ -45,7 +45,7 @@ const ROLE_PERMISSIONS = {
     invoices: ['read', 'write'],
     payments: ['read', 'write', 'execute'],
     reports: ['read'],
-    inventory: ['read'],
+    inventory: ['read', 'write'],
     suppliers: ['read'],
     purchases: ['read'],
     lab_orders: ['read', 'write', 'execute'],

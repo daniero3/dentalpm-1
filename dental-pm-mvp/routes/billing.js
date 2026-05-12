@@ -231,6 +231,14 @@ async function activateStripeTrial({ clinicId, planCode = 'PRO', stripeSubscript
   return subscription;
 }
 
+async function markStripeActivationRequestVerified(clinicId, reference) {
+  if (!clinicId || !reference) return;
+  await PaymentRequest.update(
+    { status: 'VERIFIED', verified_at: new Date(), note_admin: 'Carte validée par Stripe — essai activé automatiquement' },
+    { where: { clinic_id: clinicId, reference, status: 'PENDING' } }
+  ).catch(() => {});
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // GET /api/billing/status — Statut abonnement actuel
 // ═══════════════════════════════════════════════════════════════════════════
@@ -658,6 +666,7 @@ router.post('/finalize-public-checkout', [
       stripeSubscriptionId: stripeSub?.id || (typeof session.subscription === 'string' ? session.subscription : null),
       trialEnd
     });
+    await markStripeActivationRequestVerified(clinicId, session.id);
 
     res.json({
       activated: true,
@@ -696,10 +705,16 @@ router.post('/create-checkout-session', async (req, res) => {
 
     const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
 
+    await PaymentRequest.update(
+      { status: 'REJECTED', note_admin: 'Remplacée par une nouvelle demande carte Stripe' },
+      { where: { clinic_id: clinicId, status: 'PENDING' } }
+    ).catch(() => {});
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       payment_method_collection: 'always',
+      client_reference_id: clinicId,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
         trial_period_days: 7,
@@ -710,10 +725,21 @@ router.post('/create-checkout-session', async (req, res) => {
       },
       customer_email: clinic.email,
       metadata: { clinic_id: clinicId, plan: plan_code },
-      success_url: FRONT + '/subscription?checkout=success&plan=' + plan_code,
+      success_url: FRONT + '/subscription?checkout=success&plan=' + plan_code + '&session_id={CHECKOUT_SESSION_ID}',
       cancel_url:  FRONT + '/subscription?checkout=cancelled',
       locale: 'fr',
     });
+
+    await PaymentRequest.create({
+      clinic_id: clinicId,
+      submitted_by_user_id: _getUserId(req),
+      plan_code,
+      amount_mga: PLAN_PRICES[plan_code] || PLAN_PRICES.PRO,
+      payment_method: 'BANK_TRANSFER',
+      reference: session.id,
+      status: 'PENDING',
+      note_admin: 'Demande activation carte Stripe — en attente validation carte'
+    }).catch((e) => console.warn('[Stripe] PaymentRequest alert skipped:', e.message));
 
     res.json({ url: session.url, session_id: session.id });
   } catch (error) {
@@ -775,6 +801,7 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
             stripeSubscriptionId: obj.subscription || null,
             trialEnd
           });
+          await markStripeActivationRequestVerified(clinicId, obj.id);
 
           // Email de bienvenue
           try {
