@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
-import { matchesSearch, patientSearchText } from '../utils/search';
+import { matchesSearch, patientIdentifier, patientSearchText } from '../utils/search';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
   Clock, CheckCircle, AlertCircle, DollarSign, CreditCard,
@@ -76,6 +76,7 @@ const InvoiceManagement = () => {
   const [fees,      setFees]      = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
   const [statusF,   setStatusF]   = useState('ALL');
   const [feeSearch, setFeeSearch] = useState('');
   const [isOpen,    setIsOpen]    = useState(false);
@@ -240,6 +241,13 @@ const InvoiceManagement = () => {
   };
 
   const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
+  const patientMatches = patients
+    .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
+    .slice(0, 80);
+  const selectedPatient = patients.find(p => p.id === form.patient_id);
+  const patientOptions = selectedPatient && !patientMatches.some(p => p.id === selectedPatient.id)
+    ? [selectedPatient, ...patientMatches]
+    : patientMatches;
 
   if(loading) return(
     <div style={{ maxWidth: 1100,margin:'0 auto',paddingBottom:48 }}>
@@ -267,7 +275,7 @@ const InvoiceManagement = () => {
           <button onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}}
+          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setFees([]);setIsOpen(true);}}
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(16,185,129,.3)' }}>
             <Plus size={15}/>Nouvelle Facture
           </button>
@@ -349,7 +357,7 @@ const InvoiceManagement = () => {
           <FileText size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucune facture</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre première facture'}</p>
-          <button onClick={()=>{setForm(emptyForm);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouvelle facture
           </button>
         </div>
@@ -534,10 +542,24 @@ const InvoiceManagement = () => {
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
+              <div style={{ position:'relative', marginBottom:7 }}>
+                <Search size={13} color="#94A3B8" style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)' }}/>
+                <input
+                  value={patientSearch}
+                  onChange={e=>setPatientSearch(e.target.value)}
+                  placeholder="Rechercher par nom, ID, téléphone, email..."
+                  style={{ ...inp, paddingLeft:32 }}
+                  onFocus={fi}
+                  onBlur={bi}
+                />
+              </div>
               <select value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required>
                 <option value="">Sélectionner...</option>
-                {patients.map(p=><option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
+                {patientOptions.map(p=><option key={p.id} value={p.id}>{patientIdentifier(p)} · {p.first_name} {p.last_name}{p.phone_primary ? ` · ${p.phone_primary}` : ''}</option>)}
               </select>
+              <div style={{ fontSize:11, color:'#94A3B8', marginTop:5 }}>
+                {patientOptions.length} patient(s) affiché(s)
+              </div>
             </div>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire *</label>

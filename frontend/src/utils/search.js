@@ -44,3 +44,9 @@ export const patientSearchText = (patient = {}) => {
     patient.city
   ].filter(Boolean).join(' ');
 };
+
+export const patientIdentifier = (patient = {}) => {
+  if (patient.patient_number) return patient.patient_number;
+  if (patient.id) return `PAT-${patient.id.toString().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  return 'ID à générer';
+};

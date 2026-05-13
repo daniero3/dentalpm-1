@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
-import { matchesSearch, patientSearchText } from '../utils/search';
+import { matchesSearch, patientIdentifier, patientSearchText } from '../utils/search';
 import {
   Users, Plus, Search, Edit, Activity, Phone, Mail,
   AlertTriangle, User, Calendar, FileText, ClipboardList,
@@ -69,6 +69,10 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
     {/* Section identité */}
     <div style={{ background:'#F8FAFC', borderRadius:12, padding:'14px 16px', marginBottom:2 }}>
       <div style={{ fontSize:11, fontWeight:700, color:'#0D7A87', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>👤 Identité</div>
+      <div style={{ background:'#FFFFFF', border:'1px solid #D9F3F6', color:'#0D7A87', borderRadius:10, padding:'9px 12px', marginBottom:12, fontSize:12, fontWeight:700, display:'flex', justifyContent:'space-between', gap:10, flexWrap:'wrap' }}>
+        <span>Identifiant patient</span>
+        <span>{isEdit ? patientIdentifier(data) : 'Généré automatiquement à la création'}</span>
+      </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
         <div>
           <label style={labelStyle}>Prénom *</label>
@@ -197,7 +201,7 @@ const PatientManagement = () => {
   const importInputRef = useRef(null);
   const canImportPatients = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
-  const emptyForm = { first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' };
+  const emptyForm = { id:'', patient_number:'', first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
@@ -213,12 +217,16 @@ const PatientManagement = () => {
   const fetchPatients = async (targetPage = page) => {
     try {
       setLoading(true);
-      const params = { page: targetPage, limit: 50 };
-      if (search.trim()) params.search = search.trim();
+      const hasSearch = !!search.trim();
+      const params = hasSearch
+        ? { page: 1, limit: 500 }
+        : { page: targetPage, limit: 50 };
       const r = await axios.get(`${API}/patients`, { params, ...authH() });
       const list = r.data.patients || r.data.data || r.data || [];
       if (mountedRef.current) setPatients(Array.isArray(list) ? list : []);
-      if (mountedRef.current && r.data.pagination) setPagination(r.data.pagination);
+      if (mountedRef.current && r.data.pagination) {
+        setPagination(hasSearch ? { ...r.data.pagination, current_page: 1 } : r.data.pagination);
+      }
     } catch (e) { if (!axios.isCancel(e)) toast.error('Erreur chargement patients'); }
     finally { if (mountedRef.current) setLoading(false); }
   };
@@ -226,14 +234,19 @@ const PatientManagement = () => {
   const onChange = useCallback((name, val) => setForm(p => ({...p, [name]:val})), []);
 
   const openCreate = () => { setSelP(null); setForm(emptyForm); setIsOpen(true); };
-  const openEdit   = p  => { setSelP(p);  setForm({ first_name:p.first_name||'', last_name:p.last_name||'', date_of_birth:p.date_of_birth||'', gender:p.gender||'', phone_primary:p.phone_primary||'', email:p.email||'', address:p.address||'', emergency_contact_name:p.emergency_contact_name||'', emergency_contact_phone:p.emergency_contact_phone||'', medical_history:p.medical_history||'', allergies:p.allergies||'', current_medications:p.current_medications||'' }); setIsOpen(true); };
+  const openEdit   = p  => { setSelP(p);  setForm({ id:p.id||'', patient_number:p.patient_number||'', first_name:p.first_name||'', last_name:p.last_name||'', date_of_birth:p.date_of_birth||'', gender:p.gender||'', phone_primary:p.phone_primary||'', email:p.email||'', address:p.address||'', emergency_contact_name:p.emergency_contact_name||'', emergency_contact_phone:p.emergency_contact_phone||'', medical_history:p.medical_history||'', allergies:p.allergies||'', current_medications:p.current_medications||'' }); setIsOpen(true); };
 
   const handleSubmit = async e => {
     e.preventDefault(); setSaving(true);
     try {
-      if (selP) await axios.put(`${API}/patients/${selP.id}`, form, authH());
-      else      await axios.post(`${API}/patients`, form, authH());
-      toast.success(selP ? 'Patient modifié !' : 'Patient créé !');
+      const { id, patient_number, ...payload } = form;
+      if (selP) {
+        await axios.put(`${API}/patients/${selP.id}`, payload, authH());
+        toast.success('Patient modifié !');
+      } else {
+        const res = await axios.post(`${API}/patients`, payload, authH());
+        toast.success(`Patient créé ! ID: ${patientIdentifier(res.data.patient || {})}`);
+      }
       setIsOpen(false); fetchPatients();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
@@ -532,7 +545,7 @@ const PatientManagement = () => {
                     {/* Nom + badge genre + allergies */}
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
                       <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A' }}>{p.first_name} {p.last_name}</span>
-                      <span style={{ background:'#F8FAFC', color:'#0D7A87', border:'1px solid #D9F3F6', fontSize:10, fontWeight:800, padding:'1px 7px', borderRadius:99 }}>{p.patient_number || 'ID à générer'}</span>
+                      <span style={{ background:'#F8FAFC', color:'#0D7A87', border:'1px solid #D9F3F6', fontSize:10, fontWeight:800, padding:'1px 7px', borderRadius:99 }}>{patientIdentifier(p)}</span>
                       {p.gender && <span style={{ background:gb, color:gc, fontSize:10, fontWeight:700, padding:'1px 7px', borderRadius:99 }}>{GENDER_LABEL[p.gender]}</span>}
                       {age !== null && <span style={{ fontSize:11, color:'#64748B' }}>{age} ans</span>}
                       {p.allergies && <span style={{ background:'#FEF3C7', color:'#B45309', fontSize:10, fontWeight:700, padding:'1px 8px', borderRadius:99, display:'flex', alignItems:'center', gap:3 }}><AlertTriangle size={9}/>Allergies</span>}
@@ -574,7 +587,7 @@ const PatientManagement = () => {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A', marginBottom:4 }}>{p.first_name} {p.last_name}</div>
                     <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                      <span style={{ fontSize:11, color:'#0D7A87', background:'#F0FDFE', border:'1px solid #D9F3F6', fontWeight:800, padding:'1px 8px', borderRadius:99 }}>{p.patient_number || 'ID à générer'}</span>
+                      <span style={{ fontSize:11, color:'#0D7A87', background:'#F0FDFE', border:'1px solid #D9F3F6', fontWeight:800, padding:'1px 8px', borderRadius:99 }}>{patientIdentifier(p)}</span>
                       {age !== null && <span style={{ fontSize:11, color:'#64748B', background:'#F1F5F9', padding:'1px 8px', borderRadius:99 }}>{age} ans</span>}
                       {p.gender && <span style={{ background:GENDER_BG[p.gender], color:GENDER_COLOR[p.gender], fontSize:11, fontWeight:700, padding:'1px 8px', borderRadius:99 }}>{GENDER_LABEL[p.gender]}</span>}
                     </div>
@@ -624,7 +637,7 @@ const PatientManagement = () => {
               <div>
                 <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A', margin:'0 0 6px' }}>{detail.first_name} {detail.last_name}</h2>
                 <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
-                  <span style={{ background:'#F0FDFE', color:'#0D7A87', border:'1px solid #BFECEF', fontSize:12, fontWeight:800, padding:'2px 10px', borderRadius:99 }}>{detail.patient_number || 'ID à générer'}</span>
+                  <span style={{ background:'#F0FDFE', color:'#0D7A87', border:'1px solid #BFECEF', fontSize:12, fontWeight:800, padding:'2px 10px', borderRadius:99 }}>{patientIdentifier(detail)}</span>
                   {calcAge(detail.date_of_birth) && <span style={{ background:'#F1F5F9', color:'#475569', fontSize:12, fontWeight:600, padding:'2px 10px', borderRadius:99 }}>{calcAge(detail.date_of_birth)} ans · né(e) le {fdate(detail.date_of_birth)}</span>}
                   {detail.gender && <span style={{ background:GENDER_BG[detail.gender], color:GENDER_COLOR[detail.gender], fontSize:12, fontWeight:700, padding:'2px 10px', borderRadius:99 }}>{GENDER_LABEL[detail.gender]}</span>}
                 </div>
