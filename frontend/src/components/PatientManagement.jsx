@@ -307,10 +307,21 @@ const PatientManagement = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      toast.success(`Import terminé: ${response.data.inserted || 0} créés, ${response.data.updated || 0} mis à jour`);
+      const inserted = response.data.inserted || 0;
+      const updated = response.data.updated || 0;
+      const skipped = response.data.skipped || 0;
+      if (skipped > 0) {
+        toast.warning(`Import partiel: ${inserted} créés, ${updated} mis à jour, ${skipped} ignorés`);
+      } else {
+        toast.success(`Import terminé: ${inserted} créés, ${updated} mis à jour`);
+      }
       fetchPatients();
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Erreur lors de l\'import CSV');
+      const data = error.response?.data;
+      const firstError = Array.isArray(data?.errors) && data.errors.length > 0
+        ? ` Ligne ${data.errors[0].row}: ${data.errors[0].message || data.errors[0].error}`
+        : '';
+      toast.error(`${data?.error || 'Erreur lors de l\'import CSV'}${firstError}`);
     } finally {
       setImporting(false);
       e.target.value = '';
@@ -423,7 +434,7 @@ const PatientManagement = () => {
               <input
                 ref={importInputRef}
                 type="file"
-                accept=".csv,text/csv"
+                accept=".csv,.cvs,text/csv"
                 onChange={handleImportCsv}
                 style={{ display:'none' }}
               />

@@ -131,4 +131,55 @@ describe('patient CSV import', () => {
     expect(res.body.inserted).toBe(1);
     expect(res.body.updated).toBe(0);
   });
+
+  test('imports semicolon CSV files with French headers', async () => {
+    const { app, models } = buildApp('ADMIN', clinicA);
+
+    models.Patient.findOne.mockResolvedValueOnce(null);
+
+    const csvContent = [
+      'numero patient;prénom;nom;date de naissance;sexe;téléphone;ville',
+      'PAT-FR-001;Andry;Rabe;12/05/1990;Homme;0343333333;Antsirabe'
+    ].join('\n');
+
+    const res = await request(app)
+      .post('/api/patients/import-csv')
+      .attach('file', Buffer.from(csvContent, 'utf8'), 'patients.csv');
+
+    expect(res.status).toBe(200);
+    expect(res.body.inserted).toBe(1);
+    expect(res.body.updated).toBe(0);
+    expect(res.body.skipped).toBe(0);
+    expect(models.Patient.create).toHaveBeenCalledWith(expect.objectContaining({
+      clinic_id: clinicA,
+      patient_number: 'PAT-FR-001',
+      first_name: 'Andry',
+      last_name: 'Rabe',
+      date_of_birth: '1990-05-12',
+      gender: 'M',
+      phone_primary: '0343333333',
+      city: 'Antsirabe'
+    }), { transaction: 'tx' });
+  });
+
+  test('returns an error instead of success when every row is skipped', async () => {
+    const { app, models } = buildApp('ADMIN', clinicA);
+
+    const csvContent = [
+      'nom,prenom,telephone',
+      'Rakoto,Jean,0341111111'
+    ].join('\n');
+
+    const res = await request(app)
+      .post('/api/patients/import-csv')
+      .attach('file', Buffer.from(csvContent, 'utf8'), 'patients.csv');
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('Aucun patient importé');
+    expect(res.body.inserted).toBe(0);
+    expect(res.body.updated).toBe(0);
+    expect(res.body.skipped).toBe(1);
+    expect(models.Patient.create).not.toHaveBeenCalled();
+    expect(models.AuditLog.create).not.toHaveBeenCalled();
+  });
 });

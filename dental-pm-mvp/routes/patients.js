@@ -536,6 +536,34 @@ const parseCsvDate = (value) => {
   return raw;
 };
 
+const normalizeCsvHeader = (header) => (header || '')
+  .toString()
+  .trim()
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9]+/g, '_')
+  .replace(/^_+|_+$/g, '');
+
+const detectCsvDelimiter = (content) => {
+  const firstLine = (content || '').split(/\r?\n/).find(line => line.trim()) || '';
+  const semicolonCount = (firstLine.match(/;/g) || []).length;
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  return semicolonCount > commaCount ? ';' : ',';
+};
+
+const rowValue = (row, keys) => {
+  for (const key of keys) {
+    const normalizedKey = normalizeCsvHeader(key);
+    if (row[normalizedKey] !== undefined && row[normalizedKey] !== null) {
+      return row[normalizedKey];
+    }
+  }
+  return '';
+};
+
+const cleanCsvText = (row, keys) => (rowValue(row, keys) || '').toString().trim();
+
 router.post('/import-csv', requireClinicId, upload.single('file'), async (req, res) => {
   try {
     const clinicId = getClinicId(req);
@@ -548,12 +576,18 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
     }
 
     const content = req.file.buffer.toString('utf-8').replace(/^\uFEFF/, '');
-    const rows = csv.parse(content, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true,
-      bom: true
-    });
+    let rows = [];
+    try {
+      rows = csv.parse(content, {
+        columns: headers => headers.map(normalizeCsvHeader),
+        delimiter: detectCsvDelimiter(content),
+        skip_empty_lines: true,
+        trim: true,
+        bom: true
+      });
+    } catch (error) {
+      return res.status(400).json({ error: 'CSV invalide', details: error.message });
+    }
 
     if (!rows.length) {
       return res.status(400).json({ error: 'Aucune ligne à importer' });
@@ -564,12 +598,12 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
 
     await sequelize.transaction(async (transaction) => {
       for (const [index, row] of rows.entries()) {
-        const first_name = (row.first_name || row.prenom || row.firstname || '').trim();
-        const last_name = (row.last_name || row.nom || row.lastname || '').trim();
-        const date_of_birth = parseCsvDate(row.date_of_birth || row.birth_date || row.dob);
-        const gender = normalizeGender(row.gender || row.sexe);
-        const phone_primary = (row.phone_primary || row.telephone || row.phone || '').trim();
-        const email = (row.email || '').trim() || null;
+        const first_name = cleanCsvText(row, ['first_name', 'prenom', 'firstname', 'prénom']);
+        const last_name = cleanCsvText(row, ['last_name', 'nom', 'lastname']);
+        const date_of_birth = parseCsvDate(rowValue(row, ['date_of_birth', 'date_naissance', 'date_de_naissance', 'birth_date', 'dob', 'naissance']));
+        const gender = normalizeGender(rowValue(row, ['gender', 'sexe']));
+        const phone_primary = cleanCsvText(row, ['phone_primary', 'telephone', 'téléphone', 'tel', 'phone', 'mobile']);
+        const email = cleanCsvText(row, ['email', 'mail', 'e_mail']) || null;
 
         if (!first_name || !last_name || !date_of_birth || !gender || !phone_primary) {
           stats.skipped += 1;
@@ -581,37 +615,37 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
         }
 
         const patientData = {
-          patient_number: (row.patient_number || '').trim() || null,
+          patient_number: cleanCsvText(row, ['patient_number', 'numero_patient', 'num_patient', 'reference']) || null,
           first_name,
           last_name,
           date_of_birth,
           gender,
           phone_primary,
-          phone_secondary: (row.phone_secondary || '').trim() || null,
+          phone_secondary: cleanCsvText(row, ['phone_secondary', 'telephone_secondaire', 'tel_secondaire', 'phone2']) || null,
           email,
-          address: (row.address || '').trim() || null,
-          city: (row.city || 'Antananarivo').trim() || 'Antananarivo',
-          postal_code: (row.postal_code || '').trim() || null,
-          emergency_contact_name: (row.emergency_contact_name || '').trim() || null,
-          emergency_contact_phone: (row.emergency_contact_phone || '').trim() || null,
-          emergency_contact_relationship: (row.emergency_contact_relationship || '').trim() || null,
-          medical_history: (row.medical_history || '').trim() || null,
-          allergies: (row.allergies || '').trim() || null,
-          current_medications: (row.current_medications || '').trim() || null,
-          insurance_provider: (row.insurance_provider || '').trim() || null,
-          insurance_number: (row.insurance_number || '').trim() || null,
-          payer_type: (row.payer_type || 'SELF_PAY').trim() || 'SELF_PAY',
-          occupation: (row.occupation || '').trim() || null,
-          preferred_language: (row.preferred_language || 'FRENCH').trim() || 'FRENCH',
-          consent_treatment: ['true', '1', 'yes', 'oui', 'y'].includes((row.consent_treatment || '').toString().toLowerCase().trim()),
-          consent_data_processing: ['true', '1', 'yes', 'oui', 'y'].includes((row.consent_data_processing || '').toString().toLowerCase().trim()),
-          consent_sms_reminders: row.consent_sms_reminders == null
+          address: cleanCsvText(row, ['address', 'adresse']) || null,
+          city: cleanCsvText(row, ['city', 'ville']) || 'Antananarivo',
+          postal_code: cleanCsvText(row, ['postal_code', 'code_postal']) || null,
+          emergency_contact_name: cleanCsvText(row, ['emergency_contact_name', 'contact_urgence', 'nom_contact_urgence']) || null,
+          emergency_contact_phone: cleanCsvText(row, ['emergency_contact_phone', 'telephone_urgence', 'tel_urgence']) || null,
+          emergency_contact_relationship: cleanCsvText(row, ['emergency_contact_relationship', 'relation_contact_urgence']) || null,
+          medical_history: cleanCsvText(row, ['medical_history', 'antecedents', 'antécédents', 'antecedents_medicaux']) || null,
+          allergies: cleanCsvText(row, ['allergies']) || null,
+          current_medications: cleanCsvText(row, ['current_medications', 'traitements_en_cours', 'medicaments']) || null,
+          insurance_provider: cleanCsvText(row, ['insurance_provider', 'assurance']) || null,
+          insurance_number: cleanCsvText(row, ['insurance_number', 'numero_assurance']) || null,
+          payer_type: cleanCsvText(row, ['payer_type', 'type_payeur']) || 'SELF_PAY',
+          occupation: cleanCsvText(row, ['occupation', 'profession']) || null,
+          preferred_language: cleanCsvText(row, ['preferred_language', 'langue']) || 'FRENCH',
+          consent_treatment: ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_treatment', 'consentement_soins']).toLowerCase()),
+          consent_data_processing: ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_data_processing', 'consentement_donnees']).toLowerCase()),
+          consent_sms_reminders: rowValue(row, ['consent_sms_reminders', 'rappel_sms']) === ''
             ? true
-            : ['true', '1', 'yes', 'oui', 'y'].includes((row.consent_sms_reminders || '').toString().toLowerCase().trim()),
-          notes: (row.notes || '').trim() || null,
-          is_active: row.is_active == null
+            : ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_sms_reminders', 'rappel_sms']).toLowerCase()),
+          notes: cleanCsvText(row, ['notes', 'commentaire', 'commentaires']) || null,
+          is_active: rowValue(row, ['is_active', 'actif']) === ''
             ? true
-            : ['true', '1', 'yes', 'oui', 'y'].includes((row.is_active || '').toString().toLowerCase().trim()),
+            : ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['is_active', 'actif']).toLowerCase()),
           clinic_id: clinicId,
           created_by_user_id: getUserId(req),
         };
@@ -646,6 +680,17 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
         stats.inserted += 1;
       }
     });
+
+    if (stats.inserted + stats.updated === 0) {
+      return res.status(400).json({
+        error: 'Aucun patient importé',
+        message: 'Toutes les lignes du CSV ont été ignorées. Vérifiez les colonnes obligatoires: prénom, nom, date de naissance, sexe, téléphone.',
+        inserted: stats.inserted,
+        updated: stats.updated,
+        skipped: stats.skipped,
+        errors
+      });
+    }
 
     try {
       await AuditLog.create({
