@@ -166,8 +166,8 @@ describe('patient CSV import', () => {
     const { app, models } = buildApp('ADMIN', clinicA);
 
     const csvContent = [
-      'nom,prenom,telephone',
-      'Rakoto,Jean,0341111111'
+      'telephone,email',
+      '0341111111,jean@example.com'
     ].join('\n');
 
     const res = await request(app)
@@ -181,5 +181,31 @@ describe('patient CSV import', () => {
     expect(res.body.skipped).toBe(1);
     expect(models.Patient.create).not.toHaveBeenCalled();
     expect(models.AuditLog.create).not.toHaveBeenCalled();
+  });
+
+  test('imports minimal CSV rows with only first and last name', async () => {
+    const { app, models } = buildApp('ADMIN', clinicA);
+
+    models.Patient.findOne.mockResolvedValueOnce(null);
+
+    const csvContent = [
+      'prenom,nom',
+      'Jean,Rakoto'
+    ].join('\n');
+
+    const res = await request(app)
+      .post('/api/patients/import-csv')
+      .attach('file', Buffer.from(csvContent, 'utf8'), 'patients.csv');
+
+    expect(res.status).toBe(200);
+    expect(res.body.inserted).toBe(1);
+    expect(models.Patient.create).toHaveBeenCalledWith(expect.objectContaining({
+      clinic_id: clinicA,
+      first_name: 'Jean',
+      last_name: 'Rakoto',
+      date_of_birth: null,
+      gender: null,
+      phone_primary: null
+    }), { transaction: 'tx' });
   });
 });

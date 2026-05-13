@@ -564,6 +564,17 @@ const rowValue = (row, keys) => {
 
 const cleanCsvText = (row, keys) => (rowValue(row, keys) || '').toString().trim();
 
+const splitFullName = (value) => {
+  const fullName = (value || '').toString().trim().replace(/\s+/g, ' ');
+  if (!fullName) return { first_name: '', last_name: '' };
+  const parts = fullName.split(' ');
+  if (parts.length === 1) return { first_name: parts[0], last_name: parts[0] };
+  return {
+    first_name: parts.slice(0, -1).join(' '),
+    last_name: parts.slice(-1).join('')
+  };
+};
+
 router.post('/import-csv', requireClinicId, upload.single('file'), async (req, res) => {
   try {
     const clinicId = getClinicId(req);
@@ -598,18 +609,19 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
 
     await sequelize.transaction(async (transaction) => {
       for (const [index, row] of rows.entries()) {
-        const first_name = cleanCsvText(row, ['first_name', 'prenom', 'firstname', 'prénom']);
-        const last_name = cleanCsvText(row, ['last_name', 'nom', 'lastname']);
+        const fullName = splitFullName(rowValue(row, ['full_name', 'nom_complet', 'nom_et_prenom', 'nom_prenom', 'patient']));
+        const first_name = cleanCsvText(row, ['first_name', 'prenom', 'firstname', 'prénom']) || fullName.first_name;
+        const last_name = cleanCsvText(row, ['last_name', 'nom', 'lastname']) || fullName.last_name;
         const date_of_birth = parseCsvDate(rowValue(row, ['date_of_birth', 'date_naissance', 'date_de_naissance', 'birth_date', 'dob', 'naissance']));
         const gender = normalizeGender(rowValue(row, ['gender', 'sexe']));
-        const phone_primary = cleanCsvText(row, ['phone_primary', 'telephone', 'téléphone', 'tel', 'phone', 'mobile']);
+        const phone_primary = cleanCsvText(row, ['phone_primary', 'telephone', 'téléphone', 'tel', 'phone', 'mobile']) || null;
         const email = cleanCsvText(row, ['email', 'mail', 'e_mail']) || null;
 
-        if (!first_name || !last_name || !date_of_birth || !gender || !phone_primary) {
+        if (!first_name || !last_name) {
           stats.skipped += 1;
           errors.push({
             row: index + 2,
-            message: 'Champs requis manquants (prénom, nom, date de naissance, sexe, téléphone)',
+            message: 'Champs requis manquants (prénom et nom)',
           });
           continue;
         }
@@ -684,7 +696,7 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
     if (stats.inserted + stats.updated === 0) {
       return res.status(400).json({
         error: 'Aucun patient importé',
-        message: 'Toutes les lignes du CSV ont été ignorées. Vérifiez les colonnes obligatoires: prénom, nom, date de naissance, sexe, téléphone.',
+        message: 'Toutes les lignes du CSV ont été ignorées. Vérifiez les colonnes obligatoires: prénom et nom.',
         inserted: stats.inserted,
         updated: stats.updated,
         skipped: stats.skipped,

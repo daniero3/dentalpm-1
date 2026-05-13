@@ -23,10 +23,11 @@ const Patient = sequelize.define('patients', {
   },
   date_of_birth: {
     type: DataTypes.DATEONLY,
-    allowNull: false,
+    allowNull: true,
     validate: {
       isDate: true,
       isBefore(value) {
+        if (!value) return;
         const today = new Date().toISOString().split('T')[0];
         if (value >= today) {
           throw new Error('La date de naissance doit être dans le passé');
@@ -36,14 +37,14 @@ const Patient = sequelize.define('patients', {
   },
   gender: {
     type: DataTypes.STRING(10),
-    allowNull: false,
+    allowNull: true,
     validate: {
       isIn: [['male', 'female', 'other', 'MALE', 'FEMALE', 'OTHER', 'M', 'F']]
     }
   },
   phone_primary: {
     type: DataTypes.STRING(20),
-    allowNull: false
+    allowNull: true
   },
   phone_secondary: {
     type: DataTypes.STRING(20),
