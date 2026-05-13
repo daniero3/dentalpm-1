@@ -16,6 +16,7 @@ async function runMigrations() {
     '../migrations/20260511-purchase-general-expenses',
     '../migrations/20260512-clinic-subscription-status-pending',
     '../migrations/20260512-performance-indexes-core',
+    '../migrations/20260513-patient-import-nullable-fields',
   ];
 
   for (const migrationPath of migrations) {

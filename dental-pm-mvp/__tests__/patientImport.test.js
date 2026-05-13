@@ -91,7 +91,7 @@ describe('patient CSV import', () => {
       first_name: 'Marie',
       last_name: 'Ranaivo'
     }), { transaction: 'tx' });
-    expect(models.sequelize.transaction).toHaveBeenCalledTimes(1);
+    expect(models.sequelize.transaction).toHaveBeenCalledTimes(2);
   });
 
   test('blocks import when no CSV file is attached', async () => {

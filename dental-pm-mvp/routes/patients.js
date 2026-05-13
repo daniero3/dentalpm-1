@@ -607,8 +607,8 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
     const stats = { inserted: 0, updated: 0, skipped: 0 };
     const errors = [];
 
-    await sequelize.transaction(async (transaction) => {
-      for (const [index, row] of rows.entries()) {
+    for (const [index, row] of rows.entries()) {
+      try {
         const fullName = splitFullName(rowValue(row, ['full_name', 'nom_complet', 'nom_et_prenom', 'nom_prenom', 'patient']));
         const first_name = cleanCsvText(row, ['first_name', 'prenom', 'firstname', 'prénom']) || fullName.first_name;
         const last_name = cleanCsvText(row, ['last_name', 'nom', 'lastname']) || fullName.last_name;
@@ -626,72 +626,80 @@ router.post('/import-csv', requireClinicId, upload.single('file'), async (req, r
           continue;
         }
 
-        const patientData = {
-          patient_number: cleanCsvText(row, ['patient_number', 'numero_patient', 'num_patient', 'reference']) || null,
-          first_name,
-          last_name,
-          date_of_birth,
-          gender,
-          phone_primary,
-          phone_secondary: cleanCsvText(row, ['phone_secondary', 'telephone_secondaire', 'tel_secondaire', 'phone2']) || null,
-          email,
-          address: cleanCsvText(row, ['address', 'adresse']) || null,
-          city: cleanCsvText(row, ['city', 'ville']) || 'Antananarivo',
-          postal_code: cleanCsvText(row, ['postal_code', 'code_postal']) || null,
-          emergency_contact_name: cleanCsvText(row, ['emergency_contact_name', 'contact_urgence', 'nom_contact_urgence']) || null,
-          emergency_contact_phone: cleanCsvText(row, ['emergency_contact_phone', 'telephone_urgence', 'tel_urgence']) || null,
-          emergency_contact_relationship: cleanCsvText(row, ['emergency_contact_relationship', 'relation_contact_urgence']) || null,
-          medical_history: cleanCsvText(row, ['medical_history', 'antecedents', 'antécédents', 'antecedents_medicaux']) || null,
-          allergies: cleanCsvText(row, ['allergies']) || null,
-          current_medications: cleanCsvText(row, ['current_medications', 'traitements_en_cours', 'medicaments']) || null,
-          insurance_provider: cleanCsvText(row, ['insurance_provider', 'assurance']) || null,
-          insurance_number: cleanCsvText(row, ['insurance_number', 'numero_assurance']) || null,
-          payer_type: cleanCsvText(row, ['payer_type', 'type_payeur']) || 'SELF_PAY',
-          occupation: cleanCsvText(row, ['occupation', 'profession']) || null,
-          preferred_language: cleanCsvText(row, ['preferred_language', 'langue']) || 'FRENCH',
-          consent_treatment: ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_treatment', 'consentement_soins']).toLowerCase()),
-          consent_data_processing: ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_data_processing', 'consentement_donnees']).toLowerCase()),
-          consent_sms_reminders: rowValue(row, ['consent_sms_reminders', 'rappel_sms']) === ''
-            ? true
-            : ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_sms_reminders', 'rappel_sms']).toLowerCase()),
-          notes: cleanCsvText(row, ['notes', 'commentaire', 'commentaires']) || null,
-          is_active: rowValue(row, ['is_active', 'actif']) === ''
-            ? true
-            : ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['is_active', 'actif']).toLowerCase()),
-          clinic_id: clinicId,
-          created_by_user_id: getUserId(req),
-        };
+        await sequelize.transaction(async (transaction) => {
+          const patientData = {
+            patient_number: cleanCsvText(row, ['patient_number', 'numero_patient', 'num_patient', 'reference']) || null,
+            first_name,
+            last_name,
+            date_of_birth,
+            gender,
+            phone_primary,
+            phone_secondary: cleanCsvText(row, ['phone_secondary', 'telephone_secondaire', 'tel_secondaire', 'phone2']) || null,
+            email,
+            address: cleanCsvText(row, ['address', 'adresse']) || null,
+            city: cleanCsvText(row, ['city', 'ville']) || 'Antananarivo',
+            postal_code: cleanCsvText(row, ['postal_code', 'code_postal']) || null,
+            emergency_contact_name: cleanCsvText(row, ['emergency_contact_name', 'contact_urgence', 'nom_contact_urgence']) || null,
+            emergency_contact_phone: cleanCsvText(row, ['emergency_contact_phone', 'telephone_urgence', 'tel_urgence']) || null,
+            emergency_contact_relationship: cleanCsvText(row, ['emergency_contact_relationship', 'relation_contact_urgence']) || null,
+            medical_history: cleanCsvText(row, ['medical_history', 'antecedents', 'antécédents', 'antecedents_medicaux']) || null,
+            allergies: cleanCsvText(row, ['allergies']) || null,
+            current_medications: cleanCsvText(row, ['current_medications', 'traitements_en_cours', 'medicaments']) || null,
+            insurance_provider: cleanCsvText(row, ['insurance_provider', 'assurance']) || null,
+            insurance_number: cleanCsvText(row, ['insurance_number', 'numero_assurance']) || null,
+            payer_type: cleanCsvText(row, ['payer_type', 'type_payeur']) || 'SELF_PAY',
+            occupation: cleanCsvText(row, ['occupation', 'profession']) || null,
+            preferred_language: cleanCsvText(row, ['preferred_language', 'langue']) || 'FRENCH',
+            consent_treatment: ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_treatment', 'consentement_soins']).toLowerCase()),
+            consent_data_processing: ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_data_processing', 'consentement_donnees']).toLowerCase()),
+            consent_sms_reminders: rowValue(row, ['consent_sms_reminders', 'rappel_sms']) === ''
+              ? true
+              : ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['consent_sms_reminders', 'rappel_sms']).toLowerCase()),
+            notes: cleanCsvText(row, ['notes', 'commentaire', 'commentaires']) || null,
+            is_active: rowValue(row, ['is_active', 'actif']) === ''
+              ? true
+              : ['true', '1', 'yes', 'oui', 'y'].includes(cleanCsvText(row, ['is_active', 'actif']).toLowerCase()),
+            clinic_id: clinicId,
+            created_by_user_id: getUserId(req),
+          };
 
-        let existing = null;
-        if (patientData.patient_number) {
-          existing = await Patient.findOne({
-            where: { clinic_id: clinicId, patient_number: patientData.patient_number },
-            transaction
-          });
-        }
-        if (!existing && patientData.phone_primary) {
-          existing = await Patient.findOne({
-            where: { clinic_id: clinicId, phone_primary: patientData.phone_primary },
-            transaction
-          });
-        }
-        if (!existing && patientData.email) {
-          existing = await Patient.findOne({
-            where: { clinic_id: clinicId, email: patientData.email },
-            transaction
-          });
-        }
+          let existing = null;
+          if (patientData.patient_number) {
+            existing = await Patient.findOne({
+              where: { clinic_id: clinicId, patient_number: patientData.patient_number },
+              transaction
+            });
+          }
+          if (!existing && patientData.phone_primary) {
+            existing = await Patient.findOne({
+              where: { clinic_id: clinicId, phone_primary: patientData.phone_primary },
+              transaction
+            });
+          }
+          if (!existing && patientData.email) {
+            existing = await Patient.findOne({
+              where: { clinic_id: clinicId, email: patientData.email },
+              transaction
+            });
+          }
 
-        if (existing) {
-          await existing.update(patientData, { transaction });
-          stats.updated += 1;
-          continue;
-        }
+          if (existing) {
+            await existing.update(patientData, { transaction });
+            stats.updated += 1;
+            return;
+          }
 
-        await Patient.create(patientData, { transaction });
-        stats.inserted += 1;
+          await Patient.create(patientData, { transaction });
+          stats.inserted += 1;
+        });
+      } catch (rowError) {
+        stats.skipped += 1;
+        errors.push({
+          row: index + 2,
+          message: rowError?.errors?.[0]?.message || rowError?.original?.detail || rowError.message || 'Erreur ligne',
+        });
       }
-    });
+    }
 
     if (stats.inserted + stats.updated === 0) {
       return res.status(400).json({
