@@ -3,13 +3,13 @@
   "build": {
     "builder": "NIXPACKS",
     "watchPatterns": ["dental-pm-mvp/**"],
-    "buildCommand": "cd dental-pm-mvp && npm install",
+    "buildCommand": "npm install",
     "nixpacksPlan": {
       "providers": ["node"]
     }
   },
   "deploy": {
-    "startCommand": "cd dental-pm-mvp && npm run start",
+    "startCommand": "npm run start",
     "healthcheckPath": "/api/health"
   }
 }
