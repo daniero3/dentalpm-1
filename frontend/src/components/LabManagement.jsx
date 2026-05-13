@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { matchesSearch, patientSearchText } from '../utils/search';
 import {
   FlaskConical, Plus, Printer, RefreshCw, Loader2, Search,
   Clock, CheckCircle, XCircle, ArrowRight, Sparkles, X,
@@ -199,7 +200,7 @@ const LabManagement = () => {
     finally{setLoading(false);}
   };
   const fetchPatients = async()=>{
-    try{const r=await axios.get(`${API}/patients`,authH());const l=r.data.patients||r.data.data||r.data||[];setPatients(Array.isArray(l)?l:[]);}
+    try{const r=await axios.get(`${API}/patients`,{params:{limit:500},...authH()});const l=r.data.patients||r.data.data||r.data||[];setPatients(Array.isArray(l)?l:[]);}
     catch(e){console.error(e);}
   };
   const handleCreate = async()=>{
@@ -224,7 +225,7 @@ const LabManagement = () => {
 
   const filtered = orders.filter(o=>{
     const ms=filter==='ALL'||o.status===filter;
-    const mt=!search||o.order_number?.toLowerCase().includes(search.toLowerCase())||o.patient?.first_name?.toLowerCase().includes(search.toLowerCase())||o.patient?.last_name?.toLowerCase().includes(search.toLowerCase());
+    const mt=matchesSearch(search,o.order_number,o.work_type,o.lab_name,patientSearchText(o.patient||{}));
     return ms&&mt;
   });
 

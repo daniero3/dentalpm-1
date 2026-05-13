@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
+import { matchesSearch, patientSearchText } from '../utils/search';
 import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
@@ -401,7 +402,7 @@ const AppointmentManagement = () => {
   /* Filtrage + recherche */
   const filtered = appts.filter(a => {
     const mt = typeF === 'all' || a.appointment_type === typeF;
-    const mq = !search || [a.patient?.first_name, a.patient?.last_name, a.reason].some(v => v?.toLowerCase().includes(search.toLowerCase()));
+    const mq = matchesSearch(search, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status);
     return mt && mq;
   });
 

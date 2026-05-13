@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { matchesSearch, patientSearchText } from '../utils/search';
 import {
   Mail, MessageSquare, Plus, Send, Clock, CheckCircle, XCircle,
   Calendar, Cake, RefreshCw, Users, FileText, X, Zap, BarChart2,
@@ -184,12 +185,12 @@ const MessagingManagement = () => {
 
   const filteredLogs = logs.filter(l => {
     const ms = logFilter === 'ALL' || l.status === logFilter;
-    const mt = !search || l.patient?.first_name?.toLowerCase().includes(search.toLowerCase()) || l.patient?.last_name?.toLowerCase().includes(search.toLowerCase()) || l.to?.includes(search);
+    const mt = matchesSearch(search, patientSearchText(l.patient || {}), l.to, l.status, l.channel, l.message_type);
     return ms && mt;
   });
 
   const filteredQueue = queue.filter(q =>
-    !search || q.patient?.first_name?.toLowerCase().includes(search.toLowerCase()) || q.patient?.last_name?.toLowerCase().includes(search.toLowerCase())
+    matchesSearch(search, patientSearchText(q.patient || {}), q.to, q.status, q.channel, q.message_type)
   );
 
   const inp = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', transition:'border-color .2s' };

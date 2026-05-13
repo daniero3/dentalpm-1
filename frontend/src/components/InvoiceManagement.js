@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
+import { matchesSearch, patientSearchText } from '../utils/search';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
   Clock, CheckCircle, AlertCircle, DollarSign, CreditCard,
@@ -110,7 +111,7 @@ const InvoiceManagement = () => {
       if (mountedRef.current) setInvoices(r.data.invoices || r.data.data || []);
     } catch {}
   };
-  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
+  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients?limit=500`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
   const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
   const fetchFees = async id => { if(!id){setFees([]);return;} try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
   const fetchRevenues = async () => { try { const r=await axios.get(`${API}/invoices/revenues`, authH()); setRevenues(r.data.revenues || []); } catch { setRevenues([]); } };
@@ -215,12 +216,16 @@ const InvoiceManagement = () => {
     }
   };
 
-  const pname = id => { const p=patients.find(p=>p.id===id); return p?`${p.first_name} ${p.last_name}`:'—'; };
+  const getPatient = inv => inv.patient || patients.find(p=>p.id===inv.patient_id) || null;
+  const pname = invOrId => {
+    const p = typeof invOrId === 'object' ? getPatient(invOrId) : patients.find(p=>p.id===invOrId);
+    return p?`${p.first_name} ${p.last_name}`:'—';
+  };
   const getStatus = inv => inv.payment_status || inv.status || 'DRAFT';
 
   const filtered = invoices.filter(inv => {
     const ms = statusF==='ALL'||getStatus(inv)===statusF;
-    const mt = !search||(inv.invoice_number||'').toLowerCase().includes(search.toLowerCase())||pname(inv.patient_id).toLowerCase().includes(search.toLowerCase());
+    const mt = matchesSearch(search, inv.invoice_number, inv.status, patientSearchText(getPatient(inv) || {}));
     return ms&&mt;
   });
 
@@ -366,7 +371,7 @@ const InvoiceManagement = () => {
                     {isOverdue&&<span style={{ fontSize:10,fontWeight:700,color:C.red,background:'#FEE2E2',padding:'1px 7px',borderRadius:99 }}>⚠️ Paiement en retard</span>}
                   </div>
                   <div style={{ display:'flex',gap:14,fontSize:12,color:'#64748B',flexWrap:'wrap',alignItems:'center' }}>
-                    <span style={{ display:'flex',alignItems:'center',gap:4 }}><User size={11}/>{pname(inv.patient_id)}</span>
+                    <span style={{ display:'flex',alignItems:'center',gap:4 }}><User size={11}/>{pname(inv)}</span>
                     <span style={{ display:'flex',alignItems:'center',gap:4 }}><Calendar size={11}/>{fdate(inv.invoice_date||inv.created_at)}</span>
                     <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:14,color:isPaid?C.green:isOverdue?C.red:C.teal }}>{fmt(inv.total_mga)}</span>
                     {inv.discount_percentage>0&&<span style={{ fontSize:11,color:C.amber }}>−{inv.discount_percentage}%</span>}
@@ -408,7 +413,7 @@ const InvoiceManagement = () => {
           <div>
             <div style={{ display:'flex',gap:10,flexWrap:'wrap',marginBottom:16 }}>
               <SBadge st={getStatus(detailInv)}/>
-              <span style={{ fontSize:12,color:'#64748B' }}>{pname(detailInv.patient_id)}</span>
+              <span style={{ fontSize:12,color:'#64748B' }}>{pname(detailInv)}</span>
               <span style={{ fontSize:12,color:'#64748B' }}>{fdate(detailInv.invoice_date||detailInv.created_at)}</span>
             </div>
             <div style={{ background:'#F8FAFC',borderRadius:12,padding:'14px',marginBottom:16 }}>

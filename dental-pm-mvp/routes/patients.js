@@ -48,7 +48,7 @@ const getUserId   = (req) => {
   } catch(e) { return null; }
 };
 const { auditLogger } = require('../middleware/auditLogger');
-const { Op } = require('sequelize');
+const { Op, fn, col, where: sqlWhere } = require('sequelize');
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }
@@ -91,14 +91,32 @@ router.get('/', requireClinicId, [
     let whereClause = {};
     if (clinicId) whereClause.clinic_id = clinicId;
 
-    if (search) {
-      whereClause[Op.or] = [
-        { patient_number: { [Op.iLike]: `%${search}%` } },
-        { first_name:     { [Op.iLike]: `%${search}%` } },
-        { last_name:      { [Op.iLike]: `%${search}%` } },
-        { phone_primary:  { [Op.iLike]: `%${search}%` } },
-        { email:          { [Op.iLike]: `%${search}%` } }
+    const searchText = (search || '').toString().trim();
+    if (searchText) {
+      const terms = searchText.split(/\s+/).filter(Boolean);
+      const digits = searchText.replace(/\D/g, '');
+      const searchableFields = ['patient_number', 'first_name', 'last_name', 'phone_primary', 'phone_secondary', 'email', 'address', 'city'];
+      const fullNameMatches = [
+        sqlWhere(fn('concat', col('first_name'), ' ', col('last_name')), { [Op.iLike]: `%${searchText}%` }),
+        sqlWhere(fn('concat', col('last_name'), ' ', col('first_name')), { [Op.iLike]: `%${searchText}%` })
       ];
+
+      whereClause[Op.and] = terms.map(term => ({
+        [Op.or]: [
+          ...searchableFields.map(field => ({ [field]: { [Op.iLike]: `%${term}%` } })),
+          ...fullNameMatches
+        ]
+      }));
+
+      if (digits) {
+        whereClause[Op.and].push({
+          [Op.or]: [
+            { phone_primary: { [Op.iLike]: `%${digits}%` } },
+            { phone_secondary: { [Op.iLike]: `%${digits}%` } },
+            { patient_number: { [Op.iLike]: `%${digits}%` } }
+          ]
+        });
+      }
     }
 
     const { count, rows: patients } = await Patient.findAndCountAll({

@@ -4,6 +4,7 @@ import { useResponsive, modalOverlay, getModalStyle } from '../utils/responsive'
 import { useAuth } from '../App';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
+import { matchesSearch, patientSearchText } from '../utils/search';
 import {
   FileText, Plus, Search, Eye, Printer, Download, ArrowRight,
   Clock, CheckCircle, XCircle, AlertCircle, X, RefreshCw,
@@ -86,7 +87,7 @@ const QuoteManagement = () => {
     setLoading(false);
   };
   const fetchQuotes    = async () => { try { const r=await axios.get(`${API}/quotes`,authH()); setQuotes(r.data.quotes||[]); } catch {} };
-  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
+  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients?limit=500`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
   const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
   const fetchFees = async id => { try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
 
@@ -157,11 +158,15 @@ const QuoteManagement = () => {
     } catch { toast.error('Erreur PDF'); }
   };
 
-  const pname = id => { const p=patients.find(p=>p.id===id); return p?`${p.first_name} ${p.last_name}`:'—'; };
+  const getPatient = q => q.patient || patients.find(p=>p.id===q.patient_id) || null;
+  const pname = qOrId => {
+    const p = typeof qOrId === 'object' ? getPatient(qOrId) : patients.find(p=>p.id===qOrId);
+    return p?`${p.first_name} ${p.last_name}`:'—';
+  };
 
   const filtered = quotes.filter(q => {
     const ms = statusF==='ALL'||q.status===statusF;
-    const mt = !search||(q.invoice_number||'').toLowerCase().includes(search.toLowerCase())||pname(q.patient_id).toLowerCase().includes(search.toLowerCase());
+    const mt = matchesSearch(search, q.invoice_number, q.status, patientSearchText(getPatient(q) || {}));
     return ms&&mt;
   });
 
@@ -281,7 +286,7 @@ const QuoteManagement = () => {
                     {q.status==='ACCEPTED'&&<span style={{ fontSize:10,fontWeight:700,color:'#166534',background:'#DCFCE7',padding:'1px 7px',borderRadius:99 }}>✓ Peut être converti</span>}
                   </div>
                   <div style={{ display:'flex',gap:14,fontSize:12,color:'#64748B',flexWrap:'wrap' }}>
-                    <span style={{ display:'flex',alignItems:'center',gap:4 }}><User size={11}/>{pname(q.patient_id)}</span>
+                    <span style={{ display:'flex',alignItems:'center',gap:4 }}><User size={11}/>{pname(q)}</span>
                     <span style={{ display:'flex',alignItems:'center',gap:4 }}><Calendar size={11}/>{fdate(q.created_at)}</span>
                     {q.validity_days&&<span style={{ display:'flex',alignItems:'center',gap:4 }}><Clock size={11}/>Validité: {q.validity_days}j</span>}
                     <span style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:13,color:C.teal }}>{fmt(q.total_mga)}</span>
@@ -337,7 +342,7 @@ const QuoteManagement = () => {
           <div>
             <div style={{ display:'flex',gap:10,flexWrap:'wrap',marginBottom:18 }}>
               <SBadge status={detailQ.status}/>
-              <span style={{ fontSize:12,color:'#64748B' }}>{pname(detailQ.patient_id)}</span>
+              <span style={{ fontSize:12,color:'#64748B' }}>{pname(detailQ)}</span>
               <span style={{ fontSize:12,color:'#64748B' }}>Créé le {fdate(detailQ.created_at)}</span>
             </div>
             {/* Items */}

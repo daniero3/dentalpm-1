@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
+import { matchesSearch, patientSearchText } from '../utils/search';
 import {
   Users, Plus, Search, Edit, Activity, Phone, Mail,
   AlertTriangle, User, Calendar, FileText, ClipboardList,
@@ -345,9 +346,8 @@ const PatientManagement = () => {
   /* Filtrage et tri */
   const filtered = patients
     .filter(p => {
-      const q = search.toLowerCase();
       const ms = genderFilter === 'ALL' || p.gender === genderFilter;
-      const mt = !search || [p.first_name, p.last_name, p.phone_primary, p.email, p.address].some(v => v?.toLowerCase().includes(q));
+      const mt = matchesSearch(search, patientSearchText(p));
       return ms && mt;
     })
     .sort((a,b) => {
