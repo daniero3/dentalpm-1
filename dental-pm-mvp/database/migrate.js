@@ -17,6 +17,7 @@ async function runMigrations() {
     '../migrations/20260512-clinic-subscription-status-pending',
     '../migrations/20260512-performance-indexes-core',
     '../migrations/20260513-patient-import-nullable-fields',
+    '../migrations/20260513-backfill-patient-identifiers',
   ];
 
   for (const migrationPath of migrations) {

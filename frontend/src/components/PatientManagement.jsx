@@ -532,6 +532,7 @@ const PatientManagement = () => {
                     {/* Nom + badge genre + allergies */}
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
                       <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A' }}>{p.first_name} {p.last_name}</span>
+                      <span style={{ background:'#F8FAFC', color:'#0D7A87', border:'1px solid #D9F3F6', fontSize:10, fontWeight:800, padding:'1px 7px', borderRadius:99 }}>{p.patient_number || 'ID à générer'}</span>
                       {p.gender && <span style={{ background:gb, color:gc, fontSize:10, fontWeight:700, padding:'1px 7px', borderRadius:99 }}>{GENDER_LABEL[p.gender]}</span>}
                       {age !== null && <span style={{ fontSize:11, color:'#64748B' }}>{age} ans</span>}
                       {p.allergies && <span style={{ background:'#FEF3C7', color:'#B45309', fontSize:10, fontWeight:700, padding:'1px 8px', borderRadius:99, display:'flex', alignItems:'center', gap:3 }}><AlertTriangle size={9}/>Allergies</span>}
@@ -573,6 +574,7 @@ const PatientManagement = () => {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A', marginBottom:4 }}>{p.first_name} {p.last_name}</div>
                     <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                      <span style={{ fontSize:11, color:'#0D7A87', background:'#F0FDFE', border:'1px solid #D9F3F6', fontWeight:800, padding:'1px 8px', borderRadius:99 }}>{p.patient_number || 'ID à générer'}</span>
                       {age !== null && <span style={{ fontSize:11, color:'#64748B', background:'#F1F5F9', padding:'1px 8px', borderRadius:99 }}>{age} ans</span>}
                       {p.gender && <span style={{ background:GENDER_BG[p.gender], color:GENDER_COLOR[p.gender], fontSize:11, fontWeight:700, padding:'1px 8px', borderRadius:99 }}>{GENDER_LABEL[p.gender]}</span>}
                     </div>
@@ -622,6 +624,7 @@ const PatientManagement = () => {
               <div>
                 <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A', margin:'0 0 6px' }}>{detail.first_name} {detail.last_name}</h2>
                 <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
+                  <span style={{ background:'#F0FDFE', color:'#0D7A87', border:'1px solid #BFECEF', fontSize:12, fontWeight:800, padding:'2px 10px', borderRadius:99 }}>{detail.patient_number || 'ID à générer'}</span>
                   {calcAge(detail.date_of_birth) && <span style={{ background:'#F1F5F9', color:'#475569', fontSize:12, fontWeight:600, padding:'2px 10px', borderRadius:99 }}>{calcAge(detail.date_of_birth)} ans · né(e) le {fdate(detail.date_of_birth)}</span>}
                   {detail.gender && <span style={{ background:GENDER_BG[detail.gender], color:GENDER_COLOR[detail.gender], fontSize:12, fontWeight:700, padding:'2px 10px', borderRadius:99 }}>{GENDER_LABEL[detail.gender]}</span>}
                 </div>

@@ -61,14 +61,15 @@ const ALL_NAV = [
   { name:"Rendez-vous",     href:"/appointments",icon:Calendar,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { name:"Devis",           href:"/quotes",      icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { name:"Factures",        href:"/invoices",    icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Rapports",        href:"/reports",     icon:BarChart3,    plans:['PRO','GROUP'] },
-  { name:"Inventaire",      href:"/inventory",   icon:Package,      plans:['PRO','GROUP'] },
   { name:"Achats",          href:"/purchases",   icon:ShoppingCart, plans:['PRO','GROUP'] },
   { name:"Fournisseurs",    href:"/suppliers",   icon:Truck,        plans:['PRO','GROUP'] },
   { name:"Laboratoire",     href:"/lab",         icon:FlaskConical, plans:['PRO','GROUP'] },
+  { name:"Rapports",        href:"/reports",     icon:BarChart3,    plans:['PRO','GROUP'] },
+  { name:"Stock",           href:"/inventory",   icon:Package,      plans:['PRO','GROUP'] },
   { name:"Mailing",         href:"/mailing",     icon:Mail,         plans:['PRO','GROUP'] },
   { name:"Paramètres",      href:"/settings",    icon:Settings,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { name:"Tarifs des actes", href:"/settings/pricing", icon:FileText, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { name:"Abonnement",      href:"/subscription",icon:CreditCard,    plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
 ]
 
 // ── Navigation SUPER_ADMIN — gestion plateforme uniquement ────────────────────
@@ -93,6 +94,7 @@ const NAV_COLORS = {
   '/mailing': theme.accent,
   '/settings': theme.accent,
   '/settings/pricing': theme.accent,
+  '/subscription': theme.accent,
 }
 
 // ── Plan requis par item verrouillé ───────────────────────────────────────────
@@ -202,7 +204,11 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
   const navItems    = isSuperAdmin ? [] : ALL_NAV.filter(i => i.plans.includes(plan))
   const lockedItems = isSuperAdmin ? [] : ALL_NAV.filter(i => !i.plans.includes(plan))
 
-  const isActive = href => href === '/' ? location.pathname === '/' : location.pathname.startsWith(href)
+  const isActive = href => {
+    if (href === '/') return location.pathname === '/'
+    if (href === '/settings') return location.pathname === '/settings'
+    return location.pathname === href || location.pathname.startsWith(href + '/')
+  }
 
   // Composant item nav cabinet
   const NavItem = ({ item }) => {
