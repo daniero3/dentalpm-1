@@ -70,6 +70,7 @@ import { Toaster } from "./components/ui/sonner";
 import CookieBanner from "./components/CookieBanner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { toast } from "sonner";
+import { preloadCriticalRoutes } from "./utils/routePrefetch";
 
 // Theme Provider
 import { ThemeProvider } from "./components/theme-provider";
@@ -110,19 +111,7 @@ const OnboardingWizard = React.lazy(() => import("./components/OnboardingWizard"
 const RegisterPage = React.lazy(() => import("./components/RegisterPage"));
 const AdminPartners = React.lazy(() => import("./components/AdminPartners"));
 
-const prefetchCoreRoutes = () => {
-  const run = () => {
-    import("./components/PatientManagement");
-    import("./components/AppointmentManagement");
-    import("./components/InvoiceManagement");
-    import("./components/ReportsManagement");
-  };
-  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-    window.requestIdleCallback(run, { timeout: 5000 });
-  } else {
-    window.setTimeout(run, 1800);
-  }
-};
+const prefetchCoreRoutes = preloadCriticalRoutes;
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = BACKEND_URL
@@ -323,9 +312,6 @@ const LoadingSkeleton = () => (
         <div className="dpm-skeleton" style={{ height: 42 }} />
       </div>
     </div>
-    <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-base)', fontFamily: 'var(--font-sans)' }}>
-      Chargement...
-    </p>
   </div>
 );
 
@@ -376,8 +362,15 @@ const PageTransition = ({ children }) => {
   const [transitionKey, setTransitionKey] = useState(location.pathname);
 
   useEffect(() => {
-    setTransitionKey(location.pathname);
-    setDisplayChildren(children);
+    const update = () => {
+      setTransitionKey(location.pathname);
+      setDisplayChildren(children);
+    };
+    if (document.startViewTransition) {
+      document.startViewTransition(update);
+    } else {
+      update();
+    }
   }, [location.pathname, children]);
 
   return (
@@ -453,7 +446,7 @@ const MainLayout = ({ children }) => {
         display:'flex', flexDirection:'column', flex:1,
         overflow:'hidden', minWidth:0,
         marginLeft: sidebarW,
-        transition:'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        transition:'margin-left 150ms ease-out',
         maxWidth: isMobile ? '100vw' : `calc(100vw - ${sidebarW}px)`,
       }}>
         <ModernTopbar />
@@ -478,6 +471,10 @@ const MainLayout = ({ children }) => {
 };
 
 function App() {
+  useEffect(() => {
+    preloadCriticalRoutes();
+  }, []);
+
   return (
     <React.Suspense fallback={
       <LoadingSkeleton />

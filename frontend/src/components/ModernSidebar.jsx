@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../App"
+import { createHoverPrefetch } from "../utils/routePrefetch"
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
@@ -215,8 +216,9 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     const active = isActive(item.href)
     const Icon   = item.icon
     const color  = NAV_COLORS[item.href] || theme.accent
+    const prefetch = React.useMemo(() => createHoverPrefetch(item.href), [item.href])
     return (
-      <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
+      <Link to={item.href} onClick={onNavClick} {...prefetch} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div title={collapsed ? item.name : ''}
           style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
             borderRadius:theme.radiusSm, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
@@ -245,8 +247,9 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     const active = location.pathname === item.href || location.pathname.startsWith(item.href + '/')
     const Icon   = item.icon
     const color = theme.accent
+    const prefetch = React.useMemo(() => createHoverPrefetch(item.href), [item.href])
     return (
-      <Link to={item.href} onClick={onNavClick} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
+      <Link to={item.href} onClick={onNavClick} {...prefetch} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
           borderRadius:theme.radiusSm, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
           background: active ? theme.sidebarActiveBg : 'transparent',

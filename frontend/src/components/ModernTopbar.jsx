@@ -8,6 +8,7 @@ import {
 import { useAuth } from "../App"
 import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
+import { prefetchRoute } from "../utils/routePrefetch"
 
 const useScreenSize = () => {
   const [w, setW] = useState(window.innerWidth)
@@ -42,6 +43,15 @@ const formatMadagascarTime = (date) =>
     timeZone: MADAGASCAR_TIME_ZONE
   })
 
+const useDebouncedValue = (value, delay = 300) => {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delay)
+    return () => window.clearTimeout(timer)
+  }, [value, delay])
+  return debounced
+}
+
 const theme = {
   bgBase: 'var(--bg-base)',
   bgSurface: 'var(--bg-surface)',
@@ -71,6 +81,9 @@ export function ModernTopbar() {
   const location = useLocation()
   const { isMobile, isTablet } = useScreenSize()
   const [searchTerm, setSearchTerm]       = useState('')
+  const deferredSearchTerm                = React.useDeferredValue(searchTerm)
+  const debouncedSearchTerm               = useDebouncedValue(deferredSearchTerm, 300)
+  const [, startTransition]               = React.useTransition()
   const [searchOpen, setSearchOpen]       = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotifOpen, setIsNotifOpen]     = useState(false)
@@ -129,7 +142,7 @@ export function ModernTopbar() {
   const handleLogout = () => { logout(); navigate('/login'); }
   const openCommand = () => setSearchOpen(true)
   const runCommand = (href) => {
-    navigate(href)
+    startTransition(() => navigate(href))
     setSearchOpen(false)
     setSearchTerm('')
   }
@@ -166,7 +179,7 @@ export function ModernTopbar() {
     '/admin/partners':'Partenaires'
   })[location.pathname] || QUICK_COMMANDS.find(item => location.pathname.startsWith(item.href))?.label || 'DentalPM'
   const filteredCommands = QUICK_COMMANDS.filter(c => {
-    const q = searchTerm.trim().toLowerCase()
+    const q = debouncedSearchTerm.trim().toLowerCase()
     if (!q) return true
     return `${c.label} ${c.desc} ${c.group}`.toLowerCase().includes(q)
   }).slice(0, 8)
@@ -202,7 +215,10 @@ export function ModernTopbar() {
           <div style={{ flex:1, maxWidth: isTablet ? 240 : 380, position:'relative' }}>
             <Search size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:theme.textSecondary, pointerEvents:'none' }} />
             <input type="text" placeholder="Rechercher patients, factures..."
-              value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+              value={searchTerm} onChange={e => {
+                const value = e.target.value
+                startTransition(() => setSearchTerm(value))
+              }}
               onKeyDown={e => {
                 if (e.key === 'Enter' && filteredCommands[0]) runCommand(filteredCommands[0].href)
               }}
@@ -352,7 +368,10 @@ export function ModernTopbar() {
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderBottom:`1px solid ${theme.borderSubtle}` }}>
               <Search size={18} color={theme.accent} />
               <input type="text" placeholder="Rechercher patients, factures..." autoFocus
-                value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                value={searchTerm} onChange={e => {
+                  const value = e.target.value
+                  startTransition(() => setSearchTerm(value))
+                }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && filteredCommands[0]) runCommand(filteredCommands[0].href)
                 }}
@@ -370,7 +389,8 @@ export function ModernTopbar() {
                     return (
                       <button key={item.href + item.label} onClick={() => runCommand(item.href)}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'11px 10px', border:'none', borderRadius:12, background:'transparent', cursor:'pointer', textAlign:'left' }}
-                        onMouseEnter={e => e.currentTarget.style.background=theme.hover}
+                        onMouseEnter={e => { prefetchRoute(item.href); e.currentTarget.style.background=theme.hover }}
+                        onFocus={() => prefetchRoute(item.href)}
                         onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                         <div style={{ width:38, height:38, borderRadius:theme.radiusMd, display:'flex', alignItems:'center', justifyContent:'center', background:theme.accentGlow, flexShrink:0 }}>
                           <Icon size={18} color={theme.accent} />

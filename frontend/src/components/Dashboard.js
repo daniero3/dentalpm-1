@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useTransition } from 'react';
 import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import {
   Users, Calendar, FileText, TrendingUp, Activity,
   Clock, AlertTriangle, RefreshCw, ArrowUpRight, ArrowDownRight,
@@ -37,6 +39,28 @@ const fmtK  = v => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${
 const fdate = d => new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
 const today = () => new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
+const fetchDashboardOverview = async () => {
+  const [{ data }] = await Promise.all([
+    axios.get(`${API}/dashboard/overview`, authH()),
+  ]);
+  return data || {};
+};
+
+const buildDashboardChart = (revenueData = [], patientData = []) => {
+  const now = new Date();
+  return Array.from({ length: 12 }, (_, i) => {
+    const m = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+    const key = `${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`;
+    const revenue = revenueData.find(d => d.period === key);
+    const patients = patientData.find(d => d.period === key);
+    return {
+      mois: MOIS[m.getMonth()],
+      revenue: revenue?.amount || 0,
+      patients: patients?.count || 0,
+    };
+  });
+};
+
 /* ── Hook screen width ── */
 const useW = () => {
   const [w, setW] = useState(window.innerWidth);
@@ -44,27 +68,8 @@ const useW = () => {
   return w;
 };
 
-/* ── Counter animé ── */
-const Counter = ({ to, duration = 900, prefix = '', suffix = '' }) => {
-  const [n, setN] = useState(0);
-  const ref = useRef(false);
-  useEffect(() => {
-    if (ref.current) return;
-    ref.current = true;
-    const start = Date.now();
-    const tick = () => {
-      const p = Math.min((Date.now() - start) / duration, 1);
-      setN(Math.floor(to * (p < 0.5 ? 2*p*p : -1+(4-2*p)*p)));
-      if (p < 1) requestAnimationFrame(tick);
-      else setN(to);
-    };
-    requestAnimationFrame(tick);
-  }, [to, duration]);
-  return <>{prefix}{new Intl.NumberFormat('fr-MG').format(n)}{suffix}</>;
-};
-
 /* ── Tooltip custom ── */
-const TTip = ({ active, payload, label, cur = false }) => {
+const TTip = React.memo(({ active, payload, label, cur = false }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{ background:'#fff', border:'1px solid #E2E8F0', borderRadius:12, padding:'10px 14px', boxShadow:'0 8px 24px rgba(15,23,42,.12)' }}>
@@ -76,10 +81,10 @@ const TTip = ({ active, payload, label, cur = false }) => {
       ))}
     </div>
   );
-};
+});
 
 /* ── KPI Card ── */
-const KPI = ({ label, value, sub, icon: Icon, color, trend, trendLabel, format = 'number', loading }) => {
+const KPI = React.memo(({ label, value, sub, icon: Icon, color, trend, trendLabel, format = 'number', loading }) => {
   const isPos = trend > 0, isNeg = trend < 0;
   const trendColor = isPos ? '#10B981' : isNeg ? '#EF4444' : '#94A3B8';
   const TIcon = isPos ? ArrowUpRight : isNeg ? ArrowDownRight : Minus;
@@ -91,7 +96,7 @@ const KPI = ({ label, value, sub, icon: Icon, color, trend, trendLabel, format =
       <div style={{ position:'absolute', top:-16, right:-16, width:80, height:80, borderRadius:'50%', background:`${color}10`, pointerEvents:'none' }}/>
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14 }}>
         <div style={{ width:42, height:42, borderRadius:12, background:`${color}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          {loading ? <div style={{ width:20, height:20, borderRadius:'50%', border:`3px solid ${color}33`, borderTopColor:color, animation:'spin .8s linear infinite' }}/> : <Icon size={20} color={color}/>}
+          {loading ? <Skel h={20} w={20} r={10}/> : <Icon size={20} color={color}/>}
         </div>
         {trend !== undefined && (
           <div style={{ display:'flex', alignItems:'center', gap:3, background:`${trendColor}12`, color:trendColor, borderRadius:99, padding:'3px 8px', fontSize:11, fontWeight:700 }}>
@@ -101,8 +106,8 @@ const KPI = ({ label, value, sub, icon: Icon, color, trend, trendLabel, format =
       </div>
       <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:26, color:'#0F172A', lineHeight:1, marginBottom:4 }}>
         {loading ? <div style={{ width:100, height:24, borderRadius:6, background:'#F1F5F9' }}/> :
-          format === 'currency' ? <Counter to={value} prefix="" suffix=" Ar"/> :
-          <Counter to={value}/>
+          format === 'currency' ? fmt(value) :
+          new Intl.NumberFormat('fr-MG').format(value || 0)
         }
       </div>
       <div style={{ fontSize:13, fontWeight:600, color:'#475569', marginBottom:2 }}>{label}</div>
@@ -110,12 +115,12 @@ const KPI = ({ label, value, sub, icon: Icon, color, trend, trendLabel, format =
       {trendLabel && <div style={{ fontSize:11, color:trendColor, marginTop:4 }}>{trendLabel}</div>}
     </div>
   );
-};
+});
 
 /* ── Skeleton ── */
-const Skel = ({ h=20, w='100%', r=8 }) => (
+const Skel = React.memo(({ h=20, w='100%', r=8 }) => (
   <div style={{ height:h, width:w, borderRadius:r, background:'linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.5s infinite' }}/>
-);
+));
 
 /* ── Badge statut RDV ── */
 const APPT_STATUS = {
@@ -140,50 +145,40 @@ const Dashboard = () => {
   const isMobile = w < 768;
   const isTablet = w >= 768 && w < 1024;
 
-  const [kpi,    setKpi]    = useState(null);
-  const [acts,   setActs]   = useState(null);
-  const [chart,  setChart]  = useState([]);
-  const [appts,  setAppts]  = useState([]);
-  const [invs,   setInvs]   = useState([]);
-  const [loading,setLoad]   = useState(true);
-  const [err,    setErr]    = useState(null);
   const [activeTab, setTab] = useState('rdv'); // rdv | factures
+  const [, startTransition] = useTransition();
 
-  const load = async () => {
-    setLoad(true); setErr(null);
-    try {
-      const { data } = await axios.get(`${API}/dashboard/overview`, authH());
-      setKpi(data.kpi || null);
-      setActs(data.recent_activities || null);
-      setChart(buildChart(data.chart || [], data.chart || []));
-      setAppts((data.appointments || []).slice(0, 8));
-      setInvs((data.invoices || []).slice(0, 8));
-    } catch (e) { setErr('Erreur de connexion'); }
-    finally { setLoad(false); }
-  };
+  const {
+    data: dashboardData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['dashboard', 'overview'],
+    queryFn: fetchDashboardOverview,
+    select: data => ({
+      kpi: data.kpi || null,
+      acts: data.recent_activities || null,
+      chart: buildDashboardChart(data.chart || [], data.chart || []),
+      appts: (data.appointments || []).slice(0, 8),
+      invs: (data.invoices || []).slice(0, 8),
+    }),
+  });
 
-  useEffect(() => { load(); }, []);
-
-  /* Construire données graphique revenue sur 12 mois */
-  const buildChart = (revenueData, patientData) => {
-    const now = new Date();
-    return Array.from({ length: 12 }, (_, i) => {
-      const m = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
-      const key = `${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`;
-      const revenue = revenueData.find(d => d.period === key);
-      const patients = patientData.find(d => d.period === key);
-      return {
-        mois: MOIS[m.getMonth()],
-        revenue: revenue?.amount || 0,
-        patients: patients?.count || 0,
-      };
-    });
-  };
+  const kpi = dashboardData?.kpi || null;
+  const acts = dashboardData?.acts || null;
+  const chart = dashboardData?.chart || [];
+  const appts = dashboardData?.appts || [];
+  const invs = dashboardData?.invs || [];
+  const loading = isLoading;
+  const refreshDashboard = useCallback(() => refetch(), [refetch]);
+  const changeTab = useCallback((tab) => startTransition(() => setTab(tab)), [startTransition]);
 
   /* Répartition factures */
   const piePaid    = kpi?.invoices?.total && kpi?.invoices?.pending ? kpi.invoices.total - kpi.invoices.pending : 0;
   const pieUnpaid  = kpi?.invoices?.pending || 0;
-  const pieData    = [{ name:'Payées', value:piePaid, color:C.green }, { name:'En attente', value:pieUnpaid, color:C.amber }];
+  const pieData = useMemo(() => [{ name:'Payées', value:piePaid, color:C.green }, { name:'En attente', value:pieUnpaid, color:C.amber }], [piePaid, pieUnpaid]);
 
   const cols2 = isMobile ? '1fr' : '1fr 1fr';
   const cols4 = isMobile ? 'repeat(2,1fr)' : isTablet ? 'repeat(2,1fr)' : 'repeat(4,1fr)';
@@ -213,9 +208,9 @@ const Dashboard = () => {
             <div style={{ width:6, height:6, borderRadius:'50%', background:'#22C55E' }}/>
             En ligne
           </div>
-          <button onClick={load} disabled={loading}
+          <button onClick={refreshDashboard} disabled={isFetching}
             style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
-            <RefreshCw size={13} style={{ animation: loading ? 'spin .8s linear infinite' : 'none' }}/>
+            <RefreshCw size={13} style={{ opacity: isFetching ? .5 : 1 }}/>
             {!isMobile && 'Actualiser'}
           </button>
         </div>
@@ -239,7 +234,7 @@ const Dashboard = () => {
         ].map((s,i) => (
           <div key={i} style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'14px 16px', display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ width:36, height:36, borderRadius:10, background:`${s.color}15`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              {loading ? <div style={{ width:16, height:16, borderRadius:'50%', border:`2px solid ${s.color}33`, borderTopColor:s.color, animation:'spin .8s linear infinite' }}/> : <s.icon size={16} color={s.color}/>}
+              {loading ? <Skel h={16} w={16} r={8}/> : <s.icon size={16} color={s.color}/>}
             </div>
             <div>
               <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#0F172A' }}>
@@ -377,8 +372,8 @@ const Dashboard = () => {
             { k:'rdv',      l:'📅 Rendez-vous récents',   n:appts.length },
             { k:'factures', l:'🧾 Factures en attente',    n:invs.length },
           ].map(t => (
-            <button key={t.k} onClick={() => setTab(t.k)}
-              style={{ flex:1, padding:'13px 16px', border:'none', background:'transparent', cursor:'pointer', fontWeight:600, fontSize:13, color:activeTab===t.k?C.teal:'#64748B', borderBottom:activeTab===t.k?`2px solid ${C.teal}`:'2px solid transparent', transition:'all .2s' }}>
+            <button key={t.k} onClick={() => changeTab(t.k)}
+              style={{ flex:1, padding:'13px 16px', border:'none', background:'transparent', cursor:'pointer', fontWeight:600, fontSize:13, color:activeTab===t.k?C.teal:'#64748B', borderBottom:activeTab===t.k?`2px solid ${C.teal}`:'2px solid transparent', transition:'color 120ms ease-out, border-color 120ms ease-out' }}>
               {t.l} <span style={{ background:activeTab===t.k?'#F0FDFE':'#F1F5F9', color:activeTab===t.k?C.teal:'#94A3B8', borderRadius:99, padding:'1px 7px', fontSize:11, fontWeight:700, marginLeft:4 }}>{t.n}</span>
             </button>
           ))}
@@ -543,22 +538,22 @@ const Dashboard = () => {
             { icon:'🧾', l:'Nouvelle facture',   c:C.green,  href:'/invoices' },
             { icon:'📦', l:'Vérifier le stock',  c:C.coral,  href:'/inventory' },
           ].map(a => (
-            <a key={a.l} href={a.href}
+            <Link key={a.l} to={a.href}
               style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 16px', borderRadius:13, border:'1.5px solid #E2E8F0', background:'#fff', textDecoration:'none', transition:'all .2s' }}
               onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.background=`${a.c}08`;}}
               onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
               <div style={{ width:34, height:34, borderRadius:10, background:`${a.c}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0 }}>{a.icon}</div>
               <span style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>{a.l}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
 
-      {err && (
+      {error && (
         <div style={{ background:'#FEE2E2', border:'1px solid #FECACA', borderRadius:12, padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
           <AlertTriangle size={16} color="#EF4444"/>
-          <span style={{ fontSize:13, color:'#991B1B', fontWeight:600 }}>{err}</span>
-          <button onClick={load} style={{ marginLeft:'auto', padding:'5px 12px', borderRadius:8, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>Réessayer</button>
+          <span style={{ fontSize:13, color:'#991B1B', fontWeight:600 }}>Erreur de connexion</span>
+          <button onClick={refreshDashboard} style={{ marginLeft:'auto', padding:'5px 12px', borderRadius:8, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>Réessayer</button>
         </div>
       )}
     </div>

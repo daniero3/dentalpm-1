@@ -220,6 +220,54 @@ body, .App {
   background: #ffffff;
 }
 
+/* ===== PERFORMANCE BASELINE ===== */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 160ms;
+    animation-timing-function: ease-out;
+  }
+}
+
+.dpm-layout,
+.dpm-app-topbar,
+.dpm-main,
+.dpm-card,
+.dash-card {
+  contain: layout style paint;
+}
+
+.page-enter {
+  animation: dpmPageIn 160ms ease-out both;
+  will-change: opacity, transform;
+}
+
+@keyframes dpmPageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dpm-skeleton {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition-property: opacity, transform, background-color, border-color, color, box-shadow;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+[style*="backdrop-filter"] {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
 .form-textarea { min-height: 80px; resize: vertical; }
 
 /* ===== BOUTONS ===== */
