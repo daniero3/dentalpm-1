@@ -75,7 +75,7 @@ const PARTNER_CATALOG = [
 
 const CATS = ['Tous', 'Composite', 'Anesthésie', 'Ciment', 'Consommable', 'Équipement', 'Matériel', 'Antibiotique', 'Antidouleur', 'Antiseptique', 'Solution', 'Soins'];
 const EXPENSE_CATEGORIES = [
-  'Loyer', 'Électricité', 'Eau', 'Internet', 'Téléphone', 'Salaire',
+  'Loyer', 'JIRAMA', 'Internet', 'Téléphone', 'Salaire',
   'Entretien', 'Transport', 'Fournitures bureau', 'Impôts & taxes', 'Autre'
 ];
 const TYPE_COLOR = { DENTAL:'#1D4ED8', EQUIPMENT:'#7C3AED', PHARMA:'#166534', GENERAL:'#475569' };
@@ -89,7 +89,7 @@ const STATUS = {
 };
 
 const emptyExpense = {
-  expense_label: '',
+  expense_label: 'Loyer',
   expense_category: 'Loyer',
   amount_mga: '',
   expense_date: new Date().toISOString().split('T')[0],
@@ -205,15 +205,16 @@ const PurchaseManagement = () => {
 
   const handleCreateExpense = async () => {
     const amount = parseFloat(expense.amount_mga || 0);
-    if (!expense.expense_label.trim() || amount <= 0) {
+    if (!expense.expense_category || amount <= 0) {
       toast.error('Libellé et montant requis');
       return;
     }
+    const label = expense.expense_category;
     try {
       const r = await axios.post(`${API}/purchases`, {
         expense_type: 'GENERAL_EXPENSE',
-        expense_label: expense.expense_label.trim(),
-        expense_category: expense.expense_category,
+        expense_label: label,
+        expense_category: label,
         amount_mga: amount,
         expense_date: expense.expense_date,
         notes: expense.notes
@@ -626,8 +627,9 @@ const PurchaseManagement = () => {
               <div style={{ display:'grid', gridTemplateColumns:'1fr 160px', gap:12 }}>
                 <div>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Libellé *</label>
-                  <input value={expense.expense_label} onChange={e => setExpense(p => ({ ...p, expense_label:e.target.value }))} placeholder="Ex: Facture JIRAMA, loyer du cabinet..."
-                    style={inp} onFocus={fi} onBlur={bi}/>
+                  <select value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value, expense_label:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
+                    {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date</label>
@@ -635,13 +637,7 @@ const PurchaseManagement = () => {
                     style={inp} onFocus={fi} onBlur={bi}/>
                 </div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 180px', gap:12 }}>
-                <div>
-                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Catégorie</label>
-                  <select value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
-                    {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
-                </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:12 }}>
                 <div>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Montant *</label>
                   <input type="number" min="0" value={expense.amount_mga} onChange={e => setExpense(p => ({ ...p, amount_mga:e.target.value }))} placeholder="Ar"
@@ -716,8 +712,8 @@ const PurchaseManagement = () => {
 
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
             <button onClick={() => { setIsOpen(false); resetForm(); }} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-            <button onClick={formMode === 'expense' ? handleCreateExpense : handleCreate} disabled={formMode === 'expense' ? (!expense.expense_label.trim() || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup || items.length === 0)}
-              style={{ padding:'9px 22px', borderRadius:10, background:formMode === 'expense' ? '#EF4444' : 'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:(formMode === 'expense' ? (!expense.expense_label.trim() || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup||!items.length))?.5:1 }}>
+            <button onClick={formMode === 'expense' ? handleCreateExpense : handleCreate} disabled={formMode === 'expense' ? (!expense.expense_category || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup || items.length === 0)}
+              style={{ padding:'9px 22px', borderRadius:10, background:formMode === 'expense' ? '#EF4444' : 'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:(formMode === 'expense' ? (!expense.expense_category || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup||!items.length))?.5:1 }}>
               <Check size={14}/>{formMode === 'expense' ? 'Enregistrer la dépense' : 'Créer le bon'}
             </button>
           </div>
