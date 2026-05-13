@@ -77,6 +77,7 @@ const InvoiceManagement = () => {
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
   const [patientSearch, setPatientSearch] = useState('');
+  const [patientLoading, setPatientLoading] = useState(false);
   const [statusF,   setStatusF]   = useState('ALL');
   const [feeSearch, setFeeSearch] = useState('');
   const [isOpen,    setIsOpen]    = useState(false);
@@ -88,6 +89,7 @@ const InvoiceManagement = () => {
   const [payStats,  setPayStats]  = useState({ total_mga:0, paid_total_mga:0, balance_mga:0 });
   const [saving,    setSaving]    = useState(false);
   const [payData,   setPayData]   = useState({ amount_mga:'', payment_method:'CASH', reference_number:'' });
+  const patientRequestRef = useRef(null);
 
   const emptyForm = { patient_id:'', schedule_id:'', items:[{ description:'', procedure_code:'', quantity:1, unit_price_mga:'', tooth_number:'' }], discount_percentage:0, notes:'', payment_method:'' };
   const [form, setForm] = useState(emptyForm);
@@ -95,12 +97,15 @@ const InvoiceManagement = () => {
   useEffect(() => {
     mountedRef.current = true;
     fetchAll();
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      patientRequestRef.current?.abort();
+    };
   }, []);
 
   const fetchAll = async () => {
     setLoading(true);
-    await Promise.all([fetchInvoices(), fetchPatients(), fetchSchedules(), fetchRevenues()]);
+    await Promise.all([fetchInvoices(), fetchSchedules(), fetchRevenues()]);
     setLoading(false);
   };
 
@@ -112,10 +117,47 @@ const InvoiceManagement = () => {
       if (mountedRef.current) setInvoices(r.data.invoices || r.data.data || []);
     } catch {}
   };
-  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients?limit=500`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
+  const fetchPatients = async (query, signal) => {
+    const params = { limit: 20, page: 1 };
+    if (query?.trim()) params.search = query.trim();
+    const r = await axios.get(`${API}/patients`, { params, signal, ...authH() });
+    return r.data.patients || [];
+  };
   const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
   const fetchFees = async id => { if(!id){setFees([]);return;} try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
   const fetchRevenues = async () => { try { const r=await axios.get(`${API}/invoices/revenues`, authH()); setRevenues(r.data.revenues || []); } catch { setRevenues([]); } };
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const query = patientSearch.trim();
+    patientRequestRef.current?.abort();
+
+    if (query.length < 2) {
+      setPatients([]);
+      setPatientLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    patientRequestRef.current = controller;
+    const timer = setTimeout(async () => {
+      setPatientLoading(true);
+      try {
+        const list = await fetchPatients(query, controller.signal);
+        if (patientRequestRef.current === controller) setPatients(list);
+      } catch (error) {
+        if (!axios.isCancel(error) && error.code !== 'ERR_CANCELED') setPatients([]);
+      } finally {
+        if (patientRequestRef.current === controller) setPatientLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [isOpen, patientSearch]);
 
   const fetchPayments = async inv => {
     try {
@@ -243,7 +285,7 @@ const InvoiceManagement = () => {
   const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
   const patientMatches = patients
     .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
-    .slice(0, 80);
+    .slice(0, 20);
   const selectedPatient = patients.find(p => p.id === form.patient_id);
   const patientOptions = selectedPatient && !patientMatches.some(p => p.id === selectedPatient.id)
     ? [selectedPatient, ...patientMatches]
@@ -275,7 +317,7 @@ const InvoiceManagement = () => {
           <button onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setFees([]);setIsOpen(true);}}
+          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setPatients([]);setFees([]);setIsOpen(true);}}
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(16,185,129,.3)' }}>
             <Plus size={15}/>Nouvelle Facture
           </button>
@@ -357,7 +399,7 @@ const InvoiceManagement = () => {
           <FileText size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucune facture</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre première facture'}</p>
-          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setPatients([]);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouvelle facture
           </button>
         </div>
@@ -558,7 +600,11 @@ const InvoiceManagement = () => {
                 {patientOptions.map(p=><option key={p.id} value={p.id}>{patientIdentifier(p)} · {p.first_name} {p.last_name}{p.phone_primary ? ` · ${p.phone_primary}` : ''}</option>)}
               </select>
               <div style={{ fontSize:11, color:'#94A3B8', marginTop:5 }}>
-                {patientOptions.length} patient(s) affiché(s)
+                {patientSearch.trim().length < 2
+                  ? 'Tapez au moins 2 caractères pour rechercher'
+                  : patientLoading
+                    ? 'Recherche en cours...'
+                    : `${patientOptions.length} patient(s) trouvé(s)`}
               </div>
             </div>
             <div>

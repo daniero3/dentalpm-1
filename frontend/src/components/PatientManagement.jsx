@@ -199,6 +199,7 @@ const PatientManagement = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const mountedRef = useRef(true);
   const importInputRef = useRef(null);
+  const patientsRequestRef = useRef(null);
   const canImportPatients = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
   const emptyForm = { id:'', patient_number:'', first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' };
@@ -206,29 +207,45 @@ const PatientManagement = () => {
 
   useEffect(() => {
     mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      patientsRequestRef.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchPatients(page), search ? 250 : 0);
+    if (search.trim() && page !== 1) {
+      setPage(1);
+      return undefined;
+    }
+
+    const timer = setTimeout(() => fetchPatients(search.trim() ? 1 : page), search ? 350 : 0);
     return () => clearTimeout(timer);
   }, [page, search]);
 
   const fetchPatients = async (targetPage = page) => {
+    patientsRequestRef.current?.abort();
+    const controller = new AbortController();
+    patientsRequestRef.current = controller;
+
     try {
       setLoading(true);
       const hasSearch = !!search.trim();
       const params = hasSearch
-        ? { page: 1, limit: 500 }
+        ? { page: 1, limit: 30, search: search.trim() }
         : { page: targetPage, limit: 50 };
-      const r = await axios.get(`${API}/patients`, { params, ...authH() });
+      const r = await axios.get(`${API}/patients`, { params, signal: controller.signal, ...authH() });
       const list = r.data.patients || r.data.data || r.data || [];
-      if (mountedRef.current) setPatients(Array.isArray(list) ? list : []);
+      if (mountedRef.current && patientsRequestRef.current === controller) setPatients(Array.isArray(list) ? list : []);
       if (mountedRef.current && r.data.pagination) {
         setPagination(hasSearch ? { ...r.data.pagination, current_page: 1 } : r.data.pagination);
       }
-    } catch (e) { if (!axios.isCancel(e)) toast.error('Erreur chargement patients'); }
-    finally { if (mountedRef.current) setLoading(false); }
+    } catch (e) {
+      if (!axios.isCancel(e) && e.code !== 'ERR_CANCELED') toast.error('Erreur chargement patients');
+    }
+    finally {
+      if (mountedRef.current && patientsRequestRef.current === controller) setLoading(false);
+    }
   };
 
   const onChange = useCallback((name, val) => setForm(p => ({...p, [name]:val})), []);
