@@ -6,4 +6,4 @@ cmds = [
 ]
 
 [start]
-cmd = "serve -s build -l $PORT"
+cmd = "serve -s dist -l $PORT"
