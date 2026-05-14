@@ -5,6 +5,7 @@ const rateLimit   = require('express-rate-limit');
 const compression = require('compression');
 const crypto      = require('crypto');
 const { URL }     = require('url');
+const path         = require('path');
 require('dotenv').config();
 
 const sequelize = require('./database/connection');
@@ -349,8 +350,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.use('*', (req, res) => {
+app.use('/api/*', (req, res) => {
   res.status(404).json({ error:'Route non trouvée', path: req.originalUrl, request_id: req.requestId });
+});
+
+// ── Frontend SPA ─────────────────────────────────────────────────────────────
+const frontendDistPath = path.join(__dirname, '../frontend/dist');
+
+app.use(express.static(frontendDistPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
