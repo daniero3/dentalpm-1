@@ -1,0 +1,9 @@
+[phases.build]
+cmds = [
+  "npm install",
+  "node -e \"const fs=require('fs');const sw=fs.readFileSync('public/sw.js','utf8');fs.writeFileSync('public/sw.js',sw.replace('__BUILD_TIMESTAMP__',Date.now().toString()));console.log('[Build] Cache bust timestamp injecté dans sw.js');\"",
+  "npm run build"
+]
+
+[start]
+cmd = "serve -s dist -l $PORT"

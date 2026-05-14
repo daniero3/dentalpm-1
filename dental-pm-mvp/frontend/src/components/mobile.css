@@ -1,0 +1,345 @@
+/* ═══════════════════════════════════════════════════════════
+   DentalPM — Responsive Global
+   Règles transversales sans casser les layouts spécifiques.
+   ═══════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root,
+.App {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 0;
+}
+
+img,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+button,
+a,
+[role="button"],
+input,
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+button,
+a,
+[role="button"] {
+  line-height: 1.2;
+}
+
+button svg,
+a svg,
+[role="button"] svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.dpm-layout,
+.dpm-main,
+.dpm-content-shell,
+.dpm-page,
+.dpm-header,
+.dpm-header-left,
+.dpm-toolbar,
+.dpm-search,
+.dpm-card-item,
+.dpm-kpi,
+.dpm-tabs,
+.card,
+.glass-card {
+  min-width: 0;
+}
+
+.dpm-content-shell {
+  overflow-x: clip;
+}
+
+.dpm-table-wrap,
+.dpm-table-wrapper,
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  max-width: 100%;
+}
+
+.dpm-table,
+.table {
+  min-width: max-content;
+}
+
+.dpm-header-title,
+.dpm-header-sub,
+.dpm-kpi-label,
+.dpm-card-item,
+.dpm-empty p,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+/* ── Tablette ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .dpm-main {
+    padding: 16px 18px 72px !important;
+  }
+
+  .dpm-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .dpm-header {
+    gap: 12px;
+  }
+}
+
+/* ── Smartphone ── */
+@media (max-width: 767px) {
+  .dpm-app-topbar {
+    height: 56px !important;
+    padding-left: 62px !important;
+    padding-right: 10px !important;
+    gap: 8px !important;
+  }
+
+  .dpm-main {
+    padding: 12px 10px 84px !important;
+    min-height: 100vh;
+    overflow-x: hidden !important;
+  }
+
+  .dpm-content-shell {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .dpm-page {
+    max-width: 100%;
+    padding-bottom: 80px;
+  }
+
+  .dpm-sidebar-desktop {
+    display: none !important;
+  }
+
+  .dpm-header {
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .dpm-header-left {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .dpm-header-title {
+    font-size: clamp(18px, 6vw, 22px) !important;
+    line-height: 1.15;
+  }
+
+  .dpm-header-sub {
+    font-size: 12px !important;
+    line-height: 1.4;
+  }
+
+  .dpm-toolbar {
+    padding: 10px;
+    align-items: stretch;
+  }
+
+  .dpm-search {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    font-size: 16px !important;
+  }
+
+  .dpm-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+
+  .dpm-kpi {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .dpm-kpi-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .dpm-kpi-val {
+    font-size: 18px;
+  }
+
+  .card-body,
+  .card-header,
+  .dpm-card-item {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .dpm-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dpm-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  .dpm-modal-overlay,
+  [role="dialog"] {
+    max-width: 100vw;
+  }
+
+  .dpm-modal-overlay {
+    padding: 0 !important;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .dpm-modal {
+    max-width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 16px;
+  }
+
+  .dpm-btn-primary,
+  .dpm-btn-secondary,
+  .btn {
+    min-height: 38px;
+    justify-content: center;
+  }
+
+  .dpm-btn-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dpm-filter-btn {
+    min-height: 32px;
+  }
+
+  .dpm-btn-mobile {
+    width: 100% !important;
+  }
+}
+
+/* ── Petit smartphone ── */
+@media (max-width: 420px) {
+  .dpm-app-topbar {
+    padding-left: 58px !important;
+    padding-right: 8px !important;
+    gap: 6px !important;
+  }
+
+  .dpm-main {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .dpm-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dpm-toolbar {
+    gap: 8px;
+  }
+
+  .dpm-filter-btn,
+  .dpm-btn-primary,
+  .dpm-btn-secondary,
+  .btn {
+    width: 100%;
+  }
+
+  .dpm-table th,
+  .dpm-table td,
+  .table th,
+  .table td {
+    padding: 9px 10px !important;
+  }
+}
+
+/* ── Ultra compact : très petits écrans / montres ── */
+@media (max-width: 300px) {
+  .dpm-app-topbar {
+    padding-left: 48px !important;
+    padding-right: 5px !important;
+    gap: 4px !important;
+  }
+
+  .dpm-main {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .dpm-header-title {
+    font-size: 17px !important;
+  }
+
+  .dpm-header-icon,
+  .dpm-kpi-icon {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 9px !important;
+  }
+
+  .dpm-kpi,
+  .dpm-card-item,
+  .card-body,
+  .card-header {
+    padding: 10px !important;
+  }
+
+  .dpm-header-sub,
+  .dpm-kpi-label,
+  .dpm-card-item,
+  .dpm-table,
+  .table,
+  .dpm-btn-primary,
+  .dpm-btn-secondary,
+  .btn {
+    font-size: 11px !important;
+  }
+}

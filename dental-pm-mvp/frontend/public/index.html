@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Cache Busting — forcer vérification à chaque visite -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0D7A87" />
+    <meta name="description" content="DentalPM Madagascar — Logiciel de gestion de cabinet dentaire. Patients, RDV, facturation, odontogramme." />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32"  href="%PUBLIC_URL%/icon-128x128.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="%PUBLIC_URL%/icon-192x192.png" />
+
+    <!-- PWA iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DentalPM" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- PWA Windows / Android -->
+    <meta name="application-name" content="DentalPM Madagascar" />
+    <meta name="msapplication-TileColor" content="#0D7A87" />
+    <meta name="msapplication-TileImage" content="%PUBLIC_URL%/icon-144x144.png" />
+    
+    <!-- Open Graph (aperçu sur WhatsApp, Facebook, etc.) -->
+    <meta property="og:title" content="DPM — Gestion Cabinet Dentaire Madagascar" />
+    <meta property="og:description" content="Logiciel de gestion de cabinet dentaire à Madagascar. Patients, RDV, facturation, odontogramme." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_MG" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="DPM Madagascar" />
+    <meta name="twitter:description" content="Logiciel de gestion de cabinet dentaire à Madagascar" />
+    
+    <title>DPM — Cabinet Dentaire Madagascar</title>
+
+  <style>
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+    @keyframes float     { 0%,100%{transform:translateY(0) rotate(0deg)} 40%{transform:translateY(-14px) rotate(2deg)} 70%{transform:translateY(-6px) rotate(-1deg)} }
+    @keyframes pulse     { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+    @keyframes shimmer   { 0%{background-position:-200% center} 100%{background-position:200% center} }
+    @keyframes orb       { 0%,100%{transform:translate(0,0) scale(1)} 25%{transform:translate(30px,-20px) scale(1.1)} 50%{transform:translate(-20px,30px) scale(.9)} 75%{transform:translate(20px,10px) scale(1.05)} }
+    @keyframes blink     { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes particle  { 0%{transform:translateY(0) scale(1);opacity:.7} 100%{transform:translateY(-140px) scale(.6);opacity:0} }
+    @keyframes countUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes scaleIn   { from{opacity:0;transform:scale(.88)} to{opacity:1;transform:scale(1)} }
+    @keyframes spin      { to{transform:rotate(360deg)} }
+    @keyframes imgFade   { 0%{opacity:0;transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
+    @keyframes imgFadeOut{ 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.05)} }
+
+    .au0{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both;}
+    .au1{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) .15s both;}
+    .au2{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) .3s both;}
+    .au3{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) .45s both;}
+    .au4{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) .6s both;}
+    .sr {opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s cubic-bezier(.22,1,.36,1);}
+    .sr.vis{opacity:1;transform:translateY(0);}
+    .shimmer{background:linear-gradient(90deg,#7DD3DA,#fff,#7DD3DA,#fff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite;}
+    .card-feat{transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,border-color .3s;}
+    .card-feat:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 24px 56px rgba(13,122,135,.18);border-color:#0D7A87!important;}
+    .btn-cta{position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;}
+    .btn-cta::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:translateX(-100%);transition:transform .5s;}
+    .btn-cta:hover::after{transform:translateX(100%);}
+    .btn-cta:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(13,122,135,.42);}
+    .plan-card{transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s;}
+    .plan-card:hover{transform:translateY(-10px);box-shadow:0 28px 64px rgba(0,0,0,.13);}
+    .tooltip-wrap{position:relative;display:inline-block;}
+    .tooltip-box{visibility:hidden;opacity:0;position:absolute;bottom:calc(100% + 12px);left:50%;transform:translateX(-50%) translateY(6px);background:linear-gradient(135deg,#083D44,#0D7A87);color:#fff;border-radius:14px;padding:12px 16px;width:220px;font-size:13px;line-height:1.55;font-weight:500;box-shadow:0 16px 40px rgba(13,122,135,.35);transition:opacity .25s,transform .25s,visibility .25s;z-index:50;pointer-events:none;}
+    .tooltip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#0D7A87;}
+    .tooltip-wrap:hover .tooltip-box{visibility:visible;opacity:1;transform:translateX(-50%) translateY(0);}
+    *{box-sizing:border-box;}
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-thumb{background:#0D7A87;border-radius:99px;}
+  </style>
+
+  <style id="dpm-responsive">
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+
+    /* ── Grilles responsive automatiques ── */
+    @media (max-width: 640px) {
+      /* Toutes les grilles 2+ colonnes → 1 colonne sur mobile */
+      [style*="gridTemplateColumns: '1fr 1fr'"],
+      [style*='gridTemplateColumns: "1fr 1fr"'],
+      [style*="gridTemplateColumns: 'repeat(2"],
+      [style*="gridTemplateColumns: 'repeat(3"],
+      [style*="gridTemplateColumns: 'repeat(4"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Main layout */
+      .dpm-main { padding: 10px !important; }
+
+      /* Tables → scroll horizontal */
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+      /* Cards padding réduit */
+      .dpm-card { padding: 14px !important; }
+
+      /* Modals plein écran */
+      .dpm-modal { max-width: 100% !important; margin: 0 !important; border-radius: 20px 20px 0 0 !important; }
+
+      /* Boutons empilés */
+      .dpm-btn-row { flex-direction: column !important; }
+      .dpm-btn-row > * { width: 100% !important; }
+
+      /* Topbar — pad pour hamburger */
+      .dpm-topbar { padding-left: 62px !important; }
+
+      /* Masquer texte non essentiel sur très petit écran */
+      .dpm-hide-xs { display: none !important; }
+
+      /* FontSize réduit pour les grands titres */
+      h1 { font-size: clamp(18px, 5vw, 28px) !important; }
+      h2 { font-size: clamp(16px, 4vw, 24px) !important; }
+
+      /* Landing page */
+      .dpm-hero-grid { grid-template-columns: 1fr !important; }
+      .dpm-section-grid { grid-template-columns: 1fr !important; }
+      .dpm-plans-grid { grid-template-columns: 1fr !important; }
+      .dpm-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .dpm-features-grid { grid-template-columns: 1fr !important; }
+    }
+
+    @media (max-width: 480px) {
+      /* Encore plus petit */
+      [style*="fontSize: 44"], [style*="fontSize: 48"], [style*="fontSize: 56"],
+      [style*="fontSize: 60"] { font-size: 26px !important; }
+      [style*="padding: '100px"], [style*="padding: '88px"] { padding: 40px 16px !important; }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+      /* Tablette — 2 colonnes max pour les grilles 3-4 */
+      [style*="gridTemplateColumns: 'repeat(4"],
+      [style*="gridTemplateColumns: 'repeat(3"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    /* ── Overflow sécurité globale ── */
+    body { overflow-x: hidden; }
+    #root { overflow-x: hidden; }
+
+    /* ── Inputs et selects — taille min pour iOS ── */
+    input, select, textarea {
+      font-size: max(16px, 1em) !important; /* Évite le zoom iOS */
+    }
+
+    /* ── Scrollbar mobile ── */
+    @media (max-width: 640px) {
+      ::-webkit-scrollbar { display: none; }
+    }
+  </style>
+  </head>
+  <body>
+    <noscript>Veuillez activer JavaScript pour utiliser cette application.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
