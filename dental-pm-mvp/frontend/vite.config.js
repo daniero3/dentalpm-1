@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
+    base: '/',
     plugins: [jsxInJsPlugin(), react()],
     server: {
       host: '0.0.0.0',
@@ -48,6 +49,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      outDir: 'dist',
       target: 'es2020',
       sourcemap: false,
       cssCodeSplit: true,

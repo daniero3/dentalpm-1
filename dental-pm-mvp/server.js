@@ -355,7 +355,7 @@ app.use('/api/*', (req, res) => {
 });
 
 // ── Frontend SPA ─────────────────────────────────────────────────────────────
-const frontendDistPath = path.join(__dirname, '../frontend/dist');
+const frontendDistPath = path.join(__dirname, 'frontend/dist');
 
 app.use(express.static(frontendDistPath));
 
