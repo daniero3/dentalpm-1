@@ -238,6 +238,21 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// ── Cache headers pour données API peu volatiles ─────────────────────────────
+app.use('/api/pricing-schedules', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=300'); // 5 min
+  }
+  next();
+});
+
+app.use('/api/dashboard', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'private, max-age=60'); // 1 min
+  }
+  next();
+});
+
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status:'OK', timestamp: new Date().toISOString(), service:'DentalPM Madagascar' });
