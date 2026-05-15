@@ -274,7 +274,7 @@ const AppointmentManagement = () => {
 
   const fetchPatients = async () => {
     try {
-      const r = await cachedGet(`${API}/patients?limit=500`, authH(), { ttl: CACHE_TTL.medium });
+      const r = await cachedGet(`${API}/patients?limit=500&fields=lookup&includeTotal=false`, authH(), { ttl: CACHE_TTL.medium });
       const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
       setPatients(list);
     } catch (e) {

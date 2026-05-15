@@ -71,7 +71,9 @@ const practitionerName = (user) => user?.full_name || user?.username || 'Pratici
 router.get('/', requireClinicId, [
   query('search').optional().isLength({ min: 1 }),
   query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 500 })
+  query('limit').optional().isInt({ min: 1, max: 500 }),
+  query('fields').optional().isIn(['lookup']),
+  query('includeTotal').optional().isBoolean()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -79,7 +81,9 @@ router.get('/', requireClinicId, [
       return res.status(400).json({ error: 'Paramètres invalides', details: errors.array() });
     }
 
-    const { search, page = 1, limit = 20 } = req.query;
+    const { search, page = 1, limit = 20, fields } = req.query;
+    const includeTotal = req.query.includeTotal !== 'false';
+    const isLookup = fields === 'lookup';
     const offset = (page - 1) * limit;
 
     // ✅ Lire clinic_id depuis req.clinic_id OU req.user.clinic_id
@@ -119,27 +123,38 @@ router.get('/', requireClinicId, [
       }
     }
 
-    const { count, rows: patients } = await Patient.findAndCountAll({
+    const queryOptions = {
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['last_name', 'ASC'], ['first_name', 'ASC']],
-      include: [{
+      attributes: isLookup
+        ? ['id', 'patient_number', 'first_name', 'last_name', 'phone_primary', 'email']
+        : undefined
+    };
+
+    if (!isLookup) {
+      queryOptions.include = [{
         model: User,
         as: 'createdBy',
-        attributes: { exclude: ['password_hash'] },
+        attributes: ['id', 'username', 'full_name', 'email'],
         required: false
-      }]
-    });
+      }];
+    }
+
+    const result = includeTotal
+      ? await Patient.findAndCountAll(queryOptions)
+      : { count: null, rows: await Patient.findAll(queryOptions) };
+    const { count, rows: patients } = result;
 
     res.json({
       patients,
-      pagination: {
+      pagination: includeTotal ? {
         current_page: parseInt(page),
         total_pages: Math.ceil(count / limit),
         total_count: count,
         per_page: parseInt(limit)
-      }
+      } : undefined
     });
   } catch (error) {
     console.error('List patients error:', error);

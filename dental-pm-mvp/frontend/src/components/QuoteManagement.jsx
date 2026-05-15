@@ -87,7 +87,7 @@ const QuoteManagement = () => {
     setLoading(false);
   };
   const fetchQuotes    = async () => { try { const r=await axios.get(`${API}/quotes`,authH()); setQuotes(r.data.quotes||[]); } catch {} };
-  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients?limit=500`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
+  const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients?limit=500&fields=lookup&includeTotal=false`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
   const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
   const fetchFees = async id => { try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
 

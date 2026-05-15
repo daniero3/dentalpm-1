@@ -200,7 +200,7 @@ const LabManagement = () => {
     finally{setLoading(false);}
   };
   const fetchPatients = async()=>{
-    try{const r=await axios.get(`${API}/patients`,{params:{limit:500},...authH()});const l=r.data.patients||r.data.data||r.data||[];setPatients(Array.isArray(l)?l:[]);}
+    try{const r=await axios.get(`${API}/patients`,{params:{limit:500,fields:'lookup',includeTotal:false},...authH()});const l=r.data.patients||r.data.data||r.data||[];setPatients(Array.isArray(l)?l:[]);}
     catch(e){console.error(e);}
   };
   const handleCreate = async()=>{
