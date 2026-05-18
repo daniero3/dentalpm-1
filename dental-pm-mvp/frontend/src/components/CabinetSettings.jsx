@@ -31,8 +31,6 @@ export default function CabinetSettings() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Charger infos cabinet
-    axios.get(`${API}/auth/me`, authH()).catch(()=>{});
     // Charger profil user depuis localStorage
     try {
       const u = JSON.parse(localStorage.getItem('user') || '{}');
