@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { invalidateClientCache } from '../utils/clientCache';
+import PartnerAds from './PartnerAds';
 import {
   Truck, Plus, Search, Edit, Power, Phone, Mail, MapPin,
   Building2, Star, RefreshCw, X, Award, ExternalLink, Zap,
   Tag, ShoppingBag, Sparkles
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 
 const SUPPLIER_TYPES = [
   { value:'DENTAL',    label:'Dentaire',   color:'#1D4ED8', bg:'#EFF6FF' },
@@ -46,6 +50,39 @@ const PARTNER_SUPPLIERS = [
     badge:'Fournisseur Silver', badgeColor:'#64748B', badgeBg:'#F1F5F9',
     promo:'Livraison offerte dès 200 000 Ar', featured:false,
     rating:4.6, reviews:16,
+  },
+];
+
+const SUPPLIER_AD_EXAMPLES = [
+  {
+    id: 'supplier-demo-video',
+    type: 'video',
+    title: 'Démonstration showroom équipement cabinet',
+    partner: 'MedEquip Tana',
+    description: 'Exemple de publicité vidéo pour présenter fauteuil dentaire, lampe opératoire, compresseur, stérilisation et installation complète du cabinet.',
+    videoUrl: '',
+    ctaLabel: 'Demander une démo',
+    ctaUrl: 'mailto:medequip.tana@gmail.com?subject=Demande démo équipement cabinet',
+  },
+  {
+    id: 'supplier-demo-offer',
+    type: 'offer',
+    title: 'Pack consommables du mois',
+    partner: 'DentaSup Madagascar',
+    description: 'Exemple d’offre sponsorisée : composites, gants, seringues, anesthésiants et ciments avec remise spéciale pour les cabinets abonnés.',
+    videoUrl: '',
+    ctaLabel: 'Commander l’offre',
+    ctaUrl: 'mailto:dentasup.mada@gmail.com?subject=Pack consommables du mois',
+  },
+  {
+    id: 'supplier-demo-article',
+    type: 'article',
+    title: 'Article : préparer une salle de soins efficace',
+    partner: 'Pharma Dental Pro',
+    description: 'Exemple d’article partenaire pour conseiller les cabinets sur l’organisation des consommables, le stock minimum et les produits essentiels.',
+    videoUrl: '',
+    ctaLabel: 'Contacter le partenaire',
+    ctaUrl: 'mailto:pharmadentalpro@gmail.com?subject=Article organisation cabinet',
   },
 ];
 
@@ -332,6 +369,15 @@ const SupplierManagement = () => {
               </div>
             ))}
           </div>
+
+          <PartnerAds
+            title="Vidéos, offres et articles fournisseurs"
+            description="Les fournisseurs partenaires peuvent mettre en avant une vidéo de démonstration, une offre commerciale ou un article utile pour les cabinets dentaires. Les cartes ci-dessous servent d’exemples avant leurs propres uploads."
+            storageKey="dpm_supplier_partner_ads"
+            examples={SUPPLIER_AD_EXAMPLES}
+            accent="#D97706"
+            audienceLabel="fournisseur"
+          />
 
           {/* Zone pub libre */}
           <div style={{marginTop:22,border:'2px dashed #E2E8F0',borderRadius:18,padding:'28px',textAlign:'center',background:'#FAFBFC'}}>

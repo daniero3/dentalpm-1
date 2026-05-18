@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
+import PartnerAds from './PartnerAds';
 import {
   FlaskConical, Plus, Printer, RefreshCw, Loader2, Search,
   Clock, CheckCircle, XCircle, ArrowRight, Sparkles, X,
   Star, Phone, Mail, MapPin, Award, Zap, ExternalLink, Building2
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 
 const WORK_TYPES = {
   CROWN:'Couronne', BRIDGE:'Bridge', PARTIAL_DENTURE:'Prothèse partielle',
@@ -76,6 +80,39 @@ const PARTNER_LABS = [
     badge:'Partenaire Bronze', badgeColor:'#92400E', badgeBg:'#FEF3C7',
     desc:"Spécialiste céramique haut de gamme. Livraison nationale express disponible.",
     promo:'Livraison offerte pour Antananarivo', featured:false,
+  },
+];
+
+const LAB_AD_EXAMPLES = [
+  {
+    id: 'lab-demo-video',
+    type: 'video',
+    title: 'Démonstration finition couronne zircone',
+    partner: 'Labo Prothèse Pro',
+    description: 'Exemple de vidéo partenaire : étapes de conception, contrôle teinte, finition et livraison d’une couronne pour cabinet dentaire.',
+    videoUrl: '',
+    ctaLabel: 'Commander une couronne',
+    ctaUrl: 'mailto:labo.prosthese@gmail.com?subject=Commande couronne zircone',
+  },
+  {
+    id: 'lab-demo-offer',
+    type: 'offer',
+    title: 'Offre gouttières et retainers',
+    partner: 'Dental Lab Tana',
+    description: 'Exemple d’offre sponsorisée pour promouvoir une remise sur gouttières, appareils orthodontiques et retainer pendant le mois.',
+    videoUrl: '',
+    ctaLabel: 'Profiter de l’offre',
+    ctaUrl: 'mailto:dentallabtana@gmail.com?subject=Offre gouttières',
+  },
+  {
+    id: 'lab-demo-article',
+    type: 'article',
+    title: 'Article : mieux transmettre les teintes au labo',
+    partner: 'Labo Céramique Plus',
+    description: 'Exemple d’article labo pour expliquer comment envoyer photos, teinte, instructions et délai afin de réduire les retouches.',
+    videoUrl: '',
+    ctaLabel: 'Discuter avec le labo',
+    ctaUrl: 'mailto:ceramiqueplus.fianar@gmail.com?subject=Conseils teinte labo',
   },
 ];
 
@@ -405,6 +442,15 @@ const LabManagement = () => {
               </div>
             ))}
           </div>
+
+          <PartnerAds
+            title="Vidéos, offres et articles des labos"
+            description="Les laboratoires partenaires peuvent publier une vidéo de démonstration, une offre ou un article conseil. Les exemples ci-dessous montrent le rendu attendu avant leurs propres contenus."
+            storageKey="dpm_lab_partner_ads"
+            examples={LAB_AD_EXAMPLES}
+            accent="#0D7A87"
+            audienceLabel="laboratoire"
+          />
 
           {/* Zone pub libre */}
           <div style={{marginTop:22,border:'2px dashed #E2E8F0',borderRadius:18,padding:'28px',textAlign:'center',background:'#FAFBFC'}}>
