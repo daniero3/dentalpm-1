@@ -173,7 +173,12 @@ app.use((req, res, next) => {
 });
 app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      'media-src': ["'self'", 'data:', 'blob:', 'https:']
+    }
+  }
 }));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────

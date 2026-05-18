@@ -87,12 +87,12 @@ const LAB_AD_EXAMPLES = [
   {
     id: 'lab-demo-video',
     type: 'video',
-    title: 'Démonstration finition couronne zircone',
+    title: 'Vidéo exemple : implantologie et prothèse',
     partner: 'Labo Prothèse Pro',
-    description: 'Exemple de vidéo partenaire : étapes de conception, contrôle teinte, finition et livraison d’une couronne pour cabinet dentaire.',
-    videoUrl: '',
-    ctaLabel: 'Commander une couronne',
-    ctaUrl: 'mailto:labo.prosthese@gmail.com?subject=Commande couronne zircone',
+    description: 'Exemple de vidéo dentaire publique pour montrer comment un labo peut présenter une technique, une offre prothèse ou une démonstration de cas.',
+    videoUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Placement%20of%20root%20analogue%20ceramic%20implant.webm',
+    ctaLabel: 'Remplacer par votre vidéo',
+    ctaUrl: 'mailto:labo.prosthese@gmail.com?subject=Vidéo publicité labo',
   },
   {
     id: 'lab-demo-offer',

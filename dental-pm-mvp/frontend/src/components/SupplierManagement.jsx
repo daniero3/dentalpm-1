@@ -57,12 +57,12 @@ const SUPPLIER_AD_EXAMPLES = [
   {
     id: 'supplier-demo-video',
     type: 'video',
-    title: 'Démonstration showroom équipement cabinet',
+    title: 'Vidéo exemple : prévention et santé dentaire',
     partner: 'MedEquip Tana',
-    description: 'Exemple de publicité vidéo pour présenter fauteuil dentaire, lampe opératoire, compresseur, stérilisation et installation complète du cabinet.',
-    videoUrl: '',
-    ctaLabel: 'Demander une démo',
-    ctaUrl: 'mailto:medequip.tana@gmail.com?subject=Demande démo équipement cabinet',
+    description: 'Exemple de vidéo dentaire publique pour montrer le format attendu avant qu’un fournisseur ajoute sa propre publicité, offre produit ou démo cabinet.',
+    videoUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Go%20with%20the%20Flow.webm',
+    ctaLabel: 'Remplacer par votre vidéo',
+    ctaUrl: 'mailto:medequip.tana@gmail.com?subject=Vidéo publicité fournisseur',
   },
   {
     id: 'supplier-demo-offer',
