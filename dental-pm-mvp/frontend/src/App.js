@@ -93,6 +93,7 @@ const PatientLabOrders = React.lazy(() => import("./components/PatientLabOrders"
 const ReportsManagement = React.lazy(() => import("./components/ReportsManagement"));
 import { ModernSidebar } from "./components/ModernSidebar";
 import { ModernTopbar } from "./components/ModernTopbar";
+import HelpChatbot from "./components/HelpChatbot";
 
 // SaaS Components
 const BillingSettings = React.lazy(() => import("./components/BillingSettings"));
@@ -442,6 +443,7 @@ const MainLayout = ({ children }) => {
   return (
     <div className="dpm-layout" style={{ display:'flex', height:'100vh', background:'var(--bg-base)', overflow:'hidden', position:'relative' }}>
       <ModernSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
+      <HelpChatbot />
       <div style={{
         display:'flex', flexDirection:'column', flex:1,
         overflow:'hidden', minWidth:0,
