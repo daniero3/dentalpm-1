@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Bot, Send, X, MessageCircle, Minimize2, ArrowRight, Search, HelpCircle } from 'lucide-react';
+import { Send, X, Minimize2, ArrowRight, Search, HelpCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const theme = {
@@ -140,6 +140,25 @@ const createBotMessage = (topic) => ({
   topic,
 });
 
+const RobotMascot = ({ size = 'normal', active = false }) => (
+  <div className={`dpm-robot-mascot dpm-robot-${size} ${active ? 'is-active' : ''}`} aria-hidden="true">
+    <div className="dpm-robot-shadow" />
+    <div className="dpm-robot-antenna">
+      <span />
+    </div>
+    <div className="dpm-robot-head">
+      <div className="dpm-robot-face">
+        <i />
+        <i />
+      </div>
+      <div className="dpm-robot-mouth" />
+    </div>
+    <div className="dpm-robot-body">
+      <span />
+    </div>
+  </div>
+);
+
 export default function HelpChatbot() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -227,6 +246,18 @@ export default function HelpChatbot() {
           from { opacity: .36; transform: scale(.9); }
           to { opacity: 0; transform: scale(1.45); }
         }
+        @keyframes dpmRobotFloat {
+          0%, 100% { transform: translateY(0) rotateX(0deg) rotateZ(-1deg); }
+          50% { transform: translateY(-3px) rotateX(6deg) rotateZ(1deg); }
+        }
+        @keyframes dpmRobotBlink {
+          0%, 44%, 48%, 100% { transform: scaleY(1); }
+          46% { transform: scaleY(.18); }
+        }
+        @keyframes dpmRobotAntenna {
+          0%, 100% { transform: translateX(-50%) rotate(-5deg); }
+          50% { transform: translateX(-50%) rotate(6deg); }
+        }
         .dpm-chat-panel {
           animation: dpmChatPanelIn 180ms cubic-bezier(.22,1,.36,1) both;
           transform-origin: bottom right;
@@ -254,6 +285,162 @@ export default function HelpChatbot() {
         .dpm-chat-fab:active {
           transform: translateY(0) scale(.97);
         }
+        .dpm-robot-mascot {
+          position: relative;
+          width: 42px;
+          height: 48px;
+          transform-style: preserve-3d;
+          animation: dpmRobotFloat 3200ms ease-in-out infinite;
+          filter: drop-shadow(0 9px 12px rgba(15,23,42,.18));
+        }
+        .dpm-robot-small {
+          width: 30px;
+          height: 34px;
+          animation-duration: 3600ms;
+        }
+        .dpm-robot-shadow {
+          position: absolute;
+          left: 18%;
+          right: 18%;
+          bottom: -2px;
+          height: 7px;
+          border-radius: 999px;
+          background: rgba(15,23,42,.2);
+          filter: blur(3px);
+          transform: rotateX(72deg);
+        }
+        .dpm-robot-antenna {
+          position: absolute;
+          left: 50%;
+          top: 0;
+          width: 3px;
+          height: 12px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, #D9F7FB, #79D9E4);
+          transform-origin: bottom center;
+          animation: dpmRobotAntenna 2600ms ease-in-out infinite;
+        }
+        .dpm-robot-antenna span {
+          position: absolute;
+          left: 50%;
+          top: -5px;
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: radial-gradient(circle at 35% 35%, #FFFFFF 0 18%, #75ECF4 22% 55%, #0D7A87 100%);
+          transform: translateX(-50%);
+          box-shadow: 0 0 12px rgba(117,236,244,.75);
+        }
+        .dpm-robot-head {
+          position: absolute;
+          left: 50%;
+          top: 9px;
+          width: 34px;
+          height: 28px;
+          border-radius: 12px 12px 10px 10px;
+          background: linear-gradient(145deg, #FFFFFF 0%, #E6FAFC 45%, #B8EEF5 100%);
+          border: 1px solid rgba(255,255,255,.82);
+          box-shadow: inset -5px -6px 10px rgba(13,122,135,.2), inset 4px 4px 8px rgba(255,255,255,.95), 0 8px 16px rgba(13,122,135,.23);
+          transform: translateX(-50%) perspective(80px) rotateX(5deg);
+        }
+        .dpm-robot-small .dpm-robot-head {
+          top: 7px;
+          width: 25px;
+          height: 21px;
+          border-radius: 9px;
+        }
+        .dpm-robot-face {
+          position: absolute;
+          left: 6px;
+          right: 6px;
+          top: 8px;
+          height: 10px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, #0F172A, #164E63);
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
+        }
+        .dpm-robot-small .dpm-robot-face {
+          left: 5px;
+          right: 5px;
+          top: 6px;
+          height: 8px;
+        }
+        .dpm-robot-face i {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #77F7FF;
+          box-shadow: 0 0 8px rgba(119,247,255,.9);
+          animation: dpmRobotBlink 4200ms ease-in-out infinite;
+        }
+        .dpm-robot-small .dpm-robot-face i {
+          width: 3px;
+          height: 3px;
+        }
+        .dpm-robot-mouth {
+          position: absolute;
+          left: 50%;
+          bottom: 6px;
+          width: 10px;
+          height: 2px;
+          border-radius: 999px;
+          background: rgba(13,122,135,.45);
+          transform: translateX(-50%);
+        }
+        .dpm-robot-body {
+          position: absolute;
+          left: 50%;
+          bottom: 5px;
+          width: 24px;
+          height: 17px;
+          border-radius: 9px 9px 11px 11px;
+          background: linear-gradient(145deg, #13A3B4, #0D7A87 62%, #075E69);
+          box-shadow: inset 4px 4px 8px rgba(255,255,255,.2), inset -5px -5px 10px rgba(4,47,55,.28), 0 8px 14px rgba(13,122,135,.24);
+          transform: translateX(-50%) perspective(90px) rotateX(-5deg);
+        }
+        .dpm-robot-small .dpm-robot-body {
+          bottom: 4px;
+          width: 18px;
+          height: 13px;
+          border-radius: 7px 7px 9px 9px;
+        }
+        .dpm-robot-body::before,
+        .dpm-robot-body::after {
+          content: '';
+          position: absolute;
+          top: 4px;
+          width: 7px;
+          height: 12px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, #B8EEF5, #0D7A87);
+          z-index: -1;
+        }
+        .dpm-robot-body::before {
+          left: -5px;
+          transform: rotate(18deg);
+        }
+        .dpm-robot-body::after {
+          right: -5px;
+          transform: rotate(-18deg);
+        }
+        .dpm-robot-body span {
+          position: absolute;
+          left: 50%;
+          top: 6px;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #BFFBFF;
+          transform: translateX(-50%);
+          box-shadow: 0 0 10px rgba(191,251,255,.75);
+        }
+        .dpm-robot-mascot.is-active .dpm-robot-antenna span {
+          background: radial-gradient(circle at 35% 35%, #FFFFFF 0 18%, #9FF8D0 22% 55%, #10B981 100%);
+          box-shadow: 0 0 13px rgba(16,185,129,.75);
+        }
         .dpm-chat-suggestion {
           transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
         }
@@ -266,7 +453,10 @@ export default function HelpChatbot() {
           .dpm-chat-panel,
           .dpm-chat-message,
           .dpm-chat-fab,
-          .dpm-chat-fab::after {
+          .dpm-chat-fab::after,
+          .dpm-robot-mascot,
+          .dpm-robot-antenna,
+          .dpm-robot-face i {
             animation: none !important;
           }
           .dpm-chat-fab,
@@ -303,11 +493,12 @@ export default function HelpChatbot() {
               borderRadius: 10,
               display: 'grid',
               placeItems: 'center',
-              background: theme.accent,
-              color: '#fff',
+              background: 'linear-gradient(145deg, rgba(13,122,135,.14), rgba(19,163,180,.22))',
+              color: theme.accent,
               flexShrink: 0,
+              overflow: 'visible',
             }}>
-              <Bot size={18} />
+              <RobotMascot size="small" active />
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: theme.textPrimary }}>Assistant DentalPM</div>
@@ -473,7 +664,7 @@ export default function HelpChatbot() {
         marginLeft: 'auto',
         pointerEvents: 'auto',
       }}>
-        {open ? <X size={22} /> : <MessageCircle size={23} />}
+        {open ? <X size={22} /> : <RobotMascot active />}
       </button>
     </div>
   );
