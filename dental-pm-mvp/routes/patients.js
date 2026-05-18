@@ -99,7 +99,25 @@ router.get('/', requireClinicId, [
     if (searchText) {
       const terms = searchText.split(/\s+/).filter(Boolean);
       const digits = searchText.replace(/\D/g, '');
-      const searchableFields = ['patient_number', 'first_name', 'last_name', 'phone_primary', 'phone_secondary', 'email', 'address', 'city'];
+      const searchableFields = [
+        'patient_number',
+        'first_name',
+        'last_name',
+        'phone_primary',
+        'phone_secondary',
+        'email',
+        'address',
+        'city',
+        'postal_code',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'emergency_contact_relationship',
+        'insurance_provider',
+        'insurance_number',
+        'occupation',
+        'notes'
+      ];
+      const digitFields = ['patient_number', 'phone_primary', 'phone_secondary', 'emergency_contact_phone', 'insurance_number'];
       const fullNameMatches = [
         sqlWhere(fn('concat', col('first_name'), ' ', col('last_name')), { [Op.iLike]: `%${searchText}%` }),
         sqlWhere(fn('concat', col('last_name'), ' ', col('first_name')), { [Op.iLike]: `%${searchText}%` })
@@ -115,9 +133,10 @@ router.get('/', requireClinicId, [
       if (digits) {
         whereClause[Op.and].push({
           [Op.or]: [
-            { phone_primary: { [Op.iLike]: `%${digits}%` } },
-            { phone_secondary: { [Op.iLike]: `%${digits}%` } },
-            { patient_number: { [Op.iLike]: `%${digits}%` } }
+            ...digitFields.map(field => ({ [field]: { [Op.iLike]: `%${digits}%` } })),
+            ...digitFields.map(field => (
+              sqlWhere(fn('regexp_replace', col(field), '\\D', '', 'g'), { [Op.iLike]: `%${digits}%` })
+            ))
           ]
         });
       }
