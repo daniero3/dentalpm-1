@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Send, X, Minimize2, ArrowRight, Search, HelpCircle } from 'lucide-react';
+import { Send, X, Minimize2, ArrowRight, Search, HelpCircle, Mic, MicOff } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const theme = {
@@ -311,9 +311,12 @@ export default function HelpChatbot() {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = useRef(null);
+  const recognitionRef = useRef(null);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const [messages, setMessages] = useState(() => [
     {
       role: 'bot',
@@ -340,6 +343,49 @@ export default function HelpChatbot() {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    setSpeechSupported(Boolean(SpeechRecognition));
+    if (!SpeechRecognition) return undefined;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = event => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0]?.transcript || '')
+        .join(' ')
+        .trim();
+      if (transcript) setMessage(transcript);
+      const lastResult = event.results[event.results.length - 1];
+      if (lastResult?.isFinal && transcript) {
+        handlePrompt(transcript, true);
+      }
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => {
+      setListening(false);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'bot',
+          text: 'Je n’ai pas pu écouter le micro. Vérifiez l’autorisation du navigateur puis réessayez.',
+        },
+      ]);
+    };
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.onresult = null;
+      recognition.onend = null;
+      recognition.onerror = null;
+      recognition.stop();
+    };
+  }, []);
+
   const sendTopic = (topic) => {
     setMessages(prev => [
       ...prev,
@@ -349,19 +395,51 @@ export default function HelpChatbot() {
     setOpen(true);
   };
 
-  const sendMessage = (event) => {
-    event?.preventDefault();
-    const clean = message.trim();
+  const handlePrompt = (text, fromVoice = false) => {
+    const clean = text.trim();
     if (!clean) return;
     const response = createBotResponse(clean);
     setMessages(prev => [
       ...prev,
-      { role: 'user', text: clean },
+      { role: 'user', text: fromVoice ? `🎙️ ${clean}` : clean },
       response,
     ]);
     setMessage('');
     if (response.action?.autoNavigate) {
       navigate(response.action.route);
+    }
+  };
+
+  const sendMessage = (event) => {
+    event?.preventDefault();
+    handlePrompt(message);
+  };
+
+  const toggleVoicePrompt = () => {
+    if (!speechSupported || !recognitionRef.current) {
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'bot',
+          text: 'La saisie vocale n’est pas disponible dans ce navigateur. Essayez Chrome ou Edge avec le micro autorisé.',
+        },
+      ]);
+      return;
+    }
+
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+
+    setOpen(true);
+    setMessage('');
+    setListening(true);
+    try {
+      recognitionRef.current.start();
+    } catch {
+      setListening(false);
     }
   };
 
@@ -414,6 +492,10 @@ export default function HelpChatbot() {
         @keyframes dpmRobotAntenna {
           0%, 100% { transform: translateX(-50%) rotate(-5deg); }
           50% { transform: translateX(-50%) rotate(6deg); }
+        }
+        @keyframes dpmVoiceWave {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.32); }
+          50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
         }
         .dpm-chat-panel {
           animation: dpmChatPanelIn 180ms cubic-bezier(.22,1,.36,1) both;
@@ -606,6 +688,15 @@ export default function HelpChatbot() {
           border-color: var(--accent-primary) !important;
           background: var(--hover-subtle) !important;
         }
+        .dpm-voice-button {
+          transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+        }
+        .dpm-voice-button:hover {
+          transform: translateY(-1px);
+        }
+        .dpm-voice-button.is-listening {
+          animation: dpmVoiceWave 1200ms ease-in-out infinite;
+        }
         @media (prefers-reduced-motion: reduce) {
           .dpm-chat-panel,
           .dpm-chat-message,
@@ -613,7 +704,8 @@ export default function HelpChatbot() {
           .dpm-chat-fab::after,
           .dpm-robot-mascot,
           .dpm-robot-antenna,
-          .dpm-robot-face i {
+          .dpm-robot-face i,
+          .dpm-voice-button.is-listening {
             animation: none !important;
           }
           .dpm-chat-fab,
@@ -799,7 +891,7 @@ export default function HelpChatbot() {
             <input
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Ex. comment ajouter un tarif ?"
+              placeholder={listening ? 'Parlez maintenant...' : 'Ex. cherche patient Rakoto'}
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -812,6 +904,21 @@ export default function HelpChatbot() {
                 background: theme.bgElevated,
               }}
             />
+            <button type="button" onClick={toggleVoicePrompt} aria-label={listening ? 'Arrêter la saisie vocale' : 'Dicter un prompt vocal'}
+              title={speechSupported ? 'Dicter un prompt vocal' : 'Saisie vocale non disponible'}
+              className={`dpm-voice-button ${listening ? 'is-listening' : ''}`}
+              style={{
+                width: 42,
+                border: 0,
+                borderRadius: 10,
+                background: listening ? '#EF4444' : speechSupported ? 'var(--hover-subtle)' : '#F1F5F9',
+                color: listening ? '#fff' : speechSupported ? theme.accent : '#94A3B8',
+                display: 'grid',
+                placeItems: 'center',
+                cursor: speechSupported ? 'pointer' : 'not-allowed',
+              }}>
+              {listening ? <MicOff size={17} /> : <Mic size={17} />}
+            </button>
             <button type="submit" aria-label="Envoyer" style={{
               width: 42,
               border: 0,
