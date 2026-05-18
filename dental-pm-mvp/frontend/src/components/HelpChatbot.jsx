@@ -210,8 +210,73 @@ export default function HelpChatbot() {
       fontFamily: 'var(--font-sans)',
       pointerEvents: 'none',
     }}>
+      <style>{`
+        @keyframes dpmChatPanelIn {
+          from { opacity: 0; transform: translateY(16px) scale(.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes dpmChatBubbleIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dpmChatPulse {
+          0%, 100% { transform: translateY(0) scale(1); box-shadow: var(--shadow-lg); }
+          50% { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 38px rgba(13,122,135,.26); }
+        }
+        @keyframes dpmChatRing {
+          from { opacity: .36; transform: scale(.9); }
+          to { opacity: 0; transform: scale(1.45); }
+        }
+        .dpm-chat-panel {
+          animation: dpmChatPanelIn 180ms cubic-bezier(.22,1,.36,1) both;
+          transform-origin: bottom right;
+        }
+        .dpm-chat-message {
+          animation: dpmChatBubbleIn 170ms ease-out both;
+        }
+        .dpm-chat-fab {
+          position: relative;
+          transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+          animation: dpmChatPulse 2600ms ease-in-out infinite;
+        }
+        .dpm-chat-fab::after {
+          content: '';
+          position: absolute;
+          inset: -5px;
+          border: 1px solid rgba(13,122,135,.45);
+          border-radius: 20px;
+          animation: dpmChatRing 2200ms ease-out infinite;
+          pointer-events: none;
+        }
+        .dpm-chat-fab:hover {
+          transform: translateY(-2px) scale(1.04);
+        }
+        .dpm-chat-fab:active {
+          transform: translateY(0) scale(.97);
+        }
+        .dpm-chat-suggestion {
+          transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+        }
+        .dpm-chat-suggestion:hover {
+          transform: translateX(3px);
+          border-color: var(--accent-primary) !important;
+          background: var(--hover-subtle) !important;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .dpm-chat-panel,
+          .dpm-chat-message,
+          .dpm-chat-fab,
+          .dpm-chat-fab::after {
+            animation: none !important;
+          }
+          .dpm-chat-fab,
+          .dpm-chat-suggestion {
+            transition: none !important;
+          }
+        }
+      `}</style>
       {open && (
-        <section style={{
+        <section className="dpm-chat-panel" style={{
           width: 'min(380px, calc(100vw - 24px))',
           height: 'min(560px, calc(100vh - 96px))',
           background: theme.bgSurface,
@@ -294,7 +359,7 @@ export default function HelpChatbot() {
             {messages.map((item, index) => {
               const fromUser = item.role === 'user';
               return (
-                <div key={`${item.role}-${index}`} style={{
+                <div key={`${item.role}-${index}`} className="dpm-chat-message" style={{
                   alignSelf: fromUser ? 'flex-end' : 'flex-start',
                   maxWidth: '88%',
                   padding: '9px 11px',
@@ -308,7 +373,9 @@ export default function HelpChatbot() {
                 }}>
                   {item.text}
                   {item.topic && (
-                    <button type="button" onClick={() => goToTopic(item.topic)} style={{
+                    <button type="button" onClick={() => goToTopic(item.topic)}
+                      className="dpm-chat-suggestion"
+                      style={{
                       marginTop: 9,
                       width: '100%',
                       border: 0,
@@ -336,7 +403,7 @@ export default function HelpChatbot() {
                 Suggestions
               </div>
               {suggestedTopics.map(topic => (
-                <button key={topic.id} type="button" onClick={() => sendTopic(topic)} style={{
+                <button key={topic.id} type="button" onClick={() => sendTopic(topic)} className="dpm-chat-suggestion" style={{
                   border: `1px solid ${theme.border}`,
                   borderRadius: 9,
                   background: theme.bgSurface,
@@ -392,7 +459,7 @@ export default function HelpChatbot() {
         </section>
       )}
 
-      <button type="button" onClick={() => setOpen(prev => !prev)} aria-label="Ouvrir l'assistant DentalPM" style={{
+      <button type="button" onClick={() => setOpen(prev => !prev)} aria-label="Ouvrir l'assistant DentalPM" className="dpm-chat-fab" style={{
         width: 56,
         height: 56,
         borderRadius: 16,
