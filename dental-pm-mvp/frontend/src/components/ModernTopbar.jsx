@@ -209,6 +209,8 @@ export function ModernTopbar() {
         gap: 12,
         position: 'sticky', top: 0, zIndex: 90,
         boxShadow: theme.shadow,
+        overflow: 'visible',
+        contain: 'none',
       }}>
 
         {!isMobile && (
