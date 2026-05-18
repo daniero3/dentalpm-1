@@ -139,7 +139,15 @@ export function ModernTopbar() {
     }
   }, [])
 
-  const handleLogout = () => { logout(); navigate('/login'); }
+  const handleLogout = (event) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    setIsProfileOpen(false);
+    setIsNotifOpen(false);
+    setSearchOpen(false);
+    logout();
+    window.location.assign('/login');
+  }
   const openCommand = () => setSearchOpen(true)
   const runCommand = (href) => {
     startTransition(() => navigate(href))
