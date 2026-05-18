@@ -6,7 +6,6 @@ const compression = require('compression');
 const crypto      = require('crypto');
 const { URL }     = require('url');
 const path         = require('path');
-const fs           = require('fs');
 require('dotenv').config();
 
 const sequelize = require('./database/connection');
@@ -239,6 +238,21 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// ── Cache headers pour données API peu volatiles ─────────────────────────────
+app.use('/api/pricing-schedules', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=300'); // 5 min
+  }
+  next();
+});
+
+app.use('/api/dashboard', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'private, max-age=60'); // 1 min
+  }
+  next();
+});
+
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status:'OK', timestamp: new Date().toISOString(), service:'DentalPM Madagascar' });
@@ -357,35 +371,11 @@ app.use('/api/*', (req, res) => {
 
 // ── Frontend SPA ─────────────────────────────────────────────────────────────
 const frontendDistPath = path.join(__dirname, 'frontend/dist');
-const frontendIndexPath = path.join(frontendDistPath, 'index.html');
-const frontendFaviconPath = path.join(frontendDistPath, 'favicon.ico');
-
-if (!fs.existsSync(frontendIndexPath)) {
-  console.warn('[FRONTEND_BUILD_MISSING]', {
-    expected: frontendIndexPath,
-    hint: 'Run `cd frontend && npm run build` before starting the production server.'
-  });
-}
-
-const sendFrontendIndex = (req, res) => {
-  if (!fs.existsSync(frontendIndexPath)) {
-    return res.status(503).send('Frontend build unavailable');
-  }
-
-  res.sendFile(frontendIndexPath);
-};
-
-app.get('/', sendFrontendIndex);
-app.get('/favicon.ico', (req, res, next) => {
-  if (!fs.existsSync(frontendFaviconPath)) return next();
-  res.sendFile(frontendFaviconPath);
-});
 
 app.use(express.static(frontendDistPath));
 
-app.get('*', (req, res, next) => {
-  if (!req.accepts('html')) return next();
-  sendFrontendIndex(req, res);
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
