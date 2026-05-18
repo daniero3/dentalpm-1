@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
-import { matchesSearch, patientIdentifier, patientSearchText } from '../utils/search';
+import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   Users, Plus, Search, Edit, Activity, Phone, Mail,
   AlertTriangle, User, Calendar, FileText, ClipboardList,
@@ -12,8 +12,11 @@ import {
   MapPin, Shield, Pill, Eye, Grid, List, SortAsc, Upload, History
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const calcAge = dob => {
@@ -374,6 +377,7 @@ const PatientManagement = () => {
   };
 
   /* Filtrage et tri */
+  const activeSearch = search.trim();
   const filtered = patients
     .filter(p => {
       const ms = genderFilter === 'ALL' || p.gender === genderFilter;
@@ -381,6 +385,10 @@ const PatientManagement = () => {
       return ms && mt;
     })
     .sort((a,b) => {
+      if (activeSearch) {
+        const scoreDiff = scoreSearchMatch(activeSearch, patientSearchText(b)) - scoreSearchMatch(activeSearch, patientSearchText(a));
+        if (scoreDiff !== 0) return scoreDiff;
+      }
       if (sortBy === 'name')     return `${a.last_name}${a.first_name}`.localeCompare(`${b.last_name}${b.first_name}`);
       if (sortBy === 'recent')   return new Date(b.created_at||0) - new Date(a.created_at||0);
       if (sortBy === 'age')      return (new Date(a.date_of_birth||0)) - (new Date(b.date_of_birth||0));
@@ -510,7 +518,7 @@ const PatientManagement = () => {
         {/* Search */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:220 }}>
           <Search size={14} color="#94A3B8"/>
-          <input placeholder="Rechercher par nom, téléphone, email, adresse..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
+          <input placeholder="Nom, prénom, ID patient, téléphone, email, ville, assurance..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
             style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, fontFamily:'inherit', color:'#0F172A' }}/>
           {search && <button onClick={()=>{setPage(1);setSearch('');}} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:2 }}><X size={13}/></button>}
         </div>
@@ -532,7 +540,9 @@ const PatientManagement = () => {
           ))}
         </div>
         {/* Résultats */}
-        <span style={{ fontSize:12, color:'#94A3B8', whiteSpace:'nowrap' }}>{filtered.length} résultat{filtered.length !== 1?'s':''}</span>
+        <span style={{ fontSize:12, color:'#94A3B8', whiteSpace:'nowrap' }}>
+          {filtered.length} résultat{filtered.length !== 1?'s':''}{activeSearch ? ` pour "${activeSearch}"` : ''}
+        </span>
       </div>
 
       {/* ── Liste patients ── */}
