@@ -144,6 +144,7 @@ export default function HelpChatbot() {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState(() => [
@@ -165,6 +166,12 @@ export default function HelpChatbot() {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, open]);
+
+  useEffect(() => {
+    const updateSize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
 
   const sendTopic = (topic) => {
     setMessages(prev => [
@@ -197,10 +204,11 @@ export default function HelpChatbot() {
   return (
     <div style={{
       position: 'fixed',
-      right: 18,
-      bottom: 18,
-      zIndex: 120,
+      right: isMobile ? 12 : 18,
+      bottom: isMobile ? 84 : 18,
+      zIndex: 80,
       fontFamily: 'var(--font-sans)',
+      pointerEvents: 'none',
     }}>
       {open && (
         <section style={{
@@ -214,6 +222,7 @@ export default function HelpChatbot() {
           display: 'flex',
           flexDirection: 'column',
           marginBottom: 12,
+          pointerEvents: 'auto',
         }}>
           <header style={{
             padding: '13px 14px',
@@ -395,6 +404,7 @@ export default function HelpChatbot() {
         boxShadow: theme.shadow,
         cursor: 'pointer',
         marginLeft: 'auto',
+        pointerEvents: 'auto',
       }}>
         {open ? <X size={22} /> : <MessageCircle size={23} />}
       </button>
