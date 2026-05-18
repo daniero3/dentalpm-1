@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Send, X, Minimize2, ArrowRight, Search, HelpCircle, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const theme = {
   accent: 'var(--accent-primary)',
@@ -313,10 +314,17 @@ export default function HelpChatbot() {
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
   const lastSpokenRef = useRef('');
+  const messagesRef = useRef([]);
+  const locationRef = useRef(location.pathname);
+  const listeningRef = useRef(false);
+  const thinkingRef = useRef(false);
+  const speakerEnabledRef = useRef(false);
+  const voiceConversationRef = useRef(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [listening, setListening] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const [speakerEnabled, setSpeakerEnabled] = useState(() => {
     try {
@@ -327,10 +335,17 @@ export default function HelpChatbot() {
   });
   const [ttsSupported, setTtsSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [voiceConversation, setVoiceConversation] = useState(() => {
+    try {
+      return localStorage.getItem('dpm_chatbot_voice_conversation') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [messages, setMessages] = useState(() => [
     {
       role: 'bot',
-      text: 'Bonjour. Dites-moi ce que vous voulez faire : chercher un patient, créer une facture, planifier un rendez-vous, ouvrir les tarifs, gérer le stock...',
+      text: 'Bonjour. Vous pouvez me parler comme à un assistant : chercher un patient, créer une facture, planifier un rendez-vous, expliquer un module, ou poser une question sur DentalPM.',
     },
   ]);
 
@@ -348,6 +363,22 @@ export default function HelpChatbot() {
   }, [messages, open]);
 
   useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    locationRef.current = location.pathname;
+  }, [location.pathname]);
+
+  useEffect(() => {
+    listeningRef.current = listening;
+  }, [listening]);
+
+  useEffect(() => {
+    thinkingRef.current = thinking;
+  }, [thinking]);
+
+  useEffect(() => {
     const updateSize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
@@ -362,12 +393,22 @@ export default function HelpChatbot() {
   }, []);
 
   useEffect(() => {
+    speakerEnabledRef.current = speakerEnabled;
     try {
       localStorage.setItem('dpm_chatbot_speaker', speakerEnabled ? 'true' : 'false');
     } catch {
       // Ignore localStorage privacy mode errors.
     }
   }, [speakerEnabled]);
+
+  useEffect(() => {
+    voiceConversationRef.current = voiceConversation;
+    try {
+      localStorage.setItem('dpm_chatbot_voice_conversation', voiceConversation ? 'true' : 'false');
+    } catch {
+      // Ignore localStorage privacy mode errors.
+    }
+  }, [voiceConversation]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -425,7 +466,7 @@ export default function HelpChatbot() {
 
   const speakText = (text, force = false) => {
     if (typeof window === 'undefined' || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-    if (!force && !speakerEnabled) return;
+    if (!force && !speakerEnabledRef.current) return;
     const clean = String(text || '')
       .replace(/🎙️|→/g, '')
       .replace(/\s+/g, ' ')
@@ -438,25 +479,81 @@ export default function HelpChatbot() {
     utterance.rate = 0.96;
     utterance.pitch = 1;
     utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
+    utterance.onend = () => {
+      setSpeaking(false);
+      if (voiceConversationRef.current && recognitionRef.current && !listeningRef.current) {
+        try {
+          setListening(true);
+          recognitionRef.current.start();
+        } catch {
+          setListening(false);
+        }
+      }
+    };
     utterance.onerror = () => setSpeaking(false);
     lastSpokenRef.current = clean;
     window.speechSynthesis.speak(utterance);
   };
 
-  const handlePrompt = (text, fromVoice = false) => {
+  const askAiAssistant = async (text) => {
+    const data = await api.post('/assistant/chat', {
+      message: text,
+      pathname: locationRef.current,
+      history: messagesRef.current
+        .filter(item => item.role === 'user' || item.role === 'bot')
+        .slice(-10)
+        .map(item => ({ role: item.role, text: item.text })),
+    });
+
+    return {
+      role: 'bot',
+      text: data.answer,
+      ai: true,
+    };
+  };
+
+  const handlePrompt = async (text, fromVoice = false) => {
     const clean = text.trim();
-    if (!clean) return;
-    const response = createBotResponse(clean);
+    if (!clean || thinkingRef.current) return;
+
     setMessages(prev => [
       ...prev,
       { role: 'user', text: fromVoice ? `🎙️ ${clean}` : clean },
-      response,
     ]);
-    speakText(response.text);
     setMessage('');
-    if (response.action?.autoNavigate) {
-      navigate(response.action.route);
+
+    const localAction = resolvePromptAction(clean);
+    if (localAction) {
+      const response = {
+        role: 'bot',
+        text: `${localAction.text}\nJe prépare le bon écran pour continuer l’action.`,
+        action: localAction,
+      };
+      setMessages(prev => [...prev, response]);
+      speakText(response.text);
+      if (response.action?.autoNavigate) {
+        navigate(response.action.route);
+      }
+      return;
+    }
+
+    setThinking(true);
+    try {
+      const response = await askAiAssistant(clean);
+      setMessages(prev => [...prev, response]);
+      speakText(response.text);
+    } catch {
+      const response = createBotResponse(clean);
+      setMessages(prev => [
+        ...prev,
+        {
+          ...response,
+          text: `${response.text}\n\nL’assistant IA complet n’est pas joignable pour l’instant. Je reste disponible pour l’aide intégrée DentalPM.`,
+        },
+      ]);
+      speakText(response.text);
+    } finally {
+      setThinking(false);
     }
   };
 
@@ -493,6 +590,35 @@ export default function HelpChatbot() {
     }
   };
 
+  const toggleVoiceConversation = () => {
+    const next = !voiceConversation;
+    voiceConversationRef.current = next;
+    setVoiceConversation(next);
+    if (next) {
+      speakerEnabledRef.current = true;
+      setSpeakerEnabled(true);
+      setOpen(true);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'bot',
+          text: 'Mode conversation vocale activé. Parlez, puis je répondrai au haut-parleur.',
+        },
+      ]);
+      if (speechSupported && recognitionRef.current && !listening) {
+        try {
+          setListening(true);
+          recognitionRef.current.start();
+        } catch {
+          setListening(false);
+        }
+      }
+    } else if (recognitionRef.current && listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    }
+  };
+
   const toggleSpeaker = () => {
     if (!ttsSupported) {
       setMessages(prev => [
@@ -512,6 +638,7 @@ export default function HelpChatbot() {
     }
 
     const next = !speakerEnabled;
+    speakerEnabledRef.current = next;
     setSpeakerEnabled(next);
     if (next) {
       const latestBot = [...messages].reverse().find(item => item.role === 'bot');
@@ -857,8 +984,23 @@ export default function HelpChatbot() {
                 borderRadius: 8,
                 display: 'grid',
                 placeItems: 'center',
-              }}>
+            }}>
               {speakerEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
+            </button>
+            <button type="button" onClick={toggleVoiceConversation} aria-label={voiceConversation ? 'Désactiver la conversation vocale' : 'Activer la conversation vocale'}
+              title={speechSupported && ttsSupported ? 'Conversation vocale' : 'Conversation vocale non disponible'}
+              className={`dpm-voice-button ${voiceConversation || listening ? 'is-listening' : ''}`}
+              style={{
+                border: 0,
+                background: voiceConversation ? 'rgba(16,185,129,.14)' : 'transparent',
+                color: voiceConversation ? '#059669' : theme.textSecondary,
+                cursor: speechSupported && ttsSupported ? 'pointer' : 'not-allowed',
+                padding: 6,
+                borderRadius: 8,
+                display: 'grid',
+                placeItems: 'center',
+              }}>
+              {voiceConversation ? <Mic size={17} /> : <MicOff size={17} />}
             </button>
             <button type="button" onClick={() => setMessages([{ role: 'bot', text: 'Conversation réinitialisée. Comment puis-je vous aider ?' }])} aria-label="Réinitialiser"
               style={{ border: 0, background: 'transparent', color: theme.textSecondary, cursor: 'pointer', padding: 6 }}>
@@ -959,6 +1101,22 @@ export default function HelpChatbot() {
               );
             })}
 
+            {thinking && (
+              <div className="dpm-chat-message" style={{
+                alignSelf: 'flex-start',
+                maxWidth: '88%',
+                padding: '9px 11px',
+                borderRadius: '12px 12px 12px 3px',
+                background: theme.bgElevated,
+                color: theme.textSecondary,
+                border: `1px solid ${theme.border}`,
+                fontSize: 13,
+                lineHeight: 1.45,
+              }}>
+                Assistant en train de répondre...
+              </div>
+            )}
+
             <div style={{ display: 'grid', gap: 7, marginTop: 2 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted, fontWeight: 700 }}>
                 <Search size={13} />
@@ -992,7 +1150,8 @@ export default function HelpChatbot() {
             <input
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder={listening ? 'Parlez maintenant...' : 'Ex. cherche patient Rakoto'}
+              disabled={thinking}
+              placeholder={listening ? 'Parlez maintenant...' : thinking ? 'Réponse en cours...' : 'Ex. cherche patient Rakoto'}
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -1003,6 +1162,7 @@ export default function HelpChatbot() {
                 outline: 'none',
                 color: theme.textPrimary,
                 background: theme.bgElevated,
+                opacity: thinking ? .72 : 1,
               }}
             />
             <button type="button" onClick={toggleVoicePrompt} aria-label={listening ? 'Arrêter la saisie vocale' : 'Dicter un prompt vocal'}
@@ -1024,11 +1184,11 @@ export default function HelpChatbot() {
               width: 42,
               border: 0,
               borderRadius: 10,
-              background: theme.accent,
+              background: thinking ? theme.textMuted : theme.accent,
               color: '#fff',
               display: 'grid',
               placeItems: 'center',
-              cursor: 'pointer',
+              cursor: thinking ? 'wait' : 'pointer',
             }}>
               <Send size={17} />
             </button>

@@ -35,6 +35,7 @@ const messagingRoutes     = require('./routes/messaging');
 const purchasesRoutes     = require('./routes/purchases');
 const onboardingRoutes    = require('./routes/onboarding');
 const dentalChartRoutes   = require('./routes/dental-chart');
+const assistantRoutes     = require('./routes/assistant');
 
 const { getSubscriptionStatus } = require('./middleware/licensing');
 const { authenticateToken: requireAuth, requireClinicScope, requireSuperAdmin, blockSuperAdminFromMedicalData: blockMedical } = require('./middleware/auth');
@@ -334,6 +335,7 @@ app.use('/api/reports',          requireAuth, requireClinicScope, blockMedical, 
 app.use('/api/messaging',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('messaging'), messagingRoutes);
 app.use('/api/purchases',        requireAuth, requireClinicScope, blockMedical, requireModuleAccess('purchases'), purchasesRoutes);
 app.use('/api/onboarding',       requireAuth, onboardingRoutes);
+app.use('/api/assistant',        requireAuth, requireClinicScope, assistantRoutes);
 
 // Routes avec chemins relatifs (montées sur /api)
 app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('prescriptions'), prescriptionRoutes);
