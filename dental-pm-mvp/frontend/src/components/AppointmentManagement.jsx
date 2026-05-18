@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
-import { matchesSearch, patientSearchText } from '../utils/search';
+import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
@@ -400,11 +400,17 @@ const AppointmentManagement = () => {
   };
 
   /* Filtrage + recherche */
-  const filtered = appts.filter(a => {
-    const mt = typeF === 'all' || a.appointment_type === typeF;
-    const mq = matchesSearch(search, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status);
-    return mt && mq;
-  });
+  const activeSearch = search.trim();
+  const filtered = appts
+    .filter(a => {
+      const mt = typeF === 'all' || a.appointment_type === typeF;
+      const mq = matchesSearch(search, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status);
+      return mt && mq;
+    })
+    .sort((a, b) => activeSearch
+      ? scoreSearchMatch(activeSearch, patientSearchText(b.patient || {}), b.reason, b.appointment_type, b.status)
+        - scoreSearchMatch(activeSearch, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status)
+      : 0);
 
   /* Stats */
   const todayAppts  = appts.filter(a => a.appointment_date === today());

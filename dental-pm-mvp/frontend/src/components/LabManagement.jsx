@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { matchesSearch, patientSearchText } from '../utils/search';
+import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   FlaskConical, Plus, Printer, RefreshCw, Loader2, Search,
   Clock, CheckCircle, XCircle, ArrowRight, Sparkles, X,
@@ -223,11 +223,17 @@ const LabManagement = () => {
   };
   const pickLab = lab=>{setSelLab(lab);setForm(f=>({...f,lab_name:lab.name}));};
 
-  const filtered = orders.filter(o=>{
-    const ms=filter==='ALL'||o.status===filter;
-    const mt=matchesSearch(search,o.order_number,o.work_type,o.lab_name,patientSearchText(o.patient||{}));
-    return ms&&mt;
-  });
+  const activeSearch = search.trim();
+  const filtered = orders
+    .filter(o=>{
+      const ms=filter==='ALL'||o.status===filter;
+      const mt=matchesSearch(search,o.order_number,o.work_type,o.lab_name,patientSearchText(o.patient||{}));
+      return ms&&mt;
+    })
+    .sort((a, b) => activeSearch
+      ? scoreSearchMatch(activeSearch, b.order_number, b.work_type, b.lab_name, patientSearchText(b.patient || {}))
+        - scoreSearchMatch(activeSearch, a.order_number, a.work_type, a.lab_name, patientSearchText(a.patient || {}))
+      : 0);
 
   const inp={width:'100%',padding:'9px 12px',borderRadius:10,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none',transition:'border-color .2s'};
   const fi=e=>e.target.style.borderColor='#0D7A87', bi=e=>e.target.style.borderColor='#E2E8F0';

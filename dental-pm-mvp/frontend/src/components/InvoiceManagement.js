@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
-import { matchesSearch, patientIdentifier, patientSearchText } from '../utils/search';
+import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
   Clock, CheckCircle, AlertCircle, DollarSign, CreditCard,
@@ -266,11 +266,17 @@ const InvoiceManagement = () => {
   };
   const getStatus = inv => inv.payment_status || inv.status || 'DRAFT';
 
-  const filtered = invoices.filter(inv => {
-    const ms = statusF==='ALL'||getStatus(inv)===statusF;
-    const mt = matchesSearch(search, inv.invoice_number, inv.status, patientSearchText(getPatient(inv) || {}));
-    return ms&&mt;
-  });
+  const activeSearch = search.trim();
+  const filtered = invoices
+    .filter(inv => {
+      const ms = statusF==='ALL'||getStatus(inv)===statusF;
+      const mt = matchesSearch(search, inv.invoice_number, inv.status, patientSearchText(getPatient(inv) || {}));
+      return ms&&mt;
+    })
+    .sort((a, b) => activeSearch
+      ? scoreSearchMatch(activeSearch, b.invoice_number, b.status, patientSearchText(getPatient(b) || {}))
+        - scoreSearchMatch(activeSearch, a.invoice_number, a.status, patientSearchText(getPatient(a) || {}))
+      : 0);
 
   const stats = {
     total:    invoices.length,
@@ -285,6 +291,10 @@ const InvoiceManagement = () => {
   const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
   const patientMatches = patients
     .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
+    .sort((a, b) => patientSearch.trim()
+      ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
+        - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
+      : 0)
     .slice(0, 20);
   const selectedPatient = patients.find(p => p.id === form.patient_id);
   const patientOptions = selectedPatient && !patientMatches.some(p => p.id === selectedPatient.id)

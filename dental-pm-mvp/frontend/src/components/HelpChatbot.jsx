@@ -105,6 +105,87 @@ const HELP_TOPICS = [
   },
 ];
 
+const APP_ACTIONS = [
+  {
+    id: 'patients',
+    title: 'Patients',
+    route: '/patients',
+    keywords: ['patient', 'patients', 'dossier', 'fiche'],
+    createLabel: 'Créer un patient',
+    searchLabel: 'Chercher un patient',
+  },
+  {
+    id: 'appointments',
+    title: 'Rendez-vous',
+    route: '/appointments',
+    keywords: ['rdv', 'rendez vous', 'rendez-vous', 'agenda', 'calendrier', 'appointment'],
+    createLabel: 'Planifier un rendez-vous',
+  },
+  {
+    id: 'invoices',
+    title: 'Factures',
+    route: '/invoices',
+    keywords: ['facture', 'factures', 'paiement', 'encaissement', 'invoice'],
+    createLabel: 'Créer une facture',
+  },
+  {
+    id: 'quotes',
+    title: 'Devis',
+    route: '/quotes',
+    keywords: ['devis', 'quote', 'estimation', 'proposition'],
+    createLabel: 'Créer un devis',
+  },
+  {
+    id: 'pricing',
+    title: 'Tarifs des actes',
+    route: '/settings/pricing',
+    keywords: ['tarif', 'tarifs', 'acte', 'actes', 'grille', 'prix', 'maeva'],
+    createLabel: 'Gérer les tarifs',
+  },
+  {
+    id: 'inventory',
+    title: 'Stock',
+    route: '/inventory',
+    keywords: ['stock', 'inventaire', 'produit', 'produits', 'seuil'],
+    createLabel: 'Gérer le stock',
+  },
+  {
+    id: 'lab',
+    title: 'Laboratoire',
+    route: '/lab',
+    keywords: ['labo', 'laboratoire', 'lab', 'prothese', 'prothèse'],
+    createLabel: 'Créer une commande labo',
+  },
+  {
+    id: 'mailing',
+    title: 'Messages',
+    route: '/mailing',
+    keywords: ['message', 'messages', 'sms', 'mailing', 'rappel'],
+    createLabel: 'Envoyer un message',
+  },
+  {
+    id: 'reports',
+    title: 'Rapports',
+    route: '/reports',
+    keywords: ['rapport', 'rapports', 'statistique', 'stats', 'analyse'],
+    createLabel: 'Voir les rapports',
+  },
+  {
+    id: 'settings',
+    title: 'Paramètres',
+    route: '/settings',
+    keywords: ['parametre', 'parametres', 'paramètre', 'paramètres', 'profil', 'cabinet', 'utilisateur'],
+    createLabel: 'Ouvrir les paramètres',
+  },
+  {
+    id: 'subscription',
+    title: 'Abonnement',
+    route: '/subscription',
+    keywords: ['abonnement', 'licence', 'plan', 'subscription'],
+    createLabel: 'Gérer l’abonnement',
+  },
+];
+
 const getContextTopic = (pathname) => {
   if (pathname.startsWith('/patients')) return HELP_TOPICS[0];
   if (pathname.startsWith('/appointments')) return HELP_TOPICS[1];
@@ -121,7 +202,10 @@ const normalize = (value) =>
   String(value || '')
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[-_/]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const findTopic = (message) => {
   const query = normalize(message);
@@ -139,6 +223,70 @@ const createBotMessage = (topic) => ({
     : 'Je peux vous aider sur les patients, rendez-vous, devis, factures, tarifs des actes, stock, abonnement et paramètres.',
   topic,
 });
+
+const extractSearchQuery = (message, action) => {
+  let query = normalize(message);
+  [
+    'cherche', 'chercher', 'recherche', 'rechercher', 'trouve', 'trouver',
+    'ouvre', 'ouvrir', 'aller', 'va vers', 'va dans', 'dans', 'module',
+    ...action.keywords,
+  ].forEach(word => {
+    query = query.replace(new RegExp(`\\b${normalize(word)}\\b`, 'g'), ' ');
+  });
+  return query.replace(/\s+/g, ' ').trim();
+};
+
+const buildActionRoute = (action, mode, query) => {
+  const params = new URLSearchParams();
+  if (mode === 'create') params.set('action', 'new');
+  if (mode === 'search' && query) params.set('search', query);
+  const suffix = params.toString();
+  return suffix ? `${action.route}?${suffix}` : action.route;
+};
+
+const resolvePromptAction = (message) => {
+  const query = normalize(message);
+  if (!query) return null;
+
+  const wantsHelp = ['aide', 'help', 'comment', 'quoi faire', 'que faire'].some(word => query.includes(word));
+  const wantsSearch = ['cherche', 'chercher', 'recherche', 'rechercher', 'trouve', 'trouver'].some(word => query.includes(word));
+  const wantsCreate = ['cree', 'creer', 'crée', 'créer', 'ajoute', 'ajouter', 'nouveau', 'nouvelle', 'planifie', 'planifier'].some(word => query.includes(word));
+  const wantsOpen = ['ouvre', 'ouvrir', 'aller', 'go', 'affiche', 'voir'].some(word => query.includes(word));
+
+  const action = APP_ACTIONS.find(item => item.keywords.some(keyword => query.includes(normalize(keyword))));
+  if (!action) return null;
+
+  const searchQuery = wantsSearch ? extractSearchQuery(message, action) : '';
+  const mode = wantsSearch ? 'search' : wantsCreate ? 'create' : 'open';
+  const route = buildActionRoute(action, mode, searchQuery);
+  const label = mode === 'search'
+    ? `${action.searchLabel || `Chercher dans ${action.title}`}${searchQuery ? ` : ${searchQuery}` : ''}`
+    : mode === 'create'
+      ? action.createLabel
+      : `Ouvrir ${action.title}`;
+
+  return {
+    route,
+    label,
+    autoNavigate: wantsOpen || wantsSearch || wantsCreate,
+    text: wantsHelp
+      ? `Je peux vous guider vers ${action.title}. Utilisez le bouton ci-dessous, ou tapez une commande comme "${label}".`
+      : `Commande comprise : ${label}.`,
+  };
+};
+
+const createBotResponse = (message) => {
+  const action = resolvePromptAction(message);
+  if (action) {
+    return {
+      role: 'bot',
+      text: `${action.text}\nJe prépare le bon écran pour continuer l’action.`,
+      action,
+    };
+  }
+  const topic = findTopic(message);
+  return createBotMessage(topic);
+};
 
 const RobotMascot = ({ size = 'normal', active = false }) => (
   <div className={`dpm-robot-mascot dpm-robot-${size} ${active ? 'is-active' : ''}`} aria-hidden="true">
@@ -169,7 +317,7 @@ export default function HelpChatbot() {
   const [messages, setMessages] = useState(() => [
     {
       role: 'bot',
-      text: 'Bonjour. Dites-moi ce que vous voulez faire dans DentalPM, ou choisissez un sujet ci-dessous.',
+      text: 'Bonjour. Dites-moi ce que vous voulez faire : chercher un patient, créer une facture, planifier un rendez-vous, ouvrir les tarifs, gérer le stock...',
     },
   ]);
 
@@ -205,18 +353,27 @@ export default function HelpChatbot() {
     event?.preventDefault();
     const clean = message.trim();
     if (!clean) return;
-    const topic = findTopic(clean);
+    const response = createBotResponse(clean);
     setMessages(prev => [
       ...prev,
       { role: 'user', text: clean },
-      createBotMessage(topic),
+      response,
     ]);
     setMessage('');
+    if (response.action?.autoNavigate) {
+      navigate(response.action.route);
+    }
   };
 
   const goToTopic = (topic) => {
     if (!topic?.route) return;
     navigate(topic.route);
+    setOpen(false);
+  };
+
+  const goToAction = (action) => {
+    if (!action?.route) return;
+    navigate(action.route);
     setOpen(false);
   };
 
@@ -582,6 +739,27 @@ export default function HelpChatbot() {
                       gap: 7,
                     }}>
                       Ouvrir le module <ArrowRight size={14} />
+                    </button>
+                  )}
+                  {item.action && (
+                    <button type="button" onClick={() => goToAction(item.action)}
+                      className="dpm-chat-suggestion"
+                      style={{
+                      marginTop: 9,
+                      width: '100%',
+                      border: 0,
+                      borderRadius: 8,
+                      padding: '8px 9px',
+                      background: fromUser ? 'rgba(255,255,255,.18)' : theme.accent,
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 7,
+                    }}>
+                      {item.action.label} <ArrowRight size={14} />
                     </button>
                   )}
                 </div>

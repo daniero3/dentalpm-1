@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { matchesSearch, patientSearchText } from '../utils/search';
+import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   Mail, MessageSquare, Plus, Send, Clock, CheckCircle, XCircle,
   Calendar, Cake, RefreshCw, Users, FileText, X, Zap, BarChart2,
@@ -183,15 +183,26 @@ const MessagingManagement = () => {
     setIsNewTpl(true);
   };
 
-  const filteredLogs = logs.filter(l => {
-    const ms = logFilter === 'ALL' || l.status === logFilter;
-    const mt = matchesSearch(search, patientSearchText(l.patient || {}), l.to, l.status, l.channel, l.message_type);
-    return ms && mt;
-  });
+  const activeSearch = search.trim();
+  const filteredLogs = logs
+    .filter(l => {
+      const ms = logFilter === 'ALL' || l.status === logFilter;
+      const mt = matchesSearch(search, patientSearchText(l.patient || {}), l.to, l.status, l.channel, l.message_type);
+      return ms && mt;
+    })
+    .sort((a, b) => activeSearch
+      ? scoreSearchMatch(activeSearch, patientSearchText(b.patient || {}), b.to, b.status, b.channel, b.message_type)
+        - scoreSearchMatch(activeSearch, patientSearchText(a.patient || {}), a.to, a.status, a.channel, a.message_type)
+      : 0);
 
-  const filteredQueue = queue.filter(q =>
-    matchesSearch(search, patientSearchText(q.patient || {}), q.to, q.status, q.channel, q.message_type)
-  );
+  const filteredQueue = queue
+    .filter(q =>
+      matchesSearch(search, patientSearchText(q.patient || {}), q.to, q.status, q.channel, q.message_type)
+    )
+    .sort((a, b) => activeSearch
+      ? scoreSearchMatch(activeSearch, patientSearchText(b.patient || {}), b.to, b.status, b.channel, b.message_type)
+        - scoreSearchMatch(activeSearch, patientSearchText(a.patient || {}), a.to, a.status, a.channel, a.message_type)
+      : 0);
 
   const inp = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', transition:'border-color .2s' };
   const fi = e => e.target.style.borderColor = C.purple;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
@@ -184,6 +184,7 @@ const ActionBtn = ({ icon: Icon, label, to, onClick, color='#0D7A87' }) => {
 /* ════════════════════════════════════════════════════════════════════════════ */
 const PatientManagement = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [patients,  setPatients]  = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
@@ -203,6 +204,7 @@ const PatientManagement = () => {
   const mountedRef = useRef(true);
   const importInputRef = useRef(null);
   const patientsRequestRef = useRef(null);
+  const urlCommandRef = useRef('');
   const canImportPatients = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
   const emptyForm = { id:'', patient_number:'', first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' };
@@ -215,6 +217,21 @@ const PatientManagement = () => {
       patientsRequestRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (!location.search || urlCommandRef.current === location.search) return;
+    urlCommandRef.current = location.search;
+
+    const params = new URLSearchParams(location.search);
+    const query = params.get('search') || '';
+    if (query) {
+      setPage(1);
+      setSearch(query);
+    }
+    if (params.get('action') === 'new') {
+      openCreate();
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (search.trim() && page !== 1) {

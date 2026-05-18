@@ -4,7 +4,7 @@ import { useResponsive, modalOverlay, getModalStyle } from '../utils/responsive'
 import { useAuth } from '../App';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
-import { matchesSearch, patientSearchText } from '../utils/search';
+import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   FileText, Plus, Search, Eye, Printer, Download, ArrowRight,
   Clock, CheckCircle, XCircle, AlertCircle, X, RefreshCw,
@@ -164,11 +164,17 @@ const QuoteManagement = () => {
     return p?`${p.first_name} ${p.last_name}`:'—';
   };
 
-  const filtered = quotes.filter(q => {
-    const ms = statusF==='ALL'||q.status===statusF;
-    const mt = matchesSearch(search, q.invoice_number, q.status, patientSearchText(getPatient(q) || {}));
-    return ms&&mt;
-  });
+  const activeSearch = search.trim();
+  const filtered = quotes
+    .filter(q => {
+      const ms = statusF==='ALL'||q.status===statusF;
+      const mt = matchesSearch(search, q.invoice_number, q.status, patientSearchText(getPatient(q) || {}));
+      return ms&&mt;
+    })
+    .sort((a, b) => activeSearch
+      ? scoreSearchMatch(activeSearch, b.invoice_number, b.status, patientSearchText(getPatient(b) || {}))
+        - scoreSearchMatch(activeSearch, a.invoice_number, a.status, patientSearchText(getPatient(a) || {}))
+      : 0);
 
   const stats = {
     total: quotes.length,
