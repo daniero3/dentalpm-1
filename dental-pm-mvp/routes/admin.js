@@ -47,7 +47,7 @@ async function activateSubscriptionAfterPayment(clinicId, planCode, paymentReque
 const router = express.Router();
 const { body, param, query, validationResult } = require('express-validator');
 const { requireRole } = require('../middleware/auth');
-const { Clinic, Subscription, SubscriptionInvoice, User, PaymentRequest } = require('../models');
+const { Clinic, Subscription, SubscriptionInvoice, User, PaymentRequest, Patient, Appointment, Invoice, AuditLog } = require('../models');
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
@@ -108,6 +108,192 @@ router.get('/clinics', requireRole('SUPER_ADMIN'), async (req, res) => {
   } catch (error) {
     console.error('Get clinics error:', error);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
+  }
+});
+
+// ── GET /api/admin/churn-risk — Scoring churn SaaS à 30 jours ───────────────
+router.get('/churn-risk', requireRole('SUPER_ADMIN'), async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '50', 10), 200);
+    const now = new Date();
+    const daysAgo = (days) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const dayMs = 24 * 60 * 60 * 1000;
+
+    const d7 = daysAgo(7);
+    const d14 = daysAgo(14);
+    const d30 = daysAgo(30);
+    const d37 = daysAgo(37);
+    const todayDate = now.toISOString().split('T')[0];
+
+    const clinics = await Clinic.findAll({
+      where: { is_active: true },
+      order: [['created_at', 'DESC']],
+      limit,
+      attributes: ['id', 'name', 'email', 'current_plan', 'subscription_status', 'created_at', 'last_activity_at']
+    });
+
+    const results = await Promise.all(clinics.map(async (clinic) => {
+      const clinicId = clinic.id;
+      const [
+        activity7,
+        activityPrevious30,
+        users,
+        activeSubscription,
+        patientTotal,
+        patient14,
+        appointmentTotal,
+        appointment14,
+        invoiceTotal,
+        invoice14,
+        rejectedPayment30,
+        oldPendingPayments
+      ] = await Promise.all([
+        AuditLog.count({ where: { clinic_id: clinicId, created_at: { [Op.gte]: d7 } } }).catch(() => 0),
+        AuditLog.count({ where: { clinic_id: clinicId, created_at: { [Op.between]: [d37, d7] } } }).catch(() => 0),
+        User.findAll({
+          where: { clinic_id: clinicId, is_active: true },
+          attributes: ['id', 'role', 'last_login_at', 'full_name', 'email']
+        }).catch(() => []),
+        Subscription.findOne({
+          where: { clinic_id: clinicId, status: { [Op.in]: ['ACTIVE', 'TRIAL', 'PENDING'] } },
+          order: [['end_date', 'DESC'], ['created_at', 'DESC']],
+          attributes: ['id', 'plan', 'status', 'end_date', 'auto_renew']
+        }).catch(() => null),
+        Patient.count({ where: { clinic_id: clinicId } }).catch(() => 0),
+        Patient.count({ where: { clinic_id: clinicId, created_at: { [Op.gte]: d14 } } }).catch(() => 0),
+        Appointment.count({ where: { clinic_id: clinicId } }).catch(() => 0),
+        Appointment.count({ where: { clinic_id: clinicId, created_at: { [Op.gte]: d14 } } }).catch(() => 0),
+        Invoice.count({ where: { clinic_id: clinicId } }).catch(() => 0),
+        Invoice.count({ where: { clinic_id: clinicId, created_at: { [Op.gte]: d14 } } }).catch(() => 0),
+        PaymentRequest.count({ where: { clinic_id: clinicId, status: 'REJECTED', created_at: { [Op.gte]: d30 } } }).catch(() => 0),
+        PaymentRequest.count({ where: { clinic_id: clinicId, status: 'PENDING', created_at: { [Op.lt]: daysAgo(3) } } }).catch(() => 0)
+      ]);
+
+      const priorWeeklyAverage = activityPrevious30 / 4.3;
+      const core14 = patient14 + appointment14 + invoice14;
+      const coreTotal = patientTotal + appointmentTotal + invoiceTotal;
+      const clinicAgeDays = Math.max(0, Math.floor((now - new Date(clinic.created_at)) / dayMs));
+      const adminUsers = users.filter(user => ['ADMIN', 'SUPER_ADMIN'].includes(user.role));
+      const adminLastSeenAt = adminUsers
+        .map(user => user.last_login_at ? new Date(user.last_login_at) : null)
+        .filter(Boolean)
+        .sort((a, b) => b - a)[0] || null;
+      const activeUsers7 = users.filter(user => user.last_login_at && new Date(user.last_login_at) >= d7).length;
+
+      const subscriptionEnd = activeSubscription?.end_date ? new Date(activeSubscription.end_date) : null;
+      const daysToRenewal = subscriptionEnd
+        ? Math.ceil((subscriptionEnd - new Date(todayDate)) / dayMs)
+        : null;
+
+      let score = 0;
+      const signals = [];
+
+      if (priorWeeklyAverage >= 3 && activity7 < priorWeeklyAverage * 0.4) {
+        const previousRounded = Math.round(priorWeeklyAverage * 10) / 10;
+        score += 25;
+        signals.push({
+          code: 'ACTIVITY_DROP',
+          severity: 'high',
+          label: 'Baisse brutale d’activité',
+          evidence: `${activity7} action(s) sur 7 jours vs ${previousRounded}/semaine auparavant`,
+          automatic_response: 'Afficher une notification de reprise et envoyer un email avec les raccourcis des modules utilisés.'
+        });
+      }
+
+      if ((clinicAgeDays <= 14 && coreTotal === 0) || (clinicAgeDays > 14 && core14 === 0)) {
+        score += 25;
+        signals.push({
+          code: 'NO_CORE_USAGE',
+          severity: 'high',
+          label: 'Aucune utilisation des fonctionnalités clés',
+          evidence: `${patient14} patient(s), ${appointment14} RDV, ${invoice14} facture(s) créés sur 14 jours`,
+          automatic_response: 'Ouvrir le chatbot sur une checklist : créer un patient, planifier un RDV, créer une facture.'
+        });
+      }
+
+      if (rejectedPayment30 > 0 || oldPendingPayments > 0) {
+        score += 20;
+        signals.push({
+          code: 'PAYMENT_FRICTION',
+          severity: 'medium',
+          label: 'Friction de paiement',
+          evidence: `${rejectedPayment30} paiement(s) rejeté(s), ${oldPendingPayments} paiement(s) en attente depuis plus de 3 jours`,
+          automatic_response: 'Notifier l’admin cabinet avec les étapes de régularisation et alerter le support.'
+        });
+      }
+
+      if (daysToRenewal !== null && daysToRenewal >= 0 && daysToRenewal <= 14 && (activity7 === 0 || core14 === 0)) {
+        score += 20;
+        signals.push({
+          code: 'LOW_USAGE_BEFORE_RENEWAL',
+          severity: 'high',
+          label: 'Désengagement avant renouvellement',
+          evidence: `Renouvellement dans ${daysToRenewal} jour(s), activité récente faible`,
+          automatic_response: 'Envoyer un résumé de valeur : patients, RDV et factures créés depuis l’inscription.'
+        });
+      }
+
+      if (!adminLastSeenAt || adminLastSeenAt < d14) {
+        score += 15;
+        signals.push({
+          code: 'ADMIN_ABSENT',
+          severity: 'medium',
+          label: 'Administrateur absent',
+          evidence: adminLastSeenAt ? `Dernière connexion admin : ${adminLastSeenAt.toISOString()}` : 'Aucune connexion admin connue',
+          automatic_response: 'Envoyer un email admin avec le résumé cabinet et proposer une assistance.'
+        });
+      }
+
+      const riskLevel = score >= 70 ? 'HIGH' : score >= 45 ? 'MEDIUM' : score >= 25 ? 'LOW' : 'HEALTHY';
+      const recommendedActions = [];
+      if (score >= 25) recommendedActions.push('IN_APP_HELP');
+      if (score >= 45) recommendedActions.push('EMAIL_VALUE_SUMMARY');
+      if (score >= 70) recommendedActions.push('SUPPORT_ALERT');
+
+      return {
+        clinic: {
+          id: clinic.id,
+          name: clinic.name,
+          email: clinic.email,
+          plan: activeSubscription?.plan || clinic.current_plan,
+          subscription_status: activeSubscription?.status || clinic.subscription_status,
+          subscription_end_date: activeSubscription?.end_date || null
+        },
+        score: Math.min(score, 100),
+        risk_level: riskLevel,
+        metrics: {
+          activity_7d: activity7,
+          activity_previous_weekly_avg: Math.round(priorWeeklyAverage * 10) / 10,
+          active_users_7d: activeUsers7,
+          core_actions_14d: core14,
+          patients_14d: patient14,
+          appointments_14d: appointment14,
+          invoices_14d: invoice14,
+          days_to_renewal: daysToRenewal,
+          admin_last_seen_at: adminLastSeenAt ? adminLastSeenAt.toISOString() : null
+        },
+        signals,
+        recommended_actions: recommendedActions
+      };
+    }));
+
+    results.sort((a, b) => b.score - a.score);
+
+    res.json({
+      generated_at: now.toISOString(),
+      window_days: 30,
+      clinics: results,
+      summary: {
+        total: results.length,
+        high: results.filter(item => item.risk_level === 'HIGH').length,
+        medium: results.filter(item => item.risk_level === 'MEDIUM').length,
+        low: results.filter(item => item.risk_level === 'LOW').length,
+        healthy: results.filter(item => item.risk_level === 'HEALTHY').length
+      }
+    });
+  } catch (error) {
+    console.error('Churn risk error:', error);
+    res.status(500).json({ error: 'Erreur calcul churn risk', details: error.message });
   }
 });
 
