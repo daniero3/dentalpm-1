@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { Send, X, Minimize2, ArrowRight, Search, HelpCircle, Mic, MicOff } from 'lucide-react';
+import { Send, X, Minimize2, ArrowRight, Search, HelpCircle, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const theme = {
@@ -312,11 +312,21 @@ export default function HelpChatbot() {
   const location = useLocation();
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
+  const lastSpokenRef = useRef('');
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [speakerEnabled, setSpeakerEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('dpm_chatbot_speaker') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [ttsSupported, setTtsSupported] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const [messages, setMessages] = useState(() => [
     {
       role: 'bot',
@@ -342,6 +352,22 @@ export default function HelpChatbot() {
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    setTtsSupported(Boolean(window.speechSynthesis && window.SpeechSynthesisUtterance));
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dpm_chatbot_speaker', speakerEnabled ? 'true' : 'false');
+    } catch {
+      // Ignore localStorage privacy mode errors.
+    }
+  }, [speakerEnabled]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -387,12 +413,35 @@ export default function HelpChatbot() {
   }, []);
 
   const sendTopic = (topic) => {
+    const botMessage = createBotMessage(topic);
     setMessages(prev => [
       ...prev,
       { role: 'user', text: topic.title },
-      createBotMessage(topic),
+      botMessage,
     ]);
     setOpen(true);
+    speakText(botMessage.text);
+  };
+
+  const speakText = (text, force = false) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+    if (!force && !speakerEnabled) return;
+    const clean = String(text || '')
+      .replace(/🎙️|→/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!clean) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new window.SpeechSynthesisUtterance(clean);
+    utterance.lang = 'fr-FR';
+    utterance.rate = 0.96;
+    utterance.pitch = 1;
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    lastSpokenRef.current = clean;
+    window.speechSynthesis.speak(utterance);
   };
 
   const handlePrompt = (text, fromVoice = false) => {
@@ -404,6 +453,7 @@ export default function HelpChatbot() {
       { role: 'user', text: fromVoice ? `🎙️ ${clean}` : clean },
       response,
     ]);
+    speakText(response.text);
     setMessage('');
     if (response.action?.autoNavigate) {
       navigate(response.action.route);
@@ -440,6 +490,32 @@ export default function HelpChatbot() {
       recognitionRef.current.start();
     } catch {
       setListening(false);
+    }
+  };
+
+  const toggleSpeaker = () => {
+    if (!ttsSupported) {
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'bot',
+          text: 'La lecture haut-parleur n’est pas disponible dans ce navigateur.',
+        },
+      ]);
+      return;
+    }
+
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+
+    const next = !speakerEnabled;
+    setSpeakerEnabled(next);
+    if (next) {
+      const latestBot = [...messages].reverse().find(item => item.role === 'bot');
+      speakText(latestBot?.text || 'Lecture vocale activée.', true);
     }
   };
 
@@ -697,6 +773,15 @@ export default function HelpChatbot() {
         .dpm-voice-button.is-listening {
           animation: dpmVoiceWave 1200ms ease-in-out infinite;
         }
+        .dpm-speaker-button {
+          transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+        }
+        .dpm-speaker-button:hover {
+          transform: translateY(-1px);
+        }
+        .dpm-speaker-button.is-speaking {
+          animation: dpmVoiceWave 1200ms ease-in-out infinite;
+        }
         @media (prefers-reduced-motion: reduce) {
           .dpm-chat-panel,
           .dpm-chat-message,
@@ -705,7 +790,8 @@ export default function HelpChatbot() {
           .dpm-robot-mascot,
           .dpm-robot-antenna,
           .dpm-robot-face i,
-          .dpm-voice-button.is-listening {
+          .dpm-voice-button.is-listening,
+          .dpm-speaker-button.is-speaking {
             animation: none !important;
           }
           .dpm-chat-fab,
@@ -758,6 +844,21 @@ export default function HelpChatbot() {
             <button type="button" onClick={() => setOpen(false)} aria-label="Réduire l'assistant"
               style={{ border: 0, background: 'transparent', color: theme.textSecondary, cursor: 'pointer', padding: 6 }}>
               <Minimize2 size={17} />
+            </button>
+            <button type="button" onClick={toggleSpeaker} aria-label={speakerEnabled ? 'Désactiver la lecture vocale' : 'Activer la lecture vocale'}
+              title={ttsSupported ? (speakerEnabled ? 'Lecture vocale activée' : 'Activer le haut-parleur') : 'Lecture vocale non disponible'}
+              className={`dpm-speaker-button ${speaking ? 'is-speaking' : ''}`}
+              style={{
+                border: 0,
+                background: speakerEnabled ? 'var(--hover-subtle)' : 'transparent',
+                color: speakerEnabled ? theme.accent : theme.textSecondary,
+                cursor: ttsSupported ? 'pointer' : 'not-allowed',
+                padding: 6,
+                borderRadius: 8,
+                display: 'grid',
+                placeItems: 'center',
+              }}>
+              {speakerEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
             </button>
             <button type="button" onClick={() => setMessages([{ role: 'bot', text: 'Conversation réinitialisée. Comment puis-je vous aider ?' }])} aria-label="Réinitialiser"
               style={{ border: 0, background: 'transparent', color: theme.textSecondary, cursor: 'pointer', padding: 6 }}>
