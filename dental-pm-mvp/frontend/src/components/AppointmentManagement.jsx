@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
-import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
+import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
@@ -11,7 +11,11 @@ import {
   Stethoscope, Zap, Eye, Grid, List, AlertTriangle
 } from 'lucide-react';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const TYPES = [
@@ -225,6 +229,7 @@ const AppointmentManagement = () => {
   const [editA,    setEditA]    = useState(null);
   const [delA,     setDelA]     = useState(null);
   const [search,   setSearch]   = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
   const [statusF,  setStatusF]  = useState('all');
   const [typeF,    setTypeF]    = useState('all');
   const [selDate,  setSelDate]  = useState(today());
@@ -411,6 +416,14 @@ const AppointmentManagement = () => {
       ? scoreSearchMatch(activeSearch, patientSearchText(b.patient || {}), b.reason, b.appointment_type, b.status)
         - scoreSearchMatch(activeSearch, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status)
       : 0);
+  const selectedPatient = patients.find(p => p.id === form.patient_id) || null;
+  const patientMatches = patients
+    .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
+    .sort((a, b) => patientSearch.trim()
+      ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
+        - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
+      : 0)
+    .slice(0, 8);
 
   /* Stats */
   const todayAppts  = appts.filter(a => a.appointment_date === today());
@@ -554,10 +567,10 @@ const AppointmentManagement = () => {
             )}
 
             {/* Recherche */}
-            <div style={{ display:'flex', alignItems:'center', gap:7, flex:1, minWidth:160, background:'#F8FAFC', borderRadius:9, padding:'6px 12px', border:'1px solid #E2E8F0' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 1 260px', minWidth:220, background:'#F8FAFC', borderRadius:11, padding:'8px 12px', border:'1px solid #E2E8F0' }}>
               <Search size={13} color="#94A3B8"/>
               <input placeholder="Rechercher patient, motif..." value={search} onChange={e=>setSearch(e.target.value)}
-                style={{ border:'none', background:'transparent', outline:'none', fontSize:12, flex:1 }}/>
+                style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, minWidth:0, color:'#0F172A' }}/>
               {search && <button onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:0 }}><X size={12}/></button>}
             </div>
 
@@ -634,10 +647,35 @@ const AppointmentManagement = () => {
           {/* Patient */}
           <div>
             <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Patient *</label>
-            <select value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required>
-              <option value="">Sélectionner un patient...</option>
-              {patients.map(p=><option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
-            </select>
+            <div style={{ border:'1.5px solid #E2E8F0',borderRadius:12,background:'#fff',overflow:'hidden' }}>
+              {selectedPatient && (
+                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 10px',background:'#F5F3FF',borderBottom:'1px solid #DDD6FE' }}>
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontSize:13,fontWeight:800,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{selectedPatient.first_name} {selectedPatient.last_name}</div>
+                    <div style={{ fontSize:11,color:'#7C3AED',fontWeight:700 }}>{patientIdentifier(selectedPatient)}</div>
+                  </div>
+                  <button type="button" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
+                </div>
+              )}
+              <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
+                <Search size={13} color="#94A3B8"/>
+                <input value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
+              </div>
+              <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
+                {patientMatches.map(p=>(
+                  <button key={p.id} type="button" onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}}
+                    style={{ width:'100%',border:0,background:form.patient_id===p.id?'#F5F3FF':'#fff',cursor:'pointer',padding:'8px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,textAlign:'left',borderBottom:'1px solid #F8FAFC' }}>
+                    <span style={{ minWidth:0 }}>
+                      <span style={{ display:'block',fontSize:13,fontWeight:700,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.first_name} {p.last_name}</span>
+                      <span style={{ display:'block',fontSize:11,color:'#64748B' }}>{p.phone_primary || p.email || 'Contact non renseigné'}</span>
+                    </span>
+                    <span style={{ fontSize:10,color:'#7C3AED',fontWeight:800,background:'#F3E8FF',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
+                  </button>
+                ))}
+                {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>}
+              </div>
+            </div>
+            <input tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
           </div>
 
           {/* Type */}

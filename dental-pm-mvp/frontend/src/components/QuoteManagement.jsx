@@ -4,14 +4,18 @@ import { useResponsive, modalOverlay, getModalStyle } from '../utils/responsive'
 import { useAuth } from '../App';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
-import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
+import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
 import {
   FileText, Plus, Search, Eye, Printer, Download, ArrowRight,
   Clock, CheckCircle, XCircle, AlertCircle, X, RefreshCw,
   Trash2, Edit2, User, Calendar, Tag, Sparkles, ChevronRight
 } from 'lucide-react';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8001/api'
+    : '/api';
 const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 const fmt = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
@@ -75,6 +79,7 @@ const QuoteManagement = () => {
   const [detailQ,   setDetailQ]   = useState(null);
   const [saving,    setSaving]    = useState(false);
   const [feeSearch, setFeeSearch] = useState('');
+  const [patientSearch, setPatientSearch] = useState('');
 
   const emptyForm = { patient_id:'', schedule_id:'', items:[{ description:'', quantity:1, unit_price_mga:'', tooth_number:'' }], discount_percentage:0, validity_days:30, notes:'' };
   const [form, setForm] = useState(emptyForm);
@@ -159,6 +164,7 @@ const QuoteManagement = () => {
   };
 
   const getPatient = q => q.patient || patients.find(p=>p.id===q.patient_id) || null;
+  const selectedPatient = patients.find(p => p.id === form.patient_id) || null;
   const pname = qOrId => {
     const p = typeof qOrId === 'object' ? getPatient(qOrId) : patients.find(p=>p.id===qOrId);
     return p?`${p.first_name} ${p.last_name}`:'—';
@@ -185,6 +191,13 @@ const QuoteManagement = () => {
   };
 
   const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
+  const patientMatches = patients
+    .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
+    .sort((a, b) => patientSearch.trim()
+      ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
+        - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
+      : 0)
+    .slice(0, 8);
 
   if(loading) return(
     <div style={{ maxWidth: 1100,margin:'0 auto',paddingBottom:48 }}>
@@ -242,11 +255,11 @@ const QuoteManagement = () => {
       </div>
 
       {/* Barre filtre */}
-      <div style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'11px 16px',marginBottom:16,display:'flex',gap:10,flexWrap:'wrap',alignItems:'center' }}>
-        <div style={{ display:'flex',alignItems:'center',gap:7,flex:1,minWidth:200 }}>
+      <div style={{ background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'12px 16px',marginBottom:16,display:'flex',gap:12,flexWrap:'wrap',alignItems:'center',boxShadow:'0 1px 4px rgba(15,23,42,.04)' }}>
+        <div style={{ display:'flex',alignItems:'center',gap:8,flex:'1 1 280px',minWidth:220,background:'#F8FAFC',border:'1px solid #E2E8F0',borderRadius:11,padding:'8px 11px' }}>
           <Search size={13} color="#94A3B8"/>
           <input placeholder="Rechercher devis, patient..." value={search} onChange={e=>setSearch(e.target.value)}
-            style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1 }}/>
+            style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0,color:'#0F172A' }}/>
           {search&&<button onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
@@ -406,10 +419,35 @@ const QuoteManagement = () => {
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
-              <select value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required>
-                <option value="">Sélectionner...</option>
-                {patients.map(p=><option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
-              </select>
+              <div style={{ border:'1.5px solid #E2E8F0',borderRadius:12,background:'#fff',overflow:'hidden' }}>
+                {selectedPatient && (
+                  <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 10px',background:'#F0FDFE',borderBottom:'1px solid #CCFBF1' }}>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:13,fontWeight:800,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{selectedPatient.first_name} {selectedPatient.last_name}</div>
+                      <div style={{ fontSize:11,color:'#0D7A87',fontWeight:700 }}>{patientIdentifier(selectedPatient)}</div>
+                    </div>
+                    <button type="button" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
+                  </div>
+                )}
+                <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
+                  <Search size={13} color="#94A3B8"/>
+                  <input value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
+                </div>
+                <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
+                  {patientMatches.map(p=>(
+                    <button key={p.id} type="button" onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}}
+                      style={{ width:'100%',border:0,background:form.patient_id===p.id?'#F0FDFE':'#fff',cursor:'pointer',padding:'8px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,textAlign:'left',borderBottom:'1px solid #F8FAFC' }}>
+                      <span style={{ minWidth:0 }}>
+                        <span style={{ display:'block',fontSize:13,fontWeight:700,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.first_name} {p.last_name}</span>
+                        <span style={{ display:'block',fontSize:11,color:'#64748B' }}>{p.phone_primary || p.email || 'Contact non renseigné'}</span>
+                      </span>
+                      <span style={{ fontSize:10,color:'#0D7A87',fontWeight:800,background:'#E6FAFC',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
+                    </button>
+                  ))}
+                  {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>}
+                </div>
+              </div>
+              <input tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
             </div>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire</label>
