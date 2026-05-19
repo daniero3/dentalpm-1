@@ -22,7 +22,22 @@ if (typeof window !== 'undefined') {
 }
 
 // ── Service Worker PWA — Cache Busting ───────────────────────────────────────
-if ('serviceWorker' in navigator) {
+// En développement, Vite sert des modules frais depuis /src et /assets.
+// Un ancien service worker CRA peut garder un index.html qui pointe vers /static/*.
+if ('serviceWorker' in navigator && process.env.NODE_ENV !== 'production') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistrations?.()
+      .then(registrations => Promise.all(registrations.map(reg => reg.unregister())))
+      .catch(() => {});
+    if ('caches' in window) {
+      caches.keys()
+        .then(keys => Promise.all(keys.filter(key => key.startsWith('dentalpm-')).map(key => caches.delete(key))))
+        .catch(() => {});
+    }
+  });
+}
+
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
       .then(reg => {
