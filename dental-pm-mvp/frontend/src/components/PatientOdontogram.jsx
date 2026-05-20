@@ -30,6 +30,10 @@ const UPPER_RIGHT  = ['18','17','16','15','14','13','12','11'];
 const UPPER_LEFT   = ['21','22','23','24','25','26','27','28'];
 const LOWER_LEFT   = ['31','32','33','34','35','36','37','38'];
 const LOWER_RIGHT  = ['48','47','46','45','44','43','42','41'];
+const PRIMARY_UPPER_RIGHT = ['55','54','53','52','51'];
+const PRIMARY_UPPER_LEFT  = ['61','62','63','64','65'];
+const PRIMARY_LOWER_LEFT  = ['71','72','73','74','75'];
+const PRIMARY_LOWER_RIGHT = ['85','84','83','82','81'];
 const fdatetime = d => d ? new Date(d).toLocaleString('fr-FR', { dateStyle:'short', timeStyle:'short' }) : 'Non renseigné';
 const actionLabel = action => ({ CREATE:'Création', UPDATE:'Modification', DELETE:'Suppression' }[action] || action || 'Action');
 
@@ -237,7 +241,7 @@ const PatientOdontogram = () => {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-center">Schema dentaire FDI</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-center">Schema dentaire FDI - dentition permanente</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-col items-center gap-4">
             <div className="flex gap-1">
@@ -248,6 +252,25 @@ const PatientOdontogram = () => {
             <div className="flex gap-1">
               <div className="flex gap-1 border-r-2 border-gray-400 pr-2">{LOWER_RIGHT.map(t => <ToothButton key={t} toothFdi={t} />)}</div>
               <div className="flex gap-1 pl-2">{LOWER_LEFT.map(t => <ToothButton key={t} toothFdi={t} />)}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">Odontogramme dents de lait - dentition temporaire</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex gap-1">
+              <div className="flex gap-1 border-r-2 border-gray-400 pr-2">{PRIMARY_UPPER_RIGHT.map(t => <ToothButton key={t} toothFdi={t} />)}</div>
+              <div className="flex gap-1 pl-2">{PRIMARY_UPPER_LEFT.map(t => <ToothButton key={t} toothFdi={t} />)}</div>
+            </div>
+            <div className="text-center text-sm text-gray-500 py-2 border-t border-b w-full">Ligne mediane</div>
+            <div className="flex gap-1">
+              <div className="flex gap-1 border-r-2 border-gray-400 pr-2">{PRIMARY_LOWER_RIGHT.map(t => <ToothButton key={t} toothFdi={t} />)}</div>
+              <div className="flex gap-1 pl-2">{PRIMARY_LOWER_LEFT.map(t => <ToothButton key={t} toothFdi={t} />)}</div>
             </div>
           </div>
         </CardContent>
