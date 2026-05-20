@@ -33,10 +33,10 @@ async function processQueue() {
   while (queue.length > 0) {
     const { mail, resolve, reject, attempt } = queue.shift();
     try {
-      await _sendNow(mail);
-      resolve();
+      const result = await _sendNow(mail);
+      resolve(result);
     } catch(e) {
-      if (attempt < 3 && e.message.includes('ECONNRESET') || e.message.includes('timeout')) {
+      if (attempt < 3 && (e.message.includes('ECONNRESET') || e.message.includes('timeout'))) {
         // Retry après 30s pour les erreurs réseau temporaires
         setTimeout(() => { queue.unshift({ mail, resolve, reject, attempt: attempt + 1 }); processQueue(); }, 30000);
         break;
@@ -80,10 +80,10 @@ async function _sendNow({ to, subject, html }) {
   const transport = getTransporter();
   if (!transport) {
     console.log(`[Mailer] (no SMTP) → ${to} | ${subject}`);
-    return;
+    return { mocked: true, messageId: null };
   }
   checkRateLimit();
-  await transport.sendMail({
+  const info = await transport.sendMail({
     from: FROM,
     to,
     subject,
@@ -97,6 +97,7 @@ async function _sendNow({ to, subject, html }) {
     },
   });
   console.log(`[Mailer] ✅ Envoyé → ${to} | ${subject} (h:${stats.hour}/${LIMITS.perHour} j:${stats.day}/${LIMITS.perDay})`);
+  return { mocked: false, messageId: info?.messageId || null };
 }
 
 // ── API publique ──────────────────────────────────────────────────────────────
@@ -212,7 +213,12 @@ function getMailStats() {
     sentToday: stats.day,
     limitsHour: LIMITS.perHour,
     limitsDay: LIMITS.perDay,
+    smtpConfigured: Boolean(getTransporter()),
   };
 }
 
-module.exports = { sendMail, sendTrialReminder, sendWelcomeTrial, sendSubscriptionActivated, getMailStats };
+function isMailConfigured() {
+  return Boolean(getTransporter());
+}
+
+module.exports = { sendMail, sendTrialReminder, sendWelcomeTrial, sendSubscriptionActivated, getMailStats, isMailConfigured };

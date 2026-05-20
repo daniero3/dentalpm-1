@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const { MailingCampaign, MailingLog, Patient, User, AuditLog } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+const { sendMail, isMailConfigured } = require('../utils/mailer');
 // ✅ requireClinicId inline
 const requireClinicId = (req, res, next) => {
   const clinicId = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
@@ -208,6 +209,43 @@ const isAllowedSendHour = (date = new Date()) => {
   return hour >= 8 && hour < 19;
 };
 
+const escapeHtml = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const replaceTemplateVariables = (text, patient, context = {}) => {
+  const firstName = patient?.first_name || '';
+  const lastName = patient?.last_name || '';
+  const unsubscribeUrl = `${process.env.FRONTEND_URL || 'https://dentalpracticemada.com'}/unsubscribe?email=${encodeURIComponent(patient?.email || '')}`;
+  const values = {
+    prenom: firstName,
+    nom: lastName,
+    patient: `${firstName} ${lastName}`.trim(),
+    cabinet: context.cabinet || '',
+    praticien: context.practitioner || context.praticien || context.practitioners || '',
+    praticiens: context.practitioners || '',
+    agenda: context.agenda || '',
+    esp: context.esp || '',
+    date_rdv: context.date_rdv || '[date du rendez-vous]',
+    heure_rdv: context.heure_rdv || '[heure]',
+    soin: context.soin || '[soin]',
+    document_type: context.document_type || '[document]',
+    lien_confirmation: context.lien_confirmation || process.env.FRONTEND_URL || '#',
+    lien_document: context.lien_document || process.env.FRONTEND_URL || '#',
+    lien_article: context.lien_article || process.env.FRONTEND_URL || '#',
+    lien_rdv: context.lien_rdv || process.env.FRONTEND_URL || '#',
+    lien_desinscription: unsubscribeUrl
+  };
+
+  return String(text || '').replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
+    const value = values[key] ?? context[key] ?? '';
+    return key.startsWith('lien_') ? String(value) : escapeHtml(value);
+  });
+};
+
 // =============================================================================
 // MAILING CAMPAIGNS MANAGEMENT
 // =============================================================================
@@ -300,6 +338,7 @@ router.post('/suite/quick-campaign', requireClinicId, [
       audience_filter: {
         ...audienceFilter,
         suite_type: req.body.type,
+        context: req.body.context || {},
         sms_fallback: emailPackage.sms_fallback,
         business_rules: BUSINESS_RULES
       },
@@ -600,14 +639,14 @@ router.post('/campaigns', requireClinicId, [
     const campaign = await MailingCampaign.create({
       ...req.body,
       clinic_id: req.clinic_id, // Automatic clinic assignment
-      created_by_user_id: _getUserId(req),
+      created_by_user_id: getUserId(req),
       total_recipients: audienceCount,
       status: req.body.scheduled_at ? 'SCHEDULED' : 'DRAFT'
     });
 
     // Log campaign creation
     await AuditLog.create({
-      user_id: _getUserId(req),
+      user_id: getUserId(req),
       action: 'CREATE',
       resource_type: 'mailing_campaigns',
       resource_id: campaign.id,
@@ -713,39 +752,51 @@ router.post('/campaigns/:id/send', requireClinicId, [
     }, {});
     eligiblePatients = eligiblePatients.filter(patient => (countsByPatient[patient.id] || 0) < BUSINESS_RULES.maxEmailsPerPatientPerMonth);
 
-    // Mock email sending process
+    const smtpConfigured = isMailConfigured();
     let emailsSent = 0;
     let emailsDelivered = 0;
     let emailsBounced = 0;
+    let emailsFailed = 0;
+    const context = campaign.audience_filter?.context || {};
 
     for (const patient of eligiblePatients) {
-      // Mock delivery success rate (90% success)
-      const isDelivered = Math.random() < 0.9;
-      const deliveredAt = isDelivered ? new Date() : null;
-      const bouncedAt = isDelivered ? null : new Date();
+      const subject = replaceTemplateVariables(campaign.subject, patient, context);
+      const html = replaceTemplateVariables(campaign.body_html, patient, context);
+      const sentAt = new Date();
 
-      // Create mailing log
-      await MailingLog.create({
-        campaign_id: campaign.id,
-        patient_id: patient.id,
-        email: patient.email,
-        status: isDelivered ? 'DELIVERED' : 'BOUNCED',
-        sent_at: new Date(),
-        delivered_at: deliveredAt,
-        bounced_at: bouncedAt,
-        is_mock: true,
-        external_message_id: `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      });
+      try {
+        const result = await sendMail({
+          to: patient.email,
+          subject,
+          html
+        });
 
-      emailsSent++;
-      if (isDelivered) {
+        const wasMocked = Boolean(result?.mocked) || !smtpConfigured;
+        await MailingLog.create({
+          campaign_id: campaign.id,
+          patient_id: patient.id,
+          email: patient.email,
+          status: wasMocked ? 'DELIVERED' : 'SENT',
+          sent_at: sentAt,
+          delivered_at: wasMocked ? sentAt : null,
+          is_mock: wasMocked,
+          external_message_id: result?.messageId || `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        });
+
+        emailsSent++;
         emailsDelivered++;
-      } else {
-        emailsBounced++;
+      } catch (sendError) {
+        await MailingLog.create({
+          campaign_id: campaign.id,
+          patient_id: patient.id,
+          email: patient.email,
+          status: 'FAILED',
+          sent_at: sentAt,
+          error_message: sendError.message,
+          is_mock: !smtpConfigured
+        });
+        emailsFailed++;
       }
-
-      // Simulate some delay
-      await new Promise(resolve => setTimeout(resolve, 10));
     }
 
     // Update campaign statistics
@@ -755,19 +806,21 @@ router.post('/campaigns/:id/send', requireClinicId, [
       total_recipients: eligiblePatients.length,
       emails_sent: emailsSent,
       emails_delivered: emailsDelivered,
-      emails_bounced: emailsBounced
+      emails_bounced: emailsBounced + emailsFailed
     });
 
     // Log campaign sending
     await AuditLog.create({
-      user_id: _getUserId(req),
+      user_id: getUserId(req),
       action: 'SEND',
       resource_type: 'mailing_campaigns',
       resource_id: campaign.id,
       new_values: { 
         status: 'SENT',
         emails_sent: emailsSent,
-        emails_delivered: emailsDelivered 
+        emails_delivered: emailsDelivered,
+        emails_failed: emailsFailed,
+        smtp_configured: smtpConfigured
       },
       ip_address: req.ip,
       user_agent: req.get('User-Agent'),
@@ -775,16 +828,18 @@ router.post('/campaigns/:id/send', requireClinicId, [
     });
 
     res.json({
-      message: process.env.MOCK_EMAIL_ENABLED === 'true' 
-        ? 'Campagne simulée envoyée avec succès'
-        : 'Campagne envoyée avec succès',
+      message: smtpConfigured
+        ? 'Campagne envoyée avec succès'
+        : 'Campagne simulée: configurez SMTP_HOST, SMTP_USER et SMTP_PASS pour envoyer réellement',
       campaign: {
         id: campaign.id,
         name: campaign.name,
         status: 'SENT',
         emails_sent: emailsSent,
         emails_delivered: emailsDelivered,
-        emails_bounced: emailsBounced,
+        emails_bounced: emailsBounced + emailsFailed,
+        emails_failed: emailsFailed,
+        smtp_configured: smtpConfigured,
         delivery_rate: emailsSent > 0 ? (emailsDelivered / emailsSent * 100).toFixed(1) : 0
       }
     });

@@ -1,6 +1,6 @@
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
-const { Patient, Treatment, Appointment, Invoice, AuditLog, User, sequelize } = require('../models');
+const { Patient, Treatment, Appointment, Invoice, InvoiceItem, AuditLog, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
@@ -283,7 +283,10 @@ router.get('/:id/history', requireClinicId, [
       }).catch(() => []),
       Invoice.findAll({
         where: scoped(),
-        include: [{ model: Payment, as: 'payments', required: false }],
+        include: [
+          { model: Payment, as: 'payments', required: false },
+          { model: InvoiceItem, as: 'items', required: false }
+        ],
         order: [['created_at','DESC']],
         limit: 100
       }).catch(() => []),
@@ -378,6 +381,20 @@ router.get('/:id/history', requireClinicId, [
     }));
 
     invoices.forEach(inv => {
+      const invoiceItems = (inv.items || []).map(item => ({
+        id: item.id,
+        description: item.description,
+        quantity: parseInt(item.quantity || 1, 10),
+        unit_price_mga: parseFloat(item.unit_price_mga || 0),
+        total_price_mga: parseFloat(item.total_price_mga || ((item.quantity || 1) * (item.unit_price_mga || 0))),
+        tooth_number: item.tooth_number || null,
+        procedure_id: item.procedure_id || null,
+        notes: item.notes || null
+      }));
+      const itemSummary = invoiceItems
+        .map(item => `${item.description}${item.tooth_number ? ` (Dent ${item.tooth_number})` : ''}`)
+        .join(', ');
+
       timeline.push({
         id: `invoice-${inv.id}`,
         source_id: inv.id,
@@ -388,7 +405,8 @@ router.get('/:id/history', requireClinicId, [
         date: toHistoryDate(inv.invoice_date || inv.created_at),
         practitioner: 'Cabinet',
         amount_mga: parseFloat(inv.total_mga || 0),
-        details: inv.notes || null
+        details: inv.notes || itemSummary || null,
+        invoice_items: invoiceItems
       });
 
       (inv.payments || []).forEach(pay => {

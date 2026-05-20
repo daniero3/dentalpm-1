@@ -825,6 +825,27 @@ const PatientManagement = () => {
                       {item.status && <span style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:99, padding:'4px 8px', fontWeight:700 }}>Statut : {item.status}</span>}
                       {item.tooth_numbers && <span style={{ background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:99, padding:'4px 8px', fontWeight:700 }}>Dent(s) : {item.tooth_numbers}</span>}
                     </div>
+                    {Array.isArray(item.invoice_items) && item.invoice_items.length > 0 && (
+                      <div style={{ marginBottom:item.details ? 9 : 0, border:'1px solid #E2E8F0', borderRadius:12, overflow:'hidden', background:'#fff' }}>
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 68px 92px 96px', gap:8, padding:'8px 10px', background:'#F8FAFC', color:'#64748B', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:.8 }}>
+                          <span>Prestation</span>
+                          <span style={{ textAlign:'center' }}>Qté</span>
+                          <span style={{ textAlign:'right' }}>Prix</span>
+                          <span style={{ textAlign:'right' }}>Total</span>
+                        </div>
+                        {item.invoice_items.map((invoiceItem, rowIndex) => (
+                          <div key={invoiceItem.id || rowIndex} style={{ display:'grid', gridTemplateColumns:'1fr 68px 92px 96px', gap:8, padding:'9px 10px', borderTop:rowIndex ? '1px solid #F1F5F9' : 'none', alignItems:'center', fontSize:12, color:'#334155' }}>
+                            <div style={{ minWidth:0 }}>
+                              <div style={{ fontWeight:800, color:'#0F172A', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{invoiceItem.description}</div>
+                              {invoiceItem.tooth_number && <div style={{ color:'#94A3B8', fontSize:11, marginTop:2 }}>Dent {invoiceItem.tooth_number}</div>}
+                            </div>
+                            <div style={{ textAlign:'center', fontWeight:700 }}>{invoiceItem.quantity || 1}</div>
+                            <div style={{ textAlign:'right', fontWeight:700 }}>{fmt(invoiceItem.unit_price_mga || 0)}</div>
+                            <div style={{ textAlign:'right', fontFamily:'Plus Jakarta Sans', fontWeight:900, color:'#0F172A' }}>{fmt(invoiceItem.total_price_mga || ((invoiceItem.quantity || 1) * (invoiceItem.unit_price_mga || 0)))}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {item.details && <div style={{ fontSize:12, color:'#475569', lineHeight:1.55, background:'linear-gradient(180deg,#F8FAFC,#FFFFFF)', border:'1px solid #F1F5F9', borderRadius:12, padding:'10px 12px' }}>{item.details}</div>}
                   </div>
                 </div>
