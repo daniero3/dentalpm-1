@@ -537,7 +537,7 @@ function App() {
                 <Route path="/legal/cookies" element={<LegalPages />} />
                 <Route path="/onboarding" element={<ProtectedRoute><OnboardingWizard /></ProtectedRoute>} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/billing/renew" element={<Navigate to="/subscription" replace />} />
+                <Route path="/billing/renew" element={<Navigate to="/subscription?tab=payment" replace />} />
                 <Route path="/subscription" element={<ProtectedRoute><MainLayout><SubscriptionManagement /></MainLayout></ProtectedRoute>} />
               </Routes>
               <CookieBanner />

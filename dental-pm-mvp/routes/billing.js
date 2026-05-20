@@ -621,9 +621,9 @@ router.post('/public-checkout', async (req, res) => {
         trial_settings: {
           end_behavior: { missing_payment_method: 'cancel' }
         },
-        metadata: { plan: plan_code }
+        metadata: { plan: plan_code, checkout_kind: 'trial' }
       },
-      metadata: { plan: plan_code },
+      metadata: { plan: plan_code, checkout_kind: 'trial' },
       success_url: FRONT + '/login?checkout=success&plan=' + plan_code + '&session_id={CHECKOUT_SESSION_ID}',
       cancel_url:  FRONT + '/register?checkout=cancelled',
       locale: 'fr',
@@ -685,9 +685,26 @@ router.post('/finalize-public-checkout', [
       || session.client_reference_id
       || stripeSub?.metadata?.clinic_id;
     const planCode = session.metadata?.plan || stripeSub?.metadata?.plan || 'PRO';
+    const checkoutKind = session.metadata?.checkout_kind || stripeSub?.metadata?.checkout_kind || 'trial';
 
     if (!clinicId) {
       return res.status(400).json({ error: 'Cabinet non identifié dans la session Stripe' });
+    }
+
+    if (checkoutKind === 'renewal') {
+      const result = await activateSubscriptionAfterPayment(clinicId, planCode, null);
+      if (!result.success) {
+        return res.status(500).json({ error: 'Erreur activation abonnement Stripe', details: result.error });
+      }
+      await markStripeActivationRequestVerified(clinicId, session.id);
+
+      return res.json({
+        activated: true,
+        status: result.subscription.status,
+        plan: result.subscription.plan,
+        clinic_id: clinicId,
+        end_date: result.subscription.end_date
+      });
     }
 
     const trialEnd = stripeSub?.trial_end
@@ -718,13 +735,17 @@ router.post('/finalize-public-checkout', [
 // ── POST /api/billing/create-checkout-session ─────────────────────────────────
 router.post('/create-checkout-session', async (req, res) => {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Paiement Stripe non configuré' });
+    }
+
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const { plan_code, clinic_id: bodyClinicId } = req.body;
 
     const STRIPE_PRICE_IDS = {
-      ESSENTIAL: 'price_1TM2Yr4zCGinpjiEssURjhxa',
-      PRO:       'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
-      GROUP:     'price_1TM2m34zCGinpjiEOo3nR5CQ',
+      ESSENTIAL: process.env.STRIPE_PRICE_ESSENTIAL || 'price_1TM2Yr4zCGinpjiEssURjhxa',
+      PRO:       process.env.STRIPE_PRICE_PRO       || 'price_1TM2Ct4zCGinpjiEQ9KqgVdN',
+      GROUP:     process.env.STRIPE_PRICE_GROUP     || 'price_1TM2m34zCGinpjiEOo3nR5CQ',
     };
 
     const priceId = STRIPE_PRICE_IDS[plan_code];
@@ -737,7 +758,7 @@ router.post('/create-checkout-session', async (req, res) => {
     const clinic = await Clinic.findByPk(clinicId, { attributes: ['id','name','email'] });
     if (!clinic) return res.status(404).json({ error: 'Cabinet non trouve' });
 
-    const FRONT = process.env.FRONTEND_URL || 'https://dentalpracticemada.com';
+    const FRONT = normalizePublicUrl(process.env.FRONTEND_URL);
 
     await PaymentRequest.update(
       { status: 'REJECTED', note_admin: 'Remplacée par une nouvelle demande carte Stripe' },
@@ -751,14 +772,10 @@ router.post('/create-checkout-session', async (req, res) => {
       client_reference_id: clinicId,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 7,
-        trial_settings: {
-          end_behavior: { missing_payment_method: 'cancel' }
-        },
-        metadata: { clinic_id: clinicId, plan: plan_code }
+        metadata: { clinic_id: clinicId, plan: plan_code, checkout_kind: 'renewal' }
       },
       customer_email: clinic.email,
-      metadata: { clinic_id: clinicId, plan: plan_code },
+      metadata: { clinic_id: clinicId, plan: plan_code, checkout_kind: 'renewal' },
       success_url: FRONT + '/subscription?checkout=success&plan=' + plan_code + '&session_id={CHECKOUT_SESSION_ID}',
       cancel_url:  FRONT + '/subscription?checkout=cancelled',
       locale: 'fr',
@@ -821,12 +838,24 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
       } catch(e) {}
     }
 
-    // ── checkout.session.completed → client a entré sa carte, trial démarre ──
+    // ── checkout.session.completed → trial public ou renouvellement payé ──
     if (event.type === 'checkout.session.completed') {
       console.log(`[Stripe] Checkout complété: clinic=${clinicId} plan=${planCode}`);
       if (clinicId) {
         try {
           const { Clinic, Subscription } = require('../models');
+          const checkoutKind = metadata.checkout_kind || 'trial';
+
+          if (checkoutKind === 'renewal') {
+            const result = await activateSubscriptionAfterPayment(clinicId, planCode, null);
+            if (result.success) {
+              await markStripeActivationRequestVerified(clinicId, obj.id);
+              console.log(`[Stripe] Renouvellement activé: clinic=${clinicId} plan=${planCode}`);
+            } else {
+              console.error('[Stripe] Erreur activation renouvellement:', result.error);
+            }
+            return res.json({ received: true });
+          }
 
           const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
           await activateStripeTrial({

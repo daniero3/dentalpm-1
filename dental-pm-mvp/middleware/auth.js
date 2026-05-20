@@ -2,11 +2,47 @@ const jwt  = require('jsonwebtoken');
 const { User, Clinic } = require('../models');
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['ACTIVE', 'TRIAL']);
+const RENEWAL_STATUSES = new Set(['EXPIRED', 'TRIAL_EXPIRED', 'PENDING']);
+
+function isRenewalAccessPath(req) {
+  const path = req.originalUrl || req.url || '';
+  return path.startsWith('/api/billing')
+    || path.startsWith('/api/subscription/status')
+    || path.startsWith('/api/subscriptions');
+}
 
 function buildClinicAccessError(clinic) {
+  if (!clinic) {
+    return {
+      error: 'Aucun abonnement actif trouvé pour ce cabinet.',
+      code: 'NO_ACTIVE_SUBSCRIPTION',
+      action: 'renew',
+      subscription_status: null
+    };
+  }
+
+  if (clinic.subscription_status === 'EXPIRED') {
+    return {
+      error: 'Votre abonnement a expiré. Renouvelez votre abonnement pour continuer.',
+      code: 'SUBSCRIPTION_EXPIRED',
+      action: 'renew',
+      subscription_status: clinic.subscription_status
+    };
+  }
+
+  if (clinic.subscription_status === 'TRIAL_EXPIRED') {
+    return {
+      error: 'Votre période d\'essai est terminée. Choisissez un plan pour continuer.',
+      code: 'TRIAL_EXPIRED',
+      action: 'renew',
+      subscription_status: clinic.subscription_status
+    };
+  }
+
   return {
     error: 'Abonnement annulé ou inactif. Accès à la plateforme désactivé.',
     code: 'SUBSCRIPTION_INACTIVE',
+    action: RENEWAL_STATUSES.has(clinic.subscription_status) ? 'renew' : 'contact_support',
     subscription_status: clinic?.subscription_status || null
   };
 }
@@ -63,6 +99,10 @@ const authenticateToken = async (req, res, next) => {
     if (user.role !== 'SUPER_ADMIN') {
       const clinic = await loadClinicAccess(req.clinic_id);
       if (!hasActiveClinicAccess(clinic)) {
+        if (clinic && isRenewalAccessPath(req) && RENEWAL_STATUSES.has(clinic.subscription_status)) {
+          req.clinic = clinic;
+          return next();
+        }
         return res.status(403).json(buildClinicAccessError(clinic));
       }
     }

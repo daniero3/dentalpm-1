@@ -145,7 +145,8 @@ router.post('/login', loginRateLimiter, [
     }
 
     const selectedClinic = availableClinics.find(c => c.id === resolvedClinicId) || availableClinics[0] || null;
-    if (!hasActiveClinicAccess(selectedClinic)) {
+    const renewalLoginStatuses = new Set(['EXPIRED', 'TRIAL_EXPIRED', 'PENDING']);
+    if (!hasActiveClinicAccess(selectedClinic) && !renewalLoginStatuses.has(selectedClinic?.subscription_status)) {
       return res.status(403).json(buildClinicAccessError(selectedClinic));
     }
 
@@ -174,7 +175,18 @@ router.post('/login', loginRateLimiter, [
 
     res.json({
       message: 'Connexion réussie', token,
-      user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id: user.clinic_id || null, specialization: user.specialization, plan: userPlan },
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        clinic_id: user.clinic_id || null,
+        specialization: user.specialization,
+        plan: userPlan,
+        subscription_status: selectedClinic?.subscription_status || null,
+        needs_renewal: selectedClinic ? !hasActiveClinicAccess(selectedClinic) : false
+      },
       clinics: availableClinics,
       needs_clinic_selection: needsSelection,
       plan: userPlan

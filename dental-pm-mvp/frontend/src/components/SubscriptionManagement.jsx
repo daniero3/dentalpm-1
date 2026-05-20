@@ -113,11 +113,12 @@ const STRIPE_PAYMENT_LINKS = {
 };
 
 async function stripeCheckout(plan, apiUrl) {
+  const directLink = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
   try {
     const token = localStorage.getItem('token');
     if (!token) {
       // Pas de token — utiliser Payment Link direct
-      window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+      window.location.href = directLink;
       return;
     }
     const r = await fetch(`${apiUrl}/billing/create-checkout-session`, {
@@ -126,19 +127,16 @@ async function stripeCheckout(plan, apiUrl) {
       body: JSON.stringify({ plan_code: plan })
     });
     if (r.status === 401) {
-      // Token invalide — fallback Payment Link
-      window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+      toast.error('Session expirée. Reconnectez-vous pour renouveler votre abonnement.');
       return;
     }
     const data = await r.json();
     if (data.url) window.location.href = data.url;
     else {
-      // Fallback si pas d'URL
-      window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+      toast.error(data.error || 'Impossible de créer la session Stripe.');
     }
   } catch(e) {
-    // Erreur réseau — fallback Payment Link
-    window.location.href = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
+    toast.error('Erreur réseau Stripe. Réessayez ou utilisez Mobile Money.');
   }
 }
 

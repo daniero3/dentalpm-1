@@ -48,6 +48,34 @@ const LicensingGuard = ({ children }) => {
       setSubscriptionStatus(response.data);
     } catch (err) {
       console.error('Subscription status check error:', err);
+      const code = err.response?.data?.code;
+      const subscriptionStatus = err.response?.data?.subscription_status;
+      if (code === 'SUBSCRIPTION_EXPIRED' || subscriptionStatus === 'EXPIRED') {
+        setSubscriptionStatus({
+          status: 'EXPIRED',
+          is_expired: true,
+          end_date: err.response?.data?.expired_date || null,
+          plan: err.response?.data?.plan || 'PRO'
+        });
+        return;
+      }
+      if (code === 'TRIAL_EXPIRED' || subscriptionStatus === 'TRIAL_EXPIRED') {
+        setSubscriptionStatus({
+          status: 'TRIAL_EXPIRED',
+          is_expired: true,
+          end_date: err.response?.data?.expired_date || null,
+          plan: err.response?.data?.plan || 'PRO'
+        });
+        return;
+      }
+      if (code === 'NO_ACTIVE_SUBSCRIPTION' || code === 'SUBSCRIPTION_INACTIVE') {
+        setSubscriptionStatus({
+          status: subscriptionStatus || 'NO_SUBSCRIPTION',
+          has_access: false,
+          plan: err.response?.data?.plan || 'PRO'
+        });
+        return;
+      }
       // En cas d'erreur API, vérifier le rôle depuis localStorage
       try {
         const userStr = localStorage.getItem('user');
@@ -59,8 +87,7 @@ const LicensingGuard = ({ children }) => {
           }
         }
       } catch (e) {}
-      // Pour les autres rôles en cas d'erreur, laisser passer temporairement
-      setSubscriptionStatus({ status: 'ACTIVE' });
+      setSubscriptionStatus({ status: 'NO_SUBSCRIPTION', has_access: false });
     } finally {
       setLoading(false);
     }
@@ -213,7 +240,9 @@ const LicensingGuard = ({ children }) => {
             </div>
             <CardTitle>Abonnement Expiré</CardTitle>
             <CardDescription>
-              Votre abonnement a expiré le {new Date(subscriptionStatus.end_date).toLocaleDateString('fr-FR')}
+              {subscriptionStatus.end_date
+                ? `Votre abonnement a expiré le ${new Date(subscriptionStatus.end_date).toLocaleDateString('fr-FR')}`
+                : 'Votre abonnement a expiré.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
