@@ -128,7 +128,7 @@ body, .App {
   font-weight: 700;
   color: #0a0a14;
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 /* ===== DENTAL CHART ===== */
@@ -282,7 +282,7 @@ textarea {
   cursor: pointer;
   transition: all 0.22s ease;
   text-decoration: none;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 
 .btn-primary {
