@@ -25,6 +25,7 @@ const STRIPE_LINKS  = {
 const PLAN_PATIENTS = { ESSENTIAL:500, PRO:null, GROUP:null };
 const MONTHS_FR     = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 const PIE_COLORS    = ['#0D7A87','#8B5CF6','#3B82F6','#F59E0B'];
+const USER_TABS     = ['overview', 'payment', 'billing', 'invoices', 'settings'];
 
 const PLAN_CFG = {
   ESSENTIAL: { bg:'#EFF6FF', border:'#93C5FD', text:'#1D4ED8', grad:'135deg,#1D4ED8,#3B82F6', icon:Users  },
@@ -175,7 +176,11 @@ function UserView({ user }) {
   const [payments, setPayments] = useState([]);
   const [patients, setPatients] = useState(0);
   const [loading,  setLoading]  = useState(true);
-  const [sideTab,  setSideTab]  = useState('overview');
+  const [sideTab,  setSideTab]  = useState(() => {
+    if (typeof window === 'undefined') return 'overview';
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    return USER_TABS.includes(requestedTab) ? requestedTab : 'overview';
+  });
   const [checkoutFinalized, setCheckoutFinalized] = useState(false);
 
   const load = useCallback(async () => {
@@ -264,7 +269,7 @@ function UserView({ user }) {
         {daysWarn && (
           <div style={{ marginTop:12, padding:'10px 12px', borderRadius:10, background:'#FEF2F2', border:'1px solid #FECACA' }}>
             <div style={{ fontSize:11, fontWeight:700, color:'#DC2626', marginBottom:4 }}>Expire dans {daysLeft}j</div>
-            <a href="/payment" style={{ fontSize:11, fontWeight:700, color:'#DC2626', textDecoration:'none', display:'flex', alignItems:'center', gap:3 }}>
+            <a href="/subscription?tab=payment" style={{ fontSize:11, fontWeight:700, color:'#DC2626', textDecoration:'none', display:'flex', alignItems:'center', gap:3 }}>
               Renouveler <ChevronRight size={10}/>
             </a>
           </div>

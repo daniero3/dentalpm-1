@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, CreditCard, Clock, Lock, RefreshCw } from 'lucide-react';
 
+const SUBSCRIPTION_PAYMENT_PATH = '/subscription?tab=payment';
+
 const SubscriptionExpiredPage = ({ errorData, onRetry, onLogout }) => {
   const { code, message, expired_date, action } = errorData || {};
 
@@ -52,7 +54,7 @@ const SubscriptionExpiredPage = ({ errorData, onRetry, onLogout }) => {
       return (
         <Button 
           className="w-full bg-blue-600 hover:bg-blue-700"
-          onClick={() => window.location.href = '/billing/payment'}
+          onClick={() => window.location.assign(SUBSCRIPTION_PAYMENT_PATH)}
         >
           <CreditCard className="h-4 w-4 mr-2" />
           Renouveler mon abonnement
@@ -62,7 +64,7 @@ const SubscriptionExpiredPage = ({ errorData, onRetry, onLogout }) => {
     return (
       <Button 
         className="w-full bg-green-600 hover:bg-green-700"
-        onClick={() => window.location.href = '/billing/payment'}
+        onClick={() => window.location.assign(SUBSCRIPTION_PAYMENT_PATH)}
       >
         <CreditCard className="h-4 w-4 mr-2" />
         Souscrire à un plan

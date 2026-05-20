@@ -527,8 +527,8 @@ function App() {
                 <Route path="/admin/clinics" element={<AdminRoute><MainLayout><SuperAdminClinics /></MainLayout></AdminRoute>} />
                 <Route path="/admin/payments" element={<AdminRoute><MainLayout><PaymentValidationPage /></MainLayout></AdminRoute>} />
                 <Route path="/admin/partners" element={<AdminRoute><MainLayout><AdminPartners /></MainLayout></AdminRoute>} />
-                <Route path="/payment" element={<Navigate to="/subscription" replace />} />
-                <Route path="/billing/payment" element={<Navigate to="/subscription" replace />} />
+                <Route path="/payment" element={<Navigate to="/subscription?tab=payment" replace />} />
+                <Route path="/billing/payment" element={<Navigate to="/subscription?tab=payment" replace />} />
                 <Route path="/legal" element={<LegalPages />} />
                 <Route path="/legal/cgu" element={<LegalPages />} />
                 <Route path="/legal/cgv" element={<LegalPages />} />

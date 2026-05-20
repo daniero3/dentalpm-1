@@ -214,7 +214,7 @@ const BillingSettings = () => {
               <Button onClick={() => setUpgradeModalOpen(true)}>
                 <Crown className="h-4 w-4 mr-2" />Mettre à niveau
               </Button>
-              <Button variant="outline" onClick={() => navigate('/payment')}>
+              <Button variant="outline" onClick={() => navigate('/subscription?tab=payment')}>
                 <CreditCard className="h-4 w-4 mr-2" />Renouveler / Payer
               </Button>
             </div>
@@ -291,7 +291,7 @@ const BillingSettings = () => {
                   ))}
                 </ul>
                 {!isCurrent && (
-                  <Button className="w-full" onClick={() => { setUpgradeModalOpen(false); navigate('/payment'); }}>
+                  <Button className="w-full" onClick={() => { setUpgradeModalOpen(false); navigate('/subscription?tab=payment'); }}>
                     Choisir {info.label}
                   </Button>
                 )}

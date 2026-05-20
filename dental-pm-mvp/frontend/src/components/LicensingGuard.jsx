@@ -16,6 +16,7 @@ import {
 import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
+const SUBSCRIPTION_PAYMENT_PATH = '/subscription?tab=payment';
 
 const LicensingGuard = ({ children }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
@@ -116,7 +117,7 @@ const LicensingGuard = ({ children }) => {
               — Renouvelez maintenant pour continuer à utiliser DPM Madagascar.
             </span>
           </div>
-          <a href="/payment" style={{
+          <a href={SUBSCRIPTION_PAYMENT_PATH} style={{
             padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
             background: daysLeft <= 2 ? '#EF4444' : '#F59E0B',
             color: '#fff', textDecoration: 'none', flexShrink: 0,
@@ -159,7 +160,7 @@ const LicensingGuard = ({ children }) => {
               — Renouvelez maintenant pour continuer à utiliser DPM Madagascar.
             </span>
           </div>
-          <a href="/payment" style={{
+          <a href={SUBSCRIPTION_PAYMENT_PATH} style={{
             padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
             background: daysLeft <= 2 ? '#EF4444' : '#F59E0B',
             color: '#fff', textDecoration: 'none', flexShrink: 0,
@@ -222,7 +223,7 @@ const LicensingGuard = ({ children }) => {
                 Votre accès est suspendu. Renouvelez votre abonnement pour continuer.
               </AlertDescription>
             </Alert>
-            <Button onClick={() => setShowUpgradeModal(true)} className="w-full">
+            <Button onClick={() => window.location.assign(SUBSCRIPTION_PAYMENT_PATH)} className="w-full">
               <Crown className="h-4 w-4 mr-2" />
               Renouveler mon abonnement
             </Button>
@@ -244,7 +245,7 @@ const LicensingGuard = ({ children }) => {
             <CardTitle>Période d'Essai Expirée</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button onClick={() => setShowUpgradeModal(true)} className="w-full">
+            <Button onClick={() => window.location.assign(SUBSCRIPTION_PAYMENT_PATH)} className="w-full">
               <Crown className="h-4 w-4 mr-2" />
               Choisir un plan
             </Button>
