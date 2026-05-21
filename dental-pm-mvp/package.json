@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "seed": "node database/seed.js",
     "db:migrate": "node database/migrate.js",
+    "mail:test": "node scripts/test-mailer.js",
     "test": "jest"
   },
   "keywords": [
