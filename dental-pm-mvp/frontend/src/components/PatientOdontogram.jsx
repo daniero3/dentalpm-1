@@ -213,7 +213,7 @@ const PatientOdontogram = () => {
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={fetchOdontogram}><RefreshCw className="h-4 w-4 mr-2" />Recharger</Button>
           <Button onClick={handleSaveAll} disabled={saving || !Object.keys(pendingChanges).length}
-            className="bg-green-600 hover:bg-green-700 text-white" data-testid="save-all-btn">
+            className="bg-green-600 text-white hover:bg-green-700 disabled:bg-green-600 disabled:text-white disabled:opacity-70" data-testid="save-all-btn">
             {saving ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             Sauvegarder ({Object.keys(pendingChanges).length})
           </Button>
