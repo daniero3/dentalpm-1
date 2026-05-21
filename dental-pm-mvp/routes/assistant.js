@@ -34,6 +34,44 @@ function getOutputText(response) {
   return chunks.join('\n').trim();
 }
 
+function mapOpenAIError(error, status) {
+  const code = error?.code || 'OPENAI_REQUEST_FAILED';
+
+  if (code === 'insufficient_quota') {
+    return {
+      status: 402,
+      code: 'OPENAI_INSUFFICIENT_QUOTA',
+      error: 'Quota OpenAI insuffisant',
+      message: 'Le crédit ou quota OpenAI du compte est épuisé. Ajoutez du crédit, activez la facturation ou utilisez une autre clé API.',
+    };
+  }
+
+  if (status === 429 || code === 'rate_limit_exceeded') {
+    return {
+      status: 429,
+      code: 'OPENAI_RATE_LIMITED',
+      error: 'Assistant IA temporairement limité',
+      message: 'OpenAI limite temporairement les requêtes. Réessayez dans quelques instants.',
+    };
+  }
+
+  if (status === 401 || code === 'invalid_api_key') {
+    return {
+      status: 503,
+      code: 'OPENAI_API_KEY_INVALID',
+      error: 'Clé OpenAI invalide',
+      message: 'La clé OpenAI configurée côté serveur est invalide ou révoquée.',
+    };
+  }
+
+  return {
+    status: 502,
+    code: 'OPENAI_REQUEST_FAILED',
+    error: 'Assistant IA indisponible',
+    message: 'OpenAI a refusé la requête. Vérifiez la configuration du modèle et du compte.',
+  };
+}
+
 router.post('/chat', async (req, res) => {
   const message = String(req.body?.message || '').trim();
   const history = Array.isArray(req.body?.history) ? req.body.history : [];
@@ -86,14 +124,16 @@ router.post('/chat', async (req, res) => {
     const data = await apiResponse.json().catch(() => ({}));
 
     if (!apiResponse.ok) {
+      const mappedError = mapOpenAIError(data?.error, apiResponse.status);
       console.error('[assistant.openai]', {
         status: apiResponse.status,
         code: data?.error?.code,
         message: data?.error?.message,
       });
-      return res.status(502).json({
-        error: 'Assistant IA indisponible',
-        code: 'OPENAI_REQUEST_FAILED',
+      return res.status(mappedError.status).json({
+        error: mappedError.error,
+        code: mappedError.code,
+        message: mappedError.message,
         fallback: true,
       });
     }

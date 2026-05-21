@@ -507,10 +507,14 @@ export default function HelpChatbot() {
       if (localAction?.autoNavigate) {
         navigate(localAction.route);
       }
-    } catch {
+    } catch (error) {
+      const errorCode = error?.data?.code;
+      const errorText = errorCode === 'OPENAI_INSUFFICIENT_QUOTA'
+        ? 'Le quota OpenAI du compte est épuisé. Ajoutez du crédit ou activez la facturation OpenAI, puis réessayez.'
+        : error?.data?.message || 'Je n’arrive pas à joindre l’assistant IA pour le moment. Vérifiez la connexion serveur ou la configuration OpenAI, puis réessayez.';
       const response = {
         role: 'bot',
-        text: 'Je n’arrive pas à joindre l’assistant IA pour le moment. Vérifiez la connexion serveur ou la configuration OpenAI, puis réessayez.',
+        text: errorText,
         action: localAction || undefined,
       };
       setMessages(prev => [
