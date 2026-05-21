@@ -188,6 +188,7 @@ const PatientManagement = () => {
   const [patients,  setPatients]  = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [genderFilter, setGF]    = useState('ALL');
   const [sortBy,    setSort]      = useState('name');
   const [page,      setPage]      = useState(1);
@@ -533,11 +534,30 @@ const PatientManagement = () => {
       {/* ── Barre de recherche + filtres ── */}
       <div className="pt-card patient-box" style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'14px 18px', marginBottom:18, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', animationDelay:'.05s' }}>
         {/* Search */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:220 }}>
-          <Search size={14} color="#94A3B8"/>
+        <div
+          style={{
+            display:'flex',
+            alignItems:'center',
+            gap:10,
+            flex:'1 1 360px',
+            minWidth:260,
+            minHeight:46,
+            background:'linear-gradient(180deg,#FFFFFF,#F8FAFC)',
+            border:`1.5px solid ${searchFocused ? '#0D7A87' : '#D7E5E8'}`,
+            borderRadius:14,
+            padding:'7px 10px 7px 12px',
+            boxShadow:searchFocused ? '0 0 0 4px rgba(13,122,135,.10), 0 12px 28px rgba(15,43,48,.08)' : '0 8px 22px rgba(15,43,48,.05)',
+            transition:'border-color .18s ease, box-shadow .18s ease, background .18s ease',
+          }}
+        >
+          <span style={{ width:30, height:30, borderRadius:10, background:searchFocused ? '#E6F4F6' : '#F1F5F9', color:searchFocused ? '#0D7A87' : '#94A3B8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all .18s ease' }}>
+            <Search size={15}/>
+          </span>
           <input placeholder="Nom, prénom, ID patient, téléphone, email, ville, assurance..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
-            style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, fontFamily:'inherit', color:'#0F172A' }}/>
-          {search && <button onClick={()=>{setPage(1);setSearch('');}} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:2 }}><X size={13}/></button>}
+            onFocus={()=>setSearchFocused(true)}
+            onBlur={()=>setSearchFocused(false)}
+            style={{ border:'none', background:'transparent', outline:'none', fontSize:14, flex:1, fontFamily:'inherit', color:'#0F172A', minWidth:0 }}/>
+          {search && <button onClick={()=>{setPage(1);setSearch('');}} style={{ width:28, height:28, borderRadius:9, background:'#EEF6F7', border:'none', cursor:'pointer', color:'#64748B', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>}
         </div>
         <div style={{ width:1, height:24, background:'#E2E8F0' }}/>
         {/* Tri */}
