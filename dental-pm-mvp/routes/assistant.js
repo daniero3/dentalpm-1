@@ -7,11 +7,14 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 
 const SYSTEM_PROMPT = [
   'Tu es l’assistant conversationnel de DentalPM Madagascar, un logiciel SaaS de gestion de cabinet dentaire.',
-  'Réponds en français clair, de manière concise et pratique.',
+  'L’utilisateur peut te parler librement comme dans ChatGPT: questions ouvertes, demandes de reformulation, brouillons de messages, explications métier, aide pas à pas ou navigation dans l’application.',
+  'Réponds en français clair, naturel et pratique. Garde un ton professionnel, humain et direct.',
+  'Si la demande est vague, commence par une réponse utile puis pose au maximum une question de clarification.',
   'Tu aides les utilisateurs à comprendre et utiliser les modules: patients, rendez-vous, devis, factures, odontogramme, prescriptions, documents, stock, laboratoire, mailing, rapports, abonnement et paramètres.',
-  'Tu peux guider l’utilisateur étape par étape, reformuler sa demande, proposer l’écran à ouvrir, et expliquer les notions métier d’un cabinet dentaire.',
-  'Tu ne dois pas inventer de données patient, médicales, financières ou de rendez-vous. Si une information dépend du dossier réel, dis à l’utilisateur d’ouvrir le module concerné.',
+  'Tu peux guider l’utilisateur étape par étape, reformuler sa demande, proposer l’écran à ouvrir, rédiger des modèles de SMS ou email, expliquer les notions métier d’un cabinet dentaire, et aider à structurer le travail administratif.',
+  'Tu ne dois pas inventer de données patient, médicales, financières ou de rendez-vous. Si une information dépend du dossier réel ou d’une action dans la base de données, explique que l’utilisateur doit ouvrir le module concerné ou vérifier le dossier.',
   'Tu ne remplaces pas un avis clinique. Pour une décision médicale, invite à consulter le praticien responsable.',
+  'Ne promets pas d’avoir créé, modifié, supprimé ou envoyé une donnée si l’application ne t’a pas fourni d’outil explicite pour le faire.',
 ].join('\n');
 
 function getOutputText(response) {
@@ -35,6 +38,7 @@ router.post('/chat', async (req, res) => {
   const message = String(req.body?.message || '').trim();
   const history = Array.isArray(req.body?.history) ? req.body.history : [];
   const pathname = String(req.body?.pathname || '/');
+  const contextPage = String(req.body?.context?.page || '').trim();
 
   if (!message) {
     return res.status(400).json({ error: 'Message requis' });
@@ -50,7 +54,7 @@ router.post('/chat', async (req, res) => {
 
   const recentHistory = history
     .filter(item => ['user', 'bot', 'assistant'].includes(item?.role) && item?.text)
-    .slice(-10)
+    .slice(-16)
     .map(item => ({
       role: item.role === 'user' ? 'user' : 'assistant',
       content: String(item.text).slice(0, 1500),
@@ -60,7 +64,7 @@ router.post('/chat', async (req, res) => {
     ...recentHistory,
     {
       role: 'user',
-      content: `Page actuelle: ${pathname}\nDemande: ${message}`,
+      content: `Page actuelle: ${contextPage || pathname}\nChemin: ${pathname}\nDemande: ${message}`,
     },
   ];
 
@@ -75,7 +79,7 @@ router.post('/chat', async (req, res) => {
         model: OPENAI_MODEL,
         instructions: SYSTEM_PROMPT,
         input,
-        max_output_tokens: 700,
+        max_output_tokens: 900,
       }),
     });
 

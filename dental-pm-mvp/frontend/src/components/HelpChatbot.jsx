@@ -199,6 +199,11 @@ const getContextTopic = (pathname) => {
   return null;
 };
 
+const getContextLabel = (pathname) => {
+  const action = APP_ACTIONS.find(item => pathname.startsWith(item.route));
+  return action?.title || 'Accueil';
+};
+
 const normalize = (value) =>
   String(value || '')
     .toLowerCase()
@@ -345,11 +350,12 @@ export default function HelpChatbot() {
   const [messages, setMessages] = useState(() => [
     {
       role: 'bot',
-      text: 'Bonjour. Vous pouvez me parler comme à un assistant : chercher un patient, créer une facture, planifier un rendez-vous, expliquer un module, ou poser une question sur DentalPM.',
+      text: 'Bonjour. Vous pouvez me parler librement comme dans ChatGPT : expliquer un module, préparer un message patient, organiser une tâche, chercher un écran ou poser une question sur DentalPM.',
     },
   ]);
 
   const contextTopic = useMemo(() => getContextTopic(location.pathname), [location.pathname]);
+  const contextLabel = useMemo(() => getContextLabel(location.pathname), [location.pathname]);
   const suggestedTopics = useMemo(() => {
     const base = contextTopic
       ? [contextTopic, ...HELP_TOPICS.filter(topic => topic.id !== contextTopic.id)]
@@ -499,9 +505,12 @@ export default function HelpChatbot() {
     const data = await api.post('/assistant/chat', {
       message: text,
       pathname: locationRef.current,
+      context: {
+        page: contextLabel,
+      },
       history: messagesRef.current
         .filter(item => item.role === 'user' || item.role === 'bot')
-        .slice(-10)
+        .slice(-16)
         .map(item => ({ role: item.role, text: item.text })),
     });
 
@@ -965,7 +974,7 @@ export default function HelpChatbot() {
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 800, color: theme.textPrimary }}>Assistant DentalPM</div>
               <div style={{ fontSize: 12, color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Aide rapide et orientation dans la plateforme
+                Conversation ouverte et aide DentalPM
               </div>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label="Réduire l'assistant"
@@ -1151,7 +1160,7 @@ export default function HelpChatbot() {
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               disabled={thinking}
-              placeholder={listening ? 'Parlez maintenant...' : thinking ? 'Réponse en cours...' : 'Ex. cherche patient Rakoto'}
+              placeholder={listening ? 'Parlez maintenant...' : thinking ? 'Réponse en cours...' : 'Écrivez librement votre demande...'}
               style={{
                 flex: 1,
                 minWidth: 0,
