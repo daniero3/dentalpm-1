@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
 import { toast } from 'sonner';
-import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
+import { buildSearchText, normalizeDigits, normalizeSearch, patientIdentifier, patientSearchText } from '../utils/search';
 import {
   Users, Plus, Search, Edit, Activity, Phone, Mail,
   AlertTriangle, User, Calendar, FileText, ClipboardList,
@@ -38,6 +38,38 @@ const AVATAR_COLORS = [
   ['#0891B2','#06B6D4'], ['#7C3AED','#A855F7'],
 ];
 const avatarColor = name => AVATAR_COLORS[(name?.charCodeAt(0)||0) % AVATAR_COLORS.length];
+const searchTerms = query => [...new Set(normalizeSearch(query).split(/\s+/).filter(Boolean))];
+const patientSearchIndex = patient => {
+  const raw = patientSearchText(patient);
+  return {
+    patient,
+    text: buildSearchText(raw),
+    digits: normalizeDigits(raw),
+  };
+};
+const matchesPatientIndex = (index, query, terms, digits) => {
+  if (!query) return true;
+  return terms.every(term => index.text.includes(term)) || (!!digits && index.digits.includes(digits));
+};
+const scorePatientIndex = (index, query, terms, digits) => {
+  if (!query || !matchesPatientIndex(index, query, terms, digits)) return 0;
+  let score = 1;
+  if (index.text === query) score += 120;
+  if (index.text.includes(query)) score += 60;
+
+  const words = index.text.split(/\s+/).filter(Boolean);
+  terms.forEach(term => {
+    if (words.includes(term)) score += 35;
+    else if (words.some(word => word.startsWith(term))) score += 22;
+    else if (index.text.includes(term)) score += 12;
+  });
+
+  if (digits) {
+    if (index.digits === digits) score += 80;
+    else if (index.digits.includes(digits)) score += 45;
+  }
+  return score;
+};
 
 /* ── Modal ── */
 const Modal = ({ open, onClose, title, children, maxW = 580 }) => {
@@ -187,6 +219,7 @@ const PatientManagement = () => {
   const location = useLocation();
   const [patients,  setPatients]  = useState([]);
   const [loading,   setLoading]   = useState(true);
+  const [searching, setSearching] = useState(false);
   const [search,    setSearch]    = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [genderFilter, setGF]    = useState('ALL');
@@ -240,20 +273,21 @@ const PatientManagement = () => {
       return undefined;
     }
 
-    const timer = setTimeout(() => fetchPatients(search.trim() ? 1 : page), search ? 350 : 0);
+    const timer = setTimeout(() => fetchPatients(search.trim() ? 1 : page, search), search ? 150 : 0);
     return () => clearTimeout(timer);
   }, [page, search]);
 
-  const fetchPatients = async (targetPage = page) => {
+  const fetchPatients = async (targetPage = page, searchValue = search) => {
     patientsRequestRef.current?.abort();
     const controller = new AbortController();
     patientsRequestRef.current = controller;
 
     try {
-      setLoading(true);
-      const hasSearch = !!search.trim();
+      const hasSearch = !!searchValue.trim();
+      if (patients.length) setSearching(true);
+      else setLoading(true);
       const params = hasSearch
-        ? { page: 1, limit: 30, search: search.trim() }
+        ? { page: 1, limit: 80, search: searchValue.trim() }
         : { page: targetPage, limit: 50 };
       const r = await axios.get(`${API}/patients`, { params, signal: controller.signal, ...authH() });
       const list = r.data.patients || r.data.data || r.data || [];
@@ -265,7 +299,10 @@ const PatientManagement = () => {
       if (!axios.isCancel(e) && e.code !== 'ERR_CANCELED') toast.error('Erreur chargement patients');
     }
     finally {
-      if (mountedRef.current && patientsRequestRef.current === controller) setLoading(false);
+      if (mountedRef.current && patientsRequestRef.current === controller) {
+        setLoading(false);
+        setSearching(false);
+      }
     }
   };
 
@@ -396,31 +433,36 @@ const PatientManagement = () => {
 
   /* Filtrage et tri */
   const activeSearch = search.trim();
-  const filtered = patients
-    .filter(p => {
-      const ms = genderFilter === 'ALL' || p.gender === genderFilter;
-      const mt = matchesSearch(search, patientSearchText(p));
+  const normalizedSearch = useMemo(() => normalizeSearch(search), [search]);
+  const normalizedDigits = useMemo(() => normalizeDigits(search), [search]);
+  const normalizedTerms = useMemo(() => searchTerms(search), [search]);
+  const patientIndexes = useMemo(() => patients.map(patientSearchIndex), [patients]);
+  const filtered = useMemo(() => patientIndexes
+    .filter(({ patient, ...index }) => {
+      const ms = genderFilter === 'ALL' || patient.gender === genderFilter;
+      const mt = matchesPatientIndex(index, normalizedSearch, normalizedTerms, normalizedDigits);
       return ms && mt;
     })
     .sort((a,b) => {
-      if (activeSearch) {
-        const scoreDiff = scoreSearchMatch(activeSearch, patientSearchText(b)) - scoreSearchMatch(activeSearch, patientSearchText(a));
+      if (normalizedSearch) {
+        const scoreDiff = scorePatientIndex(b, normalizedSearch, normalizedTerms, normalizedDigits) - scorePatientIndex(a, normalizedSearch, normalizedTerms, normalizedDigits);
         if (scoreDiff !== 0) return scoreDiff;
       }
-      if (sortBy === 'name')     return `${a.last_name}${a.first_name}`.localeCompare(`${b.last_name}${b.first_name}`);
-      if (sortBy === 'recent')   return new Date(b.created_at||0) - new Date(a.created_at||0);
-      if (sortBy === 'age')      return (new Date(a.date_of_birth||0)) - (new Date(b.date_of_birth||0));
+      if (sortBy === 'name')     return `${a.patient.last_name}${a.patient.first_name}`.localeCompare(`${b.patient.last_name}${b.patient.first_name}`);
+      if (sortBy === 'recent')   return new Date(b.patient.created_at||0) - new Date(a.patient.created_at||0);
+      if (sortBy === 'age')      return (new Date(a.patient.date_of_birth||0)) - (new Date(b.patient.date_of_birth||0));
       return 0;
-    });
+    })
+    .map(index => index.patient), [genderFilter, normalizedDigits, normalizedSearch, normalizedTerms, patientIndexes, sortBy]);
 
   /* Stats */
-  const stats = {
+  const stats = useMemo(() => ({
     total:    pagination.total_count || patients.length,
     men:      patients.filter(p => p.gender==='M').length,
     women:    patients.filter(p => p.gender==='F').length,
     allergies:patients.filter(p => p.allergies).length,
     recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
-  };
+  }), [pagination.total_count, patients]);
 
   if (loading) return (
     <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
@@ -578,7 +620,7 @@ const PatientManagement = () => {
         </div>
         {/* Résultats */}
         <span style={{ fontSize:12, color:'#94A3B8', whiteSpace:'nowrap' }}>
-          {filtered.length} résultat{filtered.length !== 1?'s':''}{activeSearch ? ` pour "${activeSearch}"` : ''}
+          {searching ? 'Recherche...' : `${filtered.length} résultat${filtered.length !== 1?'s':''}${activeSearch ? ` pour "${activeSearch}"` : ''}`}
         </span>
       </div>
 
