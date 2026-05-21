@@ -213,23 +213,6 @@ const normalize = (value) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const findTopic = (message) => {
-  const query = normalize(message);
-  if (!query) return null;
-  return HELP_TOPICS.find(topic =>
-    normalize(topic.title).includes(query) ||
-    topic.keywords.some(keyword => query.includes(normalize(keyword)))
-  );
-};
-
-const createBotMessage = (topic) => ({
-  role: 'bot',
-  text: topic
-    ? `Voici comment faire :\n${topic.answer.map((item, index) => `${index + 1}. ${item}`).join('\n')}`
-    : 'Je peux vous aider sur les patients, rendez-vous, devis, factures, tarifs des actes, stock, abonnement et paramètres.',
-  topic,
-});
-
 const extractSearchQuery = (message, action) => {
   let query = normalize(message);
   [
@@ -279,19 +262,6 @@ const resolvePromptAction = (message) => {
       ? `Je peux vous guider vers ${action.title}. Utilisez le bouton ci-dessous, ou tapez une commande comme "${label}".`
       : `Commande comprise : ${label}.`,
   };
-};
-
-const createBotResponse = (message) => {
-  const action = resolvePromptAction(message);
-  if (action) {
-    return {
-      role: 'bot',
-      text: `${action.text}\nJe prépare le bon écran pour continuer l’action.`,
-      action,
-    };
-  }
-  const topic = findTopic(message);
-  return createBotMessage(topic);
 };
 
 const RobotMascot = ({ size = 'normal', active = false }) => (
@@ -460,14 +430,8 @@ export default function HelpChatbot() {
   }, []);
 
   const sendTopic = (topic) => {
-    const botMessage = createBotMessage(topic);
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', text: topic.title },
-      botMessage,
-    ]);
+    handlePrompt(topic.title);
     setOpen(true);
-    speakText(botMessage.text);
   };
 
   const speakText = (text, force = false) => {
@@ -524,41 +488,34 @@ export default function HelpChatbot() {
   const handlePrompt = async (text, fromVoice = false) => {
     const clean = text.trim();
     if (!clean || thinkingRef.current) return;
+    const localAction = resolvePromptAction(clean);
 
     setMessages(prev => [
       ...prev,
       { role: 'user', text: fromVoice ? `🎙️ ${clean}` : clean },
     ]);
     setMessage('');
-
-    const localAction = resolvePromptAction(clean);
-    if (localAction) {
-      const response = {
-        role: 'bot',
-        text: `${localAction.text}\nJe prépare le bon écran pour continuer l’action.`,
-        action: localAction,
-      };
-      setMessages(prev => [...prev, response]);
-      speakText(response.text);
-      if (response.action?.autoNavigate) {
-        navigate(response.action.route);
-      }
-      return;
-    }
-
     setThinking(true);
+
     try {
       const response = await askAiAssistant(clean);
-      setMessages(prev => [...prev, response]);
+      const responseWithAction = localAction
+        ? { ...response, action: localAction }
+        : response;
+      setMessages(prev => [...prev, responseWithAction]);
       speakText(response.text);
+      if (localAction?.autoNavigate) {
+        navigate(localAction.route);
+      }
     } catch {
-      const response = createBotResponse(clean);
+      const response = {
+        role: 'bot',
+        text: 'Je n’arrive pas à joindre l’assistant IA pour le moment. Vérifiez la connexion serveur ou la configuration OpenAI, puis réessayez.',
+        action: localAction || undefined,
+      };
       setMessages(prev => [
         ...prev,
-        {
-          ...response,
-          text: `${response.text}\n\nL’assistant IA complet n’est pas joignable pour l’instant. Je reste disponible pour l’aide intégrée DentalPM.`,
-        },
+        response,
       ]);
       speakText(response.text);
     } finally {
@@ -1129,7 +1086,7 @@ export default function HelpChatbot() {
             <div style={{ display: 'grid', gap: 7, marginTop: 2 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted, fontWeight: 700 }}>
                 <Search size={13} />
-                Suggestions
+                Idées de discussion
               </div>
               {suggestedTopics.map(topic => (
                 <button key={topic.id} type="button" onClick={() => sendTopic(topic)} className="dpm-chat-suggestion" style={{
