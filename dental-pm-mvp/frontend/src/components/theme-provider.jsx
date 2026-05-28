@@ -5,17 +5,25 @@ const ThemeContext = createContext({ theme: "light", setTheme: () => {} });
 
 export function ThemeProvider({ children, defaultTheme = "light", storageKey = "theme" }) {
   const [theme, setThemeState] = useState(() => {
-    return "light";
+    try {
+      return localStorage.getItem(storageKey) || defaultTheme;
+    } catch {
+      return defaultTheme;
+    }
   });
 
   useEffect(() => {
     const root = document.documentElement;
+    const resolvedTheme = theme === "system"
+      ? (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : theme;
+
     root.classList.remove("light", "dark");
-    root.classList.add("light");
-    try { localStorage.setItem(storageKey, "light"); } catch {}
+    root.classList.add(resolvedTheme);
+    try { localStorage.setItem(storageKey, theme); } catch {}
   }, [theme, storageKey]);
 
-  const setTheme = () => setThemeState("light");
+  const setTheme = nextTheme => setThemeState(nextTheme);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

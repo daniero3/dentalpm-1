@@ -547,25 +547,41 @@ export default function LandingPage() {
   const fs1   = isMobile ? 28 : isTablet ? 40 : 60;  // hero h1
   const fs2   = isMobile ? 24 : isTablet ? 32 : 44;  // section h2
   const sc    = scrolled || mobMenu;
+  const navSolidBg = isDark ? 'rgba(20,26,34,.97)' : 'rgba(255,255,255,.97)';
+  const navBorder = isDark ? 'rgba(30,42,54,.9)' : 'rgba(232,237,242,.8)';
+  const themeButtonBorder = isDark ? 'rgba(148,163,184,.28)' : 'var(--border)';
+  const themeButtonBg = isDark ? 'rgba(255,255,255,.08)' : 'var(--surface)';
 
   // ── Thème clair / sombre ──────────────────────────────────────────────────
   const [isDark, setIsDark] = useState(() => {
-    try { return localStorage.getItem('dpm_theme') === 'dark'; } catch { return false; }
+    try {
+      const stored = localStorage.getItem('dental-pm-theme') || localStorage.getItem('dpm_theme');
+      if (stored) return stored === 'dark';
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches || false;
+    } catch { return false; }
   });
   const toggleTheme = () => {
     setIsDark(d => {
       const next = !d;
-      try { localStorage.setItem('dpm_theme', next ? 'dark' : 'light'); } catch {}
+      try {
+        localStorage.setItem('dental-pm-theme', next ? 'dark' : 'light');
+        localStorage.setItem('dpm_theme', next ? 'dark' : 'light');
+      } catch {}
       return next;
     });
   };
   useEffect(() => {
     const r = document.documentElement;
+    r.classList.toggle('dark', isDark);
+    r.classList.toggle('light', !isDark);
+    document.body.classList.toggle('dark', isDark);
+    document.body.classList.toggle('light', !isDark);
     if (isDark) {
       r.style.setProperty('--bg',      '#0A0F14');
       r.style.setProperty('--surface', '#141A22');
       r.style.setProperty('--ink',     '#F0F4F8');
       r.style.setProperty('--slate',   '#94A3B8');
+      r.style.setProperty('--muted',   '#64748B');
       r.style.setProperty('--border',  '#1E2A36');
       r.style.setProperty('--white',   '#141A22');
       document.body.style.background = '#0A0F14';
@@ -582,6 +598,11 @@ export default function LandingPage() {
       document.body.style.background = '#F5F7FA';
       document.body.style.color      = '#1A202C';
     }
+    return () => {
+      document.body.classList.remove('dark', 'light');
+      document.body.style.background = '';
+      document.body.style.color = '';
+    };
   }, [isDark]);
 
   const IMGS_SERVICES = [
@@ -604,11 +625,11 @@ export default function LandingPage() {
   );
 
   return (
-    <div style={{fontFamily:"'Inter',sans-serif",background:'#fff',minHeight:'100vh',overflowX:'hidden'}}>
+    <div style={{fontFamily:"'Inter',sans-serif",background:'var(--bg)',minHeight:'100vh',overflowX:'hidden'}}>
       <GlobalCSS/>
 
       {/* ══ NAV ══ */}
-      <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,background:sc?'rgba(255,255,255,.97)':'transparent',backdropFilter:sc?'blur(20px)':'none',borderBottom:sc?'1px solid rgba(232,237,242,.8)':'none',boxShadow:sc?'0 2px 20px rgba(0,0,0,.06)':'none',transition:'all .35s ease'}}>
+      <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,background:sc?navSolidBg:'transparent',backdropFilter:sc?'blur(20px)':'none',borderBottom:sc?`1px solid ${navBorder}`:'none',boxShadow:sc?(isDark?'0 2px 24px rgba(0,0,0,.28)':'0 2px 20px rgba(0,0,0,.06)'):'none',transition:'all .35s ease'}}>
         <div style={{padding:`0 ${px}`,height:isMobile?58:72,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           {/* Logo */}
           <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -630,9 +651,9 @@ export default function LandingPage() {
               <button onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
               <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j</button>
               <button onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
-                style={{width:38,height:38,borderRadius:10,border:`1.5px solid ${isDark?'rgba(255,255,255,.2)':'var(--border)'}`,background:isDark?'rgba(255,255,255,.08)':'var(--surface)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:4,flexShrink:0}}
+                style={{width:38,height:38,borderRadius:10,border:`1.5px solid ${themeButtonBorder}`,background:themeButtonBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:4,flexShrink:0}}
                 onMouseOver={e=>{e.currentTarget.style.borderColor='var(--teal)';}}
-                onMouseOut={e=>{e.currentTarget.style.borderColor=isDark?'rgba(255,255,255,.2)':'var(--border)';}}>
+                onMouseOut={e=>{e.currentTarget.style.borderColor=themeButtonBorder;}}>
                 {isDark
                   ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
                   : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D7A87" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
@@ -645,6 +666,13 @@ export default function LandingPage() {
           {isMobile&&(
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               <button onClick={()=>navigate('/register')} style={{padding:'7px 12px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>Essai gratuit</button>
+              <button onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
+                style={{width:38,height:38,borderRadius:9,background:sc?themeButtonBg:'rgba(255,255,255,.15)',border:`1.5px solid ${sc?themeButtonBorder:'rgba(255,255,255,.22)'}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                {isDark
+                  ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={sc?'#0D7A87':'#fff'} strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                }
+              </button>
               <button onClick={()=>setMobMenu(m=>!m)} style={{width:38,height:38,borderRadius:9,background:sc?'var(--surface)':'rgba(255,255,255,.15)',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:5}}>
                 {[0,1,2].map(i=><div key={i} style={{width:18,height:2,borderRadius:99,background:sc?'var(--ink)':'#fff',transition:'all .25s',transform:mobMenu&&i===0?'rotate(45deg) translate(5px,5px)':mobMenu&&i===2?'rotate(-45deg) translate(5px,-5px)':mobMenu&&i===1?'scaleX(0)':'none'}}/>)}
               </button>
@@ -653,12 +681,12 @@ export default function LandingPage() {
         </div>
         {/* Menu mobile déroulant */}
         {isMobile&&mobMenu&&(
-          <div style={{background:'rgba(255,255,255,.97)',borderTop:'1px solid var(--border)',padding:'12px 16px 18px',display:'flex',flexDirection:'column',gap:2,animation:'slideDown .25s ease'}}>
+          <div style={{background:navSolidBg,borderTop:`1px solid ${navBorder}`,padding:'12px 16px 18px',display:'flex',flexDirection:'column',gap:2,animation:'slideDown .25s ease'}}>
             {[['#services','Fonctionnalités'],['#pourquoi','Avantages'],['#tarifs','Tarifs'],['#faq','FAQ'],['#contact','Contact']].map(([href,label])=>(
               <a key={href} href={href} onClick={()=>setMobMenu(false)} style={{padding:'11px 14px',color:'var(--ink)',fontWeight:600,fontSize:15,textDecoration:'none',borderRadius:9}}>{label}</a>
             ))}
             <div style={{height:1,background:'var(--border)',margin:'6px 0'}}/>
-            <button onClick={()=>{navigate('/login');setMobMenu(false);}} style={{padding:'11px 14px',borderRadius:9,border:'1.5px solid var(--border)',background:'#fff',color:'var(--ink)',fontWeight:600,fontSize:15,cursor:'pointer',textAlign:'left'}}>Connexion</button>
+            <button onClick={()=>{navigate('/login');setMobMenu(false);}} style={{padding:'11px 14px',borderRadius:9,border:'1.5px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontWeight:600,fontSize:15,cursor:'pointer',textAlign:'left'}}>Connexion</button>
           </div>
         )}
       </nav>
