@@ -547,10 +547,6 @@ export default function LandingPage() {
   const fs1   = isMobile ? 28 : isTablet ? 40 : 60;  // hero h1
   const fs2   = isMobile ? 24 : isTablet ? 32 : 44;  // section h2
   const sc    = scrolled || mobMenu;
-  const navSolidBg = isDark ? 'rgba(20,26,34,.97)' : 'rgba(255,255,255,.97)';
-  const navBorder = isDark ? 'rgba(30,42,54,.9)' : 'rgba(232,237,242,.8)';
-  const themeButtonBorder = isDark ? 'rgba(148,163,184,.28)' : 'var(--border)';
-  const themeButtonBg = isDark ? 'rgba(255,255,255,.08)' : 'var(--surface)';
 
   // ── Thème clair / sombre ──────────────────────────────────────────────────
   const [isDark, setIsDark] = useState(() => {
@@ -604,6 +600,11 @@ export default function LandingPage() {
       document.body.style.color = '';
     };
   }, [isDark]);
+
+  const navSolidBg = isDark ? 'rgba(20,26,34,.97)' : 'rgba(255,255,255,.97)';
+  const navBorder = isDark ? 'rgba(30,42,54,.9)' : 'rgba(232,237,242,.8)';
+  const themeButtonBorder = isDark ? 'rgba(148,163,184,.28)' : 'var(--border)';
+  const themeButtonBg = isDark ? 'rgba(255,255,255,.08)' : 'var(--surface)';
 
   const IMGS_SERVICES = [
     {src:'/2.jpg',alt:'Chirurgien dentiste',caption:'🦷 Précision et excellence dans chaque soin'},
