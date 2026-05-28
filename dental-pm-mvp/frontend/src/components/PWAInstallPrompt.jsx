@@ -5,22 +5,50 @@ export default function PWAInstallPrompt() {
   const [prompt, setPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
   const [installed, setInstalled] = useState(false);
+  const [mode, setMode] = useState('native');
 
   useEffect(() => {
-    // Vérifier si déjà installé ou refusé
-    if (localStorage.getItem('dpm_pwa_dismissed')) return;
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    const dismissedAt = Number(localStorage.getItem('dpm_pwa_dismissed_at') || 0);
+    const dismissedRecently = dismissedAt && Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000;
+    if (dismissedRecently) return;
+
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    if (isStandalone) return;
+
+    const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
     const handler = (e) => {
       e.preventDefault();
       setPrompt(e);
+      setMode('native');
       setTimeout(() => setVisible(true), 3000);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('appinstalled', () => { setInstalled(true); setVisible(false); });
+    const installedHandler = () => {
+      setInstalled(true);
+      setVisible(false);
+      localStorage.removeItem('dpm_pwa_dismissed_at');
+    };
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installedHandler);
+
+    if (isIOS) {
+      setMode('ios');
+      const timer = setTimeout(() => setVisible(true), 3000);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handler);
+        window.removeEventListener('appinstalled', installedHandler);
+      };
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
+    };
   }, []);
 
   const install = async () => {
@@ -33,7 +61,8 @@ export default function PWAInstallPrompt() {
   };
 
   const dismiss = () => {
-    localStorage.setItem('dpm_pwa_dismissed', '1');
+    localStorage.removeItem('dpm_pwa_dismissed');
+    localStorage.setItem('dpm_pwa_dismissed_at', String(Date.now()));
     setVisible(false);
   };
 
@@ -54,11 +83,17 @@ export default function PWAInstallPrompt() {
       </div>
       <div style={{ flex:1 }}>
         <div style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:2 }}>Installer DentalPM</div>
-        <div style={{ fontSize:11, color:'rgba(255,255,255,.6)', lineHeight:1.4 }}>Accès rapide depuis votre écran d'accueil</div>
-        <button onClick={install}
-          style={{ marginTop:8, padding:'6px 14px', borderRadius:8, border:'none', background:'#fff', color:'#0D7A87', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}>
-          <Download size={12}/> Installer
-        </button>
+        <div style={{ fontSize:11, color:'rgba(255,255,255,.72)', lineHeight:1.4 }}>
+          {mode === 'ios'
+            ? "Sur iPhone/iPad: Partager puis Sur l'ecran d'accueil."
+            : "Acces rapide depuis votre ecran d'accueil."}
+        </div>
+        {mode !== 'ios' && (
+          <button onClick={install}
+            style={{ marginTop:8, padding:'6px 14px', borderRadius:8, border:'none', background:'#fff', color:'#0D7A87', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}>
+            <Download size={12}/> Installer
+          </button>
+        )}
       </div>
       <button onClick={dismiss}
         style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,.5)', padding:4, flexShrink:0 }}>

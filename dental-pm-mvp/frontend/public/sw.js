@@ -1,6 +1,6 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
 // Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
-const BUILD_TIME = '2026-05-12-api-pass-through-1';
+const BUILD_TIME = '2026-05-28-pwa-vite-assets-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
@@ -16,7 +16,9 @@ self.addEventListener('install', e => {
   console.log(`[SW] Install — cache: ${CACHE}`);
   e.waitUntil(
     caches.open(CACHE)
-      .then(c => c.addAll(STATIC))
+      .then(c => Promise.all(STATIC.map(url => c.add(url).catch(err => {
+        console.warn(`[SW] Ressource non mise en cache: ${url}`, err);
+      }))))
       .then(() => self.skipWaiting()) // Activer immédiatement
   );
 });
@@ -64,9 +66,11 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Fichiers JS/CSS avec hash (ex: main.abc123.js) → Cache First
+  // Fichiers JS/CSS avec hash Vite (ex: /assets/index-abc123.js) → Cache First
   // Ces fichiers changent de nom à chaque build → jamais stale
-  const isHashedAsset = /\.(js|css)\?|\/static\//.test(url.pathname);
+  const isHashedAsset = url.pathname.startsWith('/assets/')
+    || url.pathname.startsWith('/static/')
+    || /\.(?:js|css|woff2?|png|jpe?g|webp|svg|ico)$/.test(url.pathname);
   if (isHashedAsset) {
     e.respondWith(
       caches.match(e.request).then(cached => {
