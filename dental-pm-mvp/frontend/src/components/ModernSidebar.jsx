@@ -415,13 +415,13 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
     return (
       <>
         <button onClick={() => setMobileOpen(true)}
-          style={{ position:'fixed', top:14, left:14, zIndex:1000, width:40, height:40, borderRadius:theme.radiusMd, background:theme.sidebarBg, border:`1px solid ${theme.sidebarBorder}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow }}>
+          style={{ position:'fixed', top:'max(14px, env(safe-area-inset-top))', left:'max(12px, env(safe-area-inset-left))', zIndex:1000, width:40, height:40, borderRadius:theme.radiusMd, background:theme.sidebarBg, border:`1px solid ${theme.sidebarBorder}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow }}>
           <Menu size={20} color={theme.sidebarText}/>
         </button>
         {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:1001, backdropFilter:'blur(8px)' }}/>}
-        <div style={{ position:'fixed', left:0, top:0, bottom:0, width:280, zIndex:1002, transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)', transition:'transform .3s cubic-bezier(.4,0,.2,1)' }}>
+        <div style={{ position:'fixed', left:0, top:0, bottom:0, width:'min(320px, 88vw)', maxWidth:'calc(100vw - 24px)', zIndex:1002, transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)', transition:'transform .3s cubic-bezier(.4,0,.2,1)' }}>
           <button onClick={() => setMobileOpen(false)}
-            style={{ position:'absolute', top:14, right:14, zIndex:1, width:32, height:32, borderRadius:theme.radiusSm, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:theme.textPrimary }}>
+            style={{ position:'absolute', top:'max(14px, env(safe-area-inset-top))', right:14, zIndex:1, width:36, height:36, borderRadius:theme.radiusSm, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:theme.textPrimary }}>
             <X size={16}/>
           </button>
           <SidebarContent collapsed={false} onNavClick={() => setMobileOpen(false)}/>

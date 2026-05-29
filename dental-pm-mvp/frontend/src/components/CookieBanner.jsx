@@ -53,12 +53,54 @@ export default function CookieBanner() {
           transform: translateY(-2px) !important;
           box-shadow: 0 8px 28px rgba(13,122,135,.55) !important;
         }
-        .dpm-accept-btn:active { transform: scale(0.97) !important; }
-        .dpm-decline-btn:hover { background: rgba(255,255,255,.1) !important; }
-        .dpm-more-btn:hover    { color: #7DD3DA !important; }
-      `}</style>
+	        .dpm-accept-btn:active { transform: scale(0.97) !important; }
+	        .dpm-decline-btn:hover { background: rgba(255,255,255,.1) !important; }
+	        .dpm-more-btn:hover    { color: #7DD3DA !important; }
+	        @media (max-width: 520px) {
+	          .dpm-cookie-shell {
+	            left: 12px !important;
+	            right: 12px !important;
+	            bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+	            width: auto !important;
+	            transform: none !important;
+	          }
+	          .dpm-cookie-inner {
+	            padding: 14px !important;
+	            gap: 12px !important;
+	            align-items: flex-start !important;
+	          }
+	          .dpm-cookie-icon {
+	            width: 40px !important;
+	            height: 40px !important;
+	            border-radius: 12px !important;
+	            font-size: 18px !important;
+	          }
+	          .dpm-cookie-copy {
+	            min-width: 0 !important;
+	            flex-basis: calc(100% - 52px) !important;
+	          }
+	          .dpm-cookie-actions {
+	            width: 100% !important;
+	            display: grid !important;
+	            grid-template-columns: 1fr 1fr !important;
+	            gap: 8px !important;
+	          }
+	          .dpm-cookie-actions button {
+	            width: 100% !important;
+	            justify-content: center !important;
+	            min-height: 42px !important;
+	            padding-left: 10px !important;
+	            padding-right: 10px !important;
+	          }
+	        }
+	        @media (max-width: 340px) {
+	          .dpm-cookie-actions {
+	            grid-template-columns: 1fr !important;
+	          }
+	        }
+	      `}</style>
 
-      <div style={{
+	      <div className="dpm-cookie-shell" style={{
         position: 'fixed', bottom: 24, left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 99999,
@@ -70,7 +112,7 @@ export default function CookieBanner() {
       }}>
 
         {/* Carte principale */}
-        <div style={{
+	          <div className="dpm-cookie-inner" style={{
           background: 'linear-gradient(135deg, rgba(6,28,40,.97) 0%, rgba(10,40,55,.97) 50%, rgba(6,28,40,.97) 100%)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
@@ -82,7 +124,7 @@ export default function CookieBanner() {
         }}>
 
           {/* Barre colorée top */}
-          <div style={{
+	            <div className="dpm-cookie-icon" style={{
             height: 3,
             background: 'linear-gradient(90deg, #0D7A87, #13A3B4, #0D7A87)',
             backgroundSize: '400px 100%',
@@ -114,7 +156,7 @@ export default function CookieBanner() {
             }}>🍪</div>
 
             {/* Texte */}
-            <div style={{ flex: 1, minWidth: 220 }}>
+	            <div className="dpm-cookie-copy" style={{ flex: 1, minWidth: 220 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 {/* Dot actif */}
                 <div style={{
@@ -151,7 +193,7 @@ export default function CookieBanner() {
             </div>
 
             {/* Boutons */}
-            <div style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
+	            <div className="dpm-cookie-actions" style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
               <button
                 className="dpm-decline-btn"
                 onClick={() => dismiss('declined')}

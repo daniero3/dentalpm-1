@@ -17,6 +17,8 @@ body,
 
 body {
   min-width: 0;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
 }
 
 img,
@@ -45,6 +47,7 @@ button,
 a,
 [role="button"] {
   line-height: 1.2;
+  touch-action: manipulation;
 }
 
 button svg,
@@ -74,6 +77,10 @@ a svg,
   overflow-x: clip;
 }
 
+.dpm-main {
+  overscroll-behavior: contain;
+}
+
 .dpm-table-wrap,
 .dpm-table-wrapper,
 .table-responsive {
@@ -100,6 +107,14 @@ th {
   overflow-wrap: anywhere;
 }
 
+[style*="display: grid"] {
+  min-width: 0;
+}
+
+[style*="display: flex"] {
+  min-width: 0;
+}
+
 /* ── Tablette ── */
 @media (min-width: 768px) and (max-width: 1023px) {
   .dpm-main {
@@ -117,6 +132,11 @@ th {
 
 /* ── Smartphone ── */
 @media (max-width: 767px) {
+  :root {
+    --mobile-page-gutter: max(12px, env(safe-area-inset-left));
+    --mobile-control-h: 44px;
+  }
+
   .dpm-app-topbar {
     height: 56px !important;
     padding-left: 62px !important;
@@ -125,8 +145,8 @@ th {
   }
 
   .dpm-main {
-    padding: 12px 10px 84px !important;
-    min-height: 100vh;
+    padding: 12px var(--mobile-page-gutter) calc(92px + env(safe-area-inset-bottom)) var(--mobile-page-gutter) !important;
+    min-height: 100dvh;
     overflow-x: hidden !important;
   }
 
@@ -145,6 +165,7 @@ th {
   }
 
   .dpm-header {
+    flex-direction: column !important;
     align-items: flex-start;
     gap: 10px;
     margin-bottom: 16px;
@@ -166,8 +187,16 @@ th {
   }
 
   .dpm-toolbar {
+    display: flex;
+    flex-direction: column !important;
     padding: 10px;
     align-items: stretch;
+    gap: 10px;
+  }
+
+  .dpm-toolbar > * {
+    width: 100%;
+    max-width: 100%;
   }
 
   .dpm-search {
@@ -180,6 +209,11 @@ th {
   textarea {
     width: 100%;
     font-size: 16px !important;
+    min-height: var(--mobile-control-h);
+  }
+
+  textarea {
+    min-height: 96px;
   }
 
   .dpm-kpi-grid {
@@ -208,6 +242,14 @@ th {
     padding-right: 14px !important;
   }
 
+  .card,
+  .glass-card,
+  .dash-card,
+  .dpm-kpi,
+  .dpm-card-item {
+    border-radius: 14px !important;
+  }
+
   .dpm-tabs {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -223,6 +265,14 @@ th {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     white-space: nowrap;
+    border-radius: 12px;
+  }
+
+  th,
+  td {
+    max-width: 220px;
+    white-space: normal;
+    vertical-align: top;
   }
 
   .dpm-modal-overlay,
@@ -238,16 +288,16 @@ th {
 
   .dpm-modal {
     max-width: 100%;
-    max-height: 92vh;
+    max-height: calc(100dvh - env(safe-area-inset-top));
     overflow-y: auto;
     border-radius: 18px 18px 0 0;
-    padding: 20px 16px;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
   }
 
   .dpm-btn-primary,
   .dpm-btn-secondary,
   .btn {
-    min-height: 38px;
+    min-height: var(--mobile-control-h);
     justify-content: center;
   }
 
@@ -263,13 +313,29 @@ th {
   .dpm-btn-mobile {
     width: 100% !important;
   }
+
+  [data-sonner-toaster] {
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  }
+
+  [data-sonner-toast] {
+    width: 100% !important;
+  }
+
+  [role="dialog"],
+  [data-radix-popper-content-wrapper] {
+    max-width: calc(100vw - 24px) !important;
+  }
 }
 
 /* ── Petit smartphone ── */
 @media (max-width: 420px) {
   .dpm-app-topbar {
     padding-left: 58px !important;
-    padding-right: 8px !important;
+    padding-right: max(8px, env(safe-area-inset-right)) !important;
     gap: 6px !important;
   }
 
@@ -293,11 +359,37 @@ th {
     width: 100%;
   }
 
+  .dpm-app-topbar button,
+  .dpm-topbar-control {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
   .dpm-table th,
   .dpm-table td,
   .table th,
   .table td {
     padding: 9px 10px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .dpm-main {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .dpm-header-title {
+    font-size: 18px !important;
+  }
+
+  .dpm-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dpm-app-topbar {
+    padding-left: 54px !important;
   }
 }
 

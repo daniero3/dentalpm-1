@@ -453,10 +453,10 @@ const MainLayout = ({ children }) => {
     setSidebarCollapsed(isTablet);
   }, [isMobile, isTablet]);
   const sidebarW  = isMobile ? 0 : (sidebarCollapsed ? 72 : 264);
-  const padding   = isMobile ? '10px 10px 80px' : '20px 24px 64px';
+  const padding   = isMobile ? '12px max(12px, env(safe-area-inset-left)) calc(92px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-right))' : '20px 24px 64px';
 
   return (
-    <div className="dpm-layout" style={{ display:'flex', height:'100vh', background:'var(--bg-base)', overflow:'hidden', position:'relative' }}>
+    <div className="dpm-layout" style={{ display:'flex', height:isMobile ? '100dvh' : '100vh', background:'var(--bg-base)', overflow:'hidden', position:'relative' }}>
       <ModernSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       <HelpChatbot />
       <div style={{

@@ -205,7 +205,9 @@ export function ModernTopbar() {
         backdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${theme.borderSubtle}`,
         display: 'flex', alignItems: 'center',
-        padding: `0 16px 0 ${topbarPL}px`,
+        padding: isMobile
+          ? `0 max(12px, env(safe-area-inset-right)) 0 ${topbarPL}px`
+          : `0 16px 0 ${topbarPL}px`,
         gap: 12,
         position: 'sticky', top: 0, zIndex: 90,
         boxShadow: theme.shadow,
@@ -289,7 +291,7 @@ export function ModernTopbar() {
             <span style={{ position:'absolute', top:7, right:7, width:7, height:7, borderRadius:'50%', background:theme.accent, border:`2px solid ${theme.bgElevated}` }} />
           </button>
           {isNotifOpen && (
-            <div style={{ position:'absolute', top:46, right:0, width: isMobile ? 280 : 320, background:theme.bgSurface, borderRadius:theme.radiusLg, border:`1px solid ${theme.borderSubtle}`, boxShadow:theme.shadow, zIndex:300, overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:46, right:0, width: isMobile ? 'min(320px, calc(100vw - 24px))' : 320, background:theme.bgSurface, borderRadius:theme.radiusLg, border:`1px solid ${theme.borderSubtle}`, boxShadow:theme.shadow, zIndex:300, overflow:'hidden' }}>
               <div style={{ padding:'12px 16px', borderBottom:`1px solid ${theme.borderSubtle}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:14, color:theme.textPrimary, margin:0 }}>Notifications</p>
                 <span style={{ fontSize:11, color:theme.accent, fontWeight:600, cursor:'pointer' }}>Tout marquer lu</span>
@@ -340,7 +342,7 @@ export function ModernTopbar() {
           </button>
 
           {isProfileOpen && (
-            <div style={{ position:'absolute', top:50, right:0, width:220, background:theme.bgSurface, borderRadius:theme.radiusLg, border:`1px solid ${theme.borderSubtle}`, boxShadow:theme.shadow, zIndex:300, overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:50, right:0, width:isMobile ? 'min(260px, calc(100vw - 24px))' : 220, background:theme.bgSurface, borderRadius:theme.radiusLg, border:`1px solid ${theme.borderSubtle}`, boxShadow:theme.shadow, zIndex:300, overflow:'hidden' }}>
               <div style={{ padding:'14px 16px', borderBottom:`1px solid ${theme.borderSubtle}` }}>
                 <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:14, color:theme.textPrimary, margin:0 }}>{user?.full_name}</p>
                 <p style={{ fontSize:12, color:theme.textSecondary, margin:'2px 0 0' }}>{user?.email || user?.username}</p>
@@ -371,7 +373,7 @@ export function ModernTopbar() {
 
       {/* ── Command palette ── */}
       {searchOpen && (
-        <div style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:200, display:'flex', alignItems:'flex-start', justifyContent:'center', padding: isMobile ? '12px' : '72px 16px 16px', backdropFilter:'blur(8px)' }}
+        <div style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:200, display:'flex', alignItems:'flex-start', justifyContent:'center', padding: isMobile ? 'max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom))' : '72px 16px 16px', backdropFilter:'blur(8px)' }}
           onClick={() => setSearchOpen(false)}>
           <div style={{ background:theme.bgSurface, borderRadius:theme.radiusLg, padding:0, width:'100%', maxWidth:620, boxShadow:theme.shadow, border:`1px solid ${theme.borderSubtle}`, overflow:'hidden' }}
             onClick={e => e.stopPropagation()}>

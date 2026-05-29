@@ -118,13 +118,18 @@ const GlobalCSS = () => (
     .nav-link:hover::after{width:100%;}
 
     /* ── Mode clair premium ── */
-    body:not(.dark) h1, body:not(.dark) h2, body:not(.dark) h3 {
-      color: #1A202C;
-    }
-    body:not(.dark) p {
-      color: #4A5568;
-      line-height: 1.8;
-    }
+	    body:not(.dark) h1, body:not(.dark) h2, body:not(.dark) h3 {
+	      color: #1A202C;
+	    }
+	    .landing-hero-title,
+	    .landing-hero-title h1,
+	    h1.landing-hero-title {
+	      color: #FFFFFF !important;
+	    }
+	    body:not(.dark) p {
+	      color: #4A5568;
+	      line-height: 1.8;
+	    }
     /* Cartes en mode clair */
     body:not(.dark) .glow-card {
       background: #FFFFFF;
@@ -703,7 +708,7 @@ export default function LandingPage() {
               <span style={{width:8,height:8,borderRadius:'50%',background:'#7DD3DA',display:'inline-block',animation:'pulse 2s ease-in-out infinite'}}/>
               <span style={{fontSize:isMobile?11:13,color:'rgba(255,255,255,.9)',fontWeight:500}}>🇲🇬 N°1 des logiciels dentaires à Madagascar</span>
             </div>
-            <h1 className="au1" style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:fs1,lineHeight:1.1,color:'#fff',marginBottom:12}}>
+            <h1 className="au1 landing-hero-title" style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:fs1,lineHeight:1.1,color:'#fff',marginBottom:12}}>
               Logiciel de Gestion<br/>
               <span className="shimmer-teal">Cabinet Dentaire</span><br/>
               à Madagascar
