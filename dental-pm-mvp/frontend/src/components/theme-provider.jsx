@@ -20,7 +20,13 @@ export function ThemeProvider({ children, defaultTheme = "light", storageKey = "
 
     root.classList.remove("light", "dark");
     root.classList.add(resolvedTheme);
+    document.body.classList.remove("light", "dark");
+    document.body.classList.add(resolvedTheme);
     try { localStorage.setItem(storageKey, theme); } catch {}
+
+    return () => {
+      document.body.classList.remove("light", "dark");
+    };
   }, [theme, storageKey]);
 
   const setTheme = nextTheme => setThemeState(nextTheme);

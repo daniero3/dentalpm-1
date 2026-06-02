@@ -9,6 +9,7 @@ import { useAuth } from "../App"
 import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { prefetchRoute } from "../utils/routePrefetch"
+import { ThemeToggle } from "./theme-toggle"
 
 const useScreenSize = () => {
   const [w, setW] = useState(window.innerWidth)
@@ -280,6 +281,10 @@ export function ModernTopbar() {
             {formatMadagascarTime(now)} Madagascar
           </div>
         )}
+
+        <div style={{ width:38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', color:theme.textSecondary }}>
+          <ThemeToggle />
+        </div>
 
         {/* ── Notifications ── */}
         <div ref={notifRef} style={{ position:'relative' }}>
