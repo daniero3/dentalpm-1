@@ -89,6 +89,7 @@ import { preloadCriticalRoutes } from "./utils/routePrefetch";
 
 // Theme Provider
 import { ThemeProvider } from "./components/theme-provider";
+import { LanguageProvider } from "./components/language-provider";
 
 // Route components are lazy-loaded so the first bundle stays light.
 const LoginForm = React.lazy(() => import("./components/LoginForm"));
@@ -497,9 +498,10 @@ function App() {
       <LoadingSkeleton />
     }>
       <ThemeProvider defaultTheme="light" storageKey="dental-pm-theme">
-        <AuthProvider>
-          <div className="App">
-            <BrowserRouter>
+        <LanguageProvider defaultLanguage="fr" storageKey="dpm_language">
+          <AuthProvider>
+            <div className="App">
+              <BrowserRouter>
               <Routes>
                 <Route path="/landing" element={<LandingRedirect />} />
                 <Route path="/super-admin" element={<Navigate to="/subscription" replace />} />
@@ -543,8 +545,8 @@ function App() {
               <CookieBanner />
               <PWAInstallPrompt />
               <OfflineBanner />
-            </BrowserRouter>
-            <Toaster
+              </BrowserRouter>
+              <Toaster
               position="top-right"
               toastOptions={{
                 duration: 4000,
@@ -557,9 +559,10 @@ function App() {
                   fontFamily: 'DM Sans, sans-serif',
                 },
               }}
-            />
-          </div>
-        </AuthProvider>
+              />
+            </div>
+          </AuthProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </React.Suspense>
   );

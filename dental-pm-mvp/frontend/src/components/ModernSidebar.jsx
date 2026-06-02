@@ -9,6 +9,7 @@ import {
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../App"
 import { createHoverPrefetch } from "../utils/routePrefetch"
+import { useLanguage } from "./language-provider"
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
@@ -57,28 +58,28 @@ const normalizePlan = (value) => {
 
 // ── Navigation cabinet — filtrée par plan ─────────────────────────────────────
 const ALL_NAV = [
-  { name:"Tableau de bord", href:"/",            icon:Home,         plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Patients",        href:"/patients",    icon:Users,        plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Rendez-vous",     href:"/appointments",icon:Calendar,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Devis",           href:"/quotes",      icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Factures",        href:"/invoices",    icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Achats",          href:"/purchases",   icon:ShoppingCart, plans:['PRO','GROUP'] },
-  { name:"Fournisseurs",    href:"/suppliers",   icon:Truck,        plans:['PRO','GROUP'] },
-  { name:"Laboratoire",     href:"/lab",         icon:FlaskConical, plans:['PRO','GROUP'] },
-  { name:"Rapports",        href:"/reports",     icon:BarChart3,    plans:['PRO','GROUP'] },
-  { name:"Stock",           href:"/inventory",   icon:Package,      plans:['PRO','GROUP'] },
-  { name:"Mailing",         href:"/mailing",     icon:Mail,         plans:['PRO','GROUP'] },
-  { name:"Paramètres",      href:"/settings",    icon:Settings,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Tarifs des actes", href:"/settings/pricing", icon:FileText, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { name:"Abonnement",      href:"/subscription",icon:CreditCard,    plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.dashboard", href:"/",            icon:Home,         plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.patients",  href:"/patients",    icon:Users,        plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.appointments", href:"/appointments", icon:Calendar, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.quotes",    href:"/quotes",      icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.invoices",  href:"/invoices",    icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.purchases", href:"/purchases",   icon:ShoppingCart, plans:['PRO','GROUP'] },
+  { labelKey:"nav.suppliers", href:"/suppliers",   icon:Truck,        plans:['PRO','GROUP'] },
+  { labelKey:"nav.lab",       href:"/lab",         icon:FlaskConical, plans:['PRO','GROUP'] },
+  { labelKey:"nav.reports",   href:"/reports",     icon:BarChart3,    plans:['PRO','GROUP'] },
+  { labelKey:"nav.inventory", href:"/inventory",   icon:Package,      plans:['PRO','GROUP'] },
+  { labelKey:"nav.mailing",   href:"/mailing",     icon:Mail,         plans:['PRO','GROUP'] },
+  { labelKey:"nav.settings",  href:"/settings",    icon:Settings,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.pricing",   href:"/settings/pricing", icon:FileText, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.subscription", href:"/subscription", icon:CreditCard, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
 ]
 
 // ── Navigation SUPER_ADMIN — gestion plateforme uniquement ────────────────────
 const SUPER_ADMIN_NAV = [
-  { name:'Dashboard revenus',       href:'/subscription',   icon:LayoutDashboard },
-  { name:'Cabinets abonnés',        href:'/admin/clinics',  icon:Building2 },
-  { name:'Validation paiements',    href:'/admin/payments', icon:CreditCard },
-  { name:'Fournisseurs partenaires',href:'/admin/partners', icon:Truck },
+  { labelKey:'nav.revenueDashboard', href:'/subscription',   icon:LayoutDashboard },
+  { labelKey:'nav.clinics',          href:'/admin/clinics',  icon:Building2 },
+  { labelKey:'nav.paymentValidation',href:'/admin/payments', icon:CreditCard },
+  { labelKey:'nav.partners',         href:'/admin/partners', icon:Truck },
 ]
 
 const NAV_COLORS = {
@@ -139,6 +140,7 @@ const sidebarShell = {
 const SidebarContent = ({ collapsed, onNavClick }) => {
   const location  = useLocation()
   const { user }  = useAuth()
+  const { t } = useLanguage()
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
   const [subscription, setSubscription] = useState(null)
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false)
@@ -190,9 +192,9 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     )
 
   const planLabel = isSuperAdmin
-    ? 'Administration'
+    ? t('label.administration')
     : (subscription?.status === 'TRIAL'
-      ? `${plan} — Essai`
+      ? t('label.trialPlan', { plan })
       : plan)
 
   const planPrice = {
@@ -217,9 +219,10 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     const Icon   = item.icon
     const color  = NAV_COLORS[item.href] || theme.accent
     const prefetch = React.useMemo(() => createHoverPrefetch(item.href), [item.href])
+    const label = t(item.labelKey)
     return (
       <Link to={item.href} onClick={onNavClick} {...prefetch} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
-        <div title={collapsed ? item.name : ''}
+        <div title={collapsed ? label : ''}
           style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
             borderRadius:theme.radiusMd, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
             background: active ? theme.sidebarActiveBg : 'transparent',
@@ -234,7 +237,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           </div>
           {!collapsed && (
             <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? theme.sidebarActiveText : theme.sidebarText, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:theme.transition }}>
-              {item.name}
+              {label}
             </span>
           )}
         </div>
@@ -248,6 +251,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     const Icon   = item.icon
     const color = theme.accent
     const prefetch = React.useMemo(() => createHoverPrefetch(item.href), [item.href])
+    const label = t(item.labelKey)
     return (
       <Link to={item.href} onClick={onNavClick} {...prefetch} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
@@ -264,7 +268,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           </div>
           {!collapsed && (
             <span style={{ fontSize:'var(--text-sm)', fontWeight: active ? 700 : 500, color: active ? theme.sidebarActiveText : theme.sidebarText, whiteSpace:'nowrap' }}>
-              {item.name}
+              {label}
             </span>
           )}
         </div>
@@ -285,7 +289,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
               <div style={{ width:5, height:5, borderRadius:'50%', background:theme.success, animation:'logoBadge 2s ease-in-out infinite' }}/>
               <p style={{ fontSize:10, color:theme.sidebarTextMuted, margin:0, fontWeight:600 }}>
-                {isSuperAdmin ? 'Administration' : 'Cabinet dentaire'}
+                {isSuperAdmin ? t('label.administration') : t('label.dentalClinic')}
               </p>
             </div>
           </div>
@@ -301,7 +305,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 10px' }}>
                 <Sparkles size={10} color={theme.accent}/>
-                <p style={{ fontSize:10, fontWeight:800, color:theme.accent, textTransform:'uppercase', letterSpacing:0, margin:0 }}>Administration plateforme</p>
+                <p style={{ fontSize:10, fontWeight:800, color:theme.accent, textTransform:'uppercase', letterSpacing:0, margin:0 }}>{t('label.platformAdmin')}</p>
               </div>
             )}
             {SUPER_ADMIN_NAV.map(item => <AdminItem key={item.href} item={item}/>)}
@@ -313,7 +317,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
           <>
             {!collapsed && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 8px 8px' }}>
-                <p style={{ fontSize:10, fontWeight:800, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>Navigation</p>
+                <p style={{ fontSize:10, fontWeight:800, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>{t('label.navigation')}</p>
                 {plan && <span style={{ fontSize:9, fontWeight:800, background:theme.sidebarActiveBg, color:theme.sidebarActiveText, padding:'3px 8px', borderRadius:99, border:`1px solid ${theme.sidebarBorder}` }}>{planLabel}</span>}
               </div>
             )}
@@ -329,7 +333,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                   <div style={{ display:'flex', alignItems:'center', gap:6, padding:'4px 8px 6px', opacity:.5 }}>
                     <Lock size={9} color={theme.sidebarTextMuted}/>
                     <p style={{ fontSize:9, fontWeight:700, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, margin:0 }}>
-                      Disponible en {PLAN_REQUIRED(lockedItems[0])}
+                      {t('label.availableIn', { plan: PLAN_REQUIRED(lockedItems[0]) })}
                     </p>
                   </div>
                 )}
@@ -342,7 +346,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                         <div style={{ width:32, height:32, borderRadius:theme.radiusMd, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:theme.sidebarHover }}>
                           <Icon size={16} color={theme.sidebarTextMuted}/>
                         </div>
-                        {!collapsed && <span style={{ fontSize:'var(--text-sm)', fontWeight:500, color:theme.sidebarTextMuted, flex:1 }}>{item.name}</span>}
+                        {!collapsed && <span style={{ fontSize:'var(--text-sm)', fontWeight:500, color:theme.sidebarTextMuted, flex:1 }}>{t(item.labelKey)}</span>}
                       </div>
                     )
                   })}
@@ -350,7 +354,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
                 {/* Bouton upgrade */}
                 {!collapsed && (
                   <a href='/subscription' style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, margin:'8px 0 4px', padding:'9px', borderRadius:theme.radiusMd, background:'var(--brand-primary)', border:'1px solid var(--brand-primary)', color:'#FFFFFF', fontSize:11, fontWeight:800, textDecoration:'none', boxShadow:'0 8px 20px rgba(13,122,135,0.18)' }}>
-                    <Sparkles size={12}/> Upgrader mon plan
+                    <Sparkles size={12}/> {t('label.upgradePlan')}
                   </a>
                 )}
               </div>
@@ -358,19 +362,19 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
 
             {/* Abonnement */}
             <div style={{ height:1, background:theme.sidebarBorder, margin:'12px 0 10px' }}/>
-            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, padding:'4px 8px 8px', margin:0 }}>Abonnement</p>}
+            {!collapsed && <p style={{ fontSize:10, fontWeight:800, color:theme.sidebarTextMuted, textTransform:'uppercase', letterSpacing:0, padding:'4px 8px 8px', margin:0 }}>{t('label.subscription')}</p>}
             {!collapsed && !isSuperAdmin && subscriptionLoaded && (
               <div style={{ margin:'0 4px 8px', padding:'10px 12px', borderRadius:theme.radiusLg, background:theme.sidebarBgElevated, border:`1px solid ${theme.sidebarBorder}`, color:theme.sidebarTextMuted, fontSize:11, lineHeight:1.4, boxShadow:'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
                 <div style={{ fontWeight:700, color:theme.sidebarText, marginBottom:2 }}>{planLabel}</div>
                 {planPrice && <div>{planPrice}</div>}
                 {subscription?.status && (
                   <div style={{ marginTop:4, fontSize:10, color:theme.sidebarTextMuted }}>
-                    Statut: {subscription.status}
+                    {t('label.status', { status: subscription.status })}
                   </div>
                 )}
               </div>
             )}
-            <NavItem item={{ name:'Mon Abonnement', href:'/subscription', icon:CreditCard }}/>
+            <NavItem item={{ labelKey:'nav.mySubscription', href:'/subscription', icon:CreditCard }}/>
           </>
         )}
 
@@ -383,9 +387,9 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
         </div>
         {!collapsed && (
           <div style={{ overflow:'hidden', flex:1 }}>
-            <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.sidebarText, margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || 'Utilisateur'}</p>
+            <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.sidebarText, margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user?.full_name || t('label.user')}</p>
             <p style={{ fontSize:11, color:theme.sidebarTextMuted, margin:'1px 0 0' }}>
-              {isSuperAdmin ? 'Super Administrateur' : user?.role}
+              {isSuperAdmin ? t('label.superAdministrator') : user?.role}
             </p>
           </div>
         )}

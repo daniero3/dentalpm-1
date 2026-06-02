@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { prefetchRoute } from "../utils/routePrefetch"
 import { ThemeToggle } from "./theme-toggle"
+import { useLanguage } from "./language-provider"
 
 const useScreenSize = () => {
   const [w, setW] = useState(window.innerWidth)
@@ -22,29 +23,24 @@ const useScreenSize = () => {
 }
 
 const QUICK_COMMANDS = [
-  { label:'Nouveau patient', desc:'Ouvrir le registre patient', href:'/patients', icon:UserPlus, group:'Actions' },
-  { label:'Planifier un rendez-vous', desc:'Agenda et disponibilités', href:'/appointments', icon:CalendarPlus, group:'Actions' },
-  { label:'Nouvelle facture', desc:'Facturation cabinet', href:'/invoices', icon:Receipt, group:'Actions' },
-  { label:'Créer un devis', desc:'Devis et conversion facture', href:'/quotes', icon:FilePlus2, group:'Actions' },
-  { label:'Stock et inventaire', desc:'Produits, seuils et mouvements', href:'/inventory', icon:PackageCheck, group:'Modules' },
-  { label:'Achats et dépenses', desc:'Dépenses cabinet et médicaments', href:'/purchases', icon:ShoppingCart, group:'Modules' },
-  { label:'Rapport financier', desc:'Chiffres, revenus et dépenses', href:'/reports', icon:BarChart3, group:'Modules' },
-  { label:'Laboratoire', desc:'Commandes prothèses et statuts', href:'/lab', icon:FlaskConical, group:'Modules' },
-  { label:'Fournisseurs', desc:'Carnet fournisseurs', href:'/suppliers', icon:Truck, group:'Modules' },
-  { label:'Mailing', desc:'Messages et relances patient', href:'/mailing', icon:Mail, group:'Modules' },
-  { label:'Abonnement', desc:'Plan et facturation SaaS', href:'/subscription', icon:Crown, group:'Administration' },
-  { label:'Paramètres cabinet', desc:'Profil, équipe et configuration', href:'/settings', icon:Settings, group:'Administration' },
+  { labelKey:'nav.patients', descKey:'quick.patient.desc', href:'/patients', icon:UserPlus, groupKey:'group.actions' },
+  { labelKey:'nav.appointments', descKey:'quick.appointment.desc', href:'/appointments', icon:CalendarPlus, groupKey:'group.actions' },
+  { labelKey:'nav.invoices', descKey:'quick.invoice.desc', href:'/invoices', icon:Receipt, groupKey:'group.actions' },
+  { labelKey:'nav.quotes', descKey:'quick.quote.desc', href:'/quotes', icon:FilePlus2, groupKey:'group.actions' },
+  { labelKey:'nav.inventoryLong', descKey:'quick.inventory.desc', href:'/inventory', icon:PackageCheck, groupKey:'group.modules' },
+  { labelKey:'nav.purchases', descKey:'quick.purchases.desc', href:'/purchases', icon:ShoppingCart, groupKey:'group.modules' },
+  { labelKey:'nav.reports', descKey:'quick.reports.desc', href:'/reports', icon:BarChart3, groupKey:'group.modules' },
+  { labelKey:'nav.lab', descKey:'quick.lab.desc', href:'/lab', icon:FlaskConical, groupKey:'group.modules' },
+  { labelKey:'nav.suppliers', descKey:'quick.suppliers.desc', href:'/suppliers', icon:Truck, groupKey:'group.modules' },
+  { labelKey:'nav.mailing', descKey:'quick.mailing.desc', href:'/mailing', icon:Mail, groupKey:'group.modules' },
+  { labelKey:'nav.subscription', descKey:'quick.subscription.desc', href:'/subscription', icon:Crown, groupKey:'group.admin' },
+  { labelKey:'nav.cabinetSettings', descKey:'quick.settings.desc', href:'/settings', icon:Settings, groupKey:'group.admin' },
 ]
 
 const MADAGASCAR_TIME_ZONE = 'Indian/Antananarivo'
-const LANGUAGE_OPTIONS = [
-  { value:'fr', label:'Français', short:'FR' },
-  { value:'en', label:'English', short:'EN' },
-  { value:'mg', label:'Malagasy', short:'MG' },
-]
 
-const formatMadagascarTime = (date) =>
-  date.toLocaleTimeString('fr-FR', {
+const formatMadagascarTime = (date, locale) =>
+  date.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: MADAGASCAR_TIME_ZONE
@@ -84,6 +80,7 @@ const theme = {
 
 export function ModernTopbar() {
   const { user, logout } = useAuth()
+  const { language, setLanguage, locale, options: languageOptions, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const { isMobile, isTablet } = useScreenSize()
@@ -94,9 +91,6 @@ export function ModernTopbar() {
   const [searchOpen, setSearchOpen]       = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotifOpen, setIsNotifOpen]     = useState(false)
-  const [language, setLanguage]           = useState(() => {
-    try { return localStorage.getItem('dpm_language') || 'fr' } catch { return 'fr' }
-  })
   const [online, setOnline]               = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine)
   const [now, setNow]                     = useState(() => new Date())
   const profileRef = useRef(null)
@@ -137,12 +131,6 @@ export function ModernTopbar() {
   }, [])
 
   useEffect(() => {
-    document.documentElement.lang = language
-    try { localStorage.setItem('dpm_language', language) } catch {}
-    window.dispatchEvent(new CustomEvent('dpm:language-change', { detail: { language } }))
-  }, [language])
-
-  useEffect(() => {
     const syncClock = () => setNow(new Date())
     const timeout = window.setTimeout(() => {
       syncClock()
@@ -172,8 +160,8 @@ export function ModernTopbar() {
   }
 
   const getRoleLabel = (role) => ({
-    SUPER_ADMIN:'Super Admin', ADMIN:'Administrateur',
-    DENTIST:'Dentiste', ASSISTANT:'Assistante', ACCOUNTANT:'Comptable'
+    SUPER_ADMIN:t('role.superAdmin'), ADMIN:t('role.admin'),
+    DENTIST:t('role.dentist'), ASSISTANT:t('role.assistant'), ACCOUNTANT:t('role.accountant')
   }[role] || role)
 
   const getRoleColor = (role) => ({
@@ -183,26 +171,32 @@ export function ModernTopbar() {
 
   const topbarHeight = isMobile ? 56 : 64
   const topbarPL     = isMobile ? 62 : 24 // espace pour le bouton hamburger
-  const clinicName = user?.clinic_name || user?.clinic?.name || user?.cabinet_name || 'Cabinet DentalPM'
+  const clinicName = user?.clinic_name || user?.clinic?.name || user?.cabinet_name || t('label.defaultClinic')
+  const commands = QUICK_COMMANDS.map(item => ({
+    ...item,
+    label: t(item.labelKey),
+    desc: t(item.descKey),
+    group: t(item.groupKey),
+  }))
   const breadcrumb = ({
-    '/':'Tableau de bord',
-    '/patients':'Patients',
-    '/appointments':'Rendez-vous',
-    '/quotes':'Devis',
-    '/invoices':'Factures',
-    '/reports':'Rapports',
-    '/inventory':'Inventaire',
-    '/purchases':'Achats',
-    '/suppliers':'Fournisseurs',
-    '/lab':'Laboratoire',
-    '/mailing':'Mailing',
-    '/settings':'Paramètres',
-    '/subscription':'Abonnement',
-    '/admin/clinics':'Cabinets',
-    '/admin/payments':'Paiements',
-    '/admin/partners':'Partenaires'
-  })[location.pathname] || QUICK_COMMANDS.find(item => location.pathname.startsWith(item.href))?.label || 'DentalPM'
-  const filteredCommands = QUICK_COMMANDS.filter(c => {
+    '/':t('nav.dashboard'),
+    '/patients':t('nav.patients'),
+    '/appointments':t('nav.appointments'),
+    '/quotes':t('nav.quotes'),
+    '/invoices':t('nav.invoices'),
+    '/reports':t('nav.reports'),
+    '/inventory':t('nav.inventory'),
+    '/purchases':t('nav.purchases'),
+    '/suppliers':t('nav.suppliers'),
+    '/lab':t('nav.lab'),
+    '/mailing':t('nav.mailing'),
+    '/settings':t('nav.settings'),
+    '/subscription':t('nav.subscription'),
+    '/admin/clinics':t('nav.clinics'),
+    '/admin/payments':t('nav.payments'),
+    '/admin/partners':t('nav.partners')
+  })[location.pathname] || commands.find(item => location.pathname.startsWith(item.href))?.label || t('nav.dentalpm')
+  const filteredCommands = commands.filter(c => {
     const q = debouncedSearchTerm.trim().toLowerCase()
     if (!q) return true
     return `${c.label} ${c.desc} ${c.group}`.toLowerCase().includes(q)
@@ -242,7 +236,7 @@ export function ModernTopbar() {
         {!isMobile && (
           <div style={{ flex:1, maxWidth: isTablet ? 240 : 380, position:'relative' }}>
             <Search size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:theme.textSecondary, pointerEvents:'none' }} />
-            <input type="text" placeholder="Rechercher patients, factures..."
+            <input type="text" placeholder={t('topbar.searchPlaceholder')}
               value={searchTerm} onChange={e => {
                 const value = e.target.value
                 startTransition(() => setSearchTerm(value))
@@ -280,32 +274,32 @@ export function ModernTopbar() {
             onMouseDown={e => { e.currentTarget.style.transform='scale(0.97)' }}
             onMouseUp={e => { e.currentTarget.style.transform='translateY(-1px)' }}>
             <CalendarPlus size={16} />
-            Nouveau RDV
+            {t('topbar.newAppointment')}
           </button>
         )}
 
         {!isMobile && (
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 10px', borderRadius:theme.radiusMd, border:`1px solid ${theme.borderDefault}`, background:theme.bgElevated, color: online ? theme.success : theme.danger, fontSize:12, fontWeight:800, whiteSpace:'nowrap' }}>
             {online ? <Wifi size={14}/> : <WifiOff size={14}/>}
-            {online ? 'Synchro active' : 'Hors ligne'}
+            {online ? t('topbar.online') : t('topbar.offline')}
           </div>
         )}
 
         {!isMobile && !isTablet && (
           <div style={{ padding:'6px 10px', borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, fontSize:12, fontWeight:800, color:theme.textSecondary, whiteSpace:'nowrap' }}>
-            {formatMadagascarTime(now)} Madagascar
+            {formatMadagascarTime(now, locale)} {t('topbar.timezone')}
           </div>
         )}
 
-        <label title="Langue de l'interface" style={{ height:38, display:'inline-flex', alignItems:'center', gap:7, padding:isMobile ? '0 8px' : '0 10px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, color:theme.textSecondary }}>
+        <label title={t('topbar.language')} style={{ height:38, display:'inline-flex', alignItems:'center', gap:7, padding:isMobile ? '0 8px' : '0 10px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, color:theme.textSecondary }}>
           <Globe2 size={16} />
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
-            aria-label="Langue de l'interface"
+            aria-label={t('topbar.language')}
             style={{ border:0, outline:0, background:'transparent', color:theme.textPrimary, fontSize:12, fontWeight:800, fontFamily:'var(--font-sans)', cursor:'pointer', width:isMobile ? 46 : 96 }}
           >
-            {LANGUAGE_OPTIONS.map(option => (
+            {languageOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {isMobile ? option.short : option.label}
               </option>
@@ -329,13 +323,13 @@ export function ModernTopbar() {
           {isNotifOpen && (
             <div style={{ position:'absolute', top:46, right:0, width: isMobile ? 'min(320px, calc(100vw - 24px))' : 320, background:theme.bgSurface, borderRadius:theme.radiusLg, border:`1px solid ${theme.borderSubtle}`, boxShadow:theme.shadow, zIndex:300, overflow:'hidden' }}>
               <div style={{ padding:'12px 16px', borderBottom:`1px solid ${theme.borderSubtle}`, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:14, color:theme.textPrimary, margin:0 }}>Notifications</p>
-                <span style={{ fontSize:11, color:theme.accent, fontWeight:600, cursor:'pointer' }}>Tout marquer lu</span>
+                <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:14, color:theme.textPrimary, margin:0 }}>{t('notifications.title')}</p>
+                <span style={{ fontSize:11, color:theme.accent, fontWeight:600, cursor:'pointer' }}>{t('notifications.markAllRead')}</span>
               </div>
               <div style={{ padding:'12px' }}>
                 {[
-                  { title:'Suivi du jour', text:'Vérifiez les rendez-vous et les factures en attente.', href:'/appointments', tone:theme.accent },
-                  { title:'Finance', text:'Ouvrir les rapports pour contrôler recettes et dépenses.', href:'/reports', tone:theme.accent },
+                  { title:t('notifications.follow.title'), text:t('notifications.follow.text'), href:'/appointments', tone:theme.accent },
+                  { title:t('notifications.finance.title'), text:t('notifications.finance.text'), href:'/reports', tone:theme.accent },
                 ].map(item => (
                   <button key={item.title} onClick={() => { navigate(item.href); setIsNotifOpen(false) }}
                     style={{ width:'100%', display:'flex', gap:10, padding:'10px', border:'none', borderRadius:12, background:'transparent', cursor:'pointer', textAlign:'left' }}
@@ -387,8 +381,8 @@ export function ModernTopbar() {
                 </span>
               </div>
               {[
-                { icon:User,     label:'Mon profil',  action:() => { setIsProfileOpen(false) } },
-                { icon:Settings, label:'Paramètres',  action:() => { navigate('/settings'); setIsProfileOpen(false) } },
+                { icon:User,     label:t('profile.myProfile'),  action:() => { setIsProfileOpen(false) } },
+                { icon:Settings, label:t('profile.settings'),  action:() => { navigate('/settings'); setIsProfileOpen(false) } },
               ].map((item,i) => (
                 <button key={i} onClick={item.action} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'none', border:'none', cursor:'pointer', fontSize:13, color:theme.textSecondary, fontFamily:'var(--font-sans)', transition:'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background=theme.hover}
@@ -400,7 +394,7 @@ export function ModernTopbar() {
               <button onClick={handleLogout} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'none', border:'none', cursor:'pointer', fontSize:13, color:theme.danger, fontFamily:'var(--font-sans)', fontWeight:600, transition:'background 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background=theme.hover}
                 onMouseLeave={e => e.currentTarget.style.background='none'}>
-                <LogOut size={15} color={theme.danger} />Se déconnecter
+                <LogOut size={15} color={theme.danger} />{t('profile.logout')}
               </button>
             </div>
           )}
@@ -415,7 +409,7 @@ export function ModernTopbar() {
             onClick={e => e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderBottom:`1px solid ${theme.borderSubtle}` }}>
               <Search size={18} color={theme.accent} />
-              <input type="text" placeholder="Rechercher patients, factures..." autoFocus
+              <input type="text" placeholder={t('topbar.searchPlaceholder')} autoFocus
                 value={searchTerm} onChange={e => {
                   const value = e.target.value
                   startTransition(() => setSearchTerm(value))
@@ -428,7 +422,7 @@ export function ModernTopbar() {
             </div>
             <div style={{ maxHeight:isMobile ? '70vh' : 420, overflowY:'auto', padding:'10px' }}>
               {Object.keys(groupedCommands).length === 0 ? (
-                <div style={{ padding:'30px 16px', textAlign:'center', color:theme.textSecondary, fontSize:13 }}>Aucun raccourci trouvé</div>
+                <div style={{ padding:'30px 16px', textAlign:'center', color:theme.textSecondary, fontSize:13 }}>{t('command.empty')}</div>
               ) : Object.entries(groupedCommands).map(([group, items]) => (
                 <div key={group} style={{ marginBottom:8 }}>
                   <div style={{ padding:'8px 8px 6px', fontSize:10, fontWeight:900, color:theme.textSecondary, textTransform:'uppercase', letterSpacing:0 }}>{group}</div>
@@ -455,8 +449,8 @@ export function ModernTopbar() {
               ))}
             </div>
             <div style={{ display:'flex', justifyContent:'space-between', gap:10, padding:'10px 14px', borderTop:`1px solid ${theme.borderSubtle}`, background:theme.bgElevated, fontSize:11, color:theme.textSecondary }}>
-              <span>Entrée pour ouvrir</span>
-              <span>Échap pour fermer</span>
+              <span>{t('command.enter')}</span>
+              <span>{t('command.escape')}</span>
             </div>
           </div>
         </div>
