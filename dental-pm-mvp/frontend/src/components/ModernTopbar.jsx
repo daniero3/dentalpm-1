@@ -3,7 +3,7 @@ import {
   Search, Bell, LogOut, User, Settings, ChevronDown, X,
   CalendarPlus, UserPlus, Receipt, FilePlus2, PackageCheck,
   ShoppingCart, BarChart3, FlaskConical, Truck, Mail, Crown,
-  Command, Wifi, WifiOff, ArrowRight
+  Command, Wifi, WifiOff, ArrowRight, Globe2
 } from "lucide-react"
 import { useAuth } from "../App"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -37,6 +37,12 @@ const QUICK_COMMANDS = [
 ]
 
 const MADAGASCAR_TIME_ZONE = 'Indian/Antananarivo'
+const LANGUAGE_OPTIONS = [
+  { value:'fr', label:'Français', short:'FR' },
+  { value:'en', label:'English', short:'EN' },
+  { value:'mg', label:'Malagasy', short:'MG' },
+]
+
 const formatMadagascarTime = (date) =>
   date.toLocaleTimeString('fr-FR', {
     hour: '2-digit',
@@ -88,6 +94,9 @@ export function ModernTopbar() {
   const [searchOpen, setSearchOpen]       = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isNotifOpen, setIsNotifOpen]     = useState(false)
+  const [language, setLanguage]           = useState(() => {
+    try { return localStorage.getItem('dpm_language') || 'fr' } catch { return 'fr' }
+  })
   const [online, setOnline]               = useState(() => typeof navigator === 'undefined' ? true : navigator.onLine)
   const [now, setNow]                     = useState(() => new Date())
   const profileRef = useRef(null)
@@ -126,6 +135,12 @@ export function ModernTopbar() {
       window.removeEventListener('offline', sync)
     }
   }, [])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+    try { localStorage.setItem('dpm_language', language) } catch {}
+    window.dispatchEvent(new CustomEvent('dpm:language-change', { detail: { language } }))
+  }, [language])
 
   useEffect(() => {
     const syncClock = () => setNow(new Date())
@@ -281,6 +296,22 @@ export function ModernTopbar() {
             {formatMadagascarTime(now)} Madagascar
           </div>
         )}
+
+        <label title="Langue de l'interface" style={{ height:38, display:'inline-flex', alignItems:'center', gap:7, padding:isMobile ? '0 8px' : '0 10px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, color:theme.textSecondary }}>
+          <Globe2 size={16} />
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+            aria-label="Langue de l'interface"
+            style={{ border:0, outline:0, background:'transparent', color:theme.textPrimary, fontSize:12, fontWeight:800, fontFamily:'var(--font-sans)', cursor:'pointer', width:isMobile ? 46 : 96 }}
+          >
+            {LANGUAGE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {isMobile ? option.short : option.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div style={{ width:38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', color:theme.textSecondary }}>
           <ThemeToggle />
