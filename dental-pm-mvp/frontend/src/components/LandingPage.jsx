@@ -24,13 +24,13 @@ const GlobalCSS = () => (
     :root{
       --teal:#0D7A87;--teal-dk:#083D44;--teal-lt:#13A3B4;
       --ink:#1A202C;--slate:#4A5568;--muted:#718096;
-      --border:#E2E8F0;--surface:#FFFFFF;--white:#FFFFFF;--bg:#F5F7FA;
+      --border:#E2E8F0;--surface:#FFFFFF;--white:#FFFFFF;--bg:#F5F7FA;--section-dark:#1A202C;
       --sh1:0 1px 3px rgba(0,0,0,.06);--sh3:0 16px 48px rgba(0,0,0,.12);--sh-teal:0 8px 32px rgba(13,122,135,.28);
     }
     body{transition:background .3s ease,color .3s ease;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     html{scroll-behavior:smooth;}
-    body{font-family:'Inter',sans-serif;background:#F5F7FA;color:#1A202C;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
     ::-webkit-scrollbar{width:4px;}
     ::-webkit-scrollbar-thumb{background:var(--teal);border-radius:99px;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
@@ -162,6 +162,51 @@ const GlobalCSS = () => (
       pointer-events:none;
     }
     .testi-card:hover{transform:translateY(-8px);box-shadow:0 24px 64px rgba(13,122,135,.12);}
+
+    /* ── Mode sombre page d'accueil ── */
+    body.dark .landing-root{
+      background:
+        radial-gradient(circle at 12% 8%, rgba(13,122,135,.18), transparent 28%),
+        radial-gradient(circle at 90% 18%, rgba(45,196,213,.10), transparent 30%),
+        var(--bg) !important;
+      color:var(--ink);
+    }
+    body.dark .landing-root .tag{
+      background:rgba(45,196,213,.12) !important;
+      border-color:rgba(45,196,213,.28) !important;
+      color:#7DD3DA !important;
+    }
+    body.dark .landing-root .feat-item,
+    body.dark .landing-root .glow-card,
+    body.dark .landing-root .stat-card,
+    body.dark .landing-root .testi-card,
+    body.dark .landing-root .plan-hover,
+    body.dark .landing-root .faq-item{
+      background:var(--surface) !important;
+      border-color:var(--border) !important;
+      box-shadow:0 14px 38px rgba(0,0,0,.22) !important;
+    }
+    body.dark .landing-root .feat-item:hover,
+    body.dark .landing-root .faq-item:hover{
+      background:#162636 !important;
+    }
+    body.dark .landing-root input,
+    body.dark .landing-root textarea,
+    body.dark .landing-root select{
+      background:#0F1B2A !important;
+      border-color:var(--border) !important;
+      color:var(--ink) !important;
+    }
+    body.dark .landing-root input::placeholder,
+    body.dark .landing-root textarea::placeholder{
+      color:var(--muted) !important;
+    }
+    body.dark .landing-root .nav-link:hover{
+      color:#7DD3DA !important;
+    }
+    body.dark .landing-root .testi-card::after{
+      color:rgba(125,211,218,.08);
+    }
   `}</style>
 );
 
@@ -249,17 +294,17 @@ const DashMockup = () => {
           </div>
         ))}
       </div>
-      <div style={{fontSize:11,fontWeight:600,color:'#64748B',marginBottom:6}}>CA mensuel (Ar)</div>
+      <div style={{fontSize:11,fontWeight:600,color:'var(--muted)',marginBottom:6}}>CA mensuel (Ar)</div>
       <svg width="100%" viewBox="0 0 200 52" style={{overflow:'visible'}}>
         <defs><linearGradient id="dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#0D7A87" stopOpacity=".2"/><stop offset="100%" stopColor="#0D7A87" stopOpacity="0"/></linearGradient></defs>
         {(()=>{ const pts=[90,140,110,185,160,225,195,260],W=200,H=48,mn=Math.min(...pts),mx=Math.max(...pts),xs=pts.map((_,i)=>(i/(pts.length-1))*W),ys=pts.map(p=>H-((p-mn)/(mx-mn||1))*(H-10)-5),d=xs.map((x,i)=>`${i?'L':'M'}${x},${ys[i]}`).join(' ');return(<><path d={`${d} L${W},${H} L0,${H}Z`} fill="url(#dg)"/><path d={d} fill="none" stroke="#0D7A87" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>{xs.map((x,i)=><circle key={i} cx={x} cy={ys[i]} r={3} fill="#0D7A87" stroke="#fff" strokeWidth={1.5}/>)}</>); })()}
       </svg>
     </div>,
     <div key={1}>
-      <div style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><span style={{fontWeight:700,fontSize:13,color:'#0F172A'}}>Patients du jour</span><span style={{background:'#F0FDFE',color:'#0D7A87',borderRadius:99,padding:'2px 10px',fontSize:11,fontWeight:700}}>247</span></div>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:11}}><span style={{fontWeight:700,fontSize:13,color:'var(--ink)'}}>Patients du jour</span><span style={{background:'rgba(13,122,135,.12)',color:'var(--teal)',borderRadius:99,padding:'2px 10px',fontSize:11,fontWeight:700}}>247</span></div>
       {[{n:'Rakoto Jean',h:'09:00',s:'Confirmé',c:'#10B981',b:'#D1FAE5'},{n:'Rasoa Marie',h:'10:30',s:'En attente',c:'#F59E0B',b:'#FEF3C7'},{n:'Andry Paul',h:'11:00',s:'Confirmé',c:'#10B981',b:'#D1FAE5'},{n:'Hanta Elisa',h:'14:00',s:'Nouveau',c:'#7C3AED',b:'#EDE9FE'}].map((p,i)=>(
         <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 10px',background:'#F8FAFC',borderRadius:10,marginBottom:5,border:'1px solid #F1F5F9'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,#0D7A87,#13A3B4)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,fontWeight:800}}>{p.n[0]}</div><div><div style={{fontWeight:700,fontSize:12,color:'#0F172A'}}>{p.n}</div><div style={{fontSize:10,color:'#94A3B8'}}>RDV {p.h}</div></div></div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:28,height:28,borderRadius:'50%',background:'linear-gradient(135deg,var(--teal),var(--teal-lt))',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,fontWeight:800}}>{p.n[0]}</div><div><div style={{fontWeight:700,fontSize:12,color:'var(--ink)'}}>{p.n}</div><div style={{fontSize:10,color:'var(--muted)'}}>RDV {p.h}</div></div></div>
           <span style={{background:p.b,color:p.c,borderRadius:99,padding:'2px 8px',fontSize:10,fontWeight:700}}>{p.s}</span>
         </div>
       ))}
@@ -269,7 +314,7 @@ const DashMockup = () => {
       <div style={{display:'flex',justifyContent:'space-around',marginBottom:14}}><Donut pct={78} color="#0D7A87"/><Donut pct={92} color="#10B981"/><Donut pct={65} color="#F59E0B"/></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
         {[{l:'Occupation',v:'78%'},{l:'Paiements',v:'92%'},{l:'Objectif',v:'65%'}].map((s,i)=>(
-          <div key={i} style={{textAlign:'center',background:'#F8FAFC',borderRadius:8,padding:'8px 4px',border:'1px solid #E2E8F0'}}><div style={{fontWeight:800,fontSize:14,color:'#0F172A'}}>{s.v}</div><div style={{fontSize:10,color:'#94A3B8'}}>{s.l}</div></div>
+          <div key={i} style={{textAlign:'center',background:'var(--bg)',borderRadius:8,padding:'8px 4px',border:'1px solid var(--border)'}}><div style={{fontWeight:800,fontSize:14,color:'var(--ink)'}}>{s.v}</div><div style={{fontSize:10,color:'var(--muted)'}}>{s.l}</div></div>
         ))}
       </div>
     </div>,
@@ -296,19 +341,19 @@ const DashMockup = () => {
       ))}
       <div style={{display:'flex',gap:8,marginTop:10,flexWrap:'wrap'}}>
         {[{c:'#EF4444',l:'Carie'},{c:'#F59E0B',l:'Obturation'},{c:'#10B981',l:'Sain'},{c:'#7C3AED',l:'Couronne'}].map(s=>(
-          <div key={s.l} style={{display:'flex',alignItems:'center',gap:4}}><div style={{width:10,height:10,background:s.c,borderRadius:2}}/><span style={{fontSize:10,color:'#64748B'}}>{s.l}</span></div>
+          <div key={s.l} style={{display:'flex',alignItems:'center',gap:4}}><div style={{width:10,height:10,background:s.c,borderRadius:2}}/><span style={{fontSize:10,color:'var(--muted)'}}>{s.l}</span></div>
         ))}
       </div>
     </div>,
   ];
   return (
-    <div style={{background:'#fff',borderRadius:20,padding:'16px 18px',boxShadow:'0 24px 64px rgba(0,0,0,.14)',border:'1px solid #E2E8F0',display:'flex',flexDirection:'column',height:'100%'}}>
+    <div style={{background:'var(--surface)',borderRadius:20,padding:'16px 18px',boxShadow:'0 24px 64px rgba(0,0,0,.14)',border:'1px solid var(--border)',display:'flex',flexDirection:'column',height:'100%'}}>
       <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:14,paddingBottom:12,borderBottom:'1px solid #F1F5F9'}}>
         <div style={{width:10,height:10,borderRadius:'50%',background:'#FF5F57'}}/><div style={{width:10,height:10,borderRadius:'50%',background:'#FFBD2E'}}/><div style={{width:10,height:10,borderRadius:'50%',background:'#28CA41'}}/>
         <div style={{flex:1,background:'#F8FAFC',borderRadius:6,padding:'4px 12px',marginLeft:10,display:'flex',alignItems:'center',gap:6}}><div style={{width:7,height:7,borderRadius:'50%',background:'#10B981'}}/><span style={{fontSize:11,color:'#94A3B8'}}>app.dpm-madagascar.com</span></div>
       </div>
       <div style={{display:'flex',gap:3,marginBottom:13,flexWrap:'wrap'}}>
-        {tabs.map((t,i)=><button key={i} onClick={()=>setTab(i)} style={{padding:'4px 9px',borderRadius:7,border:'none',cursor:'pointer',background:tab===i?'#0D7A87':'#F1F5F9',color:tab===i?'#fff':'#64748B',fontSize:10,fontWeight:700,transition:'all .2s'}}>{t}</button>)}
+        {tabs.map((t,i)=><button key={i} onClick={()=>setTab(i)} style={{padding:'4px 9px',borderRadius:7,border:'none',cursor:'pointer',background:tab===i?'var(--teal)':'var(--bg)',color:tab===i?'#fff':'var(--muted)',fontSize:10,fontWeight:700,transition:'all .2s'}}>{t}</button>)}
       </div>
       <div style={{flex:1,animation:'fadeIn .35s ease'}} key={tab}>{screens[tab]}</div>
       <div style={{display:'flex',gap:5,justifyContent:'center',marginTop:12}}>
@@ -335,7 +380,7 @@ const Counter = ({ end, suffix='', label, sub }) => {
     return ()=>obs.disconnect();
   }, [end]);
   return (
-    <div ref={ref} className="stat-card" style={{background:'#fff',borderRadius:18,padding:'20px 16px',border:'1px solid var(--border)',boxShadow:'var(--sh1)',animation:'countUp .6s ease both'}}>
+    <div ref={ref} className="stat-card" style={{background:'var(--surface)',borderRadius:18,padding:'20px 16px',border:'1px solid var(--border)',boxShadow:'var(--sh1)',animation:'countUp .6s ease both'}}>
       <div style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:38,color:'var(--teal)',lineHeight:1,marginBottom:4}}>{n}{suffix}</div>
       <div style={{fontFamily:'Bricolage Grotesque',fontWeight:700,fontSize:14,color:'var(--ink)',marginBottom:3}}>{label}</div>
       {sub && <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.4}}>{sub}</div>}
@@ -440,7 +485,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
   if(!show) return null;
   return (
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(10,15,20,.75)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn .2s ease'}}>
-      <div style={{background:'#fff',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95vh',overflowY:'auto',position:'relative',animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)'}}>
+      <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95vh',overflowY:'auto',position:'relative',animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)',border:'1px solid var(--border)'}}>
         <div style={{width:40,height:4,borderRadius:99,background:'#E2E8F0',margin:'0 auto 18px'}}/>
         <button onClick={onClose} style={{position:'absolute',top:14,right:14,width:32,height:32,borderRadius:'50%',background:'var(--surface)',border:'none',cursor:'pointer',fontSize:18,color:'var(--muted)'}}>✕</button>
         {!done?(
@@ -578,15 +623,22 @@ export default function LandingPage() {
     document.body.classList.toggle('dark', isDark);
     document.body.classList.toggle('light', !isDark);
     if (isDark) {
-      r.style.setProperty('--bg',      '#0A0F14');
-      r.style.setProperty('--surface', '#141A22');
-      r.style.setProperty('--ink',     '#F0F4F8');
-      r.style.setProperty('--slate',   '#94A3B8');
-      r.style.setProperty('--muted',   '#64748B');
-      r.style.setProperty('--border',  '#1E2A36');
-      r.style.setProperty('--white',   '#141A22');
-      document.body.style.background = '#0A0F14';
-      document.body.style.color      = '#F0F4F8';
+      r.style.setProperty('--bg',      '#07111F');
+      r.style.setProperty('--surface', '#101B2A');
+      r.style.setProperty('--ink',     '#F8FAFC');
+      r.style.setProperty('--slate',   '#C6D3DF');
+      r.style.setProperty('--muted',   '#8EA3B5');
+      r.style.setProperty('--border',  '#24364A');
+      r.style.setProperty('--white',   '#101B2A');
+      r.style.setProperty('--teal',    '#2DC4D5');
+      r.style.setProperty('--teal-dk', '#06202B');
+      r.style.setProperty('--teal-lt', '#7DD3DA');
+      r.style.setProperty('--section-dark', '#050B14');
+      r.style.setProperty('--sh1',     '0 10px 30px rgba(0,0,0,.22)');
+      r.style.setProperty('--sh3',     '0 26px 70px rgba(0,0,0,.36)');
+      r.style.setProperty('--sh-teal', '0 12px 34px rgba(45,196,213,.22)');
+      document.body.style.background = '#07111F';
+      document.body.style.color      = '#F8FAFC';
     } else {
       // Thème clair premium — fond gris chaud, pas blanc pur (moins agressif)
       r.style.setProperty('--bg',      '#F5F7FA');
@@ -596,6 +648,13 @@ export default function LandingPage() {
       r.style.setProperty('--muted',   '#718096');
       r.style.setProperty('--border',  '#E2E8F0');
       r.style.setProperty('--white',   '#FFFFFF');
+      r.style.setProperty('--teal',    '#0D7A87');
+      r.style.setProperty('--teal-dk', '#083D44');
+      r.style.setProperty('--teal-lt', '#13A3B4');
+      r.style.setProperty('--section-dark', '#1A202C');
+      r.style.setProperty('--sh1',     '0 1px 3px rgba(0,0,0,.06)');
+      r.style.setProperty('--sh3',     '0 16px 48px rgba(0,0,0,.12)');
+      r.style.setProperty('--sh-teal', '0 8px 32px rgba(13,122,135,.28)');
       document.body.style.background = '#F5F7FA';
       document.body.style.color      = '#1A202C';
     }
@@ -631,7 +690,7 @@ export default function LandingPage() {
   );
 
   return (
-    <div style={{fontFamily:"'Inter',sans-serif",background:'var(--bg)',minHeight:'100vh',overflowX:'hidden'}}>
+    <div className="landing-root" style={{fontFamily:"'Inter',sans-serif",background:'var(--bg)',minHeight:'100vh',overflowX:'hidden'}}>
       <GlobalCSS/>
 
       {/* ══ NAV ══ */}
@@ -759,7 +818,7 @@ export default function LandingPage() {
 
 
       {/* ══ PAIN POINTS ══ */}
-      <section style={{background:'var(--ink)',padding:`${isMobile?'56px 16px':'88px 56px'}`,position:'relative',overflow:'hidden'}}>
+      <section style={{background:'var(--section-dark)',padding:`${isMobile?'56px 16px':'88px 56px'}`,position:'relative',overflow:'hidden'}}>
         {/* Fond décoratif */}
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(ellipse at 10% 50%,rgba(13,122,135,.15),transparent 55%),radial-gradient(ellipse at 90% 20%,rgba(13,122,135,.10),transparent 55%)',pointerEvents:'none'}}/>
         <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px)',backgroundSize:'48px 48px',pointerEvents:'none'}}/>
@@ -870,7 +929,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ STATS ══ */}
-      <section style={{background:'#fff',padding:`${isMobile?'36px':'60px'} ${px}`,borderBottom:'1px solid var(--border)',position:'relative',overflow:'hidden'}}>
+      <section style={{background:'var(--surface)',padding:`${isMobile?'36px':'60px'} ${px}`,borderBottom:'1px solid var(--border)',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 50% 100%,rgba(13,122,135,.04),transparent 65%)',pointerEvents:'none'}}/>
         <div style={{maxWidth:1000,margin:'0 auto',display:'grid',gridTemplateColumns:c4,gap:isMobile?10:20,position:'relative'}}>
           <Counter end={50} suffix="+" label="+50 cabinets" sub="clients actifs en Madagascar"/>
@@ -938,7 +997,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ CTA MID ══ */}
-      <section style={{background:'var(--ink)',padding:`${isMobile?'44px':'80px'} ${px}`,position:'relative',overflow:'hidden'}}>
+      <section style={{background:'var(--section-dark)',padding:`${isMobile?'44px':'80px'} ${px}`,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle at 25% 50%,rgba(13,122,135,.2),transparent 50%),radial-gradient(circle at 75% 50%,rgba(13,122,135,.15),transparent 50%)',pointerEvents:'none'}}/>
         <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:c2,gap:isMobile?26:56,alignItems:'center',position:'relative'}}>
           <div className="sr">
@@ -999,7 +1058,7 @@ export default function LandingPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:c3,gap:isMobile?12:22,marginBottom:isMobile?18:48}}>
             {TEMOIGNAGES.map((t,i)=>(
-              <div key={i} className="sr testi-card" style={{background:'#fff',borderRadius:20,padding:isMobile?'18px 16px':'28px 26px',border:'1px solid var(--border)',boxShadow:'var(--sh1)',transitionDelay:`${i*.1}s`}}>
+              <div key={i} className="sr testi-card" style={{background:'var(--surface)',borderRadius:20,padding:isMobile?'18px 16px':'28px 26px',border:'1px solid var(--border)',boxShadow:'var(--sh1)',transitionDelay:`${i*.1}s`}}>
                 <div style={{display:'flex',gap:2,marginBottom:11}}>{Array(5).fill(0).map((_,j)=><span key={j} style={{color:'#F59E0B',fontSize:15}}>★</span>)}</div>
                 <p style={{color:'var(--slate)',fontSize:isMobile?13:15,lineHeight:1.8,marginBottom:16,fontStyle:'italic'}}>&ldquo;{t.txt}&rdquo;</p>
                 <div style={{display:'flex',alignItems:'center',gap:10,paddingTop:14,borderTop:'1px solid var(--border)'}}>
@@ -1067,7 +1126,7 @@ export default function LandingPage() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:c3,gap:isMobile?12:20,alignItems:'start'}}>
             {PLANS.map((plan,i)=>(
-              <div key={plan.name} className="plan-hover sr" style={{background:'#fff',borderRadius:20,padding:isMobile?'22px 18px':'32px 26px',border:plan.popular?'2px solid var(--teal)':'1px solid var(--border)',boxShadow:plan.popular?'var(--sh-teal)':'var(--sh1)',position:'relative',transitionDelay:`${i*.1}s`}}>
+              <div key={plan.name} className="plan-hover sr" style={{background:'var(--surface)',borderRadius:20,padding:isMobile?'22px 18px':'32px 26px',border:plan.popular?'2px solid var(--teal)':'1px solid var(--border)',boxShadow:plan.popular?'var(--sh-teal)':'var(--sh1)',position:'relative',transitionDelay:`${i*.1}s`}}>
                 {plan.popular&&<div style={{position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:'var(--teal)',color:'#fff',padding:'3px 14px',borderRadius:99,fontSize:11,fontWeight:800,whiteSpace:'nowrap'}}>⭐ Le plus populaire</div>}
                 {!plan.popular&&i===2&&<div style={{position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:'#7C3AED',color:'#fff',padding:'3px 14px',borderRadius:99,fontSize:11,fontWeight:800,whiteSpace:'nowrap'}}>🏆 Premium</div>}
                 <div style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>{plan.name}</div>
@@ -1107,7 +1166,7 @@ export default function LandingPage() {
         <div style={{display:'flex',flexDirection:'column',gap:8}}>
           {FAQS.map((faq,i)=>(
             <div key={i} className="faq-item sr" onClick={()=>setOpenFaq(openFaq===i?null:i)}
-              style={{background:'#fff',border:`1px solid ${openFaq===i?'var(--teal)':'var(--border)'}`,borderRadius:12,padding:isMobile?'15px 16px':'20px 24px',transitionDelay:`${i*.04}s`}}>
+              style={{background:'var(--surface)',border:`1px solid ${openFaq===i?'var(--teal)':'var(--border)'}`,borderRadius:12,padding:isMobile?'15px 16px':'20px 24px',transitionDelay:`${i*.04}s`}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
                 <p style={{fontFamily:'Bricolage Grotesque',fontWeight:700,fontSize:isMobile?13:15,color:'var(--ink)',margin:0}}>{faq.q}</p>
                 <span style={{color:'var(--teal)',fontSize:22,flexShrink:0,transition:'transform .3s',transform:openFaq===i?'rotate(45deg)':'rotate(0)',fontWeight:300}}>+</span>
@@ -1119,7 +1178,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ CONTACT ══ */}
-      <section id="contact" style={{background:'var(--ink)',padding:`${py} ${px}`,position:'relative',overflow:'hidden'}}>
+      <section id="contact" style={{background:'var(--section-dark)',padding:`${py} ${px}`,position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle at 25% 50%,rgba(13,122,135,.18),transparent 50%),radial-gradient(circle at 75% 20%,rgba(13,122,135,.12),transparent 50%)',pointerEvents:'none'}}/>
         <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:c2,gap:isMobile?30:72,position:'relative',alignItems:'start'}}>
           <div className="sr">

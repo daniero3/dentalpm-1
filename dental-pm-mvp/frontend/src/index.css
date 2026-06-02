@@ -163,7 +163,7 @@
     color: rgb(var(--foreground));
   }
 
-  p, span, label { color: rgb(40, 52, 68); }
+  p, span, label { color: inherit; }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
