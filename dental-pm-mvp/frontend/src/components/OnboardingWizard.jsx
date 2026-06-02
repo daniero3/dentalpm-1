@@ -442,7 +442,7 @@ const OnboardingWizard = () => {
                   </Button>
                   <Button onClick={handleComplete} disabled={completing} className="flex-1 bg-green-600 hover:bg-green-700">
                     {completing ? <span className="dpm-skeleton inline-block h-4 w-4 mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                    Terminer & Activer l'essai 7 jours
+                    Terminer & Activer l'essai 30 jours
                   </Button>
                 </div>
               </>

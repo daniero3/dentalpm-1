@@ -57,7 +57,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
   return (
     <button onClick={handleClick} disabled={loading}
       style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:loading?'#94A3B8':'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, border:'none', cursor:loading?'not-allowed':'pointer', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box', transition:'all .2s' }}>
-      {loading ? '⏳ Redirection vers Stripe...' : '💳 Enregistrer ma carte — 7 jours gratuits'}
+      {loading ? '⏳ Redirection vers Stripe...' : '💳 Enregistrer ma carte — 30 jours gratuits'}
     </button>
   );
 };
@@ -147,7 +147,7 @@ export default function RegisterPage() {
         <div style={{ textAlign:'center', marginBottom:28 }}>
           <img className="premium-logo" src="/fix-logo.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', marginBottom:14 }}/>
           <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:'0 0 4px' }}>Créer votre cabinet</h1>
-          <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Essai gratuit 7 jours — carte enregistrée, aucun prélèvement immédiat</p>
+          <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Essai gratuit 30 jours — carte enregistrée, aucun prélèvement immédiat</p>
         </div>
 
         {/* Card principale */}
@@ -166,7 +166,7 @@ export default function RegisterPage() {
             {step===0 && !done && (
               <>
                 <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:18, color:'#0F172A', margin:'0 0 6px' }}>Choisissez votre plan</h2>
-                <p style={{ color:'#64748B', fontSize:13, margin:'0 0 20px' }}>Commencez avec un essai gratuit de 7 jours.</p>
+                <p style={{ color:'#64748B', fontSize:13, margin:'0 0 20px' }}>Commencez avec un essai gratuit de 30 jours.</p>
                 <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                   {PLANS.map(p => (
                     <div className="premium-plan" key={p.name} onClick={() => setPlan(p)}
@@ -258,11 +258,11 @@ export default function RegisterPage() {
                     <span>Cabinet : {form.cabinet}</span>
                     <span>{plan?.price} Ar/mois</span>
                   </div>
-                  <div style={{ fontSize:12, color:'#64748B', marginTop:4 }}>7 jours d&apos;essai gratuit inclus — carte requise, aucun prélèvement aujourd’hui</div>
+                  <div style={{ fontSize:12, color:'#64748B', marginTop:4 }}>30 jours d&apos;essai gratuit inclus — carte requise, aucun prélèvement aujourd’hui</div>
                 </div>
 
                 <p style={{ color:'#475569', fontSize:13, lineHeight:1.7, marginBottom:14 }}>
-                  Stripe enregistre votre carte pour activer l&apos;essai. Aucun montant n&apos;est prélevé maintenant; le plan choisi sera facturé automatiquement à la fin des 7 jours.
+                  Stripe enregistre votre carte pour activer l&apos;essai. Aucun montant n&apos;est prélevé maintenant; le plan choisi sera facturé automatiquement à la fin des 30 jours.
                 </p>
 
                 {/* Bouton Stripe en premier */}
@@ -280,7 +280,7 @@ export default function RegisterPage() {
                 <div style={{ fontSize:56, marginBottom:16 }}>🎉</div>
                 <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:22, color:'#0F172A', margin:'0 0 8px' }}>Cabinet créé !</h2>
                 <p style={{ color:'#64748B', fontSize:14, lineHeight:1.7, margin:'0 0 16px' }}>
-                  Votre essai gratuit de 7 jours est actif. Un email de bienvenue vous a été envoyé.
+                  Votre essai gratuit de 30 jours est actif. Un email de bienvenue vous a été envoyé.
                 </p>
                 {adminUser && (
                   <div style={{ background:'#F0FDFE', border:'1.5px solid #7DD3DA', borderRadius:12, padding:'14px 18px', marginBottom:20, textAlign:'left' }}>

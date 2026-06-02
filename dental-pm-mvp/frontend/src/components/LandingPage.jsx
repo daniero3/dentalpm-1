@@ -389,7 +389,7 @@ const FEATURES_LIST = [
   {tag:'SMS',icon:'💬',title:'SMS automatiques',desc:"Rappels 24h avant RDV, messages d'anniversaire, relances patients inactifs. Zéro appel manuel inutile.",color:'#10B981'},
 ];
 const FAQS = [
-  {q:"Comment fonctionne l'essai gratuit de 7 jours ?",a:"Créez votre compte en 2 minutes avec une carte bancaire enregistrée. Aucun prélèvement n'est effectué pendant les 7 jours d'essai; Stripe prélève automatiquement le plan choisi à la fin de l'essai."},
+  {q:"Comment fonctionne l'essai gratuit de 30 jours ?",a:"Créez votre compte en 2 minutes avec une carte bancaire enregistrée. Aucun prélèvement n'est effectué pendant les 30 jours d'essai; Stripe prélève automatiquement le plan choisi à la fin de l'essai."},
   {q:"Mes données patients sont-elles sécurisées ?",a:"Oui. Chiffrement de bout en bout, sauvegarde automatique quotidienne, hébergement sécurisé. Confidentialité médicale respectée, aucune donnée partagée avec des tiers."},
   {q:"Puis-je annuler à tout moment ?",a:"Oui, sans engagement ni pénalité. Annulez depuis votre espace cabinet en un clic. Vos données restent accessibles jusqu'à la fin de la période payée."},
   {q:"Combien de patients avec le plan ESSENTIAL ?",a:"Le plan ESSENTIAL gère jusqu'à 500 patients actifs pour 1 praticien + 1 assistant(e). Le plan PRO offre des patients illimités dès 199 000 Ar/mois."},
@@ -488,15 +488,15 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
             {step===2&&(
               <div>
                 <p style={{color:'var(--slate)',fontSize:14,lineHeight:1.7,marginBottom:14}}>
-                  Votre <strong>essai de 7 jours</strong> démarre après l’enregistrement sécurisé de votre carte sur Stripe.
+                  Votre <strong>essai de 30 jours</strong> démarre après l’enregistrement sécurisé de votre carte sur Stripe.
                   <br/>Aucun prélèvement n’est effectué aujourd’hui.
                 </p>
                 <div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:12,padding:'12px 14px',marginBottom:14,color:'var(--teal)',fontSize:13,fontWeight:700,lineHeight:1.5}}>
-                  Carte requise pour activer l’essai. Stripe prélèvera automatiquement le plan choisi uniquement à la fin des 7 jours.
+                  Carte requise pour activer l’essai. Stripe prélèvera automatiquement le plan choisi uniquement à la fin des 30 jours.
                 </div>
                 <button className="btn-main" onClick={submit} disabled={loading}
                   style={{width:'100%',padding:'15px',borderRadius:13,background:'#635BFF',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
-                  {loading?'⏳ Redirection vers Stripe...':'💳 Enregistrer ma carte — 7 jours gratuits'}
+                  {loading?'⏳ Redirection vers Stripe...':'💳 Enregistrer ma carte — 30 jours gratuits'}
                 </button>
                 <button onClick={()=>setStep(1)} style={{width:'100%',marginTop:8,padding:9,background:'none',color:'var(--muted)',border:'none',cursor:'pointer',fontSize:13}}>← Retour</button>
               </div>
@@ -508,7 +508,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
             <h2 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:22,color:'var(--ink)',marginBottom:8}}>Bienvenue sur DPM !</h2>
             <p style={{color:'var(--slate)',lineHeight:1.8,marginBottom:18}}>Cabinet <strong>{form.cabinet}</strong> créé !<br/>Identifiants envoyés à <strong>{form.email}</strong></p>
             <div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:14,padding:'13px 16px',marginBottom:18,textAlign:'left'}}>
-              <p style={{margin:0,fontSize:13,color:'var(--teal)',fontWeight:700}}>🕐 Votre essai de 7 jours sera activé après l’enregistrement de la carte.</p>
+              <p style={{margin:0,fontSize:13,color:'var(--teal)',fontWeight:700}}>🕐 Votre essai de 30 jours sera activé après l’enregistrement de la carte.</p>
               <p style={{margin:'4px 0 0',color:'var(--slate)',fontSize:13}}>Connectez-vous après validation Stripe avec les identifiants reçus.</p>
             </div>
             <button className="btn-main" onClick={()=>navigate('/login')}
@@ -655,7 +655,7 @@ export default function LandingPage() {
                 <a key={href} href={href} className="nav-link" style={{padding:'7px 13px',color:sc?'var(--slate)':'rgba(255,255,255,.8)',fontWeight:500,fontSize:14,borderRadius:9}}>{label}</a>
               ))}
               <button onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
-              <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 7j</button>
+              <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 30j</button>
               <button onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
                 style={{width:38,height:38,borderRadius:10,border:`1.5px solid ${themeButtonBorder}`,background:themeButtonBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:4,flexShrink:0}}
                 onMouseOver={e=>{e.currentTarget.style.borderColor='var(--teal)';}}
@@ -725,7 +725,7 @@ export default function LandingPage() {
             <div className="au3" style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:isMobile?18:32}}>
               <button onClick={()=>navigate('/register')} className="btn-main"
                 style={{padding:isMobile?'13px 18px':'16px 32px',borderRadius:13,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'0 12px 40px rgba(0,0,0,.2)',width:isMobile?'100%':'auto'}}>
-                Essayer gratuitement — 7 jours 
+                Essayer gratuitement — 30 jours 
               </button>
               <a href="#tarifs" style={{padding:isMobile?'13px 18px':'16px 28px',borderRadius:13,background:'rgba(255,255,255,.1)',color:'#fff',fontWeight:600,fontSize:isMobile?15:16,border:'1px solid rgba(255,255,255,.22)',textDecoration:'none',display:'inline-flex',alignItems:'center',justifyContent:'center',width:isMobile?'100%':'auto'}}>
                 Voir les tarifs →
@@ -858,7 +858,7 @@ export default function LandingPage() {
               <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
                 <button onClick={()=>navigate('/register')} className="btn-main"
                   style={{padding:isMobile?'13px 22px':'14px 32px',borderRadius:12,background:'var(--teal)',color:'#fff',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>
-                  Essayer gratuitement — 7 jours 
+                  Essayer gratuitement — 30 jours 
                 </button>
                 <a href="#tarifs" style={{padding:isMobile?'13px 18px':'14px 24px',borderRadius:12,background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontWeight:600,fontSize:isMobile?14:15,border:'1px solid rgba(255,255,255,.18)',textDecoration:'none',display:'inline-flex',alignItems:'center'}}>
                   Voir les tarifs →
@@ -949,7 +949,7 @@ export default function LandingPage() {
               <span style={{color:'#5EEAD4'}}>votre cabinet</span>
             </h2>
             <p style={{color:'rgba(255,255,255,.65)',fontSize:isMobile?14:16,lineHeight:1.75,marginBottom:18}}>Transformez votre cabinet dentaire en quelques minutes. Interface moderne, fonctionnalités complètes, sécurité maximale.</p>
-            {['✓ Démonstration en 7 jours gratuits','✓ Prise en main en 30 secondes','✓ Support technique prioritaire'].map(item=>(
+            {['✓ Démonstration en 30 jours gratuits','✓ Prise en main en 30 secondes','✓ Support technique prioritaire'].map(item=>(
               <div key={item} style={{fontSize:isMobile?13:15,color:'rgba(255,255,255,.75)',marginBottom:6}}>{item}</div>
             ))}
           </div>
@@ -1062,7 +1062,7 @@ export default function LandingPage() {
       <section id="tarifs" style={{background:'var(--surface)',padding:`${py} ${px}`}}>
         <div style={{maxWidth:1100,margin:'0 auto'}}>
           <div className="sr" style={{textAlign:'center',marginBottom:isMobile?28:60}}>
-            <ST tag="💰 Tarifs" title="Simple et transparent" sub="7 jours d'essai gratuit avec carte bancaire, sans prélèvement immédiat. Résiliable à tout moment."/>
+            <ST tag="💰 Tarifs" title="Simple et transparent" sub="30 jours d'essai gratuit avec carte bancaire, sans prélèvement immédiat. Résiliable à tout moment."/>
             <p style={{color:'var(--teal)',fontWeight:600,fontSize:isMobile?12:14,marginTop:-20}}>💳 MVola · Orange Money · Airtel Money · Virement Banquière</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:c3,gap:isMobile?12:20,alignItems:'start'}}>
@@ -1090,7 +1090,7 @@ export default function LandingPage() {
                     Payer avec Stripe →
                   </a>
                   <button onClick={()=>navigate('/register')} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
-                    Essai gratuit 7 jours
+                    Essai gratuit 30 jours
                   </button>
                 </div>
               </div>
@@ -1142,7 +1142,7 @@ export default function LandingPage() {
               <p style={{color:'rgba(255,255,255,.5)',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:1.5,marginBottom:10}}>PRÊT À COMMENCER ?</p>
               <button onClick={()=>navigate('/register')} className="btn-main"
                 style={{padding:'11px 22px',borderRadius:11,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:14,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
-                Essai gratuit 7 jours 
+                Essai gratuit 30 jours 
               </button>
             </div>
           </div>

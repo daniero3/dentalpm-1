@@ -172,7 +172,7 @@ async function sendWelcomeTrial(email, clinicName, plan, trialEndDate) {
   const endStr = new Date(trialEndDate).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
   const html = tplBase(`
     <h2 style="color:#0F172A;font-size:18px;font-weight:800;margin:0 0 16px">🎉 Bienvenue sur DentalPM, ${clinicName} !</h2>
-    <p>Votre essai gratuit de <strong>7 jours</strong> est maintenant actif.</p>
+    <p>Votre essai gratuit de <strong>30 jours</strong> est maintenant actif.</p>
     <div style="background:#F0FDFE;border:1.5px solid #7DD3DA;border-radius:12px;padding:14px 18px;margin:16px 0">
       <div style="font-weight:700;color:#0D7A87;margin-bottom:4px">Plan ${plan || 'PRO'} — Essai gratuit</div>
       <div style="font-size:13px;color:#475569">Expire le <strong>${endStr}</strong></div>

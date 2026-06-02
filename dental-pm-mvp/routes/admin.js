@@ -325,7 +325,7 @@ router.post('/clinics', requireRole('SUPER_ADMIN'), [
     if (existingUser) return res.status(409).json({ error: 'Ce nom d\'utilisateur est déjà pris' });
 
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 7); // Trial 7 jours
+    trialEnd.setDate(trialEnd.getDate() + 30); // Trial 30 jours
 
     const clinic = await Clinic.create({
       name, business_name: business_name || name, email, phone, address,

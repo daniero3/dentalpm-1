@@ -391,7 +391,7 @@ router.post('/register-clinic', [
     // validation Stripe: carte enregistrée, sans prélèvement immédiat.
     const now = new Date();
     const pendingEndDate = new Date(now);
-    pendingEndDate.setDate(pendingEndDate.getDate() + 7);
+    pendingEndDate.setDate(pendingEndDate.getDate() + 30);
     await require('../models').Subscription.create({
       clinic_id:         clinic.id,
       plan,
@@ -406,7 +406,7 @@ router.post('/register-clinic', [
     });
 
     res.status(201).json({
-      message: 'Cabinet créé avec succès. Carte requise pour activer l’essai de 7 jours.',
+      message: 'Cabinet créé avec succès. Carte requise pour activer l’essai de 30 jours.',
       clinic: { id: clinic.id, name: clinic.name, plan },
       admin_user: { username: adminUser.username, full_name: adminUser.full_name, email: adminUser.email },
     });

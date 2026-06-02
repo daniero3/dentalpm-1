@@ -215,9 +215,9 @@ router.post('/complete', async (req, res) => {
     });
 
     if (!subscription) {
-      // Create 7-day trial subscription
+      // Create 30-day trial subscription
       const now = new Date();
-      const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
       const chosenPlan = req.body?.plan || 'PRO';
       const PLAN_USERS = { ESSENTIAL:2, PRO:5, GROUP:50 };
@@ -249,7 +249,7 @@ router.post('/complete', async (req, res) => {
     } catch(e) { console.warn('Welcome email (non-fatal):', e.message); }
 
     res.json({
-      message: 'Onboarding complété! Essai de 7 jours activé.',
+      message: 'Onboarding complété! Essai de 30 jours activé.',
       subscription: {
         status: subscription.status,
         trial_end_date: subscription.trial_end_date,

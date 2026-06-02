@@ -137,7 +137,7 @@ describe('subscription trial flow', () => {
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.message).toMatch(/Carte requise pour activer l’essai de 7 jours/i);
+    expect(res.body.message).toMatch(/Carte requise pour activer l’essai de 30 jours/i);
     expect(models.Clinic.create).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Cabinet Test',
       email: 'test@cabinet.mg',
@@ -168,7 +168,7 @@ describe('subscription trial flow', () => {
 
     const createdSub = models.Subscription.create.mock.calls[0][0];
     const diffDays = Math.round((new Date(createdSub.end_date) - new Date(createdSub.start_date)) / 86400000);
-    expect(diffDays).toBe(7);
+    expect(diffDays).toBe(30);
   });
 
   test('blocks login when the clinic subscription is cancelled', async () => {
@@ -204,7 +204,7 @@ describe('subscription trial flow', () => {
     expect(user.update).not.toHaveBeenCalled();
   });
 
-  test('creates a Stripe checkout session with a 7-day trial', async () => {
+  test('creates a Stripe checkout session with a 30-day trial', async () => {
     const stripeMock = {
       checkout: {
         sessions: {
@@ -238,7 +238,7 @@ describe('subscription trial flow', () => {
       mode: 'subscription',
       payment_method_types: ['card'],
       subscription_data: expect.objectContaining({
-        trial_period_days: 7,
+        trial_period_days: 30,
         metadata: expect.objectContaining({ plan: 'PRO', clinic_id: clinicId })
       }),
       metadata: expect.objectContaining({ plan: 'PRO', clinic_id: clinicId }),
@@ -350,7 +350,7 @@ describe('subscription trial flow', () => {
             metadata: { clinic_id: clinicId, plan: 'PRO' },
             subscription: {
               id: 'sub_test_123',
-              trial_end: Math.floor((Date.now() + 7 * 86400000) / 1000),
+              trial_end: Math.floor((Date.now() + 30 * 86400000) / 1000),
               metadata: { clinic_id: clinicId, plan: 'PRO' }
             }
           })

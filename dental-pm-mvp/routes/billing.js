@@ -180,6 +180,7 @@ const getClinicId = (req) =>
 const router = express.Router();
 
 const MONTHLY_PRICE_MGA = 199000; // Défaut PRO — remplacé dynamiquement selon le plan
+const TRIAL_PERIOD_DAYS = 30;
 
 // ── Générer une référence unique DPM ─────────────────────────────────────
 function generateRef(clinicId) {
@@ -192,7 +193,7 @@ async function activateStripeTrial({ clinicId, planCode = 'PRO', stripeSubscript
   if (!clinicId) throw new Error('clinic_id manquant');
 
   const now = new Date();
-  const endDate = trialEnd || new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const endDate = trialEnd || new Date(now.getTime() + TRIAL_PERIOD_DAYS * 24 * 60 * 60 * 1000);
   const PLAN_USERS = { ESSENTIAL: 2, PRO: 5, GROUP: 50 };
   const normalizedPlan = PLAN_PRICES[planCode] ? planCode : 'PRO';
 
@@ -617,7 +618,7 @@ router.post('/public-checkout', async (req, res) => {
       client_reference_id: clinic_id || undefined,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: TRIAL_PERIOD_DAYS,
         trial_settings: {
           end_behavior: { missing_payment_method: 'cancel' }
         },
@@ -857,7 +858,7 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
             return res.json({ received: true });
           }
 
-          const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          const trialEnd = new Date(Date.now() + TRIAL_PERIOD_DAYS * 24 * 60 * 60 * 1000);
           await activateStripeTrial({
             clinicId,
             planCode,
@@ -941,7 +942,7 @@ router.post('/webhook/stripe', express.raw({ type:'application/json' }), async (
       }
     }
 
-    // ── customer.subscription.updated → trial → actif après paiement J+7 ──
+    // ── customer.subscription.updated → trial → actif après paiement après essai ──
     if (event.type === 'customer.subscription.updated') {
       const subObj = obj;
       if (clinicId && subObj.cancel_at_period_end) {

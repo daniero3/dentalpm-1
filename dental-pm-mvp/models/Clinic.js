@@ -183,7 +183,7 @@ Clinic.prototype.getRemainingTrialDays = function() {
 Clinic.beforeCreate(async (clinic) => {
   if (clinic.subscription_status === 'TRIAL') {
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 14);
+    trialEnd.setDate(trialEnd.getDate() + 30);
     clinic.trial_ends_at = trialEnd;
   }
 });

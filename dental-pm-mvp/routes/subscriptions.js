@@ -213,7 +213,7 @@ router.post('/trial', [
     const planConfig = SUBSCRIPTION_PLANS[plan];
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 14); // 14 days trial
+    endDate.setDate(endDate.getDate() + 30); // 30 days trial
 
     // Create trial subscription
     const subscription = await Subscription.create({
@@ -237,7 +237,7 @@ router.post('/trial', [
       subscription: {
         ...subscription.toJSON(),
         plan_details: planConfig,
-        trial_days_remaining: 14
+        trial_days_remaining: 30
       }
     });
 
