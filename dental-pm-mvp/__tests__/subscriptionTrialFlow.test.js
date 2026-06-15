@@ -675,3 +675,88 @@ describe('blocked legacy trial restoration', () => {
     );
   });
 });
+
+describe('unrestored legacy trial backfill', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('restores blocked legacy clinics when the latest subscription has missing trial dates', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-15T12:00:00Z'));
+
+    const migration = require('../migrations/20260615-backfill-unrestored-legacy-7-day-trials');
+    const queryInterface = {
+      sequelize: {
+        query: jest.fn().mockResolvedValue([
+          {
+            clinic_id: clinicId,
+            clinic_created_at: '2026-05-01',
+            clinic_trial_ends_at: '2026-05-08',
+            clinic_plan: 'PRO',
+            clinic_status: 'TRIAL_EXPIRED',
+            subscription_id: 'sub_missing_dates',
+            subscription_status: 'EXPIRED',
+            subscription_start_date: null,
+            subscription_end_date: null,
+            subscription_trial_end_date: null,
+            subscription_notes: null
+          },
+          {
+            clinic_id: '33333333-3333-4333-8333-333333333333',
+            clinic_created_at: '2026-05-01',
+            clinic_trial_ends_at: '2026-05-31',
+            clinic_plan: 'PRO',
+            clinic_status: 'TRIAL_EXPIRED',
+            subscription_id: 'sub_full_trial',
+            subscription_status: 'TRIAL_EXPIRED',
+            subscription_start_date: '2026-05-01',
+            subscription_end_date: '2026-05-31',
+            subscription_trial_end_date: '2026-05-31',
+            subscription_notes: null
+          }
+        ])
+      },
+      bulkUpdate: jest.fn().mockResolvedValue([1])
+    };
+
+    await migration.up(queryInterface, require('sequelize'));
+
+    expect(queryInterface.bulkUpdate).toHaveBeenCalledTimes(2);
+    expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
+      1,
+      'subscriptions',
+      expect.objectContaining({
+        status: 'TRIAL',
+        end_date: '2026-07-08',
+        trial_end_date: '2026-07-08',
+        notes: expect.stringContaining('Legacy 7-day trial restored')
+      }),
+      {
+        id: 'sub_missing_dates',
+        status: expect.objectContaining({})
+      }
+    );
+    expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
+      2,
+      'clinics',
+      expect.objectContaining({
+        subscription_status: 'TRIAL',
+        trial_ends_at: '2026-07-08',
+        is_active: true,
+        current_plan: 'PRO'
+      }),
+      expect.objectContaining({ id: clinicId })
+    );
+  });
+
+  test('does not restore clinics already handled by previous top-up migrations', () => {
+    const migration = require('../migrations/20260615-backfill-unrestored-legacy-7-day-trials');
+
+    expect(migration._private.isLikelyUnrestoredLegacyTrial({
+      clinic_created_at: '2026-05-01',
+      clinic_trial_ends_at: '2026-05-08',
+      clinic_status: 'TRIAL_EXPIRED',
+      subscription_notes: '[migration:20260615-extend-legacy-7-day-trials] already done'
+    })).toBe(false);
+  });
+});
