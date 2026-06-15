@@ -19,6 +19,7 @@ async function runMigrations() {
     '../migrations/20260513-patient-import-nullable-fields',
     '../migrations/20260513-backfill-patient-identifiers',
     '../migrations/20260615-extend-legacy-7-day-trials',
+    '../migrations/20260615-restore-blocked-legacy-7-day-trials',
   ];
 
   for (const migrationPath of migrations) {

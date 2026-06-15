@@ -618,3 +618,60 @@ describe('legacy short trial migration', () => {
     );
   });
 });
+
+describe('blocked legacy trial restoration', () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  test('restores blocked clinics that had a 7-day trial history', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-15T12:00:00Z'));
+
+    const migration = require('../migrations/20260615-restore-blocked-legacy-7-day-trials');
+    const queryInterface = {
+      sequelize: {
+        query: jest.fn().mockResolvedValue([
+          {
+            clinic_id: clinicId,
+            clinic_created_at: '2026-05-01',
+            clinic_trial_ends_at: '2026-05-08',
+            clinic_plan: 'PRO',
+            clinic_status: 'TRIAL_EXPIRED',
+            subscription_id: 'sub_blocked_7',
+            start_date: '2026-05-01',
+            end_date: '2026-05-08',
+            trial_end_date: '2026-05-08',
+            notes: null
+          }
+        ])
+      },
+      bulkUpdate: jest.fn().mockResolvedValue([1])
+    };
+
+    await migration.up(queryInterface, require('sequelize'));
+
+    expect(queryInterface.bulkUpdate).toHaveBeenCalledTimes(2);
+    expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
+      1,
+      'subscriptions',
+      expect.objectContaining({
+        status: 'TRIAL',
+        end_date: '2026-07-08',
+        trial_end_date: '2026-07-08',
+        notes: expect.stringContaining('Legacy 7-day trial restored')
+      }),
+      { id: 'sub_blocked_7' }
+    );
+    expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
+      2,
+      'clinics',
+      expect.objectContaining({
+        subscription_status: 'TRIAL',
+        trial_ends_at: '2026-07-08',
+        is_active: true,
+        current_plan: 'PRO'
+      }),
+      { id: clinicId }
+    );
+  });
+});
