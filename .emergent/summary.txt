@@ -62,7 +62,7 @@ The application is a stable, feature-rich MVP for Dental Practice Management. It
     -   P??: Advanced calendar and appointment scheduling features.
 
 **Completed work in this session**
--   **Mini-sprint Sales-ready**: Implemented an onboarding wizard, trial period logic (7 days), and a  page for subscription payments.
+-   **Mini-sprint Sales-ready**: Implemented an onboarding wizard, trial period logic (30 days), and a  page for subscription payments.
 -   **P20 - DOC MIN**: Created a basic  file covering core features and troubleshooting.
 -   **P19 - Achats->Inventaire MVP**: Implemented purchase order creation and automated stock reception, which updates inventory levels.
 -   **P16 - Fournisseurs MVP**: Implemented full CRUD functionality for suppliers, including auto-seeding of initial data for new clinics.

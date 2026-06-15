@@ -204,7 +204,7 @@ class SaaSFeaturesAPITester:
         return success
 
     def test_trial_subscription_creation(self):
-        """Test 14-day trial subscription creation"""
+        """Test 30-day trial subscription creation"""
         print("\n🔍 Testing Trial Subscription Creation...")
         
         if not self.created_clinic_id:
@@ -221,8 +221,8 @@ class SaaSFeaturesAPITester:
             subscription = response.get('subscription', {})
             trial_days = subscription.get('trial_days_remaining', 0)
             
-            # Verify trial is exactly 14 days
-            if trial_days == 14 and subscription.get('status') == 'TRIAL':
+            # Verify trial is exactly 30 days
+            if trial_days == 30 and subscription.get('status') == 'TRIAL':
                 self.log_test("Trial Subscription Creation", True, 
                              f"- Trial Status: {subscription.get('status')}, Days: {trial_days}, Plan: {subscription.get('plan')}")
             else:

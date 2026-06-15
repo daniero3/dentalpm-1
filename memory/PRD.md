@@ -12,7 +12,7 @@ Application SaaS de gestion de cabinet dentaire pour Madagascar (DentalPM).
 - **Messaging**: Rappels SMS/Email (simulé), templates
 - **Reports**: Tableau de bord, statistiques
 - **Multi-tenancy**: Isolation par clinic_id
-- **SaaS**: Onboarding, trial 7 jours, renouvellement
+- **SaaS**: Onboarding, trial 30 jours, renouvellement
 
 ## Tech Stack
 - **Backend**: Node.js, Express.js, Sequelize, SQLite
