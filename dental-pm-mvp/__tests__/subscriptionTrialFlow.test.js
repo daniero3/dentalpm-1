@@ -832,5 +832,6 @@ describe('unrestored legacy trial backfill', () => {
     expect(queryInterface.sequelize.query.mock.calls[1][0]).toContain('UPDATE clinics c');
     expect(queryInterface.sequelize.query.mock.calls[1][0]).toContain('s.status = \'TRIAL\'');
     expect(queryInterface.sequelize.query.mock.calls[1][0]).toContain('c.is_active = false');
+    expect(queryInterface.sequelize.query.mock.calls[1][0]).toContain('::"enum_clinics_current_plan"');
   });
 });

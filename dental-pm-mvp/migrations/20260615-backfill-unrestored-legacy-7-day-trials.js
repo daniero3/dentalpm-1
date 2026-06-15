@@ -199,7 +199,7 @@ module.exports = {
           subscription_status = 'TRIAL',
           trial_ends_at = s.trial_end_date,
           is_active = true,
-          current_plan = COALESCE(c.current_plan, s.plan),
+          current_plan = COALESCE(c.current_plan::text, s.plan::text)::"enum_clinics_current_plan",
           max_users = COALESCE(s.max_practitioners, c.max_users),
           updated_at = :now
         FROM subscriptions s
