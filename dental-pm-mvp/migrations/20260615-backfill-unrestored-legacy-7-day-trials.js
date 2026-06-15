@@ -32,6 +32,12 @@ function hasAnyMarker(notes) {
   return [MIGRATION_MARKER, ...PREVIOUS_MARKERS].some((marker) => notes?.includes(marker));
 }
 
+function markerWhereClause(alias = 's') {
+  return [MIGRATION_MARKER, ...PREVIOUS_MARKERS]
+    .map((marker) => `${alias}.notes LIKE '%${marker}%'`)
+    .join(' OR ');
+}
+
 function inferTrialDurationDays(row) {
   const start = parseDateOnly(row.subscription_start_date || row.clinic_created_at);
   const end = parseDateOnly(row.subscription_trial_end_date || row.subscription_end_date || row.clinic_trial_ends_at);
@@ -86,14 +92,19 @@ module.exports = {
           ORDER BY subscriptions.created_at DESC
           LIMIT 1
         ) s ON true
-        WHERE c.subscription_status IN ('EXPIRED', 'TRIAL_EXPIRED')
+        WHERE c.subscription_status IN ('EXPIRED', 'TRIAL_EXPIRED', 'TRIAL', 'PENDING')
+          AND (
+            c.is_active = false
+            OR c.subscription_status IN ('EXPIRED', 'TRIAL_EXPIRED', 'PENDING')
+            OR c.trial_ends_at < CURRENT_DATE
+          )
           AND c.created_at < :cutoffDate
           AND NOT EXISTS (
             SELECT 1
-            FROM subscriptions active_subscriptions
-            WHERE active_subscriptions.clinic_id = c.id
-              AND active_subscriptions.status IN ('ACTIVE', 'TRIAL')
-              AND active_subscriptions.end_date >= CURRENT_DATE
+            FROM subscriptions active_paid_subscriptions
+            WHERE active_paid_subscriptions.clinic_id = c.id
+              AND active_paid_subscriptions.status = 'ACTIVE'
+              AND active_paid_subscriptions.end_date >= CURRENT_DATE
           )
       `,
       {
@@ -129,7 +140,7 @@ module.exports = {
           },
           {
             id: clinic.subscription_id,
-            status: { [Op.notIn]: ['ACTIVE', 'TRIAL'] },
+            status: { [Op.in]: ['EXPIRED', 'TRIAL_EXPIRED', 'PENDING', 'TRIAL'] },
           }
         );
       } else {
@@ -174,11 +185,51 @@ module.exports = {
         },
         {
           id: clinic.clinic_id,
-          subscription_status: { [Op.in]: ['EXPIRED', 'TRIAL_EXPIRED'] },
+          subscription_status: { [Op.in]: ['EXPIRED', 'TRIAL_EXPIRED', 'TRIAL', 'PENDING'] },
         }
       );
 
       restoredCount += 1;
+    }
+
+    const repairResponse = await sequelize.query(
+      `
+        UPDATE clinics c
+        SET
+          subscription_status = 'TRIAL',
+          trial_ends_at = s.trial_end_date,
+          is_active = true,
+          current_plan = COALESCE(c.current_plan, s.plan),
+          max_users = COALESCE(s.max_practitioners, c.max_users),
+          updated_at = :now
+        FROM subscriptions s
+        WHERE s.clinic_id = c.id
+          AND s.status = 'TRIAL'
+          AND s.trial_end_date >= CURRENT_DATE
+          AND (${markerWhereClause('s')})
+          AND (
+            c.subscription_status <> 'TRIAL'
+            OR c.is_active = false
+            OR c.trial_ends_at IS NULL
+            OR c.trial_ends_at::date <> s.trial_end_date
+          )
+          AND NOT EXISTS (
+            SELECT 1
+            FROM subscriptions active_paid_subscriptions
+            WHERE active_paid_subscriptions.clinic_id = c.id
+              AND active_paid_subscriptions.status = 'ACTIVE'
+              AND active_paid_subscriptions.end_date >= CURRENT_DATE
+          )
+      `,
+      { replacements: { now } }
+    );
+
+    const repairMetadata = Array.isArray(repairResponse)
+      ? (repairResponse[1] || repairResponse[0])
+      : repairResponse;
+    const repairedCount = repairMetadata?.rowCount || repairMetadata?.affectedRows || 0;
+    if (repairedCount) {
+      console.log(`Legacy trial access repair: ${repairedCount} clinic(s) reactivated from marked trial subscriptions.`);
     }
 
     console.log(`Unrestored legacy trial backfill: ${restoredCount} clinic(s) restored with ${LEGACY_TRIAL_TOP_UP_DAYS} remaining days.`);
@@ -191,5 +242,6 @@ module.exports = {
   _private: {
     inferTrialDurationDays,
     isLikelyUnrestoredLegacyTrial,
+    markerWhereClause,
   },
 };
