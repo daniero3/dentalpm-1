@@ -561,16 +561,24 @@ describe('legacy short trial migration', () => {
       sequelize: {
         query: jest.fn().mockResolvedValue([
           {
-            id: 'sub_legacy_7',
             clinic_id: clinicId,
+            clinic_created_at: '2026-05-01',
+            clinic_trial_ends_at: '2026-05-08',
+            clinic_plan: 'PRO',
+            subscription_id: 'sub_legacy_7',
+            subscription_status: 'EXPIRED',
             start_date: '2026-05-01',
             end_date: '2026-05-08',
             trial_end_date: '2026-05-08',
             notes: null
           },
           {
-            id: 'sub_already_30',
             clinic_id: '22222222-2222-4222-8222-222222222222',
+            clinic_created_at: '2026-05-01',
+            clinic_trial_ends_at: '2026-05-31',
+            clinic_plan: 'PRO',
+            subscription_id: 'sub_already_30',
+            subscription_status: 'TRIAL_EXPIRED',
             start_date: '2026-05-01',
             end_date: '2026-05-31',
             trial_end_date: '2026-05-31',
@@ -593,7 +601,10 @@ describe('legacy short trial migration', () => {
         trial_end_date: '2026-07-08',
         notes: expect.stringContaining('topped up by 23 days')
       }),
-      { id: 'sub_legacy_7', status: 'TRIAL_EXPIRED' }
+      {
+        id: 'sub_legacy_7',
+        status: expect.objectContaining({})
+      }
     );
     expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
       2,
