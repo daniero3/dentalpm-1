@@ -47,12 +47,14 @@ function inferTrialDurationDays(row) {
 
 function isLikelyUnrestoredLegacyTrial(row) {
   if (hasAnyMarker(row.subscription_notes)) return false;
+  if (row.clinic_status === 'CANCELLED' || row.subscription_status === 'CANCELLED') return false;
 
   const hasTrialSignal = Boolean(row.clinic_trial_ends_at)
     || Boolean(row.subscription_trial_end_date)
     || row.clinic_status === 'TRIAL_EXPIRED'
-    || row.subscription_status === 'TRIAL_EXPIRED';
-  if (!hasTrialSignal) return false;
+    || row.subscription_status === 'TRIAL_EXPIRED'
+    || row.clinic_status === 'TRIAL'
+    || row.subscription_status === 'TRIAL';
 
   const duration = inferTrialDurationDays(row);
   if (duration !== null) return duration >= 1 && duration <= 8;
@@ -60,7 +62,7 @@ function isLikelyUnrestoredLegacyTrial(row) {
   const createdAt = parseDateOnly(row.clinic_created_at);
   if (!createdAt) return false;
 
-  return toDateOnly(createdAt) < LEGACY_CUTOFF_DATE;
+  return hasTrialSignal || toDateOnly(createdAt) < LEGACY_CUTOFF_DATE;
 }
 
 module.exports = {

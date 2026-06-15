@@ -834,4 +834,56 @@ describe('unrestored legacy trial backfill', () => {
     expect(queryInterface.sequelize.query.mock.calls[1][0]).toContain('c.is_active = false');
     expect(queryInterface.sequelize.query.mock.calls[1][0]).toContain('::"enum_clinics_current_plan"');
   });
+
+  test('restores old blocked pending clinics when legacy trial dates are missing', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-15T12:00:00Z'));
+
+    const migration = require('../migrations/20260615-backfill-unrestored-legacy-7-day-trials');
+    const queryInterface = {
+      sequelize: {
+        query: jest.fn().mockResolvedValue([
+          {
+            clinic_id: clinicId,
+            clinic_created_at: '2026-05-01',
+            clinic_trial_ends_at: null,
+            clinic_plan: 'PRO',
+            clinic_status: 'PENDING',
+            subscription_id: 'sub_pending_without_dates',
+            subscription_status: 'PENDING',
+            subscription_start_date: null,
+            subscription_end_date: null,
+            subscription_trial_end_date: null,
+            subscription_notes: null
+          }
+        ])
+      },
+      bulkUpdate: jest.fn().mockResolvedValue([1])
+    };
+
+    await migration.up(queryInterface, require('sequelize'));
+
+    expect(queryInterface.bulkUpdate).toHaveBeenCalledTimes(2);
+    expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
+      1,
+      'subscriptions',
+      expect.objectContaining({
+        status: 'TRIAL',
+        end_date: '2026-07-08',
+        trial_end_date: '2026-07-08'
+      }),
+      {
+        id: 'sub_pending_without_dates',
+        status: expect.objectContaining({})
+      }
+    );
+    expect(queryInterface.bulkUpdate).toHaveBeenNthCalledWith(
+      2,
+      'clinics',
+      expect.objectContaining({
+        subscription_status: 'TRIAL',
+        is_active: true
+      }),
+      expect.objectContaining({ id: clinicId })
+    );
+  });
 });
