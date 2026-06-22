@@ -290,7 +290,7 @@ const AppointmentManagement = () => {
   const fetchPatients = async () => {
   try {
     const r = await axios.get(
-      `${API}/patients?limit=500&fields=lookup&includeTotal=false&_t=${Date.now()}`,
+      `${API}/patients?limit=500&fields=lookup&includeTotal=false&sort=recent&_t=${Date.now()}`
       authH()
     );
 
@@ -305,11 +305,35 @@ const AppointmentManagement = () => {
   }
 };
 
-  useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
+  // useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
+
+  useEffect(() => {
+    fetchAppts();
+    fetchPatients();
+
+    const refreshPatientsOnFocus = () => {
+      fetchPatients();
+    };
+
+    window.addEventListener('focus', refreshPatientsOnFocus);
+
+    return () => {
+      window.removeEventListener('focus', refreshPatientsOnFocus);
+    };
+  }, [fetchAppts]);
 
   const resetForm = () => setForm({ patient_id:'', dentist_id: user?.id||'', appointment_date: selDate, start_time:'09:00', end_time:'10:00', appointment_type:'CONSULTATION', reason:'', notes:'' });
 
-  const openCreate = () => { setEditA(null); resetForm(); setIsOpen(true); };
+  // const openCreate = () => { setEditA(null); resetForm(); setIsOpen(true); };
+
+  const openCreate = async () => {
+    setEditA(null);
+    resetForm();
+    setPatientSearch('');
+    setIsOpen(true);
+    await fetchPatients();
+  };
+  
   const openEdit   = a  => { setEditA(a); setForm({ patient_id:a.patient_id, dentist_id:a.dentist_id||'', appointment_date:a.appointment_date, start_time:a.start_time, end_time:a.end_time, appointment_type:a.appointment_type, reason:a.reason||'', notes:a.notes||'' }); setIsOpen(true); };
 
   const handleSubmit = async e => {
