@@ -290,7 +290,7 @@ const AppointmentManagement = () => {
   const fetchPatients = async () => {
   try {
     const r = await axios.get(
-      `${API}/patients?limit=500&fields=lookup&includeTotal=false&sort=recent&_t=${Date.now()}`
+      `${API}/patients?limit=500&fields=lookup&includeTotal=false&_t=${Date.now()}`,
       authH()
     );
 
