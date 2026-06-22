@@ -386,6 +386,37 @@ async def get_patients(current_user: User = Depends(get_current_user)):
     patients = await db.patients.find().to_list(1000)
     return [Patient(**patient) for patient in patients]
 
+@api_router.get("/patients/select")
+async def get_patients_for_select(
+    q: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    query = {}
+
+    if q:
+        query = {
+            "$or": [
+                {"first_name": {"$regex": q, "$options": "i"}},
+                {"last_name": {"$regex": q, "$options": "i"}},
+                {"phone": {"$regex": q, "$options": "i"}},
+                {"email": {"$regex": q, "$options": "i"}},
+            ]
+        }
+
+    patients = await db.patients.find(query).sort("last_name", 1).to_list(1000)
+
+    return [
+        {
+            "id": patient.get("id"),
+            "first_name": patient.get("first_name", ""),
+            "last_name": patient.get("last_name", ""),
+            "full_name": f"{patient.get('first_name', '')} {patient.get('last_name', '')}".strip(),
+            "phone": patient.get("phone", ""),
+            "email": patient.get("email", ""),
+        }
+        for patient in patients
+    ]
+
 @api_router.get("/patients/{patient_id}", response_model=Patient)
 async def get_patient(patient_id: str, current_user: User = Depends(get_current_user)):
     patient = await db.patients.find_one({"id": patient_id})
