@@ -288,22 +288,22 @@ const AppointmentManagement = () => {
   };*/
 
   const fetchPatients = async () => {
-  try {
-    const r = await axios.get(
-      `${API}/patients?limit=500&fields=lookup&includeTotal=false&_t=${Date.now()}`,
-      authH()
-    );
-
-    const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
-
-    console.log('Patients chargés pour agenda:', list.length, list);
-
-    setPatients(list);
-  } catch (e) {
-    console.error('fetchPatients error:', e?.response?.data || e.message);
-    toast.error('Erreur chargement patients');
-  }
-};
+    try {
+      const r = await axios.get(
+        `${API}/patients?limit=500&fields=lookup&includeTotal=false&_t=${Date.now()}`,
+        authH()
+      );
+  
+      const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
+  
+      console.log('Patients chargés pour agenda:', list.length, list);
+  
+      setPatients(list);
+    } catch (e) {
+      console.error('fetchPatients error:', e?.response?.data || e.message);
+      toast.error('Erreur chargement patients');
+    }
+  };
 
   // useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
 
