@@ -277,7 +277,7 @@ const AppointmentManagement = () => {
     finally { setLoading(false); }
   }, [dateRange, statusF]);
 
-  const fetchPatients = async () => {
+  /*const fetchPatients = async () => {
     try {
       const r = await cachedGet(`${API}/patients?limit=500&fields=lookup&includeTotal=false`, authH(), { ttl: CACHE_TTL.medium });
       const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
@@ -285,7 +285,25 @@ const AppointmentManagement = () => {
     } catch (e) {
       console.error('fetchPatients error:', e?.response?.data || e.message);
     }
-  };
+  };*/
+
+  const fetchPatients = async () => {
+  try {
+    const r = await axios.get(
+      `${API}/patients?limit=500&fields=lookup&includeTotal=false&_t=${Date.now()}`,
+      authH()
+    );
+
+    const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
+
+    console.log('Patients chargés pour agenda:', list.length, list);
+
+    setPatients(list);
+  } catch (e) {
+    console.error('fetchPatients error:', e?.response?.data || e.message);
+    toast.error('Erreur chargement patients');
+  }
+};
 
   useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
 
@@ -417,14 +435,23 @@ const AppointmentManagement = () => {
         - scoreSearchMatch(activeSearch, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status)
       : 0);
   const selectedPatient = patients.find(p => p.id === form.patient_id) || null;
-  const patientMatches = patients
+  
+  /*const patientMatches = patients
     .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
     .sort((a, b) => patientSearch.trim()
       ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
         - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
       : 0)
-    .slice(0, 100);
+    .slice(0, 100);*/
 
+    const patientMatches = patients
+    .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
+    .sort((a, b) => patientSearch.trim()
+      ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
+        - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
+      : patientIdentifier(a).localeCompare(patientIdentifier(b))
+    );
+  
   /* Stats */
   const todayAppts  = appts.filter(a => a.appointment_date === today());
   const confirmedN  = appts.filter(a => a.status === 'CONFIRMED').length;
