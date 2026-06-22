@@ -423,7 +423,7 @@ const AppointmentManagement = () => {
       ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
         - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
       : 0)
-    .slice(0, 8);
+    .slice(0, 100);
 
   /* Stats */
   const todayAppts  = appts.filter(a => a.appointment_date === today());
