@@ -82,7 +82,7 @@ router.get('/', requireClinicId, [
       return res.status(400).json({ error: 'Paramètres invalides', details: errors.array() });
     }
 
-    const { search, page = 1, limit = 20, fields } = req.query;
+    const { search, page = 1, limit = 20, fields, sort = 'name' } = req.query;
     const includeTotal = req.query.includeTotal !== 'false';
     const isLookup = fields === 'lookup';
     const offset = (page - 1) * limit;
@@ -147,7 +147,9 @@ router.get('/', requireClinicId, [
       where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['last_name', 'ASC'], ['first_name', 'ASC']],
+      order: sort === 'recent'
+        ? [['created_at', 'DESC']]
+        : [['last_name', 'ASC'], ['first_name', 'ASC']],
       attributes: isLookup
         ? ['id', 'patient_number', 'first_name', 'last_name', 'phone_primary', 'email']
         : undefined
