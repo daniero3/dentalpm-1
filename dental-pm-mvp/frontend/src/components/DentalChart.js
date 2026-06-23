@@ -18,7 +18,6 @@ const authHeaders = () => {
   return { headers: { Authorization: `Bearer ${token}` } };
 };
 
-// AJOUT
 const NUM_TO_FDI = {
   '1': '18', '2': '17', '3': '16', '4': '15', '5': '14', '6': '13', '7': '12', '8': '11',
   '9': '21', '10': '22', '11': '23', '12': '24', '13': '25', '14': '26', '15': '27', '16': '28',
@@ -30,7 +29,7 @@ const getFDINumber = (toothPosition) => {
   return NUM_TO_FDI[String(toothPosition)] || toothPosition;
 };
 
-// ── Modal CSS pur ──
+ {/*── Modal CSS pur ── */}
 const Modal = ({ open, onClose, title, description, children }) => {
   if (!open) return null;
   return (
@@ -272,7 +271,7 @@ const DentalChart = () => {
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" style={{ color:'#0D7A87' }} />
               {selectedTooth ? 
-                {selectedTooth ? `Dent ${getFDINumber(selectedTooth.tooth_position)}` : 'Sélectionnez une dent'}
+               {selectedTooth ? `Dent ${getFDINumber(selectedTooth.tooth_position)}` : 'Sélectionnez une dent'}
               }
             </CardTitle>
           </CardHeader>
