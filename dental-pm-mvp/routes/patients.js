@@ -189,6 +189,49 @@ router.get('/', requireClinicId, [
 });
 
 // ── GET /:id — Single patient ────────────────────────────────────────────────
+router.get('/stats/gender', async (req, res) => {
+  try {
+    const clinicId = req.user?.clinic_id;
+
+    const whereClause = {
+      is_active: true
+    };
+
+    if (clinicId) {
+      whereClause.clinic_id = clinicId;
+    }
+
+    const patients = await Patient.findAll({
+      where: whereClause,
+      attributes: ['gender']
+    });
+
+    const normalizeGender = (gender) => {
+      const g = String(gender || '').trim().toUpperCase();
+
+      if (['M', 'MALE', 'MASCULIN', 'HOMME'].includes(g)) return 'M';
+      if (['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME'].includes(g)) return 'F';
+      if (['OTHER', 'AUTRE'].includes(g)) return 'OTHER';
+
+      return '';
+    };
+
+    const stats = {
+      men: patients.filter(p => normalizeGender(p.gender) === 'M').length,
+      women: patients.filter(p => normalizeGender(p.gender) === 'F').length,
+      other: patients.filter(p => normalizeGender(p.gender) === 'OTHER').length,
+      total: patients.length
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Erreur stats gender:', error);
+    res.status(500).json({
+      error: 'Erreur lors du calcul des statistiques par sexe'
+    });
+  }
+});
+// 
 router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
