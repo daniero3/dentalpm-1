@@ -79,15 +79,29 @@ const PricingSettings = () => {
     }
   };
 
+  // const fetchFees = async (scheduleId) => {
+  //   try {
+  //     const response = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`, authH());
+  //     setFees(response.data.fees || []);
+  //   } catch (error) {
+  //     toast.error('Erreur lors du chargement des actes');
+  //   }
+  // };
+
   const fetchFees = async (scheduleId) => {
     try {
-      const response = await axios.get(`${API}/pricing-schedules/${scheduleId}/fees`, authH());
+      const response = await axios.get(
+        `${API}/pricing-schedules/${scheduleId}/fees?_t=${Date.now()}`,
+        authH()
+      );
+  
       setFees(response.data.fees || []);
     } catch (error) {
+      console.error('Fetch fees error:', error?.response?.data || error.message);
       toast.error('Erreur lors du chargement des actes');
     }
   };
-
+  // 
   const handleScheduleSelect = (schedule) => {
     setSelectedSchedule(schedule);
     fetchFees(schedule.id);
@@ -129,17 +143,36 @@ const PricingSettings = () => {
     }
   };
 
+  // const handleDeleteFee = async (fee) => {
+  //   if (!window.confirm(`Supprimer définitivement l'acte "${fee.label || fee.procedure_code}" ?`)) return;
+  //   try {
+  //     await axios.delete(`${API}/procedure-fees/${fee.id}`, authH());
+  //     toast.success('Acte supprimé');
+  //     fetchFees(selectedSchedule.id);
+  //   } catch (error) {
+  //     toast.error(error.response?.data?.error || 'Erreur suppression');
+  //   }
+  // };
+
   const handleDeleteFee = async (fee) => {
     if (!window.confirm(`Supprimer définitivement l'acte "${fee.label || fee.procedure_code}" ?`)) return;
+  
     try {
       await axios.delete(`${API}/procedure-fees/${fee.id}`, authH());
+  
+      setFees(prevFees => prevFees.filter(item => item.id !== fee.id));
+  
       toast.success('Acte supprimé');
-      fetchFees(selectedSchedule.id);
+  
+      if (selectedSchedule?.id) {
+        await fetchFees(selectedSchedule.id);
+      }
     } catch (error) {
+      console.error('Delete fee error:', error?.response?.data || error.message);
       toast.error(error.response?.data?.error || 'Erreur suppression');
     }
   };
-
+  // 
   // Créer une nouvelle grille si aucune n'existe pour le cabinet
   const handleCreateSchedule = async () => {
     try {
