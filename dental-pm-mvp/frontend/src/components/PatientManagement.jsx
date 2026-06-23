@@ -32,6 +32,17 @@ const GENDER_COLOR = { M:'#3B82F6', F:'#EC4899', OTHER:'#8B5CF6' };
 const GENDER_BG    = { M:'#EFF6FF', F:'#FDF2F8', OTHER:'#EDE9FE' };
 const GENDER_LABEL = { M:'M', F:'F', OTHER:'?' };
 
+// Ajout
+const normalizeGenderValue = (gender) => {
+  const g = String(gender || '').trim().toUpperCase();
+
+  if (g === 'M' || g === 'MALE' || g === 'MASCULIN') return 'M';
+  if (g === 'F' || g === 'FEMALE' || g === 'FEMININ' || g === 'FÉMININ') return 'F';
+  if (g === 'OTHER' || g === 'AUTRE') return 'OTHER';
+
+  return '';
+};
+
 const AVATAR_COLORS = [
   ['#0D7A87','#13A3B4'], ['#7C3AED','#9333EA'], ['#1D4ED8','#3B82F6'],
   ['#059669','#10B981'], ['#D97706','#F59E0B'], ['#DC2626','#EF4444'],
@@ -322,7 +333,8 @@ const PatientManagement = () => {
         const res = await axios.post(`${API}/patients`, payload, authH());
         toast.success(`Patient créé ! ID: ${patientIdentifier(res.data.patient || {})}`);
       }
-      setIsOpen(false); fetchPatients();
+      // setIsOpen(false); fetchPatients();
+      setIsOpen(false); await fetchPatients(1, ''); setPage(1); setSearch(''); setGF('ALL');
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
   };
@@ -439,7 +451,8 @@ const PatientManagement = () => {
   const patientIndexes = useMemo(() => patients.map(patientSearchIndex), [patients]);
   const filtered = useMemo(() => patientIndexes
     .filter(({ patient, ...index }) => {
-      const ms = genderFilter === 'ALL' || patient.gender === genderFilter;
+      // const ms = genderFilter === 'ALL' || patient.gender === genderFilter;
+      const ms = genderFilter === 'ALL' || normalizeGenderValue(patient.gender) === genderFilter;
       const mt = matchesPatientIndex(index, normalizedSearch, normalizedTerms, normalizedDigits);
       return ms && mt;
     })
@@ -456,14 +469,27 @@ const PatientManagement = () => {
     .map(index => index.patient), [genderFilter, normalizedDigits, normalizedSearch, normalizedTerms, patientIndexes, sortBy]);
 
   /* Stats */
-  const stats = useMemo(() => ({
-    total:    pagination.total_count || patients.length,
-    men:      patients.filter(p => p.gender==='M').length,
-    women:    patients.filter(p => p.gender==='F').length,
-    allergies:patients.filter(p => p.allergies).length,
-    recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
-  }), [pagination.total_count, patients]);
-
+  // const stats = useMemo(() => ({
+  //   total:    pagination.total_count || patients.length,
+  //   men:      patients.filter(p => p.gender==='M').length,
+  //   women:    patients.filter(p => p.gender==='F').length,
+  //   allergies:patients.filter(p => p.allergies).length,
+  //   recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
+  // }), [pagination.total_count, patients]);
+  const stats = useMemo(() => {
+    const activePatients = patients.filter(p => p.is_active !== false);
+    return {
+      total: pagination.total_count || activePatients.length,
+      men: activePatients.filter(p => normalizeGenderValue(p.gender) === 'M').length,
+      women: activePatients.filter(p => normalizeGenderValue(p.gender) === 'F').length,
+      allergies: activePatients.filter(p => p.allergies).length,
+      recent: activePatients.filter(p => {
+        const d = new Date(p.created_at || 0);
+        return Date.now() - d < 30 * 24 * 3600 * 1000;
+      }).length,
+    };
+  }, [pagination.total_count, patients]);
+// 
   if (loading) return (
     <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
