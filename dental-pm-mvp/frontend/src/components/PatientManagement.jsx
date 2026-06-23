@@ -42,7 +42,7 @@ const normalizeGenderValue = (gender) => {
 
   return '';
 };
-
+// 
 const AVATAR_COLORS = [
   ['#0D7A87','#13A3B4'], ['#7C3AED','#9333EA'], ['#1D4ED8','#3B82F6'],
   ['#059669','#10B981'], ['#D97706','#F59E0B'], ['#DC2626','#EF4444'],
