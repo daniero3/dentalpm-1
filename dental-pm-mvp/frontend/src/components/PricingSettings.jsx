@@ -162,8 +162,11 @@ const PricingSettings = () => {
   
       setFees(prevFees => prevFees.filter(item => item.id !== fee.id));
   
-      toast.success('Acte supprimé');
-  
+      // toast.success('Acte supprimé');
+      toast.success('Acte supprimé', {
+        duration: 2000
+      });
+      // 
       if (selectedSchedule?.id) {
         await fetchFees(selectedSchedule.id);
       }
