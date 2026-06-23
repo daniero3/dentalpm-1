@@ -281,24 +281,25 @@ const DentalChart = () => {
         style={{
           cursor: 'pointer',
           textAlign: 'center',
-          padding: 8,
-          borderRadius: 12,
+          padding: '6px 4px',
+          borderRadius: 10,
           border: isSelected ? '2px solid #0F172A' : '1px solid #E2E8F0',
           background: '#FFFFFF',
-          minWidth: 48,
+          minWidth: 0,
+          width: '100%'
         }}
       >
-        <div
-          style={{
-            width: 34,
-            height: 42,
-            borderRadius: '50% 50% 45% 45%',
-            background: status.color,
-            margin: '0 auto 6px',
-            opacity: t.status === 'healthy' ? 0.35 : 0.85,
-          }}
-        />
-        <div style={{ fontSize: 12, fontWeight: 700 }}>
+      <div
+        style={{
+          width: 28,
+          height: 36,
+          borderRadius: '50% 50% 45% 45%',
+          background: status.color,
+          margin: '0 auto 5px',
+          opacity: t.status === 'healthy' ? 0.35 : 0.85,
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 700 }}>
           {getFDINumber(t.tooth_position)}
         </div>
       </div>
@@ -347,12 +348,28 @@ const DentalChart = () => {
 
           <CardContent>
             <h3 style={{ fontWeight: 700, marginBottom: 10 }}>Mâchoire Supérieure</h3>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(16, minmax(34px, 1fr))',
+                gap: 6,
+                marginBottom: 24,
+                alignItems: 'center'
+              }}
+            >
               {upperTeeth.map(renderTooth)}
             </div>
 
             <h3 style={{ fontWeight: 700, marginBottom: 10 }}>Mâchoire Inférieure</h3>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(16, minmax(34px, 1fr))',
+                gap: 6,
+                marginBottom: 24,
+                alignItems: 'center'
+              }}
+            >
               {lowerTeeth.map(renderTooth)}
             </div>
 
