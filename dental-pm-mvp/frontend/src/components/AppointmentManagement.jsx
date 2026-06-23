@@ -322,8 +322,19 @@ const AppointmentManagement = () => {
     };
   }, [fetchAppts]);
 
-  const resetForm = () => setForm({ patient_id:'', dentist_id: user?.id||'', appointment_date: selDate, start_time:'09:00', end_time:'10:00', appointment_type:'CONSULTATION', reason:'', notes:'' });
+  // const resetForm = () => setForm({ patient_id:'', dentist_id: user?.id||'', appointment_date: selDate, start_time:'09:00', end_time:'10:00', appointment_type:'CONSULTATION', reason:'', notes:'' });
 
+  const resetForm = () => setForm({
+    patient_id: '',
+    dentist_id: user?.role === 'DENTIST' ? user.id : '',
+    appointment_date: selDate,
+    start_time: '09:00',
+    end_time: '10:00',
+    appointment_type: 'CONSULTATION',
+    reason: '',
+    notes: ''
+  });
+  
   // const openCreate = () => { setEditA(null); resetForm(); setIsOpen(true); };
 
   const openCreate = async () => {
