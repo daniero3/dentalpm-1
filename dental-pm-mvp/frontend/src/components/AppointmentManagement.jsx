@@ -305,6 +305,29 @@ const AppointmentManagement = () => {
     }
   };
 
+  //Ajout
+  const searchPatients = async (q = '') => {
+    try {
+      const params = new URLSearchParams({
+        limit: '50',
+        fields: 'lookup',
+        includeTotal: 'false',
+        _t: Date.now().toString()
+      });
+  
+      if (q.trim()) {
+        params.set('search', q.trim());
+      }
+  
+      const r = await axios.get(`${API}/patients?${params.toString()}`, authH());
+      const list = r.data.patients || [];
+      setPatients(list);
+    } catch (e) {
+      console.error('searchPatients error:', e?.response?.data || e.message);
+      toast.error('Erreur recherche patient');
+    }
+  };
+  
   // useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
 
   useEffect(() => {
