@@ -351,7 +351,6 @@ const DentalChart = () => {
         open={procedureDialog}
         onClose={() => setProcedureDialog(false)}
         title={`Nouvelle Procédure — Dent ${selectedTooth ? getFDINumber(selectedTooth.tooth_position) : ''}`}
-        // {`Nouvelle Procédure — Dent ${selectedTooth ? getToothDisplayNumber(selectedTooth) : ''}`}
         description="Ajoutez une procédure pour cette dent"
       >
         <div className="space-y-4">
