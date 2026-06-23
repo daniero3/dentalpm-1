@@ -229,6 +229,9 @@ const PatientManagement = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [patients,  setPatients]  = useState([]);
+  // AJOUT
+  const [genderStats, setGenderStats] = useState({ men: 0, women: 0, other: 0, total: 0 });
+  // 
   const [loading,   setLoading]   = useState(true);
   const [searching, setSearching] = useState(false);
   const [search,    setSearch]    = useState('');
@@ -317,6 +320,25 @@ const PatientManagement = () => {
     }
   };
 
+  // AJOUT
+  const fetchGenderStats = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${API}/patients/stats/gender?_t=${Date.now()}`,
+        authH()
+      );
+  
+      setGenderStats({
+        men: response.data.men || 0,
+        women: response.data.women || 0,
+        other: response.data.other || 0,
+        total: response.data.total || 0
+      });
+    } catch (error) {
+      console.error('Erreur chargement stats sexe:', error?.response?.data || error.message);
+    }
+  }, []);
+  // 
   const onChange = useCallback((name, val) => setForm(p => ({...p, [name]:val})), []);
 
   const openCreate = () => { setSelP(null); setForm(emptyForm); setIsOpen(true); };
@@ -334,7 +356,8 @@ const PatientManagement = () => {
         toast.success(`Patient créé ! ID: ${patientIdentifier(res.data.patient || {})}`);
       }
       // setIsOpen(false); fetchPatients();
-      setIsOpen(false); await fetchPatients(1, ''); setPage(1); setSearch(''); setGF('ALL');
+      // setIsOpen(false); await fetchPatients(1, ''); setPage(1); setSearch(''); setGF('ALL');
+      setIsOpen(false); await fetchPatients(1, ''); await fetchGenderStats();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
   };
