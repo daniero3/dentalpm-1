@@ -265,10 +265,24 @@ const AuthProvider = ({ children }) => {
       prefetchCoreRoutes();
       toast.success("Connexion réussie!");
       return { success: true };
-    } catch (error) {
-      toast.error("Erreur de connexion: " + (error.response?.data?.error || "Erreur inconnue"));
-      return { success: false, error: error.response?.data?.error || "Erreur de connexion" };
-    }
+    } 
+      // catch (error) {
+      //   toast.error("Erreur de connexion: " + (error.response?.data?.error || "Erreur inconnue"));
+      //   return { success: false, error: error.response?.data?.error || "Erreur de connexion" };
+      // }
+      catch (error) {
+        const status = error.response?.status;
+        const backendError = error.response?.data?.error;
+        const message = backendError || error.message || 'Erreur réseau/API';
+      
+        toast.error(`Erreur de connexion${status ? ` (${status})` : ''}: ${message}`);
+      
+        return {
+          success: false,
+          error: message,
+          status
+        };
+      }
   };
 
   const logout = () => {
