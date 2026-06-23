@@ -319,7 +319,10 @@ const AppointmentManagement = () => {
         params.set('search', q.trim());
       }
   
-      const r = await axios.get(`${API}/patients?${params.toString()}`, authH());
+      const r = await axios.get(
+        `${API}/patients?${params.toString()}`, 
+        authH()
+      );
       const list = r.data.patients || [];
       setPatients(list);
     } catch (e) {
@@ -744,7 +747,17 @@ const AppointmentManagement = () => {
               )}
               <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                 <Search size={13} color="#94A3B8"/>
-                <input value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
+                {/* <input value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} /> */}
+                <input
+                  value={patientSearch}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPatientSearch(value);
+                    searchPatients(value);
+                  }}
+                  placeholder="Nom, téléphone, ID patient..."
+                  style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }}
+                />
               </div>
               <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
                 {patientMatches.map(p=>(
