@@ -93,9 +93,13 @@ router.get('/', requireClinicId, [
     if (!clinicId && req.user?.role !== 'SUPER_ADMIN') {
       return res.status(403).json({ error: 'Cabinet non identifié', code: 'NO_CLINIC' });
     }
-    let whereClause = {};
+    // let whereClause = {};
+    // if (clinicId) whereClause.clinic_id = clinicId;
+    let whereClause = {
+      is_active: true
+    };
     if (clinicId) whereClause.clinic_id = clinicId;
-
+    // 
     const searchText = (search || '').toString().trim();
     if (searchText) {
       const terms = searchText.split(/\s+/).filter(Boolean);
