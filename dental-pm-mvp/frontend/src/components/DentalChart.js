@@ -272,7 +272,6 @@ const DentalChart = () => {
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" style={{ color:'#0D7A87' }} />
               {selectedTooth ? 
-                // `Dent ${selectedTooth.tooth_position}` : 'Sélectionnez une dent'
                 {selectedTooth ? `Dent ${getFDINumber(selectedTooth.tooth_position)}` : 'Sélectionnez une dent'}
               }
             </CardTitle>
