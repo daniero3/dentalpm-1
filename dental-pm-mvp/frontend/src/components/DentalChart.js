@@ -42,6 +42,13 @@ const Modal = ({ open, onClose, title, description, children }) => {
   );
 };
 
+const NUM_TO_FDI = {
+  1: '18', 2: '17', 3: '16', 4: '15', 5: '14', 6: '13', 7: '12', 8: '11',
+  9: '21', 10: '22', 11: '23', 12: '24', 13: '25', 14: '26', 15: '27', 16: '28',
+  17: '48', 18: '47', 19: '46', 20: '45', 21: '44', 22: '43', 23: '42', 24: '41',
+  25: '31', 26: '32', 27: '33', 28: '34', 29: '35', 30: '36', 31: '37', 32: '38',
+};
+
 const DentalChart = () => {
   const { patientId } = useParams();
   const { user } = useAuth();
@@ -81,26 +88,19 @@ const DentalChart = () => {
   //     procedures: [],
   //     notes: ''
   //   }));
+  
+ const generateEmptyChart = () =>
+  Array.from({ length: 32 }, (_, i) => {
+    const num = i + 1;
 
-  const NUM_TO_FDI = {
-    1: '18', 2: '17', 3: '16', 4: '15', 5: '14', 6: '13', 7: '12', 8: '11',
-    9: '21', 10: '22', 11: '23', 12: '24', 13: '25', 14: '26', 15: '27', 16: '28',
-    17: '48', 18: '47', 19: '46', 20: '45', 21: '44', 22: '43', 23: '42', 24: '41',
-    25: '31', 26: '32', 27: '33', 28: '34', 29: '35', 30: '36', 31: '37', 32: '38',
-  };
-  
-  const generateEmptyChart = () =>
-    Array.from({ length: 32 }, (_, i) => {
-      const num = i + 1;
-  
-      return {
-        tooth_position: String(num),
-        tooth_fdi: NUM_TO_FDI[num],
-        status: 'healthy',
-        procedures: [],
-        notes: ''
-      };
-    });
+    return {
+      tooth_position: String(num),
+      tooth_fdi: NUM_TO_FDI[num],
+      status: 'healthy',
+      procedures: [],
+      notes: ''
+    };
+  });
   // 
   useEffect(() => {
     if (!patientId || patientId === 'undefined') { setLoading(false); return; }
@@ -181,7 +181,7 @@ const DentalChart = () => {
     const status = toothStatuses[t.status] || toothStatuses.healthy;
     const isSelected = selectedTooth?.tooth_position === t.tooth_position;
     return (
-      <div key= {t.tooth_fdi || t.tooth_position}
+      <div key= {getToothDisplayNumber(t)}
         onClick={() => setSelectedTooth(t)}
         style={{ cursor:'pointer', transition:'transform 0.15s ease', textAlign:'center' }}
         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
@@ -194,8 +194,7 @@ const DentalChart = () => {
           {(t.procedures||[]).length > 0 && <circle cx="8" cy="8" r="4" fill="#0D7A87" stroke="white" strokeWidth="1" />}
         </svg>
         <div style={{ fontSize:10, fontWeight:700, marginTop:2, color:isSelected?'#0D7A87':'#374151' }}>
-          // {t.tooth_position}
-          {t.tooth_fdi || t.tooth_position}
+          {getToothDisplayNumber(t)}
         </div>
       </div>
     );
@@ -282,7 +281,7 @@ const DentalChart = () => {
               <Activity className="h-5 w-5" style={{ color:'#0D7A87' }} />
               {selectedTooth ? 
                 // `Dent ${selectedTooth.tooth_position}` : 'Sélectionnez une dent'
-                `Dent ${selectedTooth.tooth_position}` : 'Sélectionnez une dent'
+                `Dent ${getToothDisplayNumber(selectedTooth)}` : 'Sélectionnez une dent'
               }
             </CardTitle>
           </CardHeader>
@@ -360,7 +359,7 @@ const DentalChart = () => {
       <Modal
         open={procedureDialog}
         onClose={() => setProcedureDialog(false)}
-        title={`Nouvelle Procédure — Dent ${selectedTooth?.tooth_position || ''}`}
+        title={`Nouvelle Procédure — Dent ${selectedTooth ? getToothDisplayNumber(selectedTooth) : ''}`}
         description="Ajoutez une procédure pour cette dent"
       >
         <div className="space-y-4">
