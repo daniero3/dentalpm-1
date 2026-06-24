@@ -37,17 +37,30 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
       }
 
       const planName = plan?.name || 'PRO';
-      const checkout = await axios.post(`${apiUrl}/billing/public-checkout`, {
-        plan_code: planName,
-        clinic_id: clinicId,
-        email: form.email
-      });
-      if (checkout.data?.url) {
-        window.location.href = checkout.data.url;
-      } else {
-        alert('Impossible d’ouvrir Stripe. Réessayez.');
-        setLoading(false);
-      }
+      // const checkout = await axios.post(`${apiUrl}/billing/public-checkout`, {
+      //   plan_code: planName,
+      //   clinic_id: clinicId,
+      //   email: form.email
+      // });
+      // if (checkout.data?.url) {
+      //   window.location.href = checkout.data.url;
+      // } else {
+      //   alert('Impossible d’ouvrir Stripe. Réessayez.');
+      //   setLoading(false);
+      // }
+
+      await axios.post(
+        `${apiUrl}/billing/start-free-trial`,
+        { plan_code: planName },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      setDone(true);
+      setLoading(false);
+      
     } catch(e) {
       alert('Erreur inattendue. Réessayez.');
       setLoading(false);
