@@ -324,6 +324,64 @@ router.get('/subscription', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// GET /api/billing/start-free-trial
+// ═══════════════════════════════════════════════════════════════════════════
+router.post('/start-free-trial', async (req, res) => {
+  try {
+    const clinicId = getClinicId(req);
+    const { plan_code = 'PRO' } = req.body;
+
+    if (!clinicId) {
+      return res.status(400).json({ error: 'Cabinet non identifié' });
+    }
+
+    const now = new Date();
+    const trialEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    await Subscription.update(
+      { status: 'SUPERSEDED' },
+      {
+        where: {
+          clinic_id: clinicId,
+          status: ['PENDING', 'ACTIVE', 'TRIAL', 'EXPIRED', 'TRIAL_EXPIRED']
+        }
+      }
+    );
+
+    const subscription = await Subscription.create({
+      clinic_id: clinicId,
+      plan: plan_code,
+      status: 'TRIAL',
+      billing_cycle: 'MONTHLY',
+      start_date: now,
+      trial_end_date: trialEnd,
+      end_date: trialEnd,
+      price_mga: 0,
+      monthly_price_mga: 0,
+      annual_price_mga: 0,
+      auto_renew: false
+    });
+
+    await Clinic.update(
+      {
+        subscription_status: 'TRIAL',
+        current_plan: plan_code,
+        is_active: true
+      },
+      { where: { id: clinicId } }
+    );
+
+    res.status(201).json({
+      message: 'Essai gratuit activé pendant 30 jours',
+      subscription
+    });
+  } catch (error) {
+    console.error('Start free trial error:', error);
+    res.status(500).json({ error: 'Erreur activation essai gratuit' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // GET /api/billing/payment-requests
 // ═══════════════════════════════════════════════════════════════════════════
 router.get('/payment-requests', async (req, res) => {
