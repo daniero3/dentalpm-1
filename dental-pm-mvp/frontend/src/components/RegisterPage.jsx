@@ -70,7 +70,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
   return (
     <button onClick={handleClick} disabled={loading}
       style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:loading?'#94A3B8':'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, border:'none', cursor:loading?'not-allowed':'pointer', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box', transition:'all .2s' }}>
-      {loading ? '⏳ Redirection vers Stripe...' : '💳 Enregistrer ma carte — 30 jours gratuits'}
+      {loading ? '⏳ Redirection vers Stripe...' : '💳 Démarrer mon essai gratuit'}
     </button>
   );
 };
@@ -160,7 +160,7 @@ export default function RegisterPage() {
         <div style={{ textAlign:'center', marginBottom:28 }}>
           <img className="premium-logo" src="/fix-logo.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', marginBottom:14 }}/>
           <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:'0 0 4px' }}>Créer votre cabinet</h1>
-          <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Essai gratuit 30 jours — carte enregistrée, aucun prélèvement immédiat</p>
+          <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Démarrer mon essai gratuit</p>
         </div>
 
         {/* Card principale */}
