@@ -468,13 +468,14 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
       } catch(e) {
         throw e;
       }
-      const checkout = await axios.post(`${API_URL}/billing/public-checkout`, {
-        plan_code: plan?.name || 'PRO',
-        clinic_id: clinicId,
-        email: form.email
-      });
-      if (checkout.data?.url) window.location.href = checkout.data.url;
-      else alert('Impossible d’ouvrir Stripe. Réessayez.');
+      // const checkout = await axios.post(`${API_URL}/billing/public-checkout`, {
+      //   plan_code: plan?.name || 'PRO',
+      //   clinic_id: clinicId,
+      //   email: form.email
+      // });
+      // if (checkout.data?.url) window.location.href = checkout.data.url;
+      // else alert('Impossible d’ouvrir Stripe. Réessayez.');
+		setDone(true);
     }
     catch(e){alert(e.response?.data?.error||'Erreur. Vérifiez vos informations.');}
     finally{setLoading(false);}
@@ -537,7 +538,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
                   <br/>Aucun prélèvement n’est effectué aujourd’hui.
                 </p>
                 <div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:12,padding:'12px 14px',marginBottom:14,color:'var(--teal)',fontSize:13,fontWeight:700,lineHeight:1.5}}>
-                  Carte requise pour activer l’essai. Stripe prélèvera automatiquement le plan choisi uniquement à la fin des 30 jours.
+                  Aucune carte requise pour activer l’essai. Stripe prélèvera automatiquement le plan choisi uniquement à la fin des 30 jours.
                 </div>
                 <button className="btn-main" onClick={submit} disabled={loading}
                   style={{width:'100%',padding:'15px',borderRadius:13,background:'#635BFF',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
