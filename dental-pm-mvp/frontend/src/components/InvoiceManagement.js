@@ -159,14 +159,37 @@ const InvoiceManagement = () => {
     };
   }, [isOpen, patientSearch]);
 
+  // const fetchPayments = async inv => {
+  //   try {
+  //     const r = await axios.get(`${API}/invoices/${inv.id}/payments`, authH());
+  //     setPayments(r.data.payments || []);
+  //     setPayStats(r.data.stats || { total_mga:0, paid_total_mga:0, balance_mga:0 });
+  //   } catch { setPayments([]); }
+  // };
+
   const fetchPayments = async inv => {
     try {
-      const r = await axios.get(`${API}/invoices/${inv.id}/payments`, authH());
+      const r = await axios.get(`${API}/invoices/${inv.id}/payments?_t=${Date.now()}`, authH());
+  
       setPayments(r.data.payments || []);
-      setPayStats(r.data.stats || { total_mga:0, paid_total_mga:0, balance_mga:0 });
-    } catch { setPayments([]); }
+  
+      setPayStats({
+        total_mga: Number(r.data.total_mga || inv.total_mga || 0),
+        paid_total_mga: Number(r.data.paid_total_mga || 0),
+        balance_mga: Number(r.data.balance_mga ?? inv.total_mga ?? 0),
+        payment_status: r.data.payment_status || inv.status || 'UNPAID'
+      });
+    } catch (error) {
+      console.error('fetchPayments error:', error?.response?.data || error.message);
+      setPayments([]);
+      setPayStats({
+        total_mga: Number(inv.total_mga || 0),
+        paid_total_mga: 0,
+        balance_mga: Number(inv.total_mga || 0)
+      });
+    }
   };
-
+  
   /* Form items */
   const addItem    = () => setForm(f=>({...f,items:[...f.items,{description:'',procedure_code:'',quantity:1,unit_price_mga:'',tooth_number:''}]}));
   const removeItem = i => { if(form.items.length>1) setForm(f=>({...f,items:f.items.filter((_,idx)=>idx!==i)})); };
@@ -199,9 +222,12 @@ const InvoiceManagement = () => {
       await axios.post(`${API}/invoices/${payInv.id}/payments`, { ...payData, amount_mga: parseFloat(payData.amount_mga) }, authH());
       toast.success('Paiement enregistré !');
       setPayData({ amount_mga:'', payment_method:'CASH', reference_number:'' });
-      fetchPayments(payInv);
-      fetchInvoices(statusF!=='ALL'?statusF:undefined);
-      fetchRevenues();
+      // fetchPayments(payInv);
+      // fetchInvoices(statusF!=='ALL'?statusF:undefined);
+      // fetchRevenues();
+      await fetchPayments(payInv);
+      await fetchInvoices(statusF !== 'ALL' ? statusF : undefined);
+      await fetchRevenues();
     } catch(e){ toast.error(e.response?.data?.error||'Erreur paiement'); }
   };
 
@@ -241,24 +267,63 @@ const InvoiceManagement = () => {
     } catch { toast.error('Erreur PDF'); }
   };
 
+  // const openPayModal = async inv => {
+  //   setPayInv(inv);
+  //   setIsPayOpen(true);
+  //   // Charger les paiements et pré-remplir avec le solde restant
+  //   try {
+  //     const r = await axios.get(`${API}/invoices/${inv.id}/payments`, authH());
+  //     const stats = r.data.stats || { total_mga:0, paid_total_mga:0, balance_mga:0 };
+  //     setPayments(r.data.payments || []);
+  //     setPayStats(stats);
+  //     // Pré-remplir avec le solde restant
+  //     const solde = stats.balance_mga != null ? stats.balance_mga : parseFloat(inv.total_mga || 0);
+  //     setPayData(d => ({ ...d, amount_mga: solde > 0 ? String(Math.round(solde)) : '' }));
+  //   } catch {
+  //     setPayments([]);
+  //     setPayData(d => ({ ...d, amount_mga: String(Math.round(parseFloat(inv.total_mga || 0))) }));
+  //   }
+  // };
+
   const openPayModal = async inv => {
-    setPayInv(inv);
-    setIsPayOpen(true);
-    // Charger les paiements et pré-remplir avec le solde restant
-    try {
-      const r = await axios.get(`${API}/invoices/${inv.id}/payments`, authH());
-      const stats = r.data.stats || { total_mga:0, paid_total_mga:0, balance_mga:0 };
-      setPayments(r.data.payments || []);
-      setPayStats(stats);
-      // Pré-remplir avec le solde restant
-      const solde = stats.balance_mga != null ? stats.balance_mga : parseFloat(inv.total_mga || 0);
-      setPayData(d => ({ ...d, amount_mga: solde > 0 ? String(Math.round(solde)) : '' }));
-    } catch {
+  setPayInv(inv);
+  setIsPayOpen(true);
+
+  try {
+    const r = await axios.get(`${API}/invoices/${inv.id}/payments?_t=${Date.now()}`, authH());
+
+    const stats = {
+      total_mga: Number(r.data.total_mga || inv.total_mga || 0),
+      paid_total_mga: Number(r.data.paid_total_mga || 0),
+      balance_mga: Number(r.data.balance_mga ?? inv.total_mga ?? 0),
+      payment_status: r.data.payment_status || inv.status || 'UNPAID'
+    };
+
+    setPayments(r.data.payments || []);
+    setPayStats(stats);
+
+    const solde = stats.balance_mga;
+    setPayData(d => ({
+      ...d,
+      amount_mga: solde > 0 ? String(Math.round(solde)) : ''
+    }));
+  } catch (error) {
+    console.error('openPayModal error:', error?.response?.data || error.message);
+  
       setPayments([]);
-      setPayData(d => ({ ...d, amount_mga: String(Math.round(parseFloat(inv.total_mga || 0))) }));
+      setPayStats({
+        total_mga: Number(inv.total_mga || 0),
+        paid_total_mga: 0,
+        balance_mga: Number(inv.total_mga || 0)
+      });
+  
+      setPayData(d => ({
+        ...d,
+        amount_mga: String(Math.round(Number(inv.total_mga || 0)))
+      }));
     }
   };
-
+  
   const getPatient = inv => inv.patient || patients.find(p=>p.id===inv.patient_id) || null;
   const pname = invOrId => {
     const p = typeof invOrId === 'object' ? getPatient(invOrId) : patients.find(p=>p.id===invOrId);
@@ -521,7 +586,8 @@ const InvoiceManagement = () => {
               {[
                 {l:'Total',     v:fmt(payStats.total_mga||payInv.total_mga||0),   c:C.teal},
                 {l:'Payé',      v:fmt(payStats.paid_total_mga||0),                c:C.green},
-                {l:'Solde',     v:fmt(payStats.balance_mga!=null?payStats.balance_mga:(payInv.total_mga||0)), c:C.amber},
+                {/*{l:'Solde',     v:fmt(payStats.balance_mga!=null?payStats.balance_mga:(payInv.total_mga||0)), c:C.amber},*/}
+                {l: 'Reste à payer', v: fmt(payStats.balance_mga != null ? payStats.balance_mga : (payInv.total_mga || 0)), c: C.amber}
               ].map((s,i)=>(
                 <div key={i} style={{ background:'#F8FAFC',borderRadius:12,padding:'11px 14px',border:'1px solid #E2E8F0',textAlign:'center' }}>
                   <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:16,color:s.c }}>{s.v}</div>
