@@ -36,7 +36,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
         return;
       }
 
-      const planName = plan?.name || 'PRO';
+      // const planName = plan?.name || 'PRO';
       // const checkout = await axios.post(`${apiUrl}/billing/public-checkout`, {
       //   plan_code: planName,
       //   clinic_id: clinicId,
@@ -49,15 +49,15 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
       //   setLoading(false);
       // }
 
-      await axios.post(
-        `${apiUrl}/billing/start-free-trial`,
-        { plan_code: planName },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      // await axios.post(
+      //   `${apiUrl}/billing/start-free-trial`,
+      //   { plan_code: planName },
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${localStorage.getItem('token')}`
+      //     }
+      //   }
+      // );
       setDone(true);
       setLoading(false);
       
