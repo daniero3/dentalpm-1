@@ -169,7 +169,10 @@ const InvoiceManagement = () => {
 
   const fetchPayments = async inv => {
     try {
-      const r = await axios.get(`${API}/invoices/${inv.id}/payments?_t=${Date.now()}`, authH());
+      const r = await axios.get(
+        `${API}/invoices/${inv.id}/payments?_t=${Date.now()}`,
+        authH()
+      );
   
       setPayments(r.data.payments || []);
   
@@ -286,29 +289,31 @@ const InvoiceManagement = () => {
   // };
 
   const openPayModal = async inv => {
-  setPayInv(inv);
-  setIsPayOpen(true);
-
-  try {
-    const r = await axios.get(`${API}/invoices/${inv.id}/payments?_t=${Date.now()}`, authH());
-
-    const stats = {
-      total_mga: Number(r.data.total_mga || inv.total_mga || 0),
-      paid_total_mga: Number(r.data.paid_total_mga || 0),
-      balance_mga: Number(r.data.balance_mga ?? inv.total_mga ?? 0),
-      payment_status: r.data.payment_status || inv.status || 'UNPAID'
-    };
-
-    setPayments(r.data.payments || []);
-    setPayStats(stats);
-
-    const solde = stats.balance_mga;
-    setPayData(d => ({
-      ...d,
-      amount_mga: solde > 0 ? String(Math.round(solde)) : ''
-    }));
-  } catch (error) {
-    console.error('openPayModal error:', error?.response?.data || error.message);
+    setPayInv(inv);
+    setIsPayOpen(true);
+  
+    try {
+      const r = await axios.get(
+        `${API}/invoices/${inv.id}/payments?_t=${Date.now()}`,
+        authH()
+      );
+  
+      const stats = {
+        total_mga: Number(r.data.total_mga || inv.total_mga || 0),
+        paid_total_mga: Number(r.data.paid_total_mga || 0),
+        balance_mga: Number(r.data.balance_mga ?? inv.total_mga ?? 0),
+        payment_status: r.data.payment_status || inv.status || 'UNPAID'
+      };
+  
+      setPayments(r.data.payments || []);
+      setPayStats(stats);
+  
+      setPayData(d => ({
+        ...d,
+        amount_mga: stats.balance_mga > 0 ? String(Math.round(stats.balance_mga)) : ''
+      }));
+    } catch (error) {
+      console.error('openPayModal error:', error?.response?.data || error.message);
   
       setPayments([]);
       setPayStats({
@@ -586,7 +591,6 @@ const InvoiceManagement = () => {
               {[
                 {l:'Total',     v:fmt(payStats.total_mga||payInv.total_mga||0),   c:C.teal},
                 {l:'Payé',      v:fmt(payStats.paid_total_mga||0),                c:C.green},
-                {/*{l:'Solde',     v:fmt(payStats.balance_mga!=null?payStats.balance_mga:(payInv.total_mga||0)), c:C.amber},*/}
                 {l: 'Reste à payer', v: fmt(payStats.balance_mga != null ? payStats.balance_mga : (payInv.total_mga || 0)), c: C.amber}
               ].map((s,i)=>(
                 <div key={i} style={{ background:'#F8FAFC',borderRadius:12,padding:'11px 14px',border:'1px solid #E2E8F0',textAlign:'center' }}>
