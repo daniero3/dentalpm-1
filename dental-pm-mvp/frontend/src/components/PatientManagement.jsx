@@ -715,7 +715,7 @@ const PatientManagement = () => {
                 </div>
                 {/* Actions */}
                 <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                  <ActionBtn icon={Eye}            label="Fiche détaillée"  onClick={()=>setDetail(p)}                           color="#0D7A87"/>
+                  {/*<ActionBtn icon={Eye}            label="Fiche détaillée"  onClick={()=>setDetail(p)}*/}                           color="#0D7A87"/>
                   <ActionBtn icon={History}        label="Historique"       onClick={()=>openHistory(p)}                         color="#DC2626"/>
                   <ActionBtn icon={Activity}       label="Odontogramme"     to={`/patients/${p.id}/odontogram`}                  color="#7C3AED"/>
                   <ActionBtn icon={FileText}       label="Documents"        to={`/patients/${p.id}/documents`}                   color="#3B82F6"/>
@@ -784,7 +784,7 @@ const PatientManagement = () => {
       )}
 
       {/* ══ MODAL FICHE DÉTAILLÉE ══ */}
-      <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={520}>
+      {/*<Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={520}>
         {detail && (
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
@@ -798,7 +798,7 @@ const PatientManagement = () => {
                 </div>
               </div>
             </div>
-            {/* Infos */}
+            /* Infos 
             {[
               { icon:Phone,    l:'Téléphone',          v:detail.phone_primary },
               { icon:Mail,     l:'Email',              v:detail.email },
@@ -810,7 +810,7 @@ const PatientManagement = () => {
                 <div><div style={{ fontSize:10, fontWeight:600, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1 }}>{row.l}</div><div style={{ fontSize:13, color:'#0F172A', fontWeight:500 }}>{row.v}</div></div>
               </div>
             ))}
-            {/* Médical */}
+            /* Médical 
             {(detail.allergies||detail.medical_history||detail.current_medications) && (
               <div style={{ background:'#FFF5F5', borderRadius:12, padding:'14px', marginTop:14 }}>
                 <div style={{ fontSize:11, fontWeight:700, color:'#EF4444', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>🏥 Informations médicales</div>
@@ -819,7 +819,7 @@ const PatientManagement = () => {
                 {detail.current_medications && <div><div style={{ fontSize:11, fontWeight:600, color:'#475569', marginBottom:3 }}>Médicaments</div><div style={{ fontSize:12, color:'#475569' }}>{detail.current_medications}</div></div>}
               </div>
             )}
-            {/* Accès rapides */}
+            {/* Accès rapides 
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:18 }}>
               {[
                 { icon:Activity, l:'Odontogramme', to:`/patients/${detail.id}/odontogram`, c:'#7C3AED' },
@@ -894,7 +894,7 @@ const PatientManagement = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Modal> */}
 
       {/* ══ MODAL HISTORIQUE PATIENT ══ */}
       <Modal open={!!historyFor} onClose={()=>{setHistoryFor(null);setHistory([]);}} title="" maxW={920}>
