@@ -292,6 +292,30 @@ const PatientManagement = () => {
     return () => clearTimeout(timer);
   }, [page, search]);
 
+  useEffect(() => {
+    const patientIdToOpen = sessionStorage.getItem('dpm_open_patient_detail');
+  
+    if (!patientIdToOpen) return;
+  
+    const openPatientFromAppointment = async () => {
+      try {
+        const response = await axios.get(
+          `${API}/patients/${patientIdToOpen}`,
+          authH()
+        );
+  
+        setDetail(response.data);
+      } catch (error) {
+        console.error('open patient detail error:', error?.response?.data || error.message);
+        toast.error('Impossible d’ouvrir la fiche détaillée du patient');
+      } finally {
+        sessionStorage.removeItem('dpm_open_patient_detail');
+      }
+    };
+  
+    openPatientFromAppointment();
+  }, [location.pathname]);
+
   const fetchPatients = async (targetPage = page, searchValue = search) => {
     patientsRequestRef.current?.abort();
     const controller = new AbortController();
