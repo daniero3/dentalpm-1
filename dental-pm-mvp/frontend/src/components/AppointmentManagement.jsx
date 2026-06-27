@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
@@ -8,7 +9,8 @@ import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
   CheckCircle, XCircle, MoreHorizontal, Filter, Search,
-  Stethoscope, Zap, Eye, Grid, List, AlertTriangle
+  Stethoscope, Zap, Eye, Grid, List, AlertTriangle,
+  Activity, FileText, ClipboardList, FlaskConical, History
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL
@@ -133,6 +135,107 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
 };
 
 /* ── Card RDV ── */
+const PatientQuickActions = ({ patientId }) => {
+  if (!patientId) return null;
+
+  const actions = [
+    {
+      label: 'Fiche',
+      to: `/patients/${patientId}`,
+      icon: Eye,
+      color: '#0D7A87',
+      bg: '#ECFEFF'
+    },
+    {
+      label: 'Historique',
+      to: `/patients/${patientId}/history`,
+      icon: History,
+      color: '#EF4444',
+      bg: '#FEF2F2'
+    },
+    {
+      label: 'Odontogramme',
+      to: `/patients/${patientId}/odontogram`,
+      icon: Activity,
+      color: '#7C3AED',
+      bg: '#F5F3FF'
+    },
+    {
+      label: 'Documents',
+      to: `/patients/${patientId}/documents`,
+      icon: FileText,
+      color: '#3B82F6',
+      bg: '#EFF6FF'
+    },
+    {
+      label: 'Ordonnances',
+      to: `/patients/${patientId}/prescriptions`,
+      icon: ClipboardList,
+      color: '#10B981',
+      bg: '#ECFDF5'
+    },
+    {
+      label: 'Labo',
+      to: `/patients/${patientId}/lab-orders`,
+      icon: FlaskConical,
+      color: '#8B5CF6',
+      bg: '#F5F3FF'
+    },
+    {
+      label: 'Fiche dentaire',
+      to: `/patients/${patientId}/chart`,
+      icon: ChevronRight,
+      color: '#F59E0B',
+      bg: '#FFFBEB'
+    }
+  ];
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+        gap: 8,
+        marginTop: 10
+      }}
+    >
+      {actions.map((action) => {
+        const Icon = action.icon;
+
+        return (
+          <Link
+            key={action.label}
+            to={action.to}
+            style={{ textDecoration: 'none' }}
+          >
+            <div
+              style={{
+                minHeight: 58,
+                borderRadius: 12,
+                border: `1.5px solid ${action.color}26`,
+                background: action.bg,
+                color: action.color,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                fontSize: 9,
+                fontWeight: 800,
+                textAlign: 'center',
+                padding: '6px 4px',
+                boxSizing: 'border-box'
+              }}
+            >
+              <Icon size={16} />
+              <span>{action.label}</span>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+};
 const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const type   = getType(a.appointment_type);
@@ -736,7 +839,7 @@ const AppointmentManagement = () => {
           <div>
             <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Patient *</label>
             <div style={{ border:'1.5px solid #E2E8F0',borderRadius:12,background:'#fff',overflow:'hidden' }}>
-              {selectedPatient && (
+              {/*{selectedPatient && (
                 <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 10px',background:'#F5F3FF',borderBottom:'1px solid #DDD6FE' }}>
                   <div style={{ minWidth:0 }}>
                     <div style={{ fontSize:13,fontWeight:800,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{selectedPatient.first_name} {selectedPatient.last_name}</div>
@@ -744,6 +847,16 @@ const AppointmentManagement = () => {
                   </div>
                   <button type="button" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
                 </div>
+              )}*/}
+              {selectedPatient && (
+                <>
+                  <div>
+                    {selectedPatient.first_name} {selectedPatient.last_name}
+                    {patientIdentifier(selectedPatient)}
+                  </div>
+              
+                  <PatientQuickActions patientId={selectedPatient.id} />
+                </>
               )}
               <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                 <Search size={13} color="#94A3B8"/>
