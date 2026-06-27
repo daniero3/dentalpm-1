@@ -257,6 +257,7 @@ const PatientManagement = () => {
 
   const emptyForm = { id:'', patient_number:'', first_name:'', last_name:'', date_of_birth:'', gender:'', phone_primary:'', email:'', address:'', emergency_contact_name:'', emergency_contact_phone:'', medical_history:'', allergies:'', current_medications:'' };
   const [form, setForm] = useState(emptyForm);
+  
 
   useEffect(() => {
     mountedRef.current = true;
