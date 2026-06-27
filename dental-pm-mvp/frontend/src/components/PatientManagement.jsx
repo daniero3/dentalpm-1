@@ -715,7 +715,7 @@ const PatientManagement = () => {
                 </div>
                 {/* Actions */}
                 <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                  {/*<ActionBtn icon={Eye}            label="Fiche détaillée"  onClick={()=>setDetail(p)}*/}                           color="#0D7A87"/>
+                  {/*<ActionBtn icon={Eye}            label="Fiche détaillée"  onClick={()=>setDetail(p)}                        color="#0D7A87"/>*/}
                   <ActionBtn icon={History}        label="Historique"       onClick={()=>openHistory(p)}                         color="#DC2626"/>
                   <ActionBtn icon={Activity}       label="Odontogramme"     to={`/patients/${p.id}/odontogram`}                  color="#7C3AED"/>
                   <ActionBtn icon={FileText}       label="Documents"        to={`/patients/${p.id}/documents`}                   color="#3B82F6"/>
