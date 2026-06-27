@@ -135,107 +135,6 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
 };
 
 /* ── Card RDV ── */
-// const PatientQuickActions = ({ patientId }) => {
-//   if (!patientId) return null;
-
-//   const actions = [
-//     {
-//       label: 'Fiche',
-//       to: `/patients/${patientId}`,
-//       icon: Eye,
-//       color: '#0D7A87',
-//       bg: '#ECFEFF'
-//     },
-//     {
-//       label: 'Historique',
-//       to: `/patients/${patientId}/history`,
-//       icon: History,
-//       color: '#EF4444',
-//       bg: '#FEF2F2'
-//     },
-//     {
-//       label: 'Odontogramme',
-//       to: `/patients/${patientId}/odontogram`,
-//       icon: Activity,
-//       color: '#7C3AED',
-//       bg: '#F5F3FF'
-//     },
-//     {
-//       label: 'Documents',
-//       to: `/patients/${patientId}/documents`,
-//       icon: FileText,
-//       color: '#3B82F6',
-//       bg: '#EFF6FF'
-//     },
-//     {
-//       label: 'Ordonnances',
-//       to: `/patients/${patientId}/prescriptions`,
-//       icon: ClipboardList,
-//       color: '#10B981',
-//       bg: '#ECFDF5'
-//     },
-//     {
-//       label: 'Labo',
-//       to: `/patients/${patientId}/lab-orders`,
-//       icon: FlaskConical,
-//       color: '#8B5CF6',
-//       bg: '#F5F3FF'
-//     },
-//     {
-//       label: 'Fiche dentaire',
-//       to: `/patients/${patientId}/chart`,
-//       icon: ChevronRight,
-//       color: '#F59E0B',
-//       bg: '#FFFBEB'
-//     }
-//   ];
-
-//   return (
-//     <div
-//       style={{
-//         display: 'grid',
-//         gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-//         gap: 8,
-//         marginTop: 10
-//       }}
-//     >
-//       {actions.map((action) => {
-//         const Icon = action.icon;
-
-//         return (
-//           <Link
-//             key={action.label}
-//             to={action.to}
-//             style={{ textDecoration: 'none' }}
-//           >
-//             <div
-//               style={{
-//                 minHeight: 58,
-//                 borderRadius: 12,
-//                 border: `1.5px solid ${action.color}26`,
-//                 background: action.bg,
-//                 color: action.color,
-//                 display: 'flex',
-//                 flexDirection: 'column',
-//                 alignItems: 'center',
-//                 justifyContent: 'center',
-//                 gap: 4,
-//                 fontSize: 9,
-//                 fontWeight: 800,
-//                 textAlign: 'center',
-//                 padding: '6px 4px',
-//                 boxSizing: 'border-box'
-//               }}
-//             >
-//               <Icon size={16} />
-//               <span>{action.label}</span>
-//             </div>
-//           </Link>
-//         );
-//       })}
-//     </div>
-//   );
-// };
 const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const type   = getType(a.appointment_type);
@@ -869,30 +768,73 @@ const AppointmentManagement = () => {
 
           {/* Patient */}
           <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Patient *</label>
-            <div style={{ border:'1.5px solid #E2E8F0',borderRadius:12,background:'#fff',overflow:'hidden' }}>
-              {/*{selectedPatient && (
-                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 10px',background:'#F5F3FF',borderBottom:'1px solid #DDD6FE' }}>
-                  <div style={{ minWidth:0 }}>
-                    <div style={{ fontSize:13,fontWeight:800,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{selectedPatient.first_name} {selectedPatient.last_name}</div>
-                    <div style={{ fontSize:11,color:'#7C3AED',fontWeight:700 }}>{patientIdentifier(selectedPatient)}</div>
-                  </div>
-                  <button type="button" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
-                </div>
-              )}*/}
+            <label style={{ fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 6, display: 'block' }}>
+              Patient *
+            </label>
+          
+            <div
+              style={{
+                border: '1.5px solid #E2E8F0',
+                borderRadius: 12,
+                background: '#FFFFFF',
+                overflow: 'hidden'
+              }}
+            >
               {selectedPatient && (
-                <>
-                  <div>
-                    {selectedPatient.first_name} {selectedPatient.last_name}
-                    {patientIdentifier(selectedPatient)}
+                <div
+                  style={{
+                    padding: '10px 12px',
+                    background: '#F8FAFC',
+                    borderBottom: '1px solid #E2E8F0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
+                      {selectedPatient.first_name} {selectedPatient.last_name}
+                    </div>
+          
+                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                      {patientIdentifier(selectedPatient)}
+                    </div>
                   </div>
-              
-                  <PatientQuickActions patientId={selectedPatient.id} />
-                </>
+          
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, patient_id: '' }));
+                      setPatientSearch('');
+                      fetchPatients();
+                    }}
+                    style={{
+                      border: 0,
+                      background: 'transparent',
+                      cursor: 'pointer',
+                      color: '#64748B',
+                      display: 'flex',
+                      padding: 4
+                    }}
+                    title="Retirer le patient"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               )}
-              <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
-                <Search size={13} color="#94A3B8"/>
-                {/* <input value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} /> */}
+          
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 10px',
+                  borderBottom: patientMatches.length > 0 ? '1px solid #F1F5F9' : 'none'
+                }}
+              >
+                <Search size={14} color="#94A3B8" />
+          
                 <input
                   value={patientSearch}
                   onChange={(e) => {
@@ -901,24 +843,81 @@ const AppointmentManagement = () => {
                     searchPatients(value);
                   }}
                   placeholder="Nom, téléphone, ID patient..."
-                  style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    fontSize: 13,
+                    flex: 1,
+                    minWidth: 0,
+                    color: '#0F172A'
+                  }}
                 />
               </div>
-              <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
-                {patientMatches.map(p=>(
-                  <button key={p.id} type="button" onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}}
-                    style={{ width:'100%',border:0,background:form.patient_id===p.id?'#F5F3FF':'#fff',cursor:'pointer',padding:'8px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,textAlign:'left',borderBottom:'1px solid #F8FAFC' }}>
-                    <span style={{ minWidth:0 }}>
-                      <span style={{ display:'block',fontSize:13,fontWeight:700,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.first_name} {p.last_name}</span>
-                      <span style={{ display:'block',fontSize:11,color:'#64748B' }}>{p.phone_primary || p.email || 'Contact non renseigné'}</span>
-                    </span>
-                    <span style={{ fontSize:10,color:'#7C3AED',fontWeight:800,background:'#F3E8FF',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
-                  </button>
-                ))}
-                {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>}
-              </div>
+          
+              {patientMatches.length > 0 ? (
+                <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+                  {patientMatches.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setForm(prev => ({ ...prev, patient_id: p.id }));
+                        setPatientSearch(`${p.first_name || ''} ${p.last_name || ''}`.trim());
+                      }}
+                      style={{
+                        width: '100%',
+                        border: 0,
+                        background: form.patient_id === p.id ? '#F5F3FF' : '#FFFFFF',
+                        cursor: 'pointer',
+                        padding: '9px 10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        textAlign: 'left',
+                        borderBottom: '1px solid #F8FAFC'
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
+                          {p.first_name} {p.last_name}
+                        </div>
+          
+                        <div style={{ fontSize: 11, color: '#64748B' }}>
+                          {p.phone_primary || p.phone || p.email || 'Contact non renseigné'}
+                        </div>
+                      </div>
+          
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: '#7C3AED',
+                          background: '#F3E8FF',
+                          borderRadius: 999,
+                          padding: '3px 7px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {patientIdentifier(p)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '10px 12px', fontSize: 12, color: '#94A3B8' }}>
+                  Aucun patient trouvé
+                </div>
+              )}
             </div>
-            <input tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
+          
+            <input
+              type="hidden"
+              value={form.patient_id}
+              onChange={() => {}}
+              required
+            />
           </div>
 
           {/* Type */}
