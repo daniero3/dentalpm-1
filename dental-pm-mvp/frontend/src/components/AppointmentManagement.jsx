@@ -135,7 +135,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
 };
 
 /* ── Card RDV ── */
-const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
+const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDetail, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const patientId = a.patient_id || a.patient?.id;
   const type   = getType(a.appointment_type);
@@ -199,11 +199,11 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
       {/* Actions */}
       <div style={{ display:'flex', gap:5, flexShrink:0 }}>
         {patientId && (
-          <Link
-            to="/patients"
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
-              sessionStorage.setItem('dpm_open_patient_detail', patientId);
+              onPatientDetail?.(patientId);
             }}
             title="Fiche détaillée"
             style={{
@@ -217,8 +217,7 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
               alignItems: 'center',
               justifyContent: 'center',
               color: '#94A3B8',
-              transition: 'all .15s',
-              textDecoration: 'none'
+              transition: 'all .15s'
             }}
             onMouseOver={e => {
               e.currentTarget.style.borderColor = '#0D7A87';
@@ -230,7 +229,7 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
             }}
           >
             <Eye size={15} />
-          </Link>
+          </button>
         )}
         <button onClick={() => onExport(a)} title="Export .ics"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
@@ -265,6 +264,8 @@ const AppointmentManagement = () => {
   const [isDelOpen,setIsDelOpen]= useState(false);
   const [editA,    setEditA]    = useState(null);
   const [delA,     setDelA]     = useState(null);
+  const [detailPatient, setDetailPatient] = useState(null);
+  const [isPatientDetailOpen, setIsPatientDetailOpen] = useState(false);
   const [search,   setSearch]   = useState('');
   const [patientSearch, setPatientSearch] = useState('');
   const [statusF,  setStatusF]  = useState('all');
@@ -410,6 +411,22 @@ const AppointmentManagement = () => {
   
   const openEdit   = a  => { setEditA(a); setForm({ patient_id:a.patient_id, dentist_id:a.dentist_id||'', appointment_date:a.appointment_date, start_time:a.start_time, end_time:a.end_time, appointment_type:a.appointment_type, reason:a.reason||'', notes:a.notes||'' }); setIsOpen(true); };
 
+  const openPatientDetail = async (patientId) => {
+    if (!patientId) {
+      toast.error('Patient introuvable pour ce rendez-vous');
+      return;
+    }
+  
+    try {
+      const response = await axios.get(`${API}/patients/${patientId}`, authH());
+      setDetailPatient(response.data);
+      setIsPatientDetailOpen(true);
+    } catch (error) {
+      console.error('openPatientDetail error:', error?.response?.data || error.message);
+      toast.error('Impossible d’ouvrir la fiche détaillée du patient');
+    }
+  };
+  
   const handleSubmit = async e => {
     e.preventDefault();
     const sm = form.start_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
@@ -735,7 +752,7 @@ const AppointmentManagement = () => {
               </div>
               {filtered.sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||'')).map((a,i)=>(
                 <div key={a.id} style={{ marginBottom:10 }}>
-                  <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d=>{setDelA(d);setIsDelOpen(true);}} onStatusChange={handleStatusChange} onExport={handleExport}/>
+                  <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d=>{setDelA(d);setIsDelOpen(true);}} onStatusChange={handleStatusChange} onExport={handleExport} onPatientDetail={openPatientDetail}/>
                 </div>
               ))}
             </div>
@@ -755,7 +772,7 @@ const AppointmentManagement = () => {
                   </div>
                   {grouped[date].sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||'')).map((a,i)=>(
                     <div key={a.id} style={{ marginBottom:8 }}>
-                      <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d=>{setDelA(d);setIsDelOpen(true);}} onStatusChange={handleStatusChange} onExport={handleExport}/>
+                      <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d=>{setDelA(d);setIsDelOpen(true);}} onStatusChange={handleStatusChange} onExport={handleExport} onPatientDetail={openPatientDetail}/>
                     </div>
                   ))}
                 </div>
@@ -764,7 +781,135 @@ const AppointmentManagement = () => {
           )}
         </div>
       </div>
-
+      {/* Début */}
+      <Modal
+        open={isPatientDetailOpen}
+        onClose={() => {
+          setIsPatientDetailOpen(false);
+          setDetailPatient(null);
+        }}
+        title="Fiche détaillée patient"
+        maxW={540}
+      >
+        {detailPatient ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+              <div
+                style={{
+                  width: 58,
+                  height: 58,
+                  borderRadius: 16,
+                  background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                  fontWeight: 800,
+                  boxShadow: '0 8px 20px rgba(124,58,237,.25)'
+                }}
+              >
+                {(detailPatient.first_name?.[0] || '')}{(detailPatient.last_name?.[0] || '')}
+              </div>
+      
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#0F172A' }}>
+                  {detailPatient.first_name} {detailPatient.last_name}
+                </div>
+      
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    marginTop: 6,
+                    padding: '4px 10px',
+                    borderRadius: 999,
+                    background: '#ECFEFF',
+                    color: '#0D7A87',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    border: '1px solid #A5F3FC'
+                  }}
+                >
+                  {patientIdentifier(detailPatient)}
+                </div>
+              </div>
+            </div>
+      
+            <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
+              {detailPatient.phone_primary || detailPatient.phone ? (
+                <div style={{ fontSize: 13, color: '#475569' }}>
+                  Téléphone : <strong>{detailPatient.phone_primary || detailPatient.phone}</strong>
+                </div>
+              ) : null}
+      
+              {detailPatient.email ? (
+                <div style={{ fontSize: 13, color: '#475569' }}>
+                  Email : <strong>{detailPatient.email}</strong>
+                </div>
+              ) : null}
+      
+              {detailPatient.address ? (
+                <div style={{ fontSize: 13, color: '#475569' }}>
+                  Adresse : <strong>{detailPatient.address}</strong>
+                </div>
+              ) : null}
+            </div>
+      
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 12
+              }}
+            >
+              {[
+                { label: 'Odontogramme', icon: Activity, to: `/patients/${detailPatient.id}/odontogram`, color: '#7C3AED', bg: '#F5F3FF' },
+                { label: 'Historique', icon: History, to: `/patients/${detailPatient.id}/history`, color: '#DC2626', bg: '#FEF2F2' },
+                { label: 'Documents', icon: FileText, to: `/patients/${detailPatient.id}/documents`, color: '#3B82F6', bg: '#EFF6FF' },
+                { label: 'Ordonnances', icon: ClipboardList, to: `/patients/${detailPatient.id}/prescriptions`, color: '#10B981', bg: '#ECFDF5' },
+                { label: 'Labo', icon: FlaskConical, to: `/patients/${detailPatient.id}/lab-orders`, color: '#8B5CF6', bg: '#F5F3FF' },
+                { label: 'Fiche dentaire', icon: ChevronRight, to: `/patients/${detailPatient.id}/chart`, color: '#F59E0B', bg: '#FFFBEB' }
+              ].map((item) => {
+                const Icon = item.icon;
+      
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => {
+                      window.location.href = item.to;
+                    }}
+                    style={{
+                      minHeight: 92,
+                      borderRadius: 16,
+                      border: `1.5px solid ${item.color}30`,
+                      background: item.bg,
+                      color: item.color,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      fontWeight: 800
+                    }}
+                  >
+                    <Icon size={22} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div style={{ color: '#64748B', fontSize: 13 }}>
+            Chargement de la fiche patient...
+          </div>
+        )}
+      </Modal>
+      {/* fin */}
+      
       {/* ══ MODAL CRÉER / MODIFIER ══ */}
       <Modal open={isOpen} onClose={()=>setIsOpen(false)} title={editA ? '✏️ Modifier le rendez-vous' : '📅 Nouveau rendez-vous'} maxW={520}>
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
