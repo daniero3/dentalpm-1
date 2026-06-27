@@ -135,107 +135,107 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
 };
 
 /* ── Card RDV ── */
-const PatientQuickActions = ({ patientId }) => {
-  if (!patientId) return null;
+// const PatientQuickActions = ({ patientId }) => {
+//   if (!patientId) return null;
 
-  const actions = [
-    {
-      label: 'Fiche',
-      to: `/patients/${patientId}`,
-      icon: Eye,
-      color: '#0D7A87',
-      bg: '#ECFEFF'
-    },
-    {
-      label: 'Historique',
-      to: `/patients/${patientId}/history`,
-      icon: History,
-      color: '#EF4444',
-      bg: '#FEF2F2'
-    },
-    {
-      label: 'Odontogramme',
-      to: `/patients/${patientId}/odontogram`,
-      icon: Activity,
-      color: '#7C3AED',
-      bg: '#F5F3FF'
-    },
-    {
-      label: 'Documents',
-      to: `/patients/${patientId}/documents`,
-      icon: FileText,
-      color: '#3B82F6',
-      bg: '#EFF6FF'
-    },
-    {
-      label: 'Ordonnances',
-      to: `/patients/${patientId}/prescriptions`,
-      icon: ClipboardList,
-      color: '#10B981',
-      bg: '#ECFDF5'
-    },
-    {
-      label: 'Labo',
-      to: `/patients/${patientId}/lab-orders`,
-      icon: FlaskConical,
-      color: '#8B5CF6',
-      bg: '#F5F3FF'
-    },
-    {
-      label: 'Fiche dentaire',
-      to: `/patients/${patientId}/chart`,
-      icon: ChevronRight,
-      color: '#F59E0B',
-      bg: '#FFFBEB'
-    }
-  ];
+//   const actions = [
+//     {
+//       label: 'Fiche',
+//       to: `/patients/${patientId}`,
+//       icon: Eye,
+//       color: '#0D7A87',
+//       bg: '#ECFEFF'
+//     },
+//     {
+//       label: 'Historique',
+//       to: `/patients/${patientId}/history`,
+//       icon: History,
+//       color: '#EF4444',
+//       bg: '#FEF2F2'
+//     },
+//     {
+//       label: 'Odontogramme',
+//       to: `/patients/${patientId}/odontogram`,
+//       icon: Activity,
+//       color: '#7C3AED',
+//       bg: '#F5F3FF'
+//     },
+//     {
+//       label: 'Documents',
+//       to: `/patients/${patientId}/documents`,
+//       icon: FileText,
+//       color: '#3B82F6',
+//       bg: '#EFF6FF'
+//     },
+//     {
+//       label: 'Ordonnances',
+//       to: `/patients/${patientId}/prescriptions`,
+//       icon: ClipboardList,
+//       color: '#10B981',
+//       bg: '#ECFDF5'
+//     },
+//     {
+//       label: 'Labo',
+//       to: `/patients/${patientId}/lab-orders`,
+//       icon: FlaskConical,
+//       color: '#8B5CF6',
+//       bg: '#F5F3FF'
+//     },
+//     {
+//       label: 'Fiche dentaire',
+//       to: `/patients/${patientId}/chart`,
+//       icon: ChevronRight,
+//       color: '#F59E0B',
+//       bg: '#FFFBEB'
+//     }
+//   ];
 
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-        gap: 8,
-        marginTop: 10
-      }}
-    >
-      {actions.map((action) => {
-        const Icon = action.icon;
+//   return (
+//     <div
+//       style={{
+//         display: 'grid',
+//         gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+//         gap: 8,
+//         marginTop: 10
+//       }}
+//     >
+//       {actions.map((action) => {
+//         const Icon = action.icon;
 
-        return (
-          <Link
-            key={action.label}
-            to={action.to}
-            style={{ textDecoration: 'none' }}
-          >
-            <div
-              style={{
-                minHeight: 58,
-                borderRadius: 12,
-                border: `1.5px solid ${action.color}26`,
-                background: action.bg,
-                color: action.color,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                fontSize: 9,
-                fontWeight: 800,
-                textAlign: 'center',
-                padding: '6px 4px',
-                boxSizing: 'border-box'
-              }}
-            >
-              <Icon size={16} />
-              <span>{action.label}</span>
-            </div>
-          </Link>
-        );
-      })}
-    </div>
-  );
-};
+//         return (
+//           <Link
+//             key={action.label}
+//             to={action.to}
+//             style={{ textDecoration: 'none' }}
+//           >
+//             <div
+//               style={{
+//                 minHeight: 58,
+//                 borderRadius: 12,
+//                 border: `1.5px solid ${action.color}26`,
+//                 background: action.bg,
+//                 color: action.color,
+//                 display: 'flex',
+//                 flexDirection: 'column',
+//                 alignItems: 'center',
+//                 justifyContent: 'center',
+//                 gap: 4,
+//                 fontSize: 9,
+//                 fontWeight: 800,
+//                 textAlign: 'center',
+//                 padding: '6px 4px',
+//                 boxSizing: 'border-box'
+//               }}
+//             >
+//               <Icon size={16} />
+//               <span>{action.label}</span>
+//             </div>
+//           </Link>
+//         );
+//       })}
+//     </div>
+//   );
+// };
 const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const type   = getType(a.appointment_type);
@@ -298,6 +298,38 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
 
       {/* Actions */}
       <div style={{ display:'flex', gap:5, flexShrink:0 }}>
+        {(a.patient_id || a.patient?.id) && (
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = `/patients/${a.patient_id || a.patient?.id}`;
+            }}
+            title="Fiche détaillée"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              border: '1.5px solid #E2E8F0',
+              background: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#94A3B8',
+              transition: 'all .15s'
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.borderColor = '#0D7A87';
+              e.currentTarget.style.color = '#0D7A87';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.borderColor = '#E2E8F0';
+              e.currentTarget.style.color = '#94A3B8';
+            }}
+            >
+            <Eye size={15} />
+          </button>
+        )}
         <button onClick={() => onExport(a)} title="Export .ics"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
