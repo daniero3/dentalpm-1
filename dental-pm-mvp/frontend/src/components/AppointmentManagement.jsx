@@ -202,17 +202,15 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-            
-                if (!patientId) {
-                  toast.error('Patient introuvable pour ce rendez-vous');
-                  return;
-                }
-              
-                  sessionStorage.setItem('dpm_open_patient_detail', patientId);
-                  navigate('/patients');
-                }
+        
+              if (!patientId) {
+                toast.error('Patient introuvable pour ce rendez-vous');
+                return;
               }
-            }
+        
+              sessionStorage.setItem('dpm_open_patient_detail', patientId);
+              navigate('/patients');
+            }}
             title="Fiche détaillée"
             style={{
               width: 30,
@@ -235,7 +233,7 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
               e.currentTarget.style.borderColor = '#E2E8F0';
               e.currentTarget.style.color = '#94A3B8';
             }}
-            >
+          >
             <Eye size={15} />
           </button>
         )}
