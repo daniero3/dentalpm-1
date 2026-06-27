@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
@@ -137,6 +137,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
 /* ── Card RDV ── */
 const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const patientId = a.patient_id || a.patient?.id;
   const type   = getType(a.appointment_type);
   const status = STATUS[a.status] || STATUS.SCHEDULED;
   const nextStatuses = QUICK_STATUS_NEXT[a.status] || [];
@@ -198,18 +199,11 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
       {/* Actions */}
       <div style={{ display:'flex', gap:5, flexShrink:0 }}>
         {patientId && (
-          <button
-            type="button"
+          <Link
+            to="/patients"
             onClick={(e) => {
               e.stopPropagation();
-        
-              if (!patientId) {
-                toast.error('Patient introuvable pour ce rendez-vous');
-                return;
-              }
-        
               sessionStorage.setItem('dpm_open_patient_detail', patientId);
-              navigate('/patients');
             }}
             title="Fiche détaillée"
             style={{
@@ -223,7 +217,8 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
               alignItems: 'center',
               justifyContent: 'center',
               color: '#94A3B8',
-              transition: 'all .15s'
+              transition: 'all .15s',
+              textDecoration: 'none'
             }}
             onMouseOver={e => {
               e.currentTarget.style.borderColor = '#0D7A87';
@@ -235,7 +230,7 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
             }}
           >
             <Eye size={15} />
-          </button>
+          </Link>
         )}
         <button onClick={() => onExport(a)} title="Export .ics"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
@@ -259,9 +254,6 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
     </div>
   );
 };
-
-const navigate = useNavigate();
-const patientId = a.patient_id || a.patient?.id;
 
 /* ════════════════════════════════════════════════════════════════════════════ */
 const AppointmentManagement = () => {
