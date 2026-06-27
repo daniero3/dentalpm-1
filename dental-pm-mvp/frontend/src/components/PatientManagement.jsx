@@ -759,7 +759,7 @@ const PatientManagement = () => {
                   <ActionBtn icon={Activity}      label="Odontogramme" to={`/patients/${p.id}/odontogram`}  color="#7C3AED"/>
                   <ActionBtn icon={FileText}      label="Documents"    to={`/patients/${p.id}/documents`}   color="#3B82F6"/>
                   <ActionBtn icon={ClipboardList} label="Ordonnances"  to={`/patients/${p.id}/prescriptions`} color="#10B981"/>
-                  {/*<ActionBtn icon={Edit}          label="Modifier"     onClick={()=>openEdit(p)}             color="#0D7A87"/>*/}
+                  <ActionBtn icon={Edit}          label="Modifier"     onClick={()=>openEdit(p)}             color="#0D7A87"/>
                 </div>
               </div>
             );
@@ -820,28 +820,76 @@ const PatientManagement = () => {
               </div>
             )}
             {/* Accès rapides */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginTop:18 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:18 }}>
               {[
-                { icon:Activity,      l:'Odontogramme', to:`/patients/${detail.id}/odontogram`,    c:'#7C3AED' },
-                { icon:History,       l:'Historique',    onClick:()=>{setDetail(null);openHistory(detail);}, c:'#DC2626' },
-                { icon:FileText,      l:'Documents',    to:`/patients/${detail.id}/documents`,     c:'#3B82F6' },
-                { icon:ClipboardList, l:'Ordonnances',  to:`/patients/${detail.id}/prescriptions`, c:'#10B981' },
-                { icon:FlaskConical,  l:'Labo',          to:`/patients/${detail.id}/lab-orders`,   c:'#8B5CF6' },
-                { icon:ChevronRight,  l:'Fiche dentaire',to:`/patients/${detail.id}/chart`,        c:'#F59E0B' },
-                { icon:Edit,          l:'Modifier',      onClick:()=>{setDetail(null);openEdit(detail);}, c:'#0D7A87' },
+                { icon:Activity, l:'Odontogramme', to:`/patients/${detail.id}/odontogram`, c:'#7C3AED' },
+                { icon:History, l:'Historique', onClick:()=>{setDetail(null);openHistory(detail);}, c:'#DC2626' },
+                { icon:FileText, l:'Documents', to:`/patients/${detail.id}/documents`, c:'#3B82F6' },
+                { icon:ClipboardList, l:'Ordonnances', to:`/patients/${detail.id}/prescriptions`, c:'#10B981' },
+                { icon:FlaskConical, l:'Labo', to:`/patients/${detail.id}/lab-orders`, c:'#8B5CF6' },
+                { icon:ChevronRight, l:'Fiche dentaire', to:`/patients/${detail.id}/chart`, c:'#F59E0B' },
               ].map((a,i) => {
                 const btn = (
-                  <button key={i} onClick={a.onClick}
-                    style={{ padding:'14px 8px', borderRadius:14, border:`1.5px solid ${a.c}22`, background:`${a.c}08`, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:7, transition:'all .2s' }}
-                    onMouseOver={e=>{e.currentTarget.style.background=`${a.c}18`;e.currentTarget.style.borderColor=a.c;e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 6px 16px ${a.c}25`;}}
-                    onMouseOut={e=>{e.currentTarget.style.background=`${a.c}08`;e.currentTarget.style.borderColor=`${a.c}22`;e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
-                    <div style={{ width:40, height:40, borderRadius:12, background:`${a.c}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={a.onClick}
+                    style={{
+                      width:'100%',
+                      minHeight:92,
+                      padding:'14px 8px',
+                      borderRadius:16,
+                      border:`1.5px solid ${a.c}24`,
+                      background:`${a.c}08`,
+                      cursor:'pointer',
+                      display:'flex',
+                      flexDirection:'column',
+                      alignItems:'center',
+                      justifyContent:'center',
+                      gap:8,
+                      transition:'all .2s',
+                      boxSizing:'border-box'
+                    }}
+                    onMouseOver={e=>{
+                      e.currentTarget.style.background=`${a.c}18`;
+                      e.currentTarget.style.borderColor=a.c;
+                      e.currentTarget.style.transform='translateY(-2px)';
+                      e.currentTarget.style.boxShadow=`0 6px 16px ${a.c}25`;
+                    }}
+                    onMouseOut={e=>{
+                      e.currentTarget.style.background=`${a.c}08`;
+                      e.currentTarget.style.borderColor=`${a.c}24`;
+                      e.currentTarget.style.transform='translateY(0)';
+                      e.currentTarget.style.boxShadow='none';
+                    }}
+                  >
+                    <div style={{
+                      width:42,
+                      height:42,
+                      borderRadius:13,
+                      background:`${a.c}15`,
+                      display:'flex',
+                      alignItems:'center',
+                      justifyContent:'center'
+                    }}>
                       <a.icon size={22} color={a.c}/>
                     </div>
-                    <span style={{ fontSize:11, fontWeight:700, color:a.c, textAlign:'center', lineHeight:1.2 }}>{a.l}</span>
+            
+                    <span style={{
+                      fontSize:11,
+                      fontWeight:800,
+                      color:a.c,
+                      textAlign:'center',
+                      lineHeight:1.2
+                    }}>
+                      {a.l}
+                    </span>
                   </button>
                 );
-                return a.to ? <Link key={i} to={a.to} style={{ textDecoration:'none' }} onClick={()=>setDetail(null)}>{btn}</Link> : btn;
+            
+                return a.to
+                  ? <Link key={i} to={a.to} style={{ textDecoration:'none' }} onClick={()=>setDetail(null)}>{btn}</Link>
+                  : btn;
               })}
             </div>
           </div>
