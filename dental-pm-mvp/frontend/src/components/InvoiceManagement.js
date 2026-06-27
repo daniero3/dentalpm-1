@@ -41,6 +41,21 @@ const DISCOUNT_PRESETS = [
 
 const C = { teal:'#0D7A87', green:'#10B981', amber:'#F59E0B', red:'#EF4444', blue:'#3B82F6', purple:'#8B5CF6' };
 
+// 
+const PAYMENT_METHODS_WITH_REFERENCE = [
+  'MVOLA',
+  'ORANGE_MONEY',
+  'AIRTEL_MONEY',
+  'BANK_TRANSFER',
+  'CHEQUE',
+  'CARD'
+];
+
+const canUsePaymentReference = (method) => {
+  return PAYMENT_METHODS_WITH_REFERENCE.includes(method);
+};
+// 
+
 const Modal = ({ open, onClose, title, children, maxW=700 }) => {
   if (!open) return null;
   return (
@@ -219,21 +234,60 @@ const InvoiceManagement = () => {
     finally { setSaving(false); }
   };
 
+  // const handlePayment = async () => {
+  //   if (!payData.amount_mga || parseFloat(payData.amount_mga) <= 0) { toast.error('Montant requis'); return; }
+  //   try {
+  //     await axios.post(`${API}/invoices/${payInv.id}/payments`, { ...payData, amount_mga: parseFloat(payData.amount_mga) }, authH());
+  //     toast.success('Paiement enregistré !');
+  //     setPayData({ amount_mga:'', payment_method:'CASH', reference_number:'' });
+  //     // fetchPayments(payInv);
+  //     // fetchInvoices(statusF!=='ALL'?statusF:undefined);
+  //     // fetchRevenues();
+  //     await fetchPayments(payInv);
+  //     await fetchInvoices(statusF !== 'ALL' ? statusF : undefined);
+  //     await fetchRevenues();
+  //   } catch(e){ toast.error(e.response?.data?.error||'Erreur paiement'); }
+  // };
+
   const handlePayment = async () => {
-    if (!payData.amount_mga || parseFloat(payData.amount_mga) <= 0) { toast.error('Montant requis'); return; }
+    const amount = parseFloat(payData.amount_mga);
+  
+    if (!payData.amount_mga || amount <= 0) {
+      toast.error('Montant requis');
+      return;
+    }
+  
     try {
-      await axios.post(`${API}/invoices/${payInv.id}/payments`, { ...payData, amount_mga: parseFloat(payData.amount_mga) }, authH());
+      const paymentPayload = {
+        ...payData,
+        amount_mga: amount,
+        reference_number: canUsePaymentReference(payData.payment_method)
+          ? payData.reference_number
+          : ''
+      };
+  
+      await axios.post(
+        `${API}/invoices/${payInv.id}/payments`,
+        paymentPayload,
+        authH()
+      );
+  
       toast.success('Paiement enregistré !');
-      setPayData({ amount_mga:'', payment_method:'CASH', reference_number:'' });
-      // fetchPayments(payInv);
-      // fetchInvoices(statusF!=='ALL'?statusF:undefined);
-      // fetchRevenues();
+  
+      setPayData({
+        amount_mga: '',
+        payment_method: 'CASH',
+        reference_number: ''
+      });
+  
       await fetchPayments(payInv);
       await fetchInvoices(statusF !== 'ALL' ? statusF : undefined);
       await fetchRevenues();
-    } catch(e){ toast.error(e.response?.data?.error||'Erreur paiement'); }
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Erreur paiement');
+    }
   };
-
+// 
   const handlePrint = async id => {
     try {
       const popup = window.open('', '_blank');
@@ -637,7 +691,7 @@ const InvoiceManagement = () => {
                 <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:8 }}>Méthode de paiement</label>
                 <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6 }}>
                   {PMETHODS.map(m=>(
-                    <button key={m.v} type="button" onClick={()=>setPayData({...payData,payment_method:m.v})}
+                    <button key={m.v} type="button" onClick={()=>setPayData(prev => ({...prev, payment_method: m.v, reference_number: canUsePaymentReference(m.v) ? prev.reference_number : ''}))}
                       style={{ padding:'8px 4px',borderRadius:10,border:`2px solid ${payData.payment_method===m.v?C.teal:'#E2E8F0'}`,background:payData.payment_method===m.v?'#F0FDFE':'#fff',cursor:'pointer',fontSize:10,fontWeight:700,color:payData.payment_method===m.v?C.teal:'#64748B',textAlign:'center',transition:'all .15s' }}>
                       <div style={{ fontSize:18,marginBottom:2 }}>{m.icon}</div>
                       {m.l}
@@ -646,9 +700,38 @@ const InvoiceManagement = () => {
                 </div>
               </div>
               <div style={{ marginBottom:14 }}>
-                <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Référence (optionnel)</label>
+              {/*<label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Référence (optionnel)</label>
                 <input value={payData.reference_number} onChange={e=>setPayData({...payData,reference_number:e.target.value})}
-                  placeholder="N° transaction MVola, chèque..." style={inp} onFocus={fi} onBlur={bi}/>
+                  placeholder="N° transaction MVola, chèque..." style={inp} onFocus={fi} onBlur={bi}/>*/}
+              <label style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
+                  Référence {canUsePaymentReference(payData.payment_method) ? '(optionnel)' : '(non applicable)'}
+                </label>
+                
+                <input
+                  value={payData.reference_number}
+                  onChange={(e) => {
+                    if (!canUsePaymentReference(payData.payment_method)) return;
+                
+                    setPayData({
+                      ...payData,
+                      reference_number: e.target.value
+                    });
+                  }}
+                  disabled={!canUsePaymentReference(payData.payment_method)}
+                  placeholder={
+                    canUsePaymentReference(payData.payment_method)
+                      ? 'N° transaction MVola, chèque, carte...'
+                      : 'Non applicable pour paiement en espèces'
+                  }
+                  style={{
+                    ...inp,
+                    background: canUsePaymentReference(payData.payment_method) ? '#FFFFFF' : '#F1F5F9',
+                    color: canUsePaymentReference(payData.payment_method) ? '#0F172A' : '#94A3B8',
+                    cursor: canUsePaymentReference(payData.payment_method) ? 'text' : 'not-allowed'
+                  }}
+                  onFocus={fi}
+                  onBlur={bi}
+                />
               </div>
               <button onClick={handlePayment} style={{ width:'100%',padding:'12px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
                 <CheckCircle size={16}/>Valider le paiement
