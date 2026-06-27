@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
@@ -197,12 +197,22 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
 
       {/* Actions */}
       <div style={{ display:'flex', gap:5, flexShrink:0 }}>
-        {(a.patient_id || a.patient?.id) && (
+        {patientId && (
           <button
             type="button"
-            onClick={() => {
-              window.location.href = `/patients/${a.patient_id || a.patient?.id}`;
-            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            
+                if (!patientId) {
+                  toast.error('Patient introuvable pour ce rendez-vous');
+                  return;
+                }
+              
+                  sessionStorage.setItem('dpm_open_patient_detail', patientId);
+                  navigate('/patients');
+                }
+              }
+            }
             title="Fiche détaillée"
             style={{
               width: 30,
@@ -251,6 +261,9 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, idx }) => {
     </div>
   );
 };
+
+const navigate = useNavigate();
+const patientId = a.patient_id || a.patient?.id;
 
 /* ════════════════════════════════════════════════════════════════════════════ */
 const AppointmentManagement = () => {
