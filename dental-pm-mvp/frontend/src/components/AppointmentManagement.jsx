@@ -5,6 +5,11 @@ import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
+import PatientOdontogram from './PatientOdontogram';
+import PatientDocuments from './PatientDocuments';
+import PatientPrescriptions from './PatientPrescriptions';
+import PatientLabOrders from './PatientLabOrders';
+import DentalChart from './DentalChart';
 import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
@@ -262,6 +267,7 @@ const AppointmentManagement = () => {
   const [loading,  setLoading]  = useState(true);
   const [isOpen,   setIsOpen]   = useState(false);
   const [isDelOpen,setIsDelOpen]= useState(false);
+  const [patientPopup, setPatientPopup] = useState(null);
   const [editA,    setEditA]    = useState(null);
   const [delA,     setDelA]     = useState(null);
   const [detailPatient, setDetailPatient] = useState(null);
@@ -891,12 +897,12 @@ const AppointmentManagement = () => {
               }}
             >
               {[
-                { label: 'Odontogramme', icon: Activity, to: `/patients/${detailPatient.id}/odontogram`, color: '#7C3AED', bg: '#F5F3FF' },
+                { label: 'Odontogramme', icon: Activity, view: 'odontogram', color: '#7C3AED', bg: '#F5F3FF' },
                 { label: 'Historique', icon: History, action: 'history', color: '#DC2626', bg: '#FEF2F2' },
-                { label: 'Documents', icon: FileText, to: `/patients/${detailPatient.id}/documents`, color: '#3B82F6', bg: '#EFF6FF' },
-                { label: 'Ordonnances', icon: ClipboardList, to: `/patients/${detailPatient.id}/prescriptions`, color: '#10B981', bg: '#ECFDF5' },
-                { label: 'Labo', icon: FlaskConical, to: `/patients/${detailPatient.id}/lab-orders`, color: '#8B5CF6', bg: '#F5F3FF' },
-                { label: 'Fiche dentaire', icon: ChevronRight, to: `/patients/${detailPatient.id}/chart`, color: '#F59E0B', bg: '#FFFBEB' }
+                { label: 'Documents', icon: FileText, view: 'documents', color: '#3B82F6', bg: '#EFF6FF' },
+                { label: 'Ordonnances', icon: ClipboardList, view: 'prescriptions', color: '#10B981', bg: '#ECFDF5' },
+                { label: 'Labo', icon: FlaskConical, view: 'lab', color: '#8B5CF6', bg: '#F5F3FF' },
+                { label: 'Fiche dentaire', icon: ChevronRight, view: 'dentalChart', color: '#F59E0B', bg: '#FFFBEB' }
               ].map((item) => {
                 const Icon = item.icon;
       
@@ -910,10 +916,11 @@ const AppointmentManagement = () => {
                         return;
                       }
                     
-                      if (item.to) {
-                        setEmbeddedPatientView({
+                      if (item.view) {
+                        setPatientPopup({
+                          type: item.view,
                           title: item.label,
-                          url: item.to
+                          patientId: detailPatient.id
                         });
                       }
                     }}
@@ -970,6 +977,48 @@ const AppointmentManagement = () => {
           <div style={{ padding: 24, color: '#64748B' }}>
             Aucun contenu à afficher.
           </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={!!patientPopup}
+        onClose={() => setPatientPopup(null)}
+        title={patientPopup?.title || ''}
+        maxW={1150}
+      >
+        {patientPopup?.type === 'odontogram' && (
+          <PatientOdontogram
+            patientIdOverride={patientPopup.patientId}
+            embedded
+          />
+        )}
+      
+        {patientPopup?.type === 'documents' && (
+          <PatientDocuments
+            patientIdOverride={patientPopup.patientId}
+            embedded
+          />
+        )}
+      
+        {patientPopup?.type === 'prescriptions' && (
+          <PatientPrescriptions
+            patientIdOverride={patientPopup.patientId}
+            embedded
+          />
+        )}
+      
+        {patientPopup?.type === 'lab' && (
+          <PatientLabOrders
+            patientIdOverride={patientPopup.patientId}
+            embedded
+          />
+        )}
+      
+        {patientPopup?.type === 'dentalChart' && (
+          <DentalChart
+            patientIdOverride={patientPopup.patientId}
+            embedded
+          />
         )}
       </Modal>
       
