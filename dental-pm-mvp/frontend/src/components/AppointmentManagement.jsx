@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+importer axios depuis 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
-import {
-  Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
-  AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
+importer {
+  Calendrier, Horloge, Plus, Edit2, Corbeille2, Télécharger, Téléverser, Utilisateur, X,
+  AlertCircle, RefreshCw, ChevronGauche, ChevronDroite,
   CheckCircle, XCircle, MoreHorizontal, Filter, Search,
-  Stethoscope, Zap, Eye, Grid, List, AlertTriangle,
-  Activity, FileText, ClipboardList, FlaskConical, History
-} from 'lucide-react';
+  Stéthoscope, Zap, Œil, Grille, Liste, Triangle d'alerte,
+  Activité, FichierTexte, Liste du presse-papiers, FlaskConical, Historique
+} de 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
@@ -22,82 +22,82 @@ const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem(
 
 const TYPES = [
   { value:'CONSULTATION', label:'Consultation', color:'#3B82F6', bg:'#EFF6FF', icon:'🩺' },
-  { value:'TREATMENT',    label:'Traitement',   color:'#10B981', bg:'#DCFCE7', icon:'🦷' },
-  { value:'FOLLOW_UP',    label:'Suivi',        color:'#8B5CF6', bg:'#EDE9FE', icon:'📋' },
-  { value:'EMERGENCY',    label:'Urgence',      color:'#EF4444', bg:'#FEE2E2', icon:'🚨' },
-  { value:'CLEANING',     label:'Nettoyage',    color:'#06B6D4', bg:'#ECFEFF', icon:'✨' },
-  { value:'CHECK_UP',     label:'Contrôle',     color:'#F59E0B', bg:'#FFFBEB', icon:'🔍' },
+  { value:'TRAITEMENT', label:'Traitement', color:'#10B981', bg:'#DCFCE7', icon:'🦷' },
+  { value:'FOLLOW_UP', label:'Suivi', color:'#8B5CF6', bg:'#EDE9FE', icon:'📋' },
+  { value:'URGENCE', label:'Urgence', color:'#EF4444', bg:'#FEE2E2', icon:'🚨' },
+  { value:'NETTOYAGE', label:'Nettoyage', color:'#06B6D4', bg:'#ECFEFF', icon:'✨' },
+  { value:'CHECK_UP', label:'Contrôle', color:'#F59E0B', bg:'#FFFBEB', icon:'🔍' },
 ];
 
-const STATUS = {
-  SCHEDULED:   { l:'Planifié',   bg:'#F1F5F9', c:'#475569', dot:'#94A3B8' },
-  CONFIRMED:   { l:'Confirmé',   bg:'#DCFCE7', c:'#166534', dot:'#22C55E' },
-  IN_PROGRESS: { l:'En cours',   bg:'#DBEAFE', c:'#1D4ED8', dot:'#3B82F6' },
-  COMPLETED:   { l:'Terminé',    bg:'#F0FDF4', c:'#166534', dot:'#16A34A' },
-  CANCELLED:   { l:'Annulé',     bg:'#FEE2E2', c:'#991B1B', dot:'#EF4444' },
-  NO_SHOW:     { l:'Absent',     bg:'#FEF3C7', c:'#92400E', dot:'#F59E0B' },
-  RESCHEDULED: { l:'Reporté',    bg:'#FEF9C3', c:'#713F12', dot:'#EAB308' },
+const STATUT = {
+  PRÉVU : { l:'Planifié', bg:'#F1F5F9', c:'#475569', dot:'#94A3B8' },
+  CONFIRMÉ : { l:'Confirmé', bg:'#DCFCE7', c:'#166534', dot:'#22C55E' },
+  IN_PROGRESS : { l:'En cours', bg:'#DBEAFE', c:'#1D4ED8', dot:'#3B82F6' },
+  TERMINÉ : { l:'Terminé', bg:'#F0FDF4', c:'#166534', dot:'#16A34A' },
+  ANNULÉ : { l:'Annulé', bg:'#FEE2E2', c:'#991B1B', dot:'#EF4444' },
+  ABSENCE : { l:'Absent', bg:'#FEF3C7', c:'#92400E', dot:'#F59E0B' },
+  REPROGRAMMÉ : { l:'Reporté', bg:'#FEF9C3', c:'#713F12', dot:'#EAB308' },
 };
 
 const QUICK_STATUS_NEXT = {
-  SCHEDULED:   ['CONFIRMED','CANCELLED'],
-  CONFIRMED:   ['IN_PROGRESS','CANCELLED','NO_SHOW'],
-  IN_PROGRESS: ['COMPLETED','CANCELLED'],
-  RESCHEDULED: ['CONFIRMED','CANCELLED'],
+  PRÉVU : ['CONFIRMÉ','ANNULÉ'],
+  CONFIRMÉ : ['EN_COURS','ANNULÉ','ABSENT'],
+  EN COURS : ['TERMINÉ','ANNULÉ'],
+  REPORTÉ : ['CONFIRMÉ','ANNULÉ'],
 };
 
 const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const JOURS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 
-const today   = () => new Date().toISOString().split('T')[0];
-const fdate   = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' }) : '—';
+const aujourd'hui = () => new Date().toISOString().split('T')[0];
+const fdate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' }) : '—';
 const fdateLong = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
 const getType = v => TYPES.find(t => t.value === v) || TYPES[0];
 
-/* ── Skeleton ── */
+/* ── Squelette ── */
 const Skel = ({ h=16, w='100%', r=8 }) => (
   <div style={{ height:h, width:w, borderRadius:r, background:'linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }}/>
 );
 
 /* ── Modal ── */
 const Modal = ({ open, onClose, title, children, maxW=520 }) => {
-  if (!open) return null;
-  return (
+  si (!ouvert) retourner null ;
+  retour (
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
         <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}>
-          <X size={15}/>
+          <X taille={15}/>
         </button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
-        {children}
+        {enfants}
       </div>
     </div>
   );
 };
 
-/* ── Mini calendrier ── */
+/* ── Mini-calendrier ── */
 const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
-  const [month, setMonth] = useState(() => {
+  const [mois, setMonth] = useState(() => {
     const d = selectedDate ? new Date(selectedDate + 'T00:00:00') : new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
+    retourner une nouvelle Date(d.getFullYear(), d.getMonth(), 1);
   });
 
-  const year  = month.getFullYear();
-  const mon   = month.getMonth();
-  const first = new Date(year, mon, 1).getDay();
-  const days  = new Date(year, mon + 1, 0).getDate();
+  const année = mois.getFullYear();
+  const mon = month.getMonth();
+  const premier = new Date(année, lundi, 1).getDay();
+  const jours = new Date(année, mon + 1, 0).getDate();
   const cells = Array.from({ length: first + days }, (_, i) => i < first ? null : i - first + 1);
 
   // dates avec RDV
   const apptDates = new Set(appointments.map(a => a.appointment_date));
 
-  return (
+  retour (
     <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'16px', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
-      {/* Header mois */}
+      {/* En-tête mois */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
         <button onClick={()=>setMonth(new Date(year,mon-1,1))} style={{ background:'none',border:'none',cursor:'pointer',padding:4,borderRadius:8,color:'#64748B',display:'flex' }}><ChevronLeft size={16}/></button>
-        <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A' }}>{MOIS_FR[mon]} {year}</span>
+        <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A' }}>{MOIS_FR[mon]} {année}</span>
         <button onClick={()=>setMonth(new Date(year,mon+1,1))} style={{ background:'none',border:'none',cursor:'pointer',padding:4,borderRadius:8,color:'#64748B',display:'flex' }}><ChevronRight size={16}/></button>
       </div>
       {/* Jours de la semaine */}
@@ -106,27 +106,27 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
       </div>
       {/* Cellules */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2 }}>
-        {cells.map((day, i) => {
+        {cells.map((jour, i) => {
           if (!day) return <div key={i}/>;
           const dateStr = `${year}-${String(mon+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-          const isSel   = dateStr === selectedDate;
+          const isSel = dateStr === selectedDate;
           const isToday = dateStr === today();
           const hasAppt = apptDates.has(dateStr);
-          return (
+          retour (
             <button key={i} onClick={() => onSelect(dateStr)}
               style={{ width:'100%', aspectRatio:'1', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:isSel||isToday?700:400, position:'relative', transition:'all .15s',
-                background: isSel ? '#0D7A87' : isToday ? '#F0FDFE' : 'transparent',
-                color: isSel ? '#fff' : isToday ? '#0D7A87' : '#0F172A',
+                arrière-plan : isSel ? '#0D7A87' : isToday ? '#F0FDFE' : 'transparent',
+                couleur : estSel ? '#fff' : estAujourd'hui ? '#0D7A87' : '#0F172A',
               }}
               onMouseOver={e=>{if(!isSel)e.currentTarget.style.background='#F8FAFC';}}
               onMouseOut={e=>{if(!isSel)e.currentTarget.style.background=isToday?'#F0FDFE':'transparent';}}>
-              {day}
+              {jour}
               {hasAppt && !isSel && <div style={{ position:'absolute', bottom:2, left:'50%', transform:'translateX(-50%)', width:4, height:4, borderRadius:'50%', background:'#0D7A87' }}/>}
             </button>
           );
         })}
       </div>
-      <button onClick={() => onSelect(today())}
+      <button onClick={() => onSelect(aujourd'hui())}
         style={{ width:'100%', marginTop:10, padding:'7px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569' }}>
         Aujourd'hui
       </button>
@@ -134,27 +134,27 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
   );
 };
 
-/* ── Card RDV ── */
+/* ── Carte RDV ── */
 const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDetail, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const patientId = a.patient_id || a.patient?.id;
-  const type   = getType(a.appointment_type);
+  const type = getType(a.appointment_type);
   const status = STATUS[a.status] || STATUS.SCHEDULED;
   const nextStatuses = QUICK_STATUS_NEXT[a.status] || [];
   const dur = (() => {
-    if (!a.start_time || !a.end_time) return null;
+    si (!a.start_time || !a.end_time) retourner null ;
     const [sh,sm] = a.start_time.split(':').map(Number);
     const [eh,em] = a.end_time.split(':').map(Number);
     const mins = (eh*60+em) - (sh*60+sm);
-    return mins > 0 ? (mins >= 60 ? `${Math.floor(mins/60)}h${mins%60?mins%60+'min':''}` : `${mins}min`) : null;
+    retourner mins > 0 ? (mins >= 60 ? `${Math.floor(mins/60)}h${mins%60?mins%60+'min':''}` : `${mins}min`) : null;
   })();
 
-  return (
+  retour (
     <div className="rdv-card" style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E2E8F0', padding:'16px 18px', display:'flex', gap:14, alignItems:'flex-start', boxShadow:'0 1px 4px rgba(0,0,0,.04)', transition:'all .2s', animationDelay:`${Math.min(idx,.15)*0.05}s`, position:'relative' }}
       onMouseOver={e=>{e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
       onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}>
 
-      {/* Barre couleur type */}
+      {/* Type de couleur de la barre */}
       <div style={{ width:4, borderRadius:99, background:type.color, alignSelf:'stretch', flexShrink:0, minHeight:60 }}/>
 
       {/* Heure */}
@@ -176,14 +176,14 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDeta
           </span>
         </div>
         {a.reason && <div style={{ fontSize:12, color:'#64748B', marginBottom:4 }}>📝 {a.reason}</div>}
-        {a.notes  && <div style={{ fontSize:11, color:'#94A3B8', background:'#F8FAFC', borderRadius:7, padding:'4px 8px', display:'inline-block' }}>💬 {a.notes}</div>}
+        {a.notes && <div style={{ fontSize:11, color:'#94A3B8', background:'#F8FAFC', borderRadius:7, padding:'4px 8px', display:'inline-block' }}>💬 {a.notes}</div>}
 
         {/* Boutons statut rapide */}
         {nextStatuses.length > 0 && (
           <div style={{ display:'flex', gap:5, marginTop:8, flexWrap:'wrap' }}>
             {nextStatuses.map(ns => {
-              const st = STATUS[ns];
-              return (
+              const st = STATUT[ns];
+              retour (
                 <button key={ns} onClick={() => onStatusChange(a, ns)}
                   style={{ padding:'3px 10px', borderRadius:99, border:`1px solid ${st.dot}`, background:st.bg, color:st.c, fontSize:10, fontWeight:700, cursor:'pointer', transition:'all .15s' }}
                   onMouseOver={e=>{e.currentTarget.style.transform='scale(1.05)';}}
@@ -199,25 +199,25 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDeta
       {/* Actions */}
       <div style={{ display:'flex', gap:5, flexShrink:0 }}>
         {patientId && (
-          <button
+          < bouton
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onPatientDetail?.(patientId);
+              surPatientDetail?.(patientId);
             }}
-            title="Fiche détaillée"
+            titre="Fiche détaillée"
             style={{
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              border: '1.5px solid #E2E8F0',
-              background: '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#94A3B8',
-              transition: 'all .15s'
+              largeur : 30,
+              taille : 30,
+              rayon de bordure : 8,
+              bordure : '1,5px solide #E2E8F0',
+              arrière-plan : '#fff',
+              curseur : 'pointeur',
+              affichage : 'flexible',
+              alignItems: 'centre',
+              justifierContenu : « centre »,
+              couleur : '#94A3B8',
+              transition : 'tous les .15'
             }}
             onMouseOver={e => {
               e.currentTarget.style.borderColor = '#0D7A87';
@@ -228,26 +228,26 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDeta
               e.currentTarget.style.color = '#94A3B8';
             }}
           >
-            <Eye size={15} />
+            <Taille des yeux={15} />
           </button>
         )}
-        <button onClick={() => onExport(a)} title="Export .ics"
+        <button onClick={() => onExport(a)} title="Exporter .ics"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
           onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
-          <Download size={13}/>
+          <Taille du téléchargement={13}/>
         </button>
         <button onClick={() => onEdit(a)} title="Modifier"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#3B82F6';e.currentTarget.style.color='#3B82F6';}}
           onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
-          <Edit2 size={13}/>
+          <Edit2 taille={13}/>
         </button>
         <button onClick={() => onDelete(a)} title="Supprimer"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#EF4444';e.currentTarget.style.color='#EF4444';}}
           onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
-          <Trash2 size={13}/>
+          <Trash2 taille={13}/>
         </button>
       </div>
     </div>
@@ -255,78 +255,78 @@ const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDeta
 };
 
 /* ════════════════════════════════════════════════════════════════════════════ */
-const AppointmentManagement = () => {
-  const { user } = useAuth();
-  const [appts,    setAppts]    = useState([]);
+const Gestion des rendez-vous = () => {
+  const { utilisateur } = utiliserAuth();
+  const [appts, setAppts] = useState([]);
   const [patients, setPatients] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [isOpen,   setIsOpen]   = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isDelOpen,setIsDelOpen]= useState(false);
-  const [editA,    setEditA]    = useState(null);
-  const [delA,     setDelA]     = useState(null);
+  const [editA, setEditA] = useState(null);
+  const [delA, setDelA] = useState(null);
   const [detailPatient, setDetailPatient] = useState(null);
   const [isPatientDetailOpen, setIsPatientDetailOpen] = useState(false);
-  const [search,   setSearch]   = useState('');
+  const [search, setSearch] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
-  const [statusF,  setStatusF]  = useState('all');
-  const [typeF,    setTypeF]    = useState('all');
-  const [selDate,  setSelDate]  = useState(today());
-  const [viewMode, setView]     = useState('day'); // day | week | all
-  const [showCal,  setShowCal]  = useState(true);
+  const [statusF, setStatusF] = useState('all');
+  const [typeF, setTypeF] = useState('all');
+  const [selDate, setSelDate] = useState(aujourd'hui());
+  const [viewMode, setView] = useState('day'); // jour | semaine | tous
+  const [showCal, setShowCal] = useState(true);
   const [importing, setImporting] = useState(false);
   const importInputRef = useRef(null);
-  const canImportAppointments = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
-  
+  const canImportAppointments = ['ADMIN', 'DENTISTE', 'ASSISTANT'].includes(user?.role);
+
   const [form, setForm] = useState({
     patient_id:'', dentist_id:'',
-    appointment_date: today(), start_time:'09:00', end_time:'10:00',
-    appointment_type:'CONSULTATION', reason:'', notes:''
+    date_rendez-vous : aujourd’hui(), heure_début : '09:00', heure_fin : '10:00',
+    type_rendez-vous : « CONSULTATION », motif : « », notes : « »
   });
 
   const inp = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', transition:'border-color .2s' };
-  const fi  = e => e.target.style.borderColor = '#0D7A87';
-  const bi  = e => e.target.style.borderColor = '#E2E8F0';
+  const fi = e => e.target.style.borderColor = '#0D7A87';
+  const bi = e => e.target.style.borderColor = '#E2E8F0';
 
   /* Plage de dates selon viewMode */
   const dateRange = useCallback(() => {
-    if (viewMode === 'day') return { from: selDate, to: selDate };
-    if (viewMode === 'week') {
+    si (viewMode === 'day') retourner { de : selDate, à : selDate };
+    si (viewMode === 'semaine') {
       const d = new Date(selDate + 'T00:00:00');
       const dow = d.getDay();
       const mon = new Date(d); mon.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
-      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      const soleil = new Date(lun); soleil.setDate(lun.getDate() + 6);
       return { from: mon.toISOString().split('T')[0], to: sun.toISOString().split('T')[0] };
     }
     const d = new Date();
     const from = new Date(d); from.setMonth(d.getMonth() - 1);
-    const to   = new Date(d); to.setMonth(d.getMonth() + 3);
+    const to = new Date(d); to.setMonth(d.getMonth() + 3);
     return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] };
   }, [selDate, viewMode]);
 
   const fetchAppts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const { from, to } = dateRange();
+    définirChargement(true);
+    essayer {
+      const { de, à } = plage de dates();
       let url = `${API}/appointments?date_from=${from}&date_to=${to}`;
-      if (statusF !== 'all') url += `&status=${statusF}`;
+      si (statusF !== 'all') url += `&status=${statusF}`;
       const r = await axios.get(url, authH());
-      setAppts(r.data.appointments || []);
-    } catch (e) { if (!axios.isCancel(e)) toast.error('Erreur chargement'); }
-    finally { setLoading(false); }
+      définirRendez-vous(r.data.appointments || []);
+    } catch (e) { if (!axios.isCancel(e)) toast.error('Erreur de chargement'); }
+    enfin { setLoading(false); }
   }, [dateRange, statusF]);
 
   /*const fetchPatients = async () => {
-    try {
+    essayer {
       const r = await cachedGet(`${API}/patients?limit=500&fields=lookup&includeTotal=false`, authH(), { ttl: CACHE_TTL.medium });
       const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
-      setPatients(list);
-    } catch (e) {
-      console.error('fetchPatients error:', e?.response?.data || e.message);
+      définirPatients(liste);
+    } attraper (e) {
+      console.error('Erreur lors de la récupération des patients :', e?.response?.data || e.message);
     }
   };*/
 
   const fetchPatients = async () => {
-    try {
+    essayer {
       const r = await axios.get(
         `${API}/patients?limit=500&fields=lookup&includeTotal=false&_t=${Date.now()}`,
         authH()
@@ -336,53 +336,53 @@ const AppointmentManagement = () => {
   
       console.log('Patients chargés pour agenda:', list.length, list);
   
-      setPatients(list);
-    } catch (e) {
-      console.error('fetchPatients error:', e?.response?.data || e.message);
-      toast.error('Erreur chargement patients');
+      définirPatients(liste);
+    } attraper (e) {
+      console.error('Erreur lors de la récupération des patients :', e?.response?.data || e.message);
+      toast.error('Erreur de chargement des patients');
     }
   };
 
   //Ajout
   const searchPatients = async (q = '') => {
-    try {
+    essayer {
       const params = new URLSearchParams({
-        limit: '50',
-        fields: 'lookup',
-        includeTotal: 'false',
+        limite : '50',
+        champs : 'recherche',
+        inclureTotal : 'false',
         _t: Date.now().toString()
       });
   
-      if (q.trim()) {
+      si (q.trim()) {
         params.set('search', q.trim());
       }
   
       const r = await axios.get(
-        `${API}/patients?${params.toString()}`, 
+        `${API}/patients?${params.toString()}`,
         authH()
       );
-      const list = r.data.patients || [];
-      setPatients(list);
-    } catch (e) {
-      console.error('searchPatients error:', e?.response?.data || e.message);
+      const liste = r.data.patients || [];
+      définirPatients(liste);
+    } attraper (e) {
+      console.error('erreur searchPatients :', e?.response?.data || e.message);
       toast.error('Erreur recherche patient');
     }
   };
   
   // useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
 
-  useEffect(() => {
-    fetchAppts();
-    fetchPatients();
+  utiliserEffect(() => {
+    récupérerAppets();
+    récupérerPatients();
 
     const refreshPatientsOnFocus = () => {
-      fetchPatients();
+      récupérerPatients();
     };
 
-    window.addEventListener('focus', refreshPatientsOnFocus);
+    fenêtre.ajouterÉcouteurÉvénement('focus', rafraîchirPatientsOnFocus);
 
-    return () => {
-      window.removeEventListener('focus', refreshPatientsOnFocus);
+    retourner () => {
+      fenêtre.supprimerEventListener('focus', rafraîchirPatientsOnFocus);
     };
   }, [fetchAppts]);
 
@@ -390,101 +390,101 @@ const AppointmentManagement = () => {
 
   const resetForm = () => setForm({
     patient_id: '',
-    dentist_id: user?.role === 'DENTIST' ? user.id : '',
-    appointment_date: selDate,
-    start_time: '09:00',
-    end_time: '10:00',
-    appointment_type: 'CONSULTATION',
-    reason: '',
-    notes: ''
+    dentist_id: user?.role === 'DENTISTE' ? user.id : '',
+    date_rendez-vous : selDate,
+    heure_début : '09:00',
+    heure_fin : '10:00',
+    type_de_rendez-vous : 'CONSULTATION',
+    raison: '',
+    notes : ''
   });
   
   // const openCreate = () => { setEditA(null); resetForm(); setIsOpen(true); };
 
   const openCreate = async () => {
-    setEditA(null);
-    resetForm();
-    setPatientSearch('');
-    setIsOpen(true);
-    await fetchPatients();
+    définirEditA(null);
+    réinitialiserFormulaire();
+    définirRecherchePatient('');
+    définirEstOuvert(vrai);
+    attendre récupérer les patients();
   };
   
-  const openEdit   = a  => { setEditA(a); setForm({ patient_id:a.patient_id, dentist_id:a.dentist_id||'', appointment_date:a.appointment_date, start_time:a.start_time, end_time:a.end_time, appointment_type:a.appointment_type, reason:a.reason||'', notes:a.notes||'' }); setIsOpen(true); };
+  const openEdit = a => { setEditA(a); setForm({ patient_id:a.patient_id, dentist_id:a.dentist_id||'', appointment_date:a.appointment_date, start_time:a.start_time, end_time:a.end_time, appointment_type:a.appointment_type, reason:a.reason||'', notes:a.notes||'' }); setIsOpen(true); };
 
   const openPatientDetail = async (patientId) => {
-    if (!patientId) {
+    si (!patientId) {
       toast.error('Patient introuvable pour ce rendez-vous');
-      return;
+      retour;
     }
   
-    try {
-      const response = await axios.get(`${API}/patients/${patientId}`, authH());
-      setDetailPatient(response.data);
-      setIsPatientDetailOpen(true);
-    } catch (error) {
-      console.error('openPatientDetail error:', error?.response?.data || error.message);
-      toast.error('Impossible d’ouvrir la fiche détaillée du patient');
+    essayer {
+      const réponse = await axios.get(`${API}/patients/${patientId}`, authH());
+      définirDétailPatient(réponse.données);
+      définirEstOuvertLeDétailDuPatient(vrai);
+    } attraper (erreur) {
+      console.error('erreur openPatientDetail :', error?.response?.data || error.message);
+      toast.error('Impossible d'ouvrir la fiche détaillée du patient');
     }
   };
   
   const handleSubmit = async e => {
-    e.preventDefault();
+    e.prévenirDefault();
     const sm = form.start_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
     const em = form.end_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
-    if (em <= sm) { toast.error("L'heure de fin doit être après le début"); return; }
-    try {
+    if (em <= sm) { toast.error("L'heure de fin doit être après le début"); retour; }
+    essayer {
       const p = { ...form }; if (!p.dentist_id) delete p.dentist_id;
-      if (editA) await axios.put(`${API}/appointments/${editA.id}`, p, authH());
-      else       await axios.post(`${API}/appointments`, p, authH());
+      si (editA) attendre axios.put(`${API}/appointments/${editA.id}`, p, authH());
+      sinon attendre axios.post(`${API}/appointments`, p, authH());
       toast.success(editA ? 'RDV modifié !' : 'RDV créé !');
-      setIsOpen(false); fetchAppts();
+      définirOuvert(faux); récupérerRendez-vous();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
 
   const handleDelete = async () => {
-    if (!delA) return;
-    try {
+    si (!delA) retourner;
+    essayer {
       await axios.delete(`${API}/appointments/${delA.id}`, authH());
-      toast.success('RDV supprimé'); setIsDelOpen(false); setDelA(null); fetchAppts();
+      toast.success('RDV supprimé'); setIsDelOpen(faux); setDelA(null); fetchAppts();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur'); }
   };
 
   const handleStatusChange = async (a, newStatus) => {
-    try {
+    essayer {
       await axios.patch(`${API}/appointments/${a.id}/status`, { status: newStatus }, authH());
       toast.success(`Statut → ${STATUS[newStatus]?.l}`);
-      fetchAppts();
+      récupérerAppets();
     } catch { toast.error('Erreur mise à jour statut'); }
   };
 
   const handleExport = async a => {
-    try {
+    essayer {
       const r = await axios.get(`${API}/appointments/${a.id}/export-calendar`, { responseType:'blob', ...authH() });
       const url = window.URL.createObjectURL(new Blob([r.data], { type:'text/calendar' }));
-      const el  = document.createElement('a'); el.href=url; el.download=`rdv-${a.appointment_date}.ics`;
+      const el = document.createElement('a'); el.href=url; el.download=`rdv-${a.appointment_date}.ics`;
       document.body.appendChild(el); el.click(); document.body.removeChild(el);
       window.URL.revokeObjectURL(url); toast.success('Calendrier exporté');
-    } catch { toast.error('Erreur export'); }
+    } catch { toast.error('Erreur d'exportation'); }
   };
 
   const downloadCsvTemplate = () => {
-    const header = [
-      'patient_number',
-      'patient_phone_primary',
-      'patient_email',
-      'appointment_date',
-      'start_time',
-      'end_time',
-      'appointment_type',
-      'status',
-      'reason',
-      'notes',
-      'chair_number',
-      'dentist_email',
-      'dentist_name'
-    ].join(',');
+    const en-tête = [
+      'numéro_patient',
+      'patient_phone_primaire',
+      'courriel_du_patient',
+      'date_rendez-vous',
+      'heure_début',
+      'fin_heure',
+      'type_rendez-vous',
+      'statut',
+      'raison',
+      « notes »,
+      'numéro_de_chaise',
+      'courriel_dentiste',
+      'nom_dentiste'
+    ].rejoindre(',');
 
-    const sample = [
+    const échantillon = [
       'PAT-000001',
       '0340000000',
       'jean@example.com',
@@ -492,58 +492,58 @@ const AppointmentManagement = () => {
       '09:00',
       '09:30',
       'CONSULTATION',
-      'SCHEDULED',
+      'PROGRAMMÉ',
       'Contrôle annuel',
       'Premier RDV importé',
       '1',
       'dr.rakoto@example.com',
-      'Dr Rakoto'
-    ].join(',');
+      « Docteur Rakoto »
+    ].rejoindre(',');
 
     const blob = new Blob([`${header}\n${sample}\n`], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = URL.createObjectURL(blob);
     link.download = 'modele_import_rendez_vous.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
+    lien.cliquer();
+    URL.révoquerObjectURL(lien.href);
   };
 
   const handleImportCsv = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const fichier = e.target.files?.[0];
+    si (!fichier) retourner;
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', fichier);
 
-    setImporting(true);
-    try {
+    définirImporter(true);
+    essayer {
       const response = await axios.post(`${API}/appointments/import-csv`, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        en-têtes : {
+          Autorisation : `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data'
         }
       });
 
       const inserted = response.data.inserted || 0;
-      const updated = response.data.updated || 0;
+      const mis à jour = réponse.données.mis à jour || 0;
       const skipped = response.data.skipped || 0;
-      toast.success(`Import terminé: ${inserted} créés, ${updated} mis à jour, ${skipped} ignorés`);
-      fetchAppts();
-    } catch (error) {
+      toast.success(`Import terminé: ${inserted} créé, ${updated} mis à jour, ${skipped} ignorés`);
+      récupérerAppets();
+    } attraper (erreur) {
       toast.error(error.response?.data?.error || 'Erreur lors de l\'import CSV');
-    } finally {
-      setImporting(false);
+    } enfin {
+      définirImportation(false);
       e.target.value = '';
     }
   };
 
   /* Filtrage + recherche */
   const activeSearch = search.trim();
-  const filtered = appts
+  const filtré = rendez-vous
     .filter(a => {
       const mt = typeF === 'all' || a.appointment_type === typeF;
       const mq = matchesSearch(search, patientSearchText(a.patient || {}), a.reason, a.appointment_type, a.status);
-      return mt && mq;
+      renvoyer mt && mq;
     })
     .sort((a, b) => activeSearch
       ? scoreSearchMatch(activeSearch, patientSearchText(b.patient || {}), b.reason, b.appointment_type, b.status)
@@ -557,7 +557,7 @@ const AppointmentManagement = () => {
       ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
         - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
       : 0)
-    .slice(0, 100);*/
+    .tranche(0, 100);*/
 
     const patientMatches = patients
     .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
@@ -567,25 +567,25 @@ const AppointmentManagement = () => {
       : patientIdentifier(a).localeCompare(patientIdentifier(b))
     );
   
-  /* Stats */
-  const todayAppts  = appts.filter(a => a.appointment_date === today());
-  const confirmedN  = appts.filter(a => a.status === 'CONFIRMED').length;
-  const completedN  = appts.filter(a => a.status === 'COMPLETED').length;
-  const cancelledN  = appts.filter(a => a.status === 'CANCELLED').length;
+  /* Statistiques */
+  const todayAppts = appts.filter(a => a.appointment_date === today());
+  const confirmedN = appts.filter(a => a.status === 'CONFIRMED').length;
+  const completedN = appts.filter(a => a.status === 'COMPLETED').length;
+  const cancelledN = appts.filter(a => a.status === 'CANCELLED').length;
 
   /* Grouper par date pour vue all/week */
   const grouped = filtered.reduce((acc, a) => {
-    if (!acc[a.appointment_date]) acc[a.appointment_date] = [];
-    acc[a.appointment_date].push(a);
-    return acc;
+    si (!acc[a.appointment_date]) acc[a.appointment_date] = [];
+    acc[a.date_de_rendez-vous].push(a);
+    retourner acc;
   }, {});
   const sortedDates = Object.keys(grouped).sort();
 
-  /* Navigation jour */
+  /* Jour de navigation */
   const prevDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()-1); setSelDate(d.toISOString().split('T')[0]); };
   const nextDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()+1); setSelDate(d.toISOString().split('T')[0]); };
 
-  return (
+  retour (
     <div style={{ maxWidth: 1200, margin:'0 auto', paddingBottom:48 }}>
       <style>{`
         @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -607,26 +607,26 @@ const AppointmentManagement = () => {
         </div>
         <div style={{ display:'flex', gap:8 }}>
           <button onClick={fetchAppts} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:13, fontWeight:600, color:'#475569' }}>
-            <RefreshCw size={13}/>
+            <RefreshCw taille={13}/>
           </button>
           <button onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#7C3AED', border:'1.5px solid #C4B5FD', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
-            <Download size={15}/>Modèle CSV
+            <Taille du téléchargement={15}/>Modèle CSV
           </button>
-          {canImportAppointments && (
+          {peutImporterAppointments && (
             <>
               <input
                 ref={importInputRef}
-                type="file"
+                type="fichier"
                 accept=".csv,text/csv"
                 onChange={handleImportCsv}
                 style={{ display:'none' }}
               />
-              <button
+              < bouton
                 onClick={() => importInputRef.current?.click()}
-                disabled={importing}
+                désactivé={importation}
                 style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(124,58,237,.25)', opacity: importing ? .75 : 1 }}
               >
-                <Upload size={15}/>{importing ? 'Import en cours' : 'Importer CSV'}
+                <Upload size={15}/>{importing ? 'Importer en cours' : 'Importer CSV'}
               </button>
             </>
           )}
@@ -637,20 +637,20 @@ const AppointmentManagement = () => {
         </div>
       </div>
 
-      {/* ── KPIs ── */}
+      {/* ── Indicateurs clés de performance ── */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:12, marginBottom:20 }}>
         {[
-          { icon:'📅', l:"Aujourd'hui",  v:todayAppts.length,  c:'#8B5CF6', bg:'#EDE9FE' },
-          { icon:'✅', l:'Confirmés',     v:confirmedN,          c:'#10B981', bg:'#DCFCE7' },
-          { icon:'🏁', l:'Terminés',      v:completedN,          c:'#0D7A87', bg:'#F0FDFE' },
-          { icon:'❌', l:'Annulés',       v:cancelledN,          c:'#EF4444', bg:'#FEE2E2' },
-          { icon:'📋', l:'Total période', v:appts.length,        c:'#F59E0B', bg:'#FFFBEB' },
+          { icon:'📅', l:"Aujourd'hui", v:todayAppts.length, c:'#8B5CF6', bg:'#EDE9FE' },
+          { icon:'✅', l:'Confirmés', v:confirmedN, c:'#10B981', bg:'#DCFCE7' },
+          { icon:'🏁', l:'Terminés', v:completedN, c:'#0D7A87', bg:'#F0FDFE' },
+          { icon:'❌', l:'Annulés', v:cancelledN, c:'#EF4444', bg:'#FEE2E2' },
+          { icon:'📋', l:'Période totale', v:appts.length, c:'#F59E0B', bg:'#FFFBEB' },
         ].map((k,i) => (
           <div key={i} style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'14px 16px', display:'flex', alignItems:'center', gap:11 }}>
             <div style={{ width:36, height:36, borderRadius:10, background:k.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{k.icon}</div>
             <div>
-              <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A', lineHeight:1 }}>{k.v}</div>
-              <div style={{ fontSize:11, color:'#64748B', marginTop:2 }}>{k.l}</div>
+              <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A', lineHeight:1 }}>{kv}</div>
+              <div style={{ fontSize:11, color:'#64748B', marginTop:2 }}>{kl}</div>
             </div>
           </div>
         ))}
@@ -663,7 +663,7 @@ const AppointmentManagement = () => {
         {showCal && (
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
             <MiniCalendar selectedDate={selDate} onSelect={d=>{setSelDate(d);setView('day');}} appointments={appts}/>
-            {/* Types légende */}
+            {/* Légende des types */}
             <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'14px' }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>Types</div>
               {TYPES.map(t => (
@@ -681,13 +681,13 @@ const AppointmentManagement = () => {
         <div>
           {/* Barre de navigation + filtres */}
           <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'12px 16px', marginBottom:14, display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
-            {/* Toggle calendrier */}
+            {/* Basculer le calendrier */}
             <button onClick={()=>setShowCal(s=>!s)}
               style={{ padding:'6px 10px', borderRadius:8, border:'1.5px solid #E2E8F0', background:showCal?'#EDE9FE':'#fff', color:showCal?'#7C3AED':'#64748B', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:12, fontWeight:600 }}>
               <Calendar size={13}/>
             </button>
 
-            {/* Vue mode */}
+            {/* Mode Vue */}
             <div style={{ display:'flex', gap:3, background:'#F8FAFC', borderRadius:9, padding:3 }}>
               {[['day','Jour'],['week','Semaine'],['all','Tout']].map(([k,l])=>(
                 <button key={k} onClick={()=>setView(k)}
@@ -697,12 +697,12 @@ const AppointmentManagement = () => {
               ))}
             </div>
 
-            {/* Navigation date (jour/semaine) */}
+            {/* Date de navigation (jour/semaine) */}
             {viewMode !== 'all' && (
               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <button onClick={prevDay} style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronLeft size={14}/></button>
+                <button onClick={prevDay} ​​style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronLeft size={14}/></button>
                 <span style={{ fontSize:13, fontWeight:700, color:'#0F172A', whiteSpace:'nowrap' }}>
-                  {viewMode==='day' ? fdateLong(selDate) : `Semaine du ${fdate(dateRange().from)}`}
+                  {viewMode==='jour' ? fdateLong(selDate) : `Semaine du ${fdate(dateRange().from)}`}
                 </span>
                 <button onClick={nextDay} style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronRight size={14}/></button>
               </div>
@@ -713,21 +713,21 @@ const AppointmentManagement = () => {
               <Search size={13} color="#94A3B8"/>
               <input placeholder="Rechercher patient, motif..." value={search} onChange={e=>setSearch(e.target.value)}
                 style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, minWidth:0, color:'#0F172A' }}/>
-              {search && <button onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:0 }}><X size={12}/></button>}
+              {rechercher && <button onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:0 }}><X size={12}/></button>}
             </div>
 
             {/* Filtre statut */}
             <select value={statusF} onChange={e=>setStatusF(e.target.value)}
               style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer', outline:'none' }}>
               <option value="all">Tous statuts</option>
-              {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
+              {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{vl}</option>)}
             </select>
 
             <span style={{ fontSize:11, color:'#94A3B8', whiteSpace:'nowrap' }}>{filtered.length} RDV</span>
           </div>
 
           {/* Liste RDV */}
-          {loading ? (
+          {chargement ? (
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {Array(4).fill(0).map((_,i) => <Skel key={i} h={86} r={16}/>)}
             </div>
@@ -736,14 +736,14 @@ const AppointmentManagement = () => {
               <Calendar size={40} style={{ margin:'0 auto 14px', color:'#CBD5E1' }}/>
               <p style={{ fontWeight:700, color:'#475569', fontSize:15, margin:'0 0 6px' }}>Aucun rendez-vous</p>
               <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 18px' }}>
-                {viewMode==='day' ? `Aucun RDV pour le ${fdateLong(selDate)}` : 'Aucun RDV sur cette période'}
+                {viewMode==='jour' ? `Aucun RDV pour le ${fdateLong(selDate)}` : 'Aucun RDV sur cette période'}
               </p>
               <button onClick={openCreate} style={{ padding:'10px 22px', borderRadius:11, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700 }}>
                 Créer un RDV
               </button>
             </div>
-          ) : viewMode === 'day' ? (
-            /* ── Vue JOUR : timeline ── */
+          ) : viewMode === 'jour' ? (
+            /* ── Vue JOUR : chronologie ── */
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, padding:'10px 16px', background:'linear-gradient(135deg,#EDE9FE,#F5F3FF)', borderRadius:12, border:'1px solid #DDD6FE' }}>
                 <Calendar size={15} color="#7C3AED"/>
@@ -783,29 +783,29 @@ const AppointmentManagement = () => {
       </div>
       {/* Début */}
       <Modal
-        open={isPatientDetailOpen}
+        ouvert={isPatientDetailOpen}
         onClose={() => {
           setIsPatientDetailOpen(false);
-          setDetailPatient(null);
+          définirDétailPatient(null);
         }}
         title="Fiche détaillée patient"
         maxW={540}
       >
-        {detailPatient ? (
+        {détailPatient ? (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
               <div
                 style={{
-                  width: 58,
-                  height: 58,
-                  borderRadius: 16,
-                  background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 20,
-                  fontWeight: 800,
+                  largeur : 58,
+                  taille : 58,
+                  Rayon de bordure : 16,
+                  arrière-plan : 'dégradé linéaire (135°, #8B5CF6, #7C3AED)',
+                  couleur : '#fff',
+                  affichage : 'flexible',
+                  alignItems: 'centre',
+                  justifierContenu : « centre »,
+                  Taille de police : 20,
+                  policeWeight: 800,
                   boxShadow: '0 8px 20px rgba(124,58,237,.25)'
                 }}
               >
@@ -819,15 +819,15 @@ const AppointmentManagement = () => {
       
                 <div
                   style={{
-                    display: 'inline-flex',
-                    marginTop: 6,
-                    padding: '4px 10px',
-                    borderRadius: 999,
-                    background: '#ECFEFF',
-                    color: '#0D7A87',
-                    fontSize: 11,
-                    fontWeight: 800,
-                    border: '1px solid #A5F3FC'
+                    affichage : 'inline-flex',
+                    marge supérieure : 6,
+                    marge intérieure : '4px 10px',
+                    Rayon de bordure : 999,
+                    arrière-plan : '#ECFEFF',
+                    couleur : '#0D7A87',
+                    Taille de police : 11,
+                    policeWeight: 800,
+                    bordure : '1px solide #A5F3FC'
                   }}
                 >
                   {patientIdentifier(detailPatient)}
@@ -838,68 +838,64 @@ const AppointmentManagement = () => {
             <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
               {detailPatient.phone_primary || detailPatient.phone ? (
                 <div style={{ fontSize: 13, color: '#475569' }}>
-                  Téléphone : <strong>{detailPatient.phone_primary || detailPatient.phone}</strong>
+                  Téléphone : <strong>{detailPatient.phone_primary || détailPatient.phone</strong>
                 </div>
-              ) : null}
+              ) : nul}
       
               {detailPatient.email ? (
                 <div style={{ fontSize: 13, color: '#475569' }}>
-                  Email : <strong>{detailPatient.email}</strong>
+                  Courriel : <strong>{detailPatient.email}</strong>
                 </div>
-              ) : null}
+              ) : nul}
       
               {detailPatient.address ? (
                 <div style={{ fontSize: 13, color: '#475569' }}>
                   Adresse : <strong>{detailPatient.address}</strong>
                 </div>
-              ) : null}
+              ) : nul}
             </div>
       
             <div
               style={{
-                display: 'grid',
+                affichage : 'grille',
                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: 12
+                écart : 12
               }}
             >
               {[
                 { label: 'Odontogramme', icon: Activity, to: `/patients/${detailPatient.id}/odontogram`, color: '#7C3AED', bg: '#F5F3FF' },
-                { label: 'Historique', icon: History, action: 'history', color: '#DC2626', bg: '#FEF2F2' }
+                { label: 'Historique', icon: History, to: `/patients/${detailPatient.id}/history`, color: '#DC2626', bg: '#FEF2F2' },
                 { label: 'Documents', icon: FileText, to: `/patients/${detailPatient.id}/documents`, color: '#3B82F6', bg: '#EFF6FF' },
                 { label: 'Ordonnances', icon: ClipboardList, to: `/patients/${detailPatient.id}/prescriptions`, color: '#10B981', bg: '#ECFDF5' },
                 { label: 'Labo', icon: FlaskConical, to: `/patients/${detailPatient.id}/lab-orders`, color: '#8B5CF6', bg: '#F5F3FF' },
-                { label: 'Fiche dentaire', icon: ChevronRight, to: `/patients/${detailPatient.id}/chart`, color: '#F59E0B', bg: '#FFFBEB' }
+                { label : 'Fiche dentaire', icône : ChevronRight, vers : `/patients/${detailPatient.id}/chart`, couleur : '#F59E0B', bg : '#FFFBEB' }
               ].map((item) => {
-                const Icon = item.icon;
+                const Icône = élément.icône;
       
-                return (
-                  <button
-                    key={item.label}
+                retour (
+                  < bouton
+                    clé={item.label}
                     type="button"
                     onClick={() => {
-                     if (item.action === 'history') {
-                      openPatientHistory(detailPatient);
-                      return;
-                      }
-                      window.location.href = item.to;
+                      fenêtre.location.href = élément.to;
                     }}
                     style={{
-                      minHeight: 92,
-                      borderRadius: 16,
-                      border: `1.5px solid ${item.color}30`,
-                      background: item.bg,
-                      color: item.color,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 8,
-                      cursor: 'pointer',
-                      fontSize: 11,
-                      fontWeight: 800
+                      Hauteur minimale : 92,
+                      Rayon de bordure : 16,
+                      bordure : `1,5px solide ${item.color}30`,
+                      arrière-plan : item.bg,
+                      couleur : item.color,
+                      affichage : 'flexible',
+                      flexDirection : 'colonne',
+                      alignItems: 'centre',
+                      justifierContenu : « centre »,
+                      écart : 8,
+                      curseur : 'pointeur',
+                      Taille de police : 11,
+                      policeWeight: 800
                     }}
                   >
-                    <Icon size={22} />
+                    <Icône taille={22} />
                     <span>{item.label}</span>
                   </button>
                 );
@@ -913,8 +909,8 @@ const AppointmentManagement = () => {
         )}
       </Modal>
       {/* fin */}
-
-      {/* ══ MODAL CRÉER / MODIFIER ══ */}
+      
+      {/* ══ MODAL CRÉER / MODIFICATEUR ══ */}
       <Modal open={isOpen} onClose={()=>setIsOpen(false)} title={editA ? '✏️ Modifier le rendez-vous' : '📅 Nouveau rendez-vous'} maxW={520}>
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
@@ -926,22 +922,22 @@ const AppointmentManagement = () => {
           
             <div
               style={{
-                border: '1.5px solid #E2E8F0',
-                borderRadius: 12,
-                background: '#FFFFFF',
-                overflow: 'hidden'
+                bordure : '1,5px solide #E2E8F0',
+                Rayon de bordure : 12,
+                arrière-plan : '#FFFFFF',
+                débordement : 'caché'
               }}
             >
-              {selectedPatient && (
+              {Patient sélectionné && (
                 <div
                   style={{
-                    padding: '10px 12px',
-                    background: '#F8FAFC',
-                    borderBottom: '1px solid #E2E8F0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10
+                    marge intérieure : '10px 12px',
+                    arrière-plan : '#F8FAFC',
+                    borderBottom: '1px solide #E2E8F0',
+                    affichage : 'flexible',
+                    alignItems: 'centre',
+                    justifyContent: 'espace entre',
+                    écart : 10
                   }}
                 >
                   <div style={{ minWidth: 0 }}>
@@ -950,59 +946,59 @@ const AppointmentManagement = () => {
                     </div>
           
                     <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                      {patientIdentifier(selectedPatient)}
+                      {patientIdentifier(patient sélectionné)}
                     </div>
                   </div>
           
-                  <button
+                  < bouton
                     type="button"
                     onClick={() => {
                       setForm(prev => ({ ...prev, patient_id: '' }));
-                      setPatientSearch('');
-                      fetchPatients();
+                      définirRecherchePatient('');
+                      récupérerPatients();
                     }}
                     style={{
-                      border: 0,
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      color: '#64748B',
-                      display: 'flex',
-                      padding: 4
+                      bordure : 0,
+                      arrière-plan : « transparent »,
+                      curseur : 'pointeur',
+                      couleur : '#64748B',
+                      affichage : 'flexible',
+                      rembourrage : 4
                     }}
-                    title="Retirer le patient"
+                    titre="Retirer le patient"
                   >
-                    <X size={16} />
+                    <X taille={16} />
                   </button>
                 </div>
               )}
           
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 10px',
+                  affichage : 'flexible',
+                  alignItems: 'centre',
+                  écart : 8,
+                  marge intérieure : '8px 10px',
                   borderBottom: patientMatches.length > 0 ? '1px solid #F1F5F9' : 'none'
                 }}
               >
                 <Search size={14} color="#94A3B8" />
           
                 <input
-                  value={patientSearch}
+                  valeur={patientSearch}
                   onChange={(e) => {
-                    const value = e.target.value;
-                    setPatientSearch(value);
-                    searchPatients(value);
+                    valeur constante = e.cible.valeur;
+                    définirRecherchePatient(valeur);
+                    rechercherPatients(valeur);
                   }}
                   placeholder="Nom, téléphone, ID patient..."
                   style={{
-                    border: 'none',
-                    background: 'transparent',
-                    outline: 'none',
-                    fontSize: 13,
-                    flex: 1,
-                    minWidth: 0,
-                    color: '#0F172A'
+                    bordure : 'aucune',
+                    arrière-plan : « transparent »,
+                    contour : « aucun »,
+                    Taille de police : 13,
+                    flex : 1,
+                    largeur minimale : 0,
+                    couleur : '#0F172A'
                   }}
                 />
               </div>
@@ -1010,30 +1006,30 @@ const AppointmentManagement = () => {
               {patientMatches.length > 0 ? (
                 <div style={{ maxHeight: 180, overflowY: 'auto' }}>
                   {patientMatches.map(p => (
-                    <button
-                      key={p.id}
+                    < bouton
+                      clé={p.id}
                       type="button"
                       onClick={() => {
                         setForm(prev => ({ ...prev, patient_id: p.id }));
                         setPatientSearch(`${p.first_name || ''} ${p.last_name || ''}`.trim());
                       }}
                       style={{
-                        width: '100%',
-                        border: 0,
-                        background: form.patient_id === p.id ? '#F5F3FF' : '#FFFFFF',
-                        cursor: 'pointer',
-                        padding: '9px 10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
+                        largeur : '100%',
+                        bordure : 0,
+                        arrière-plan : form.patient_id === p.id ? '#F5F3FF' : '#FFFFFF',
+                        curseur : 'pointeur',
+                        marge intérieure : '9px 10px',
+                        affichage : 'flexible',
+                        alignItems: 'centre',
+                        justifyContent: 'espace entre',
+                        écart : 10,
                         textAlign: 'left',
-                        borderBottom: '1px solid #F8FAFC'
+                        borderBottom: '1px solide #F8FAFC'
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
-                          {p.first_name} {p.last_name}
+                          {p.prénom} {p.nom}
                         </div>
           
                         <div style={{ fontSize: 11, color: '#64748B' }}>
@@ -1043,16 +1039,16 @@ const AppointmentManagement = () => {
           
                       <span
                         style={{
-                          fontSize: 10,
-                          fontWeight: 800,
-                          color: '#7C3AED',
-                          background: '#F3E8FF',
-                          borderRadius: 999,
-                          padding: '3px 7px',
+                          Taille de police : 10,
+                          policeWeight: 800,
+                          couleur : '#7C3AED',
+                          arrière-plan : '#F3E8FF',
+                          Rayon de bordure : 999,
+                          marge intérieure : '3px 7px',
                           whiteSpace: 'nowrap'
                         }}
                       >
-                        {patientIdentifier(p)}
+                        {identifiantpatient(p)}
                       </span>
                     </button>
                   ))}
@@ -1065,14 +1061,14 @@ const AppointmentManagement = () => {
             </div>
           
             <input
-              type="hidden"
-              value={form.patient_id}
+              type="masqué"
+              valeur={form.patient_id}
               onChange={() => {}}
-              required
+              requis
             />
           </div>
 
-          {/* Type */}
+          {/* Taper */}
           <div>
             <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Type de rendez-vous *</label>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
@@ -1108,9 +1104,9 @@ const AppointmentManagement = () => {
                   const sm = form.start_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
                   const em = form.end_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
                   const mins = em - sm;
-                  if (mins <= 0) return '—';
-                  return mins >= 60 ? `${Math.floor(mins/60)}h${mins%60?mins%60+'min':''}` : `${mins}min`;
-                })()}
+                  si (mins <= 0) retourner '—';
+                  retourner mins >= 60 ? `${Math.floor(mins/60)}h${mins%60?mins%60+'min':''}` : `${mins}min`;
+                })(}
               </span>
             </div>
           </div>
@@ -1118,7 +1114,7 @@ const AppointmentManagement = () => {
           {/* Motif */}
           <div>
             <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Motif</label>
-            <input value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})} placeholder="Ex: Douleur molaire, détartrage..." style={inp} onFocus={fi} onBlur={bi}/>
+            <input value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})} placeholder="Ex : Douleur molaire, détartrage..." style={inp} onFocus={fi} onBlur={bi}/>
           </div>
 
           {/* Notes */}
@@ -1130,13 +1126,13 @@ const AppointmentManagement = () => {
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
             <button type="button" onClick={()=>setIsOpen(false)} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
             <button type="submit" style={{ padding:'9px 22px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7 }}>
-              {editA ? <><Edit2 size={14}/>Modifier</> : <><Plus size={14}/>Créer le RDV</>}
+              {modifierA ? <><Edit2 size={14}/>Modificateur</> : <><Plus size={14}/>Créer le RDV</>}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* ══ MODAL SUPPRESSION ══ */}
+      {/* ══ SUPPRESSION MODALE ══ */}
       <Modal open={isDelOpen} onClose={()=>setIsDelOpen(false)} title="🗑️ Supprimer le rendez-vous" maxW={420}>
         <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:12, padding:'14px 16px', marginBottom:18, display:'flex', gap:10, alignItems:'center' }}>
           <AlertCircle size={18} color="#EF4444"/>
@@ -1157,4 +1153,4 @@ const AppointmentManagement = () => {
   );
 };
 
-export default AppointmentManagement;
+exporter par défaut Gestion des rendez-vous ;
