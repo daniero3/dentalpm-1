@@ -277,6 +277,35 @@ const AppointmentManagement = () => {
   const importInputRef = useRef(null);
   const canImportAppointments = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
+  const [historyFor, setHistoryFor] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const openPatientHistory = async (patient) => {
+    if (!patient?.id) {
+      toast.error('Patient introuvable');
+      return;
+    }
+  
+    setHistoryFor(patient);
+    setHistory([]);
+    setHistoryLoading(true);
+  
+    try {
+      const response = await axios.get(
+        `${API}/patients/${patient.id}/history`,
+        authH()
+      );
+  
+      setHistory(response.data.history || []);
+    } catch (error) {
+      console.error('openPatientHistory error:', error?.response?.data || error.message);
+      toast.error('Erreur chargement historique patient');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+  
   const [form, setForm] = useState({
     patient_id:'', dentist_id:'',
     appointment_date: today(), start_time:'09:00', end_time:'10:00',
@@ -864,7 +893,7 @@ const AppointmentManagement = () => {
             >
               {[
                 { label: 'Odontogramme', icon: Activity, to: `/patients/${detailPatient.id}/odontogram`, color: '#7C3AED', bg: '#F5F3FF' },
-                { label: 'Historique', icon: History, to: `/patients/${detailPatient.id}/history`, color: '#DC2626', bg: '#FEF2F2' },
+                { label: 'Historique', icon: History, action: 'history', color: '#DC2626', bg: '#FEF2F2' }
                 { label: 'Documents', icon: FileText, to: `/patients/${detailPatient.id}/documents`, color: '#3B82F6', bg: '#EFF6FF' },
                 { label: 'Ordonnances', icon: ClipboardList, to: `/patients/${detailPatient.id}/prescriptions`, color: '#10B981', bg: '#ECFDF5' },
                 { label: 'Labo', icon: FlaskConical, to: `/patients/${detailPatient.id}/lab-orders`, color: '#8B5CF6', bg: '#F5F3FF' },
@@ -877,6 +906,10 @@ const AppointmentManagement = () => {
                     key={item.label}
                     type="button"
                     onClick={() => {
+                     if (item.action === 'history') {
+                      openPatientHistory(detailPatient);
+                      return;
+                      }
                       window.location.href = item.to;
                     }}
                     style={{
@@ -909,7 +942,117 @@ const AppointmentManagement = () => {
         )}
       </Modal>
       {/* fin */}
+      {/* Debut */}
+      <Modal
+        open={!!historyFor}
+        onClose={() => {
+          setHistoryFor(null);
+          setHistory([]);
+        }}
+        title={`Historique — ${historyFor?.first_name || ''} ${historyFor?.last_name || ''}`}
+        maxW={760}
+      >
+        {historyLoading ? (
+          <div
+            style={{
+              padding: 40,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              color: '#64748B',
+              fontSize: 14
+            }}
+          >
+            <RefreshCw size={18} style={{ animation: 'spin .8s linear infinite' }} />
+            Chargement de l'historique...
+          </div>
+        ) : history.length === 0 ? (
+          <div
+            style={{
+              padding: 34,
+              textAlign: 'center',
+              color: '#94A3B8',
+              background: '#F8FAFC',
+              borderRadius: 16,
+              border: '1px solid #E2E8F0'
+            }}
+          >
+            <History size={30} color="#94A3B8" />
+            <p style={{ margin: '12px 0 0', fontWeight: 700 }}>
+              Aucune action enregistrée
+            </p>
+            <p style={{ margin: '6px 0 0', fontSize: 13 }}>
+              Les soins, factures et rendez-vous apparaîtront ici.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {history.map((item, index) => (
+              <div
+                key={item.id || index}
+                style={{
+                  padding: 14,
+                  borderRadius: 14,
+                  border: '1px solid #E2E8F0',
+                  background: '#FFFFFF',
+                  boxShadow: '0 6px 18px rgba(15,23,42,.05)'
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    alignItems: 'center',
+                    marginBottom: 6
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      color: '#0D7A87',
+                      textTransform: 'uppercase',
+                      letterSpacing: .8,
+                      background: '#ECFEFF',
+                      padding: '4px 8px',
+                      borderRadius: 999
+                    }}
+                  >
+                    {item.label || item.type || 'Événement'}
+                  </span>
       
+                  <span style={{ fontSize: 12, color: '#64748B', whiteSpace: 'nowrap' }}>
+                    {item.date
+                      ? new Date(item.date).toLocaleDateString('fr-FR')
+                      : item.created_at
+                        ? new Date(item.created_at).toLocaleDateString('fr-FR')
+                        : ''}
+                  </span>
+                </div>
+      
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#0F172A' }}>
+                  {item.title || item.description || item.reason || 'Action enregistrée'}
+                </div>
+      
+                {item.amount_mga != null && (
+                  <div style={{ marginTop: 6, fontSize: 13, color: '#475569' }}>
+                    Montant : {new Intl.NumberFormat('fr-MG').format(item.amount_mga)} Ar
+                  </div>
+                )}
+      
+                {item.notes && (
+                  <div style={{ marginTop: 6, fontSize: 13, color: '#64748B' }}>
+                    {item.notes}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
+      {/* fin */}
       {/* ══ MODAL CRÉER / MODIFIER ══ */}
       <Modal open={isOpen} onClose={()=>setIsOpen(false)} title={editA ? '✏️ Modifier le rendez-vous' : '📅 Nouveau rendez-vous'} maxW={520}>
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
