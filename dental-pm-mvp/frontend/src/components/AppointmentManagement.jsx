@@ -943,80 +943,371 @@ const AppointmentManagement = () => {
 
       {/* début  */}
       <Modal
-  open={!!historyPatient}
-  onClose={() => {
-    setHistoryPatient(null);
-    setHistoryItems([]);
-  }}
-  title={`Historique — ${historyPatient?.first_name || ''} ${historyPatient?.last_name || ''}`}
-  maxW={760}
->
-  {historyLoading ? (
-    <div style={{ padding: 30, textAlign: 'center', color: '#64748B' }}>
-      Chargement de l’historique...
-    </div>
-  ) : historyItems.length === 0 ? (
-    <div
-      style={{
-        padding: 34,
-        textAlign: 'center',
-        color: '#94A3B8',
-        background: '#F8FAFC',
-        borderRadius: 16,
-        border: '1px solid #E2E8F0'
-      }}
-    >
-      <History size={30} color="#94A3B8" />
-      <p style={{ margin: '12px 0 0', fontWeight: 700 }}>
-        Aucune action enregistrée
-      </p>
-      <p style={{ margin: '6px 0 0', fontSize: 13 }}>
-        Les soins, factures et rendez-vous apparaîtront ici.
-      </p>
-    </div>
-  ) : (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {historyItems.map((item, index) => (
-        <div
-          key={item.id || index}
-          style={{
-            padding: 14,
-            borderRadius: 14,
-            border: '1px solid #E2E8F0',
-            background: '#FFFFFF',
-            boxShadow: '0 6px 18px rgba(15,23,42,.05)'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-            <strong style={{ color: '#0F172A' }}>
-              {item.title || item.type || item.label || 'Événement'}
-            </strong>
-
-            <span style={{ fontSize: 12, color: '#64748B' }}>
-              {item.date
-                ? new Date(item.date).toLocaleDateString('fr-FR')
-                : item.created_at
-                  ? new Date(item.created_at).toLocaleDateString('fr-FR')
-                  : ''}
-            </span>
+        open={!!historyPatient}
+        onClose={() => {
+          setHistoryPatient(null);
+          setHistoryItems([]);
+        }}
+        maxW={960}
+      >
+        {historyPatient ? (
+          <div style={{ borderRadius: 28, overflow: 'hidden', background: '#FFFFFF' }}>
+            <div
+              style={{
+                position: 'relative',
+                padding: '52px 48px 38px',
+                background: 'linear-gradient(135deg,#073B4C,#0D7A87,#12A6A8)',
+                color: '#FFFFFF',
+                overflow: 'hidden'
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  width: 280,
+                  height: 280,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,.12)',
+                  top: -90,
+                  left: '46%'
+                }}
+              />
+      
+              <div
+                style={{
+                  position: 'absolute',
+                  width: 280,
+                  height: 280,
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,.16)',
+                  right: -70,
+                  bottom: -110
+                }}
+              />
+      
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 22 }}>
+                  <div
+                    style={{
+                      width: 76,
+                      height: 76,
+                      borderRadius: 22,
+                      background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#FFFFFF',
+                      fontSize: 30,
+                      fontWeight: 900,
+                      boxShadow: '0 14px 30px rgba(0,0,0,.22)'
+                    }}
+                  >
+                    {(historyPatient.first_name?.[0] || '')}
+                    {(historyPatient.last_name?.[0] || '')}
+                  </div>
+      
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '9px 16px',
+                          borderRadius: 999,
+                          background: 'rgba(255,255,255,.18)',
+                          fontSize: 14,
+                          fontWeight: 900,
+                          letterSpacing: 2,
+                          textTransform: 'uppercase'
+                        }}
+                      >
+                        <History size={16} />
+                        Dossier clinique
+                      </span>
+      
+                      <span style={{ fontSize: 15, fontWeight: 900 }}>
+                        {patientIdentifier(historyPatient)}
+                      </span>
+                    </div>
+      
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: 30,
+                        lineHeight: 1.15,
+                        fontWeight: 900,
+                        color: '#062C35'
+                      }}
+                    >
+                      {historyPatient.first_name} {historyPatient.last_name}
+                    </h2>
+      
+                    <p
+                      style={{
+                        margin: '14px 0 0',
+                        color: 'rgba(255,255,255,.88)',
+                        fontSize: 16
+                      }}
+                    >
+                      Historique patient centralisé, soins, rendez-vous et activité financière.
+                    </p>
+                  </div>
+                </div>
+      
+                {(() => {
+                  const soins = historyItems.filter(i =>
+                    ['TREATMENT', 'CARE', 'PROCEDURE'].includes(String(i.type || '').toUpperCase())
+                  ).length;
+      
+                  const rdv = historyItems.filter(i =>
+                    ['APPOINTMENT', 'FOLLOW_UP', 'RDV'].includes(String(i.type || '').toUpperCase())
+                  ).length;
+      
+                  const documents = historyItems.filter(i =>
+                    ['DOCUMENT', 'PRESCRIPTION', 'LAB_ORDER'].includes(String(i.type || '').toUpperCase())
+                  ).length;
+      
+                  const messages = historyItems.filter(i =>
+                    ['MESSAGE', 'SMS', 'EMAIL'].includes(String(i.type || '').toUpperCase())
+                  ).length;
+      
+                  const montant = historyItems.reduce((sum, item) => {
+                    const value =
+                      item.amount_mga ??
+                      item.total_mga ??
+                      item.paid_amount_mga ??
+                      item.cost_mga ??
+                      0;
+      
+                    return sum + Number(value || 0);
+                  }, 0);
+      
+                  const statBox = (label, value) => (
+                    <div
+                      style={{
+                        minHeight: 92,
+                        borderRadius: 16,
+                        border: '1px solid rgba(255,255,255,.28)',
+                        background: 'rgba(255,255,255,.15)',
+                        padding: '18px 18px',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 900,
+                          textTransform: 'uppercase',
+                          letterSpacing: 2,
+                          color: 'rgba(255,255,255,.72)',
+                          marginBottom: 12
+                        }}
+                      >
+                        {label}
+                      </div>
+      
+                      <div style={{ fontSize: 26, fontWeight: 900, color: '#FFFFFF' }}>
+                        {value}
+                      </div>
+                    </div>
+                  );
+      
+                  return (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                        gap: 14,
+                        maxWidth: 540
+                      }}
+                    >
+                      {statBox('Événements', historyItems.length)}
+                      {statBox('Soins', soins)}
+                      {statBox('RDV', rdv)}
+                      {statBox('Documents', documents)}
+                      {statBox('Messages', messages)}
+                      {statBox('Montant', `${new Intl.NumberFormat('fr-MG').format(montant)} Ar`)}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+      
+            <div style={{ padding: 34, background: '#FFFFFF' }}>
+              {historyLoading ? (
+                <div
+                  style={{
+                    minHeight: 230,
+                    borderRadius: 24,
+                    border: '1px solid #E2E8F0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#64748B',
+                    fontSize: 15
+                  }}
+                >
+                  Chargement de l’historique...
+                </div>
+              ) : historyItems.length === 0 ? (
+                <div
+                  style={{
+                    minHeight: 230,
+                    borderRadius: 24,
+                    border: '1px solid #E2E8F0',
+                    background: '#FFFFFF',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    color: '#94A3B8'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 22,
+                      background: '#F1F5F9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 18
+                    }}
+                  >
+                    <History size={36} color="#94A3B8" />
+                  </div>
+      
+                  <div style={{ fontSize: 18, fontWeight: 900, color: '#64748B' }}>
+                    Aucune action enregistrée
+                  </div>
+      
+                  <div style={{ marginTop: 10, fontSize: 15, color: '#94A3B8' }}>
+                    Les soins, factures et rendez-vous apparaîtront ici.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {historyItems.map((item, index) => {
+                    const type = String(item.type || item.label || 'Événement').toUpperCase();
+      
+                    const typeLabel = {
+                      APPOINTMENT: 'Rendez-vous',
+                      FOLLOW_UP: 'Suivi',
+                      TREATMENT: 'Soin',
+                      CARE: 'Soin',
+                      PROCEDURE: 'Acte',
+                      INVOICE: 'Facture',
+                      PAYMENT: 'Paiement',
+                      DOCUMENT: 'Document',
+                      MESSAGE: 'Message',
+                      PRESCRIPTION: 'Ordonnance',
+                      LAB_ORDER: 'Labo'
+                    }[type] || type;
+      
+                    const eventDate =
+                      item.date ||
+                      item.appointment_date ||
+                      item.created_at ||
+                      item.updated_at;
+      
+                    const title =
+                      item.title ||
+                      item.reason ||
+                      item.treatment_name ||
+                      item.procedure_name ||
+                      item.invoice_number ||
+                      item.document_name ||
+                      typeLabel;
+      
+                    const description =
+                      item.description ||
+                      item.notes ||
+                      item.note ||
+                      item.observation ||
+                      item.comment ||
+                      '';
+      
+                    const amount =
+                      item.amount_mga ??
+                      item.total_mga ??
+                      item.paid_amount_mga ??
+                      item.cost_mga ??
+                      null;
+      
+                    return (
+                      <div
+                        key={item.id || index}
+                        style={{
+                          padding: 18,
+                          borderRadius: 18,
+                          border: '1px solid #E2E8F0',
+                          background: '#FFFFFF',
+                          boxShadow: '0 8px 22px rgba(15,23,42,.06)'
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: 14,
+                            alignItems: 'flex-start'
+                          }}
+                        >
+                          <div>
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                padding: '5px 10px',
+                                borderRadius: 999,
+                                background: '#ECFEFF',
+                                color: '#0D7A87',
+                                fontSize: 11,
+                                fontWeight: 900,
+                                textTransform: 'uppercase',
+                                letterSpacing: .7,
+                                marginBottom: 8
+                              }}
+                            >
+                              {typeLabel}
+                            </div>
+      
+                            <div style={{ fontSize: 16, fontWeight: 900, color: '#0F172A' }}>
+                              {title}
+                            </div>
+      
+                            {description && (
+                              <div style={{ marginTop: 6, fontSize: 13, color: '#64748B' }}>
+                                {description}
+                              </div>
+                            )}
+      
+                            {amount != null && (
+                              <div style={{ marginTop: 8, fontSize: 13, color: '#475569' }}>
+                                Montant : {new Intl.NumberFormat('fr-MG').format(Number(amount || 0))} Ar
+                              </div>
+                            )}
+                          </div>
+      
+                          <div style={{ fontSize: 14, color: '#64748B', whiteSpace: 'nowrap' }}>
+                            {eventDate ? new Date(eventDate).toLocaleDateString('fr-FR') : ''}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-
-          {(item.description || item.reason || item.notes) && (
-            <div style={{ marginTop: 6, fontSize: 13, color: '#64748B' }}>
-              {item.description || item.reason || item.notes}
-            </div>
-          )}
-
-          {item.amount_mga != null && (
-            <div style={{ marginTop: 6, fontSize: 13, color: '#475569' }}>
-              Montant : {new Intl.NumberFormat('fr-MG').format(item.amount_mga)} Ar
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  )}
-</Modal>
+        ) : (
+          <div style={{ padding: 30, color: '#64748B' }}>
+            Chargement du dossier clinique...
+          </div>
+        )}
+      </Modal>
       {/* fin */}
       
       {/* ══ MODAL CRÉER / MODIFIER ══ */}
