@@ -135,7 +135,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
 };
 
 /* ── Card RDV ── */
-const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDetail, idx }) => {
+  const ApptCard = ({ a, onEdit, onDelete, onStatusChange, onExport, onPatientDetail, idx }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const patientId = a.patient_id || a.patient?.id;
   const type   = getType(a.appointment_type);
@@ -275,6 +275,7 @@ const AppointmentManagement = () => {
   const [showCal,  setShowCal]  = useState(true);
   const [importing, setImporting] = useState(false);
   const importInputRef = useRef(null);
+  const [embeddedPatientView, setEmbeddedPatientView] = useState(null);
   const canImportAppointments = ['ADMIN', 'DENTIST', 'ASSISTANT'].includes(user?.role);
 
   const [form, setForm] = useState({
@@ -908,7 +909,13 @@ const AppointmentManagement = () => {
                         openPatientHistory(detailPatient);
                         return;
                       }
-                      window.location.href = item.to;
+                    
+                      if (item.to) {
+                        setEmbeddedPatientView({
+                          title: item.label,
+                          url: item.to
+                        });
+                      }
                     }}
                     style={{
                       minHeight: 92,
@@ -941,6 +948,31 @@ const AppointmentManagement = () => {
       </Modal>
       {/* fin */}
 
+      <Modal
+        open={!!embeddedPatientView}
+        onClose={() => setEmbeddedPatientView(null)}
+        title={embeddedPatientView?.title || ''}
+        maxW={1100}
+      >
+        {embeddedPatientView?.url ? (
+          <iframe
+            src={embeddedPatientView.url}
+            title={embeddedPatientView.title}
+            style={{
+              width: '100%',
+              height: '75vh',
+              border: 'none',
+              borderRadius: 18,
+              background: '#FFFFFF'
+            }}
+          />
+        ) : (
+          <div style={{ padding: 24, color: '#64748B' }}>
+            Aucun contenu à afficher.
+          </div>
+        )}
+      </Modal>
+      
       {/* début  */}
       <Modal
         open={!!historyPatient}
