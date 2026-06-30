@@ -618,8 +618,9 @@ const ActionBtn = ({ icon, title, color, onClick }) => (
 /* ══════════════════════════════════════════════════════
    PAGE PRINCIPALE — PatientPrescriptions
 ══════════════════════════════════════════════════════ */
-const PatientPrescriptions = () => {
-  const { patientId } = useParams();
+const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) => {
+  const params = useParams();
+  const patientId = patientIdOverride || params.patientId || params.id;
   const navigate = useNavigate();
 
   const [patient, setPatient]             = useState(null);
@@ -740,12 +741,14 @@ const PatientPrescriptions = () => {
         <div style={{ display:'flex', alignItems:'center', gap:16, minWidth:0, flex:1 }}>
 
           {/* Bouton Retour */}
+          {!embedded && (
           <button onClick={() => navigate(-1)}
             style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, color:'#475569', flexShrink:0, transition:'all .18s', boxShadow:'0 1px 4px rgba(0,0,0,.06)', fontFamily:'inherit' }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=T;e.currentTarget.style.color=T;e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.boxShadow=`0 2px 10px ${T}18`;}}
             onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';e.currentTarget.style.background='#fff';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.06)';}}>
             <ArrowLeft size={15}/> Retour
           </button>
+          )}
 
           {/* Patient card */}
           {patient && (
