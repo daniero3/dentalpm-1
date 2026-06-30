@@ -95,7 +95,7 @@ const Modal = ({ open, onClose, title, description, children }) => {
   );
 };
 
-const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
+const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   const params = useParams();
   const patientId = patientIdOverride || params.patientId || params.id;
   
