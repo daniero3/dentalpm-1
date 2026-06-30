@@ -95,9 +95,10 @@ const Modal = ({ open, onClose, title, description, children }) => {
   );
 };
 
-const DentalChart = () => {
-  const { patientId } = useParams();
-
+const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
+  const params = useParams();
+  const patientId = patientIdOverride || params.patientId || params.id;
+  
   const [patient, setPatient] = useState(null);
   const [teethRecords, setTeethRecords] = useState([]);
   const [selectedTooth, setSelectedTooth] = useState(null);
@@ -346,12 +347,14 @@ const DentalChart = () => {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 20 }}>
+        {!embedded && (
         <Link to="/patients">
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
         </Link>
+        )}
 
         <h1 style={{ fontSize: 26, fontWeight: 800, marginTop: 16 }}>
           Fiche Dentaire
