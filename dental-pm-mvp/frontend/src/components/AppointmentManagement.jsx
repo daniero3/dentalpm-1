@@ -1213,7 +1213,23 @@ const AppointmentManagement = () => {
                       item.created_at ||
                       item.updated_at;
       
-                    const title =
+                    const appointmentTypeLabel = (value) => {
+                      const raw = String(value || '').trim().toUpperCase();
+
+                      const labels = {
+                        CONSULTATION: 'Consultation',
+                        TREATMENT: 'Traitement',
+                        FOLLOW_UP: 'Suivi',
+                        EMERGENCY: 'Urgence',
+                        CLEANING: 'Nettoyage',
+                        CHECK_UP: 'Contrôle'
+                      };
+
+                      return labels[raw] || value;
+                    };
+
+                    const rawTitle =
+                      item.appointment_type ||
                       item.title ||
                       item.reason ||
                       item.treatment_name ||
@@ -1221,6 +1237,8 @@ const AppointmentManagement = () => {
                       item.invoice_number ||
                       item.document_name ||
                       typeLabel;
+                    
+                    const title = appointmentTypeLabel(rawTitle);
       
                     const description =
                       item.description ||
