@@ -75,8 +75,9 @@ const Notification = ({ notification }) => {
   );
 };
 
-const PatientOdontogram = () => {
-  const { patientId } = useParams();
+const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {  
+  const params = useParams();
+  const patientId = patientIdOverride || params.patientId || params.id;
   const [patient, setPatient]             = useState(null);
   const [odontogram, setOdontogram]       = useState({});
   const [loading, setLoading]             = useState(true);
@@ -204,7 +205,9 @@ const PatientOdontogram = () => {
     <div className="space-y-6" data-testid="patient-odontogram">
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-4">
+          {!embedded && (
           <Link to="/patients"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Retour</Button></Link>
+          )}
           <div>
             <h1 className="text-2xl font-bold">Odontogramme</h1>
             {patient && <p className="text-gray-500 flex items-center gap-1"><User className="h-4 w-4" />{patient.first_name} {patient.last_name}</p>}
