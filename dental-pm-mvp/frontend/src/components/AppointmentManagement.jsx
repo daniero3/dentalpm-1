@@ -891,8 +891,8 @@ const AppointmentManagement = () => {
             >
               {[
                 { label: 'Odontogramme', icon: Activity, to: `/patients/${detailPatient.id}/odontogram`, color: '#7C3AED', bg: '#F5F3FF' },
-                {/* label: 'Historique', icon: History, to: `/patients/${detailPatient.id}/history`, color: '#DC2626', bg: '#FEF2F2' */},
-                { label: 'Historique', icon: History, action: 'history', color: '#DC2626', bg: '#FEF2F2' }
+                {/* label: 'Historique', icon: History, to: `/patients/${detailPatient.id}/history`, color: '#DC2626', bg: '#FEF2F2' */}
+                { label: 'Historique', icon: History, action: 'history', color: '#DC2626', bg: '#FEF2F2' },
                 { label: 'Documents', icon: FileText, to: `/patients/${detailPatient.id}/documents`, color: '#3B82F6', bg: '#EFF6FF' },
                 { label: 'Ordonnances', icon: ClipboardList, to: `/patients/${detailPatient.id}/prescriptions`, color: '#10B981', bg: '#ECFDF5' },
                 { label: 'Labo', icon: FlaskConical, to: `/patients/${detailPatient.id}/lab-orders`, color: '#8B5CF6', bg: '#F5F3FF' },
