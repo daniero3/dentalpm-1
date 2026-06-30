@@ -30,8 +30,9 @@ const STATUS_CONFIG = {
   CANCELLED:   { label: 'Annulée',  color: 'bg-red-100 text-red-700',      icon: XCircle }
 };
 
-const PatientLabOrders = () => {
-  const { patientId } = useParams();
+const PatientLabOrders = ({ patientIdOverride = null, embedded = false }) => {
+  const params = useParams();
+  const patientId = patientIdOverride || params.patientId || params.id;
   const [patient, setPatient] = useState(null);
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,11 +111,13 @@ const PatientLabOrders = () => {
     <div className="space-y-6" data-testid="patient-lab-orders">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          {!embedded && (
           <Link to="/patients">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />Retour
             </Button>
           </Link>
+          )}
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <FlaskConical className="h-6 w-6 text-purple-600" />
