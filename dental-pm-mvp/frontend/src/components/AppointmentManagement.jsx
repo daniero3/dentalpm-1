@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-importer axios depuis 'axios';
+import { axios } from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
