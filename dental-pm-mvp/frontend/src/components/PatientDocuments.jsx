@@ -37,8 +37,9 @@ const Modal = ({ open, onClose, title, children, maxWidth = 480 }) => {
   );
 };
 
-const PatientDocuments = () => {
-  const { patientId } = useParams();
+const PatientDocuments = ({ patientIdOverride = null, embedded = false }) => {
+  const params = useParams();
+  const patientId = patientIdOverride || params.patientId || params.id;
   const [patient, setPatient]         = useState(null);
   const [documents, setDocuments]     = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -191,6 +192,7 @@ const PatientDocuments = () => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {!embedded && (
           <Link to="/patients">
             <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontSize: 13, fontWeight: 600, color: '#475569', cursor: 'pointer', fontFamily: 'Plus Jakarta Sans', transition: 'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#0D7A87'; e.currentTarget.style.color = '#0D7A87'; }}
@@ -198,6 +200,7 @@ const PatientDocuments = () => {
               <ArrowLeft size={15} /> Retour
             </button>
           </Link>
+        )}
           <div>
             <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 22, fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
               <FileText size={20} color="#0D7A87" /> Documents
