@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import './components/responsive-fix.css';
 
 const handleChunkFailure = async (event) => {
   const message = String(event?.reason?.message || event?.message || '');
