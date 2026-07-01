@@ -232,6 +232,81 @@ router.get('/stats/gender', async (req, res) => {
   }
 });
 // 
+router.get('/stats/summary', async (req, res) => {
+  try {
+    const clinicId = req.user?.clinic_id;
+
+    const whereClause = {
+      is_active: true
+    };
+
+    if (clinicId) {
+      whereClause.clinic_id = clinicId;
+    }
+
+    const patients = await Patient.findAll({
+      where: whereClause,
+      attributes: ['id', 'gender', 'allergies', 'created_at']
+    });
+
+    const normalizeGender = (gender) => {
+      const g = String(gender || '').trim().toUpperCase();
+
+      if (['M', 'MALE', 'MASCULIN', 'HOMME'].includes(g)) return 'M';
+      if (['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME'].includes(g)) return 'F';
+      if (['OTHER', 'AUTRE'].includes(g)) return 'OTHER';
+
+      return '';
+    };
+
+    const hasAllergy = (allergies) => {
+      if (!allergies) return false;
+
+      if (Array.isArray(allergies)) {
+        return allergies.length > 0;
+      }
+
+      if (typeof allergies === 'object') {
+        return Object.keys(allergies).length > 0;
+      }
+
+      return String(allergies).trim().length > 0;
+    };
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const isCreatedThisMonth = (createdAt) => {
+      if (!createdAt) return false;
+
+      const d = new Date(createdAt);
+
+      return (
+        d.getMonth() === currentMonth &&
+        d.getFullYear() === currentYear
+      );
+    };
+
+    const summary = {
+      total: patients.length,
+      men: patients.filter(p => normalizeGender(p.gender) === 'M').length,
+      women: patients.filter(p => normalizeGender(p.gender) === 'F').length,
+      other: patients.filter(p => normalizeGender(p.gender) === 'OTHER').length,
+      allergies: patients.filter(p => hasAllergy(p.allergies)).length,
+      this_month: patients.filter(p => isCreatedThisMonth(p.created_at)).length
+    };
+
+    res.json(summary);
+  } catch (error) {
+    console.error('Patient stats summary error:', error);
+    res.status(500).json({
+      error: 'Erreur lors du calcul des statistiques patients'
+    });
+  }
+});
+
+// 
 router.get('/:id', requireClinicId, [
   param('id').isUUID().withMessage('ID patient invalide')
 ], async (req, res) => {
