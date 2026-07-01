@@ -230,7 +230,13 @@ const PatientManagement = () => {
   const location = useLocation();
   const [patients,  setPatients]  = useState([]);
   // AJOUT
-  const [genderStats, setGenderStats] = useState({ men: 0, women: 0, other: 0, total: 0 });
+  const [patientStats, setPatientStats] = useState({
+    total: 0,
+    men: 0,
+    women: 0,
+    allergies: 0,
+    recent: 0
+  });  
   // 
   const [loading,   setLoading]   = useState(true);
   const [searching, setSearching] = useState(false);
@@ -346,23 +352,29 @@ const PatientManagement = () => {
   };
 
   // AJOUT
-  const fetchGenderStats = useCallback(async () => {
+  const fetchPatientStats = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${API}/patients/stats/gender?_t=${Date.now()}`,
+        `${API}/patients/stats/summary?_t=${Date.now()}`,
         authH()
       );
   
-      setGenderStats({
-        men: response.data.men || 0,
-        women: response.data.women || 0,
-        other: response.data.other || 0,
-        total: response.data.total || 0
+      const data = response.data || {};
+  
+      setPatientStats({
+        total: Number(data.total || 0),
+        men: Number(data.men || 0),
+        women: Number(data.women || 0),
+        allergies: Number(data.allergies || 0),
+        recent: Number(data.recent ?? data.this_month ?? 0)
       });
     } catch (error) {
-      console.error('Erreur chargement stats sexe:', error?.response?.data || error.message);
+      console.error('Erreur chargement statistiques patients:', error?.response?.data || error.message);
     }
   }, []);
+  useEffect(() => {
+    fetchPatientStats();
+  }, [fetchPatientStats]);
   // 
   const onChange = useCallback((name, val) => setForm(p => ({...p, [name]:val})), []);
 
@@ -381,8 +393,7 @@ const PatientManagement = () => {
         toast.success(`Patient créé ! ID: ${patientIdentifier(res.data.patient || {})}`);
       }
       // setIsOpen(false); fetchPatients();
-      // setIsOpen(false); await fetchPatients(1, ''); setPage(1); setSearch(''); setGF('ALL');
-      setIsOpen(false); await fetchPatients(1, ''); await fetchGenderStats();
+      setIsOpen(false); setPage(1); setSearch(''); setGF('ALL'); await fetchPatients(1, ''); await fetchPatientStats();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
   };
@@ -464,7 +475,9 @@ const PatientManagement = () => {
       } else {
         toast.success(`Import terminé: ${inserted} créés, ${updated} mis à jour`);
       }
-      fetchPatients();
+      // fetchPatients();
+      await fetchPatients(1, '');
+      await fetchPatientStats();
     } catch (error) {
       const data = error.response?.data;
       const firstError = Array.isArray(data?.errors) && data.errors.length > 0
@@ -524,19 +537,7 @@ const PatientManagement = () => {
   //   allergies:patients.filter(p => p.allergies).length,
   //   recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
   // }), [pagination.total_count, patients]);
-  const stats = useMemo(() => {
-    const activePatients = patients.filter(p => p.is_active !== false);
-    return {
-      total: pagination.total_count || activePatients.length,
-      men: activePatients.filter(p => normalizeGenderValue(p.gender) === 'M').length,
-      women: activePatients.filter(p => normalizeGenderValue(p.gender) === 'F').length,
-      allergies: activePatients.filter(p => p.allergies).length,
-      recent: activePatients.filter(p => {
-        const d = new Date(p.created_at || 0);
-        return Date.now() - d < 30 * 24 * 3600 * 1000;
-      }).length,
-    };
-  }, [pagination.total_count, patients]);
+  const stats = patientStats;
 // 
   if (loading) return (
     <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
@@ -595,7 +596,7 @@ const PatientManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={fetchPatients} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
+          <button onClick={async () => { await fetchPatients(); await fetchPatientStats(); }} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
           <button onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#0D7A87', border:'1.5px solid #7DD3DA', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
