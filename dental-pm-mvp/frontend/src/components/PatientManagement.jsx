@@ -230,7 +230,13 @@ const PatientManagement = () => {
   const location = useLocation();
   const [patients,  setPatients]  = useState([]);
   // AJOUT
-  const [genderStats, setGenderStats] = useState({ men: 0, women: 0, other: 0, total: 0 });
+  const [serverStats, setServerStats] = useState({
+    total: 0,
+    men: 0,
+    women: 0,
+    allergies: 0,
+    recent: 0
+  });
   // 
   const [loading,   setLoading]   = useState(true);
   const [searching, setSearching] = useState(false);
@@ -267,6 +273,11 @@ const PatientManagement = () => {
     };
   }, []);
 
+  useEffect(() => {
+    fetchPatients();
+    fetchPatientStats();
+  }, [fetchPatientStats]);
+  
   useEffect(() => {
     if (!location.search || urlCommandRef.current === location.search) return;
     urlCommandRef.current = location.search;
@@ -346,24 +357,86 @@ const PatientManagement = () => {
   };
 
   // AJOUT
-  const fetchGenderStats = useCallback(async () => {
+  const fetchPatientStats = useCallback(async () => {
     try {
-      const response = await axios.get(
-        `${API}/patients/stats/gender?_t=${Date.now()}`,
-        authH()
-      );
+      let page = 1;
+      const limit = 500;
+      let allPatients = [];
+      let totalCount = 0;
+      let keepGoing = true;
   
-      setGenderStats({
-        men: response.data.men || 0,
-        women: response.data.women || 0,
-        other: response.data.other || 0,
-        total: response.data.total || 0
+      while (keepGoing) {
+        const response = await axios.get(
+          `${API}/patients?page=${page}&limit=${limit}&includeTotal=true&_t=${Date.now()}`,
+          authH()
+        );
+  
+        const list =
+          response.data.patients ||
+          response.data.data ||
+          (Array.isArray(response.data) ? response.data : []);
+  
+        allPatients = [...allPatients, ...list];
+  
+        totalCount =
+          response.data.pagination?.total_count ||
+          response.data.total_count ||
+          response.data.total ||
+          allPatients.length;
+  
+        keepGoing = list.length > 0 && allPatients.length < totalCount && page < 50;
+        page += 1;
+      }
+  
+      const normalizeGender = (gender) => {
+        const g = String(gender || '').trim().toUpperCase();
+  
+        if (['M', 'MALE', 'MASCULIN', 'HOMME'].includes(g)) return 'M';
+        if (['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME'].includes(g)) return 'F';
+  
+        return '';
+      };
+  
+      const hasAllergy = (allergies) => {
+        if (!allergies) return false;
+  
+        if (Array.isArray(allergies)) {
+          return allergies.length > 0;
+        }
+  
+        if (typeof allergies === 'object') {
+          return Object.keys(allergies).length > 0;
+        }
+  
+        return String(allergies).trim().length > 0;
+      };
+  
+      const isThisMonth = (createdAt) => {
+        if (!createdAt) return false;
+  
+        const created = new Date(createdAt);
+        const now = new Date();
+  
+        return (
+          created.getMonth() === now.getMonth() &&
+          created.getFullYear() === now.getFullYear()
+        );
+      };
+  
+      const activePatients = allPatients.filter(p => p.is_active !== false);
+  
+      setServerStats({
+        total: totalCount || activePatients.length,
+        men: activePatients.filter(p => normalizeGender(p.gender) === 'M').length,
+        women: activePatients.filter(p => normalizeGender(p.gender) === 'F').length,
+        allergies: activePatients.filter(p => hasAllergy(p.allergies)).length,
+        recent: activePatients.filter(p => isThisMonth(p.created_at)).length
       });
     } catch (error) {
-      console.error('Erreur chargement stats sexe:', error?.response?.data || error.message);
+      console.error('fetchPatientStats error:', error?.response?.data || error.message);
     }
   }, []);
-  // 
+// 
   const onChange = useCallback((name, val) => setForm(p => ({...p, [name]:val})), []);
 
   const openCreate = () => { setSelP(null); setForm(emptyForm); setIsOpen(true); };
@@ -381,8 +454,7 @@ const PatientManagement = () => {
         toast.success(`Patient créé ! ID: ${patientIdentifier(res.data.patient || {})}`);
       }
       // setIsOpen(false); fetchPatients();
-      // setIsOpen(false); await fetchPatients(1, ''); setPage(1); setSearch(''); setGF('ALL');
-      setIsOpen(false); await fetchPatients(1, ''); await fetchGenderStats();
+      setIsOpen(false); await fetchPatients(); await fetchPatientStats();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
   };
@@ -516,7 +588,7 @@ const PatientManagement = () => {
     })
     .map(index => index.patient), [genderFilter, normalizedDigits, normalizedSearch, normalizedTerms, patientIndexes, sortBy]);
 
-  /* Stats */
+// Stats 
   // const stats = useMemo(() => ({
   //   total:    pagination.total_count || patients.length,
   //   men:      patients.filter(p => p.gender==='M').length,
@@ -524,19 +596,7 @@ const PatientManagement = () => {
   //   allergies:patients.filter(p => p.allergies).length,
   //   recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
   // }), [pagination.total_count, patients]);
-  const stats = useMemo(() => {
-    const activePatients = patients.filter(p => p.is_active !== false);
-    return {
-      total: pagination.total_count || activePatients.length,
-      men: activePatients.filter(p => normalizeGenderValue(p.gender) === 'M').length,
-      women: activePatients.filter(p => normalizeGenderValue(p.gender) === 'F').length,
-      allergies: activePatients.filter(p => p.allergies).length,
-      recent: activePatients.filter(p => {
-        const d = new Date(p.created_at || 0);
-        return Date.now() - d < 30 * 24 * 3600 * 1000;
-      }).length,
-    };
-  }, [pagination.total_count, patients]);
+  const stats = serverStats;
 // 
   if (loading) return (
     <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
