@@ -229,6 +229,14 @@ const PatientManagement = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [patients,  setPatients]  = useState([]);
+  const [patientStats, setPatientStats] = useState({
+  total: 0,
+  men: 0,
+  women: 0,
+  other: 0,
+  allergies: 0,
+  this_month: 0
+});
   // AJOUT
   const [genderStats, setGenderStats] = useState({ men: 0, women: 0, other: 0, total: 0 });
   // 
@@ -293,6 +301,11 @@ const PatientManagement = () => {
   }, [page, search]);
 
   useEffect(() => {
+    fetchPatients();
+    fetchPatientStats();
+  }, [fetchPatientStats]);
+
+  useEffect(() => {
     const patientIdToOpen = sessionStorage.getItem('dpm_open_patient_detail');
   
     if (!patientIdToOpen) return;
@@ -345,6 +358,26 @@ const PatientManagement = () => {
     }
   };
 
+  const fetchPatientStats = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${API}/patients/stats/summary?_t=${Date.now()}`,
+        authH()
+      );
+  
+      setPatientStats({
+        total: Number(response.data.total || 0),
+        men: Number(response.data.men || 0),
+        women: Number(response.data.women || 0),
+        other: Number(response.data.other || 0),
+        allergies: Number(response.data.allergies || 0),
+        this_month: Number(response.data.this_month || 0)
+      });
+    } catch (error) {
+      console.error('fetchPatientStats error:', error?.response?.data || error.message);
+    }
+  }, []);
+
   // AJOUT
   const fetchGenderStats = useCallback(async () => {
     try {
@@ -382,7 +415,10 @@ const PatientManagement = () => {
       }
       // setIsOpen(false); fetchPatients();
       // setIsOpen(false); await fetchPatients(1, ''); setPage(1); setSearch(''); setGF('ALL');
-      setIsOpen(false); await fetchPatients(1, ''); await fetchGenderStats();
+      // setIsOpen(false); await fetchPatients(1, ''); await fetchGenderStats();
+      setIsOpen(false);
+      await fetchPatients();
+      await fetchPatientStats();
     } catch (e) { toast.error(e.response?.data?.error || 'Erreur sauvegarde'); }
     finally { setSaving(false); }
   };
