@@ -510,59 +510,24 @@ const PatientManagement = () => {
   const normalizedDigits = useMemo(() => normalizeDigits(search), [search]);
   const normalizedTerms = useMemo(() => searchTerms(search), [search]);
   const patientIndexes = useMemo(() => patients.map(patientSearchIndex), [patients]);
-  const filteredPatients = useMemo(() => {
-    const hasAllergy = (allergies) => {
-      if (!allergies) return false;
-  
-      if (Array.isArray(allergies)) {
-        return allergies.length > 0;
+  const filtered = useMemo(() => patientIndexes
+    .filter(({ patient, ...index }) => {
+      // const ms = genderFilter === 'ALL' || patient.gender === genderFilter;
+      const ms = genderFilter === 'ALL' || normalizeGenderValue(patient.gender) === genderFilter;
+      const mt = matchesPatientIndex(index, normalizedSearch, normalizedTerms, normalizedDigits);
+      return ms && mt;
+    })
+    .sort((a,b) => {
+      if (normalizedSearch) {
+        const scoreDiff = scorePatientIndex(b, normalizedSearch, normalizedTerms, normalizedDigits) - scorePatientIndex(a, normalizedSearch, normalizedTerms, normalizedDigits);
+        if (scoreDiff !== 0) return scoreDiff;
       }
-  
-      if (typeof allergies === 'object') {
-        return Object.keys(allergies).length > 0;
-      }
-  
-      return String(allergies).trim().length > 0;
-    };
-  
-    const isThisMonth = (createdAt) => {
-      if (!createdAt) return false;
-  
-      const d = new Date(createdAt);
-      const now = new Date();
-  
-      return (
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear()
-      );
-    };
-  
-    return patients.filter(p => {
-      if (p.is_active === false) return false;
-  
-      if (genderFilter === 'M') {
-        return normalizeGenderValue(p.gender) === 'M';
-      }
-  
-      if (genderFilter === 'F') {
-        return normalizeGenderValue(p.gender) === 'F';
-      }
-  
-      if (genderFilter === 'OTHER') {
-        return normalizeGenderValue(p.gender) === 'OTHER';
-      }
-  
-      if (genderFilter === 'ALLERGIES') {
-        return hasAllergy(p.allergies);
-      }
-  
-      if (genderFilter === 'THIS_MONTH') {
-        return isThisMonth(p.created_at);
-      }
-  
-      return true;
-    });
-  }, [patients, genderFilter]);
+      if (sortBy === 'name')     return `${a.patient.last_name}${a.patient.first_name}`.localeCompare(`${b.patient.last_name}${b.patient.first_name}`);
+      if (sortBy === 'recent')   return new Date(b.patient.created_at||0) - new Date(a.patient.created_at||0);
+      if (sortBy === 'age')      return (new Date(a.patient.date_of_birth||0)) - (new Date(b.patient.date_of_birth||0));
+      return 0;
+    })
+    .map(index => index.patient), [genderFilter, normalizedDigits, normalizedSearch, normalizedTerms, patientIndexes, sortBy]);
 
   /* Stats */
   // const stats = useMemo(() => ({
@@ -668,8 +633,8 @@ const PatientManagement = () => {
           { icon:'👥', l:'Total',         v:stats.total,    c:'#0D7A87', bg:'#F0FDFE', action:()=>setGF('ALL') },
           { icon:'👨', l:'Hommes',         v:stats.men,      c:'#3B82F6', bg:'#EFF6FF', action:()=>setGF('M') },
           { icon:'👩', l:'Femmes',          v:stats.women,    c:'#EC4899', bg:'#FDF2F8', action:()=>setGF('F') },
-          { icon:'⚠️', l:'Avec allergies', v:stats.allergies, c:'#F59E0B', bg:'#FFFBEB', action:()=>setGF('ALLERGIES') },
-          { icon:'🆕', l:'Ce mois', v:stats.recent, c:'#10B981', bg:'#DCFCE7', action:()=>setGF('THIS_MONTH') },
+          { icon:'⚠️', l:'Avec allergies', v:stats.allergies,c:'#F59E0B', bg:'#FFFBEB', action:()=>{} },
+          { icon:'🆕', l:'Ce mois',         v:stats.recent,   c:'#10B981', bg:'#DCFCE7', action:()=>setSort('recent') },
         ].map((k,i) => (
           <button key={i} onClick={k.action} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${(genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total')?k.c:'#E2E8F0'}`, padding:'14px 16px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', alignItems:'center', gap:11 }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
