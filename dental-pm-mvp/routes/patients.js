@@ -1288,4 +1288,109 @@ router.get('/stats/summary', requireClinicId, async (req, res) => {
   }
 });
 
+// ── GET /filter/by-stat/:filter — Liste patients filtrée par carte statistique ──
+router.get('/filter/by-stat/:filter', requireClinicId, async (req, res) => {
+  try {
+    const filter = String(req.params.filter || 'ALL').trim().toUpperCase();
+
+    const whereClause = {
+      is_active: true
+    };
+
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+
+    const patients = await Patient.findAll({
+      where: whereClause,
+      order: [['last_name', 'ASC'], ['first_name', 'ASC']],
+      raw: true
+    });
+
+    const normalizeGenderForFilter = (gender) => {
+      const g = String(gender || '').trim().toUpperCase();
+
+      if (['M', 'MALE', 'MASCULIN', 'HOMME'].includes(g)) return 'M';
+      if (['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME'].includes(g)) return 'F';
+      if (['OTHER', 'AUTRE'].includes(g)) return 'OTHER';
+
+      return '';
+    };
+
+    const hasRealAllergy = (allergies) => {
+      if (!allergies) return false;
+
+      const value = String(allergies).trim().toLowerCase();
+
+      if (!value) return false;
+
+      return ![
+        'aucune',
+        'aucun',
+        'ras',
+        'néant',
+        'neant',
+        'non',
+        'none',
+        'no',
+        'n/a',
+        '[]',
+        '{}'
+      ].includes(value);
+    };
+
+    const isCreatedThisMonth = (createdAt) => {
+      if (!createdAt) return false;
+
+      const d = new Date(createdAt);
+      const now = new Date();
+
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear()
+      );
+    };
+
+    let filteredPatients = patients;
+
+    if (filter === 'M') {
+      filteredPatients = patients.filter(p => normalizeGenderForFilter(p.gender) === 'M');
+    }
+
+    if (filter === 'F') {
+      filteredPatients = patients.filter(p => normalizeGenderForFilter(p.gender) === 'F');
+    }
+
+    if (filter === 'OTHER') {
+      filteredPatients = patients.filter(p => normalizeGenderForFilter(p.gender) === 'OTHER');
+    }
+
+    if (filter === 'ALLERGIES') {
+      filteredPatients = patients.filter(p => hasRealAllergy(p.allergies));
+    }
+
+    if (filter === 'THIS_MONTH') {
+      filteredPatients = patients.filter(p =>
+        isCreatedThisMonth(p.created_at || p.createdAt)
+      );
+    }
+
+    res.json({
+      patients: filteredPatients,
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: filteredPatients.length,
+        per_page: filteredPatients.length
+      }
+    });
+  } catch (error) {
+    console.error('Patient stat filter error:', error);
+    res.status(500).json({
+      error: 'Erreur lors du filtrage statistique des patients',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
