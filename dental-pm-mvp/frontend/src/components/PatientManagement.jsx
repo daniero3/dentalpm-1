@@ -542,20 +542,44 @@ const PatientManagement = () => {
   //   recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
   // }), [pagination.total_count, patients]);
   const stats = patientStats;
+  
   const applyStatFilter = async (filter) => {
   try {
     setPage(1);
     setGF(filter);
 
-    const response = await axios.get(
-      `${API}/patients?page=1&limit=1000&includeTotal=true&_t=${Date.now()}`,
-      authH()
-    );
+    const pageSize = 100;
+    let pageToLoad = 1;
+    let allPatients = [];
+    let keepLoading = true;
 
-    const list =
-      response.data?.patients ||
-      response.data?.data ||
-      (Array.isArray(response.data) ? response.data : []);
+    while (keepLoading) {
+      const response = await axios.get(
+        `${API}/patients?page=${pageToLoad}&limit=${pageSize}&includeTotal=true&_t=${Date.now()}`,
+        authH()
+      );
+
+      const list =
+        response.data?.patients ||
+        response.data?.data ||
+        (Array.isArray(response.data) ? response.data : []);
+
+      allPatients = [...allPatients, ...list];
+
+      const totalCount =
+        response.data?.pagination?.total_count ||
+        response.data?.pagination?.total ||
+        response.data?.total_count ||
+        response.data?.total ||
+        allPatients.length;
+
+      keepLoading =
+        list.length > 0 &&
+        allPatients.length < totalCount &&
+        pageToLoad < 50;
+
+      pageToLoad += 1;
+    }
 
     const normalizeGenderForFilter = (gender) => {
       const g = String(gender || '').trim().toUpperCase();
@@ -601,7 +625,7 @@ const PatientManagement = () => {
       );
     };
 
-    let filteredList = list.filter(p => p.is_active !== false);
+    let filteredList = allPatients.filter(p => p.is_active !== false);
 
     if (filter === 'M') {
       filteredList = filteredList.filter(p => normalizeGenderForFilter(p.gender) === 'M');
@@ -632,7 +656,7 @@ const PatientManagement = () => {
         current_page: 1,
         total_pages: 1,
         total_count: filteredList.length,
-        per_page: 1000
+        per_page: filteredList.length || pageSize
       });
     }
   } catch (error) {
