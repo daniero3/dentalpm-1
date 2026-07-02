@@ -542,6 +542,36 @@ const PatientManagement = () => {
   //   recent:   patients.filter(p => { const d = new Date(p.created_at||0); return Date.now()-d < 30*24*3600*1000; }).length,
   // }), [pagination.total_count, patients]);
   const stats = patientStats;
+  const applyStatFilter = async (filter) => {
+    try {
+      setPage(1);
+  
+      const response = await axios.get(
+        `${API}/patients?page=1&limit=1000&includeTotal=true&gender=${filter}&_t=${Date.now()}`,
+        authH()
+      );
+  
+      const list =
+        response.data.patients ||
+        response.data.data ||
+        (Array.isArray(response.data) ? response.data : []);
+  
+      setPatients(list);
+  
+      if (typeof setPagination === 'function') {
+        setPagination({
+          current_page: 1,
+          total_pages: 1,
+          total_count: list.length,
+          per_page: 1000
+        });
+      }
+    } catch (error) {
+      console.error('Erreur filtre statistique patients:', error?.response?.data || error.message);
+      toast.error('Erreur lors du filtrage des patients');
+    }
+  };
+  
 // 
   if (loading) return (
     <div style={{ width:'100%', maxWidth: 1380, margin:'0 auto', padding:'0 clamp(14px,2vw,28px) 56px' }}>
@@ -634,11 +664,11 @@ const PatientManagement = () => {
       {/* ── KPIs ── */}
       <div className="pt-card" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:14, marginBottom:22 }}>
         {[
-          { icon:'👥', l:'Total',         v:stats.total,    c:'#0D7A87', bg:'#F0FDFE', action:()=>setGF('ALL') },
-          { icon:'👨', l:'Hommes',         v:stats.men,      c:'#3B82F6', bg:'#EFF6FF', action:()=>setGF('M') },
-          { icon:'👩', l:'Femmes',          v:stats.women,    c:'#EC4899', bg:'#FDF2F8', action:()=>setGF('F') },
-          { icon:'⚠️', l:'Avec allergies', v:stats.allergies, c:'#F59E0B', bg:'#FFFBEB', action:()=>setGF('ALLERGIES') },
-          { icon:'🆕', l:'Ce mois', v:stats.recent, c:'#10B981', bg:'#DCFCE7', action:()=>setGF('THIS_MONTH') },
+          { icon:'👥', l:'Total', v:stats.total, c:'#0D7A87', bg:'#F0FDFE', action:()=>applyStatFilter('ALL') },
+          { icon:'👨', l:'Hommes', v:stats.men, c:'#3B82F6', bg:'#EFF6FF', action:()=>applyStatFilter('M') },
+          { icon:'👩', l:'Femmes', v:stats.women, c:'#EC4899', bg:'#FDF2F8', action:()=>applyStatFilter('F') },
+          { icon:'⚠️', l:'Avec allergies', v:stats.allergies, c:'#F59E0B', bg:'#FFFBEB', action:()=>applyStatFilter('ALLERGIES') },
+          { icon:'🆕', l:'Ce mois', v:stats.recent, c:'#10B981', bg:'#DCFCE7', action:()=>applyStatFilter('THIS_MONTH') },
         ].map((k,i) => (
           <button key={i} onClick={k.action} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${(genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total')?k.c:'#E2E8F0'}`, padding:'14px 16px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', alignItems:'center', gap:11 }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
