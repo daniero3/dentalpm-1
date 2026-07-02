@@ -85,8 +85,15 @@ router.get('/', requireClinicId, [
     const { search, page = 1, limit = 20, fields, sort = 'name', gender } = req.query;
     const includeTotal = req.query.includeTotal !== 'false';
     const isLookup = fields === 'lookup';
-    const offset = (page - 1) * limit;
+    // const offset = (page - 1) * limit;
+    const genderQuery = String(gender || '').trim().toUpperCase();
+    const filteredPatientMode = ['M', 'F', 'OTHER', 'ALLERGIES', 'THIS_MONTH'].includes(genderQuery);
 
+    const effectivePage = filteredPatientMode ? 1 : parseInt(page, 10);
+    const effectiveLimit = filteredPatientMode ? 1000 : parseInt(limit, 10);
+    
+    const offset = (effectivePage - 1) * effectiveLimit;
+    
     // ✅ Lire clinic_id depuis req.clinic_id OU req.user.clinic_id
     const clinicId = req.clinic_id || req.user?.clinic_id || null;
     // SÉCURITÉ : refuser si pas de clinic_id (ne jamais retourner tous les patients)
@@ -100,7 +107,6 @@ router.get('/', requireClinicId, [
     };
     if (clinicId) whereClause.clinic_id = clinicId;
     // 
-    const genderQuery = String(gender || '').trim().toUpperCase();
 
     if (genderQuery === 'M') {
       whereClause.gender = {
@@ -189,8 +195,11 @@ router.get('/', requireClinicId, [
 
     const queryOptions = {
       where: whereClause,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      // limit: parseInt(limit),
+      // offset: parseInt(offset),
+      limit: effectiveLimit,
+      offset,
+      
       order: sort === 'recent'
         ? [['created_at', 'DESC']]
         : [['last_name', 'ASC'], ['first_name', 'ASC']],
@@ -215,11 +224,17 @@ router.get('/', requireClinicId, [
 
     res.json({
       patients,
+      // pagination: includeTotal ? {
+      //   current_page: parseInt(page),
+      //   total_pages: Math.ceil(count / limit),
+      //   total_count: count,
+      //   per_page: parseInt(limit)
+      // } : undefined
       pagination: includeTotal ? {
-        current_page: parseInt(page),
-        total_pages: Math.ceil(count / limit),
+        current_page: effectivePage,
+        total_pages: Math.ceil(count / effectiveLimit),
         total_count: count,
-        per_page: parseInt(limit)
+        per_page: effectiveLimit
       } : undefined
     });
   } catch (error) {
