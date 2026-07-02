@@ -633,8 +633,8 @@ const PatientManagement = () => {
           { icon:'👥', l:'Total',         v:stats.total,    c:'#0D7A87', bg:'#F0FDFE', action:()=>setGF('ALL') },
           { icon:'👨', l:'Hommes',         v:stats.men,      c:'#3B82F6', bg:'#EFF6FF', action:()=>setGF('M') },
           { icon:'👩', l:'Femmes',          v:stats.women,    c:'#EC4899', bg:'#FDF2F8', action:()=>setGF('F') },
-          { icon:'⚠️', l:'Avec allergies', v:stats.allergies,c:'#F59E0B', bg:'#FFFBEB', action:()=>{} },
-          { icon:'🆕', l:'Ce mois',         v:stats.recent,   c:'#10B981', bg:'#DCFCE7', action:()=>setSort('recent') },
+          { icon:'⚠️', l:'Avec allergies', v:stats.allergies, c:'#F59E0B', bg:'#FFFBEB', action:()=>setGF('ALLERGIES') },
+          { icon:'🆕', l:'Ce mois', v:stats.recent, c:'#10B981', bg:'#DCFCE7', action:()=>setGF('THIS_MONTH') },
         ].map((k,i) => (
           <button key={i} onClick={k.action} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${(genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total')?k.c:'#E2E8F0'}`, padding:'14px 16px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', alignItems:'center', gap:11 }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
