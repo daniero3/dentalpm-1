@@ -354,8 +354,12 @@ const PatientManagement = () => {
   // AJOUT
   const fetchPatientStats = useCallback(async () => {
     try {
+      // const response = await axios.get(
+      //   `${API}/patients/stats/summary?_t=${Date.now()}`,
+      //   authH()
+      // );
       const response = await axios.get(
-        `${API}/patients/stats/summary?_t=${Date.now()}`,
+        `${API}/patients?page=${pageNum}&limit=${limit}&search=${encodeURIComponent(searchTerm)}&sort=${sort}&gender=${genderFilter}&_t=${Date.now()}`,
         authH()
       );
   
