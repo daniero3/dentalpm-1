@@ -543,34 +543,103 @@ const PatientManagement = () => {
   // }), [pagination.total_count, patients]);
   const stats = patientStats;
   const applyStatFilter = async (filter) => {
-    try {
-      setPage(1);
-  
-      const response = await axios.get(
-        `${API}/patients?page=1&limit=1000&includeTotal=true&gender=${filter}&_t=${Date.now()}`,
-        authH()
+  try {
+    setPage(1);
+    setGF(filter);
+
+    const response = await axios.get(
+      `${API}/patients?page=1&limit=1000&includeTotal=true&_t=${Date.now()}`,
+      authH()
+    );
+
+    const list =
+      response.data?.patients ||
+      response.data?.data ||
+      (Array.isArray(response.data) ? response.data : []);
+
+    const normalizeGenderForFilter = (gender) => {
+      const g = String(gender || '').trim().toUpperCase();
+
+      if (['M', 'MALE', 'MASCULIN', 'HOMME'].includes(g)) return 'M';
+      if (['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME'].includes(g)) return 'F';
+      if (['OTHER', 'AUTRE'].includes(g)) return 'OTHER';
+
+      return '';
+    };
+
+    const hasRealAllergy = (allergies) => {
+      if (!allergies) return false;
+
+      const value = String(allergies).trim().toLowerCase();
+
+      if (!value) return false;
+
+      return ![
+        'aucune',
+        'aucun',
+        'ras',
+        'néant',
+        'neant',
+        'non',
+        'none',
+        'no',
+        'n/a',
+        '[]',
+        '{}'
+      ].includes(value);
+    };
+
+    const isCreatedThisMonth = (createdAt) => {
+      if (!createdAt) return false;
+
+      const d = new Date(createdAt);
+      const now = new Date();
+
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear()
       );
-  
-      const list =
-        response.data.patients ||
-        response.data.data ||
-        (Array.isArray(response.data) ? response.data : []);
-  
-      setPatients(list);
-  
-      if (typeof setPagination === 'function') {
-        setPagination({
-          current_page: 1,
-          total_pages: 1,
-          total_count: list.length,
-          per_page: 1000
-        });
-      }
-    } catch (error) {
-      console.error('Erreur filtre statistique patients:', error?.response?.data || error.message);
-      toast.error('Erreur lors du filtrage des patients');
+    };
+
+    let filteredList = list.filter(p => p.is_active !== false);
+
+    if (filter === 'M') {
+      filteredList = filteredList.filter(p => normalizeGenderForFilter(p.gender) === 'M');
     }
-  };
+
+    if (filter === 'F') {
+      filteredList = filteredList.filter(p => normalizeGenderForFilter(p.gender) === 'F');
+    }
+
+    if (filter === 'OTHER') {
+      filteredList = filteredList.filter(p => normalizeGenderForFilter(p.gender) === 'OTHER');
+    }
+
+    if (filter === 'ALLERGIES') {
+      filteredList = filteredList.filter(p => hasRealAllergy(p.allergies));
+    }
+
+    if (filter === 'THIS_MONTH') {
+      filteredList = filteredList.filter(p =>
+        isCreatedThisMonth(p.created_at || p.createdAt)
+      );
+    }
+
+    setPatients(filteredList);
+
+    if (typeof setPagination === 'function') {
+      setPagination({
+        current_page: 1,
+        total_pages: 1,
+        total_count: filteredList.length,
+        per_page: 1000
+      });
+    }
+  } catch (error) {
+    console.error('Erreur filtre statistique patients:', error?.response?.data || error.message);
+    toast.error(error?.response?.data?.error || 'Erreur lors du filtrage des patients');
+  }
+};
   
 // 
   if (loading) return (
