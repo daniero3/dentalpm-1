@@ -82,7 +82,7 @@ router.get('/', requireClinicId, [
       return res.status(400).json({ error: 'Paramètres invalides', details: errors.array() });
     }
 
-    const { search, page = 1, limit = 20, fields, sort = 'name' } = req.query;
+    const { search, page = 1, limit = 20, fields, sort = 'name', gender } = req.query;
     const includeTotal = req.query.includeTotal !== 'false';
     const isLookup = fields === 'lookup';
     const offset = (page - 1) * limit;
@@ -99,6 +99,46 @@ router.get('/', requireClinicId, [
       is_active: true
     };
     if (clinicId) whereClause.clinic_id = clinicId;
+    // 
+    const genderQuery = String(gender || '').trim().toUpperCase();
+
+    if (genderQuery === 'M') {
+      whereClause.gender = {
+        [Op.in]: ['M', 'MALE', 'MASCULIN', 'HOMME']
+      };
+    }
+    
+    if (genderQuery === 'F') {
+      whereClause.gender = {
+        [Op.in]: ['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME']
+      };
+    }
+    
+    if (genderQuery === 'OTHER') {
+      whereClause.gender = {
+        [Op.in]: ['OTHER', 'AUTRE']
+      };
+    }
+    
+    if (genderQuery === 'THIS_MONTH') {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    
+      whereClause.created_at = {
+        [Op.gte]: startOfMonth,
+        [Op.lt]: startOfNextMonth
+      };
+    }
+    
+    if (genderQuery === 'ALLERGIES') {
+      whereClause[Op.and] = [
+        ...(whereClause[Op.and] || []),
+        { allergies: { [Op.ne]: null } },
+        { allergies: { [Op.ne]: '' } }
+      ];
+    }
+    
     // 
     const searchText = (search || '').toString().trim();
     if (searchText) {
