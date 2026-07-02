@@ -1190,4 +1190,87 @@ router.get('/:id/lab-orders', requireClinicId, [
   }
 });
 
+// ── GET /stats/summary — Statistiques patients ───────────────────────────────
+router.get('/stats/summary', requireClinicId, async (req, res) => {
+  try {
+    const whereClause = {
+      is_active: true
+    };
+
+    if (req.clinic_id) {
+      whereClause.clinic_id = req.clinic_id;
+    }
+
+    const patients = await Patient.findAll({
+      where: whereClause,
+      attributes: ['gender', 'allergies', 'created_at'],
+      raw: true
+    });
+
+    const normalizeGenderForStats = (gender) => {
+      const g = String(gender || '').trim().toUpperCase();
+
+      if (['M', 'MALE', 'MASCULIN', 'HOMME'].includes(g)) return 'M';
+      if (['F', 'FEMALE', 'FEMININ', 'FÉMININ', 'FEMME'].includes(g)) return 'F';
+      if (['OTHER', 'AUTRE'].includes(g)) return 'OTHER';
+
+      return '';
+    };
+
+    const hasRealAllergy = (allergies) => {
+      if (!allergies) return false;
+
+      const value = String(allergies).trim().toLowerCase();
+
+      if (!value) return false;
+
+      return ![
+        'aucune',
+        'aucun',
+        'ras',
+        'néant',
+        'neant',
+        'non',
+        'none',
+        'no',
+        'n/a',
+        '[]',
+        '{}'
+      ].includes(value);
+    };
+
+    const isCreatedThisMonth = (createdAt) => {
+      if (!createdAt) return false;
+
+      const d = new Date(createdAt);
+      const now = new Date();
+
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear()
+      );
+    };
+
+    const recent = patients.filter(p =>
+      isCreatedThisMonth(p.created_at || p.createdAt)
+    ).length;
+
+    res.json({
+      total: patients.length,
+      men: patients.filter(p => normalizeGenderForStats(p.gender) === 'M').length,
+      women: patients.filter(p => normalizeGenderForStats(p.gender) === 'F').length,
+      other: patients.filter(p => normalizeGenderForStats(p.gender) === 'OTHER').length,
+      allergies: patients.filter(p => hasRealAllergy(p.allergies)).length,
+      recent,
+      this_month: recent
+    });
+  } catch (error) {
+    console.error('Patient stats summary error:', error);
+    res.status(500).json({
+      error: 'Erreur lors du calcul des statistiques patients',
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;
