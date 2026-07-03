@@ -83,17 +83,76 @@ const scorePatientIndex = (index, query, terms, digits) => {
 };
 
 /* ── Modal ── */
-const Modal = ({ open, onClose, title, children, maxW = 580 }) => {
+const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
   if (!open) return null;
+
   return (
-    <div onClick={e => e.target === e.currentTarget && onClose()}
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:'60px 16px 32px' }}>
-      <div style={{ background:'#fff', borderRadius:22, padding:28, width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
-          <X size={15}/>
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        background: 'rgba(15,23,42,.55)',
+        padding: '24px 16px',
+        overflowY: 'auto',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center'
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: maxW,
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
+          background: '#FFFFFF',
+          borderRadius: 28,
+          boxShadow: '0 24px 80px rgba(15,23,42,.25)',
+          position: 'relative'
+        }}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            position: 'sticky',
+            top: 14,
+            float: 'right',
+            zIndex: 20,
+            margin: 14,
+            width: 38,
+            height: 38,
+            borderRadius: 999,
+            border: '1px solid #E2E8F0',
+            background: '#FFFFFF',
+            cursor: 'pointer',
+            fontSize: 22,
+            color: '#64748B',
+            boxShadow: '0 8px 24px rgba(15,23,42,.12)'
+          }}
+        >
+          ×
         </button>
-        {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 22px', paddingRight:28 }}>{title}</h2>}
-        {children}
+
+        {title && (
+          <div
+            style={{
+              padding: '22px 28px 0',
+              fontSize: 22,
+              fontWeight: 800,
+              color: '#0F172A'
+            }}
+          >
+            {title}
+          </div>
+        )}
+
+        <div style={{ clear: 'both' }}>
+          {children}
+        </div>
       </div>
     </div>
   );
