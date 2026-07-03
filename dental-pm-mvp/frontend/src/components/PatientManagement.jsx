@@ -83,80 +83,8 @@ const scorePatientIndex = (index, query, terms, digits) => {
 };
 
 /* ── Modal ── */
-const Modal = ({ open, onClose, title, children, maxW = 580, fullScreen = false }) => {
+const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
   if (!open) return null;
-
-  if (fullScreen) {
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1000,
-          background: '#F8FAFC',
-          width: '100vw',
-          height: '100dvh',
-          overflow: 'hidden'
-        }}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            position: 'fixed',
-            top: 18,
-            right: 22,
-            zIndex: 1100,
-            width: 44,
-            height: 44,
-            borderRadius: 999,
-            border: '1px solid #E2E8F0',
-            background: '#FFFFFF',
-            cursor: 'pointer',
-            fontSize: 26,
-            color: '#64748B',
-            boxShadow: '0 10px 30px rgba(15,23,42,.16)'
-          }}
-        >
-          ×
-        </button>
-
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            padding: '24px',
-            boxSizing: 'border-box',
-            overflow: 'hidden'
-          }}
-        >
-          {title && (
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 800,
-                color: '#0F172A',
-                marginBottom: 16,
-                paddingRight: 60
-              }}
-            >
-              {title}
-            </div>
-          )}
-
-          <div
-            style={{
-              width: '100%',
-              height: title ? 'calc(100dvh - 88px)' : 'calc(100dvh - 48px)',
-              overflow: 'hidden'
-            }}
-          >
-            {children}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -166,8 +94,11 @@ const Modal = ({ open, onClose, title, children, maxW = 580, fullScreen = false 
         inset: 0,
         zIndex: 1000,
         background: 'rgba(15,23,42,.55)',
+        padding: '24px 16px',
         overflowY: 'auto',
-        padding: '60px 16px 32px'
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center'
       }}
     >
       <div
@@ -175,11 +106,11 @@ const Modal = ({ open, onClose, title, children, maxW = 580, fullScreen = false 
         style={{
           width: '100%',
           maxWidth: maxW,
-          margin: '0 auto',
+          maxHeight: 'calc(100vh - 48px)',
+          overflowY: 'auto',
           background: '#FFFFFF',
           borderRadius: 28,
           boxShadow: '0 24px 80px rgba(15,23,42,.25)',
-          overflow: 'hidden',
           position: 'relative'
         }}
       >
@@ -187,18 +118,20 @@ const Modal = ({ open, onClose, title, children, maxW = 580, fullScreen = false 
           type="button"
           onClick={onClose}
           style={{
-            position: 'absolute',
+            position: 'sticky',
             top: 14,
-            right: 14,
+            float: 'right',
             zIndex: 20,
-            width: 36,
-            height: 36,
+            margin: 14,
+            width: 38,
+            height: 38,
             borderRadius: 999,
             border: '1px solid #E2E8F0',
             background: '#FFFFFF',
             cursor: 'pointer',
             fontSize: 22,
-            color: '#64748B'
+            color: '#64748B',
+            boxShadow: '0 8px 24px rgba(15,23,42,.12)'
           }}
         >
           ×
@@ -217,7 +150,9 @@ const Modal = ({ open, onClose, title, children, maxW = 580, fullScreen = false 
           </div>
         )}
 
-        {children}
+        <div style={{ clear: 'both' }}>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -1077,9 +1012,7 @@ const PatientManagement = () => {
       </Modal>
 
       {/* ══ MODAL HISTORIQUE PATIENT ══ */}
-      <Modal
-  open={!!historyPatient}
-  onClose={() => {setHistoryPatient(null); setHistoryItems([]);}} fullScreen>
+      <Modal open={!!historyFor} onClose={()=>{setHistoryFor(null);setHistory([]);}} title="" maxW={920}>
         <div style={{ margin:-28 }}>
           <div style={{
             position:'relative',
