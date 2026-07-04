@@ -21,7 +21,6 @@ import {
   Download,
   Lock,
   Unlock,
-  FileText,
   Save,
   Trash2,
   X
@@ -367,18 +366,7 @@ const PricingSettings = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Exporter CSV
                     </Button>
-                    {/* Import modèle de tarifs */}
-                    {canExecuteSchedule(schedule) && (
-                      <Button 
-                        variant="outline" 
-                        onClick={handleImportTemplateTarifs}
-                        data-testid="import-maeva-btn"
-                        className="bg-green-50 hover:bg-green-100 border-green-300"
-                      >
-                        <FileText className="h-4 w-4 mr-2 text-green-600" />
-                        Modèle de tarifs
-                      </Button>
-                    )}
+                    
                     {/* Import Button */}
                     {canExecuteSchedule(schedule) && (
                       <>
