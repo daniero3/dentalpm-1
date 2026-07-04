@@ -1476,7 +1476,7 @@ const AppointmentManagement = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  height: 56,
+                  height: 46,
                   borderRadius: 28,
                   border: '2px solid #D7E6EA',
                   background: '#FFFFFF',
@@ -1501,7 +1501,7 @@ const AppointmentManagement = () => {
                     fontSize: 16,
                     flex: 1,
                     minWidth: 0,
-                    height: 48,
+                    height: 38,
                     color: '#0F172A',
                     paddingLeft: 12,
                     paddingRight: 70
