@@ -1475,12 +1475,16 @@ const AppointmentManagement = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 10px',
-                  borderBottom: patientMatches.length > 0 ? '1px solid #F1F5F9' : 'none'
+                  gap: 10,
+                  height: 56,
+                  borderRadius: 28,
+                  border: '2px solid #D7E6EA',
+                  background: '#FFFFFF',
+                  boxShadow: '0 4px 14px rgba(13, 122, 135, 0.08)',
+                  overflow: 'hidden'
                 }}
               >
-                <Search size={14} color="#94A3B8" />
+                  <Search size={22} style={{ flexShrink: 0, color: '#94A3B8', marginLeft: 10, marginRight: 6}} />
           
                 <input
                   value={patientSearch}
@@ -1494,10 +1498,13 @@ const AppointmentManagement = () => {
                     border: 'none',
                     background: 'transparent',
                     outline: 'none',
-                    fontSize: 13,
+                    fontSize: 16,
                     flex: 1,
                     minWidth: 0,
-                    color: '#0F172A'
+                    height: 48,
+                    color: '#0F172A',
+                    paddingLeft: 12,
+                    paddingRight: 70
                   }}
                 />
               </div>
