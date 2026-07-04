@@ -465,13 +465,51 @@ const PricingSettings = () => {
 
                 {/* Filters */}
                 <div className="flex gap-4 mb-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%'
+                    }}
+                  >
+                    <Search
+                      size={22}
+                      style={{
+                        position: 'absolute',
+                        left: 22,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#94A3B8',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}
+                    />
+                  
                     <Input
                       placeholder="Rechercher un acte..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      onFocus={(e) => {
+                        e.currentTarget.style.borderColor = '#0D7A87';
+                        e.currentTarget.style.boxShadow = '0 0 0 4px rgba(13, 122, 135, 0.12)';
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.borderColor = '#C7E1E5';
+                        e.currentTarget.style.boxShadow = '0 4px 14px rgba(13, 122, 135, 0.08)';
+                      }}
+                      style={{
+                        width: '100%',
+                        height: 58,
+                        paddingLeft: 62,
+                        paddingRight: 22,
+                        borderRadius: 28,
+                        border: '2px solid #C7E1E5',
+                        background: '#F8FEFE',
+                        color: '#0F172A',
+                        fontSize: 18,
+                        fontWeight: 500,
+                        outline: 'none',
+                        boxShadow: '0 4px 14px rgba(13, 122, 135, 0.08)'
+                      }}
                     />
                   </div>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
