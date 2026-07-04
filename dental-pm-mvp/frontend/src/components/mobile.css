@@ -434,5 +434,42 @@ th {
   .btn {
     font-size: 11px !important;
   }
+
+   /* Amélioration barre de recherche patient dans le modal rendez-vous */
+   input[placeholder="Nom, téléphone, ID patient..."] {
+     height: 52px !important;
+     min-height: 52px !important;
+     padding-left: 14px !important;
+     padding-right: 72px !important;
+     font-size: 16px !important;
+     font-weight: 500 !important;
+     color: #0f172a !important;
+     background: #ffffff !important;
+     border-radius: 24px !important;
+   }
+   
+   /* Espace entre l’icône de recherche et le texte */
+   div:has(> input[placeholder="Nom, téléphone, ID patient..."]) svg {
+     flex-shrink: 0 !important;
+     margin-left: 14px !important;
+     margin-right: 12px !important;
+     color: #94a3b8 !important;
+   }
+   
+   /* Conteneur de la barre patient */
+   div:has(> input[placeholder="Nom, téléphone, ID patient..."]) {
+     min-height: 56px !important;
+     border-radius: 28px !important;
+     background: #ffffff !important;
+     border: 2px solid #d7e6ea !important;
+     box-shadow: 0 4px 14px rgba(13, 122, 135, 0.08) !important;
+     overflow: hidden !important;
+   }
+   
+   /* Focus plus propre */
+   div:has(> input[placeholder="Nom, téléphone, ID patient..."]:focus) {
+     border-color: #0d7a87 !important;
+     box-shadow: 0 0 0 4px rgba(13, 122, 135, 0.12) !important;
+   }
 }
 
