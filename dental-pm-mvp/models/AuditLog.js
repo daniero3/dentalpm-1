@@ -25,6 +25,7 @@ const AuditLog = sequelize.define('audit_logs', {
       'LOGOUT',
       'VIEW',
       'EXPORT',
+      'IMPORT',
       'PRINT',
       'SEND_SMS',
       'PAYMENT_PROCESS'
@@ -99,6 +100,7 @@ AuditLog.prototype.getActionLabel = function() {
     'LOGOUT': 'Déconnexion',
     'VIEW': 'Consultation',
     'EXPORT': 'Export',
+    'IMPORT': 'Import',
     'PRINT': 'Impression',
     'SEND_SMS': 'Envoi SMS',
     'PAYMENT_PROCESS': 'Traitement paiement'
