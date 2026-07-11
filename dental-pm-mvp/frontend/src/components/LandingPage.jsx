@@ -1145,10 +1145,10 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  <a href={plan.stripe} target="_blank" rel="noopener noreferrer"
+                  <button onClick={()=>navigate('/register')}
                     style={{display:'block',width:'100%',padding:'12px',borderRadius:11,background:plan.popular?'var(--teal)':'transparent',color:plan.popular?'#fff':'var(--teal)',fontWeight:700,fontSize:14,border:'2px solid var(--teal)',cursor:'pointer',textDecoration:'none',textAlign:'center',boxSizing:'border-box'}}>
-                    Payer avec Stripe →
-                  </a>
+                    Démarrer l’essai gratuit →
+                  </button>
                   <button onClick={()=>navigate('/register')} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
                     Essai gratuit 30 jours
                   </button>

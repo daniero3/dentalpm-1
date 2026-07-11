@@ -18,7 +18,7 @@ const PLANS = [
 const T = '#0D7A87';
 
 
-const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
+const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone, setAdminUser }) => {
   const [loading, setLoading] = React.useState(false);
 
   const handleClick = async () => {
@@ -29,6 +29,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
       try {
         const r = await axios.post(`${apiUrl}/auth/register-clinic`, { ...form, plan: plan?.name || 'PRO' });
         if (r.data.temp_password) setTempPwd && setTempPwd(r.data.temp_password);
+        if (r.data.admin_user) setAdminUser && setAdminUser(r.data.admin_user);
         clinicId = r.data.clinic?.id;
       } catch(e) {
         alert(e.response?.data?.error || 'Erreur création cabinet');
@@ -36,29 +37,19 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone }) => {
         return;
       }
 
-      // const planName = plan?.name || 'PRO';
-      // const checkout = await axios.post(`${apiUrl}/billing/public-checkout`, {
-      //   plan_code: planName,
-      //   clinic_id: clinicId,
-      //   email: form.email
-      // });
-      // if (checkout.data?.url) {
-      //   window.location.href = checkout.data.url;
-      // } else {
-      //   alert('Impossible d’ouvrir Stripe. Réessayez.');
-      //   setLoading(false);
-      // }
+      const planName = plan?.name || 'PRO';
+      const checkout = await axios.post(`${apiUrl}/billing/public-checkout`, {
+        plan_code: planName,
+        clinic_id: clinicId,
+        email: form.email
+      });
+      if (checkout.data?.url) {
+        window.location.href = checkout.data.url;
+        return;
+      }
 
-      // await axios.post(
-      //   `${apiUrl}/billing/start-free-trial`,
-      //   { plan_code: planName },
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${localStorage.getItem('token')}`
-      //     }
-      //   }
-      // );
-      setDone(true);
+      alert('Impossible d’ouvrir Stripe. Réessayez.');
+      setDone && setDone(false);
       setLoading(false);
       
     } catch(e) {
@@ -279,7 +270,7 @@ export default function RegisterPage() {
                 </p>
 
                 {/* Bouton Stripe en premier */}
-                <StripeCheckoutBtn plan={plan} form={form} apiUrl={API_URL}/>
+                <StripeCheckoutBtn plan={plan} form={form} apiUrl={API_URL} setTempPwd={setTempPwd} setDone={setDone} setAdminUser={setAdminUser}/>
 
                 <p style={{ textAlign:'center', fontSize:11, color:'#94A3B8', marginTop:12, marginBottom:0 }}>
                   En confirmant, vous acceptez nos <a href="/legal/cgu" style={{ color:T }}>CGU</a>
