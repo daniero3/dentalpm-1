@@ -248,7 +248,7 @@ router.post('/:id/import-fees', upload.single('file'), [param('id').isUUID()], a
       feesData = csv.parse(fileContent, { columns:true, skip_empty_lines:true, trim:true, bom:true });
     }
 
-    let inserted = 0, updated = 0;
+    let inserted = 0, updated = 0, deleted = 0;
     const importedCodes = new Set();
 
     for (const row of feesData) {
@@ -270,7 +270,16 @@ router.post('/:id/import-fees', upload.single('file'), [param('id').isUUID()], a
       }
     }
 
-    res.json({ message:'Import terminé', inserted, updated, total: inserted + updated });
+    if (replaceMode && importedCodes.size > 0) {
+      deleted = await ProcedureFee.destroy({
+        where: {
+          schedule_id: schedule.id,
+          procedure_code: { [Op.notIn]: Array.from(importedCodes) }
+        }
+      });
+    }
+
+    res.json({ message:'Import terminé', inserted, updated, deleted, total: inserted + updated });
   } catch (error) {
     res.status(500).json({ error:'Erreur import', details: error.message });
   }
@@ -462,8 +471,7 @@ async function seedDefaultSchedules(clinicId) {
     await cabinet.update({ is_active: true });
   }
 
-  const feeCount = created ? 0 : await ProcedureFee.count({ where: { schedule_id: cabinet.id } });
-  if (feeCount === 0) {
+  if (created) {
     for (const fee of DEFAULT_CABINET_FEES) {
       await ProcedureFee.create({ schedule_id: cabinet.id, ...fee, is_active: true });
     }
