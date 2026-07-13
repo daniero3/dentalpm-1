@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
@@ -146,9 +147,11 @@ const fdate = d => new Date(d).toLocaleDateString('fr-FR');
 /* ── Modal ── */
 const Modal = ({open,onClose,title,children,maxW=560}) => {
   if(!open) return null;
-  return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'80px 16px 32px'}}>
-      <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative'}}>
+  if(typeof document === 'undefined') return null;
+
+  const modal = (
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,width:'100vw',minHeight:'100dvh',zIndex:5000,background:'rgba(15,23,42,.55)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',overflowY:'auto',padding:'80px 16px 32px',boxSizing:'border-box'}}>
+      <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box'}}>
         <button onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
           <X size={15}/>
         </button>
@@ -157,6 +160,8 @@ const Modal = ({open,onClose,title,children,maxW=560}) => {
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };
 
 /* ── Tarif Suggestions ── */

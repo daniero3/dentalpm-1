@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useResponsive, modalOverlay, getModalStyle } from '../utils/responsive';
 import { useAuth } from '../App';
@@ -40,16 +41,20 @@ const C = { green:'#10B981', teal:'#0D7A87', blue:'#3B82F6', amber:'#F59E0B', pu
 /* ── Modal ── */
 const Modal = ({ open, onClose, title, children, maxW=640 }) => {
   if (!open) return null;
-  return (
+  if (typeof document === 'undefined') return null;
+
+  const modal = (
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
-      style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'60px 16px 32px' }}>
-      <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
+      style={{ position:'fixed',inset:0,width:'100vw',minHeight:'100dvh',zIndex:5000,background:'rgba(15,23,42,.55)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',overflowY:'auto',padding:'60px 16px 32px',boxSizing:'border-box' }}>
+      <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box' }}>
         <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}><X size={15}/></button>
         {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };
 const Skel = ({h=16,w='100%',r=8}) => <div style={{ height:h,width:w,borderRadius:r,background:'linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%)',backgroundSize:'200% 100%',animation:'shimmer 1.4s infinite' }}/>;
 const inp = { width:'100%',padding:'9px 12px',borderRadius:10,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none',transition:'border-color .2s' };
