@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Plus, UserCheck, UserX, Trash2, Eye, EyeOff, X, Users, Crown } from 'lucide-react';
+import {
+  Plus, UserCheck, UserX, Eye, EyeOff, X, Users, Crown,
+  Stethoscope, UserRound, Calculator, ShieldCheck, CheckCircle
+} from 'lucide-react';
 import { useResponsive } from '../utils/responsive';
 
 const API = process.env.REACT_APP_BACKEND_URL
@@ -13,15 +16,38 @@ const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem(
 
 const T = '#0D7A87';
 const ROLES = [
-  { value:'DENTIST',    label:'Dentiste',        color:'#3B4FD8' },
-  { value:'ASSISTANT',  label:'Assistant(e)',     color:'#8B5CF6' },
-  { value:'ACCOUNTANT', label:'Comptable',        color:'#F59E0B' },
-  { value:'ADMIN',      label:'Admin cabinet',    color:'#0D7A87' },
+  { value:'DENTIST',    label:'Dentiste',        desc:'Agenda et dossiers patients', color:'#3B4FD8', icon:Stethoscope },
+  { value:'ASSISTANT',  label:'Assistant(e)',    desc:'Accueil et suivi quotidien',  color:'#8B5CF6', icon:UserRound },
+  { value:'ACCOUNTANT', label:'Comptable',       desc:'Factures et paiements',       color:'#F59E0B', icon:Calculator },
+  { value:'ADMIN',      label:'Admin cabinet',   desc:'Gestion complète du cabinet', color:'#0D7A87', icon:ShieldCheck },
 ];
 const ROLE_LABELS = Object.fromEntries(ROLES.map(r => [r.value, r]));
-const inp = { width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box' };
+const inp = {
+  width:'100%',
+  minHeight:44,
+  padding:'11px 13px',
+  borderRadius:10,
+  border:'1.5px solid #D7DEE8',
+  fontSize:14,
+  fontFamily:'inherit',
+  outline:'none',
+  boxSizing:'border-box',
+  background:'#FFFFFF',
+  color:'#0F172A',
+  transition:'border-color .18s ease, box-shadow .18s ease, background .18s ease'
+};
 const EMPTY = { full_name:'', email:'', username:'', password:'', role:'DENTIST', phone:'', specialization:'' };
 const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+const fieldFocus = e => {
+  e.target.style.borderColor = T;
+  e.target.style.boxShadow = `0 0 0 3px ${T}18`;
+  e.target.style.background = '#FFFFFF';
+};
+const fieldBlur = e => {
+  e.target.style.borderColor = '#D7DEE8';
+  e.target.style.boxShadow = 'none';
+  e.target.style.background = '#FFFFFF';
+};
 
 export default function ClinicUsersTab() {
   const { isMobile } = useResponsive();
@@ -167,64 +193,94 @@ export default function ClinicUsersTab() {
       {/* Modal ajout */}
       {modal && (
         <div onClick={e=>e.target===e.currentTarget&&setModal(false)}
-          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(10,16,30,.65)', backdropFilter:'blur(4px)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding: isMobile ? 0 : 16, overflowY:'auto', overscrollBehavior:'contain' }}>
-          <div style={{ background:'#fff', borderRadius: isMobile ? '20px 20px 0 0' : 20, width:'100%', maxWidth:480, maxHeight: isMobile ? '88dvh' : '92dvh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
+          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(15,23,42,.44)', backdropFilter:'blur(10px) saturate(120%)', WebkitBackdropFilter:'blur(10px) saturate(120%)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding: isMobile ? 0 : 20, overflowY:'auto', overscrollBehavior:'contain' }}>
+          <div style={{ background:'#fff', borderRadius: isMobile ? '22px 22px 0 0' : 18, width:'100%', maxWidth:720, maxHeight: isMobile ? '90dvh' : '88dvh', display:'flex', flexDirection:'column', overflow:'hidden', border:'1px solid rgba(226,232,240,.95)', boxShadow:'0 28px 80px rgba(15,23,42,.26)' }}>
 
             {/* Header modal */}
-            <div style={{ padding:'18px 22px', background:`linear-gradient(135deg,${T},#0A5F6A)`, borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff' }}>Nouvel utilisateur</div>
-              <button onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <X size={15}/>
+            <div style={{ padding:isMobile ? '18px 18px 16px' : '22px 26px 18px', background:'#FFFFFF', borderBottom:'1px solid #E2E8F0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16, flexShrink:0 }}>
+              <div>
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:5 }}>
+                  <div style={{ width:36, height:36, borderRadius:10, background:`${T}14`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    <Users size={18} color={T}/>
+                  </div>
+                  <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:18, color:'#0F172A' }}>Nouvel utilisateur</div>
+                </div>
+                <div style={{ fontSize:13, color:'#64748B', lineHeight:1.45 }}>Ajoutez un membre au cabinet et définissez son rôle d'accès.</div>
+              </div>
+              <button onClick={()=>setModal(false)} aria-label="Fermer" style={{ width:34, height:34, borderRadius:10, background:'#F8FAFC', border:'1px solid #E2E8F0', cursor:'pointer', color:'#64748B', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <X size={16}/>
               </button>
             </div>
 
-            <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14, overflowY:'auto', WebkitOverflowScrolling:'touch', overscrollBehavior:'contain', minHeight:0, flex:'1 1 auto' }}>
+            <div style={{ padding:isMobile ? '18px' : '22px 26px 24px', display:'flex', flexDirection:'column', gap:18, overflowY:'auto', WebkitOverflowScrolling:'touch', overscrollBehavior:'contain', minHeight:0, flex:'1 1 auto', background:'#F8FAFC' }}>
               {/* Formulaire */}
-              {[
-                { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
-                { label:'Email *',        key:'email',     ph:'rakoto@cabinet.mg', type:'email' },
-                { label:'Identifiant *',  key:'username',  ph:'rakotoj', type:'text' },
-                { label:'Téléphone',      key:'phone',     ph:'034 XX XXX XX', type:'tel' },
-                { label:'Spécialisation', key:'specialization', ph:'Chirurgie dentaire', type:'text' },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
-                  <input type={f.type} placeholder={f.ph} value={form[f.key]}
-                    onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}
-                    style={inp}
-                    onFocus={e=>{e.target.style.borderColor=T; e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
-                    onBlur={e=>{e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none';}}/>
-                </div>
-              ))}
-
-              {/* Rôle */}
-              <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Rôle *</label>
-                <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap:8 }}>
-                  {ROLES.map(r => (
-                    <button key={r.value} onClick={()=>setForm(p=>({...p,role:r.value}))} type="button"
-                      style={{ padding:'8px 6px', borderRadius:10, border:`2px solid ${form.role===r.value ? r.color : '#E2E8F0'}`, background: form.role===r.value ? r.color + '15' : '#F8FAFC', cursor:'pointer', fontSize:11, fontWeight:700, color: form.role===r.value ? r.color : '#64748B', transition:'all .15s', textAlign:'center' }}>
-                      {r.label}
-                    </button>
+              <div style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:14, padding:isMobile ? 14 : 18 }}>
+                <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', textTransform:'uppercase', letterSpacing:.7, marginBottom:14 }}>Identité</div>
+                <div style={{ display:'grid', gridTemplateColumns:isMobile ? '1fr' : '1fr 1fr', gap:14 }}>
+                  {[
+                    { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
+                    { label:'Email *',        key:'email',     ph:'rakoto@cabinet.mg', type:'email' },
+                    { label:'Identifiant *',  key:'username',  ph:'rakotoj', type:'text' },
+                    { label:'Téléphone',      key:'phone',     ph:'034 XX XXX XX', type:'tel' },
+                    { label:'Spécialisation', key:'specialization', ph:'Chirurgie dentaire', type:'text' },
+                  ].map(f => (
+                    <div key={f.key} style={{ gridColumn: !isMobile && f.key === 'specialization' ? '1 / -1' : undefined }}>
+                      <label style={{ display:'block', fontSize:12, fontWeight:700, color:'#334155', marginBottom:6 }}>{f.label}</label>
+                      <input type={f.type} placeholder={f.ph} value={form[f.key]}
+                        onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}
+                        style={inp}
+                        onFocus={fieldFocus}
+                        onBlur={fieldBlur}/>
+                    </div>
                   ))}
                 </div>
               </div>
 
+              {/* Rôle */}
+              <div style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:14, padding:isMobile ? 14 : 18 }}>
+                <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:12, marginBottom:14 }}>
+                  <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', textTransform:'uppercase', letterSpacing:.7 }}>Rôle</div>
+                  <div style={{ fontSize:11, color:'#64748B' }}>Choix obligatoire</div>
+                </div>
+                <div role="radiogroup" aria-label="Rôle utilisateur" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:10 }}>
+                  {ROLES.map(r => {
+                    const Icon = r.icon;
+                    const selected = form.role === r.value;
+                    return (
+                      <button key={r.value} onClick={()=>setForm(p=>({...p,role:r.value}))} type="button" role="radio" aria-checked={selected}
+                        style={{ minHeight:76, padding:'12px 13px', borderRadius:12, border:`1.5px solid ${selected ? r.color : '#E2E8F0'}`, background: selected ? r.color + '10' : '#FFFFFF', cursor:'pointer', display:'flex', alignItems:'center', gap:12, color:'#0F172A', textAlign:'left', transition:'border-color .18s ease, background .18s ease, box-shadow .18s ease', boxShadow:selected ? `0 0 0 3px ${r.color}18` : 'none' }}>
+                        <span style={{ width:36, height:36, borderRadius:10, background:r.color + '14', color:r.color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                          <Icon size={18}/>
+                        </span>
+                        <span style={{ flex:1, minWidth:0 }}>
+                          <span style={{ display:'block', fontSize:13, fontWeight:800, color:selected ? r.color : '#0F172A' }}>{r.label}</span>
+                          <span style={{ display:'block', fontSize:11, color:'#64748B', marginTop:2, lineHeight:1.35 }}>{r.desc}</span>
+                        </span>
+                        <span style={{ width:20, height:20, borderRadius:'50%', border:`1.5px solid ${selected ? r.color : '#CBD5E1'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, background:selected ? r.color : '#FFFFFF' }}>
+                          {selected && <CheckCircle size={13} color="#FFFFFF"/>}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Mot de passe */}
-              <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Mot de passe *</label>
-                <div style={{ position:'relative' }}>
+              <div style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:14, padding:isMobile ? 14 : 18 }}>
+                <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', textTransform:'uppercase', letterSpacing:.7, marginBottom:14 }}>Accès</div>
+                <label style={{ display:'block', fontSize:12, fontWeight:700, color:'#334155', marginBottom:6 }}>Mot de passe *</label>
+                <div style={{ position:'relative', maxWidth:isMobile ? '100%' : 340 }}>
                   <input type={showPwd ? 'text' : 'password'} placeholder="Ex: Cabinet@2026" value={form.password}
                     onChange={e=>setForm(p=>({...p,password:e.target.value}))}
-                    style={{ ...inp, paddingRight:40 }}
-                    onFocus={e=>{e.target.style.borderColor=T; e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
-                    onBlur={e=>{e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none';}}/>
-                  <button type="button" onClick={()=>setShowPwd(s=>!s)}
-                    style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8' }}>
+                    style={{ ...inp, paddingRight:44 }}
+                    onFocus={fieldFocus}
+                    onBlur={fieldBlur}/>
+                  <button type="button" onClick={()=>setShowPwd(s=>!s)} aria-label={showPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', width:30, height:30, borderRadius:8, background:'#F8FAFC', border:'1px solid #E2E8F0', cursor:'pointer', color:'#64748B', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     {showPwd ? <EyeOff size={15}/> : <Eye size={15}/>}
                   </button>
                 </div>
-                <div style={{ fontSize:11, color:'#64748B', marginTop:5 }}>
+                <div style={{ fontSize:11, color:'#64748B', marginTop:7, lineHeight:1.45 }}>
                   10 caractères minimum, avec majuscule, minuscule, chiffre et symbole.
                 </div>
               </div>
@@ -232,10 +288,10 @@ export default function ClinicUsersTab() {
             </div>
 
             {/* Boutons */}
-            <div style={{ display:'flex', gap:10, padding:'14px 22px calc(14px + env(safe-area-inset-bottom))', borderTop:'1px solid #E2E8F0', background:'#fff', flexShrink:0 }}>
-              <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+            <div style={{ display:'flex', gap:10, padding:isMobile ? '14px 18px calc(14px + env(safe-area-inset-bottom))' : '16px 26px', borderTop:'1px solid #E2E8F0', background:'#fff', flexShrink:0, boxShadow:'0 -12px 28px rgba(15,23,42,.05)' }}>
+              <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:11, border:'1.5px solid #D7DEE8', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, color:'#475569' }}>Annuler</button>
               <button onClick={save} disabled={saving}
-                style={{ flex:2, padding:'11px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, opacity:saving?.7:1 }}>
+                style={{ flex:2, padding:'11px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:800, opacity:saving?.7:1, boxShadow:`0 8px 20px ${T}28` }}>
                 {saving ? 'Création...' : 'Créer l\'utilisateur'}
               </button>
             </div>
