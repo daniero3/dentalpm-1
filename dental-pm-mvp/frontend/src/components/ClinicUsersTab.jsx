@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import {
   Plus, UserCheck, UserX, Eye, EyeOff, X, Users, Crown,
-  Stethoscope, UserRound, Calculator, ShieldCheck, CheckCircle
+  Stethoscope, UserRound, Calculator, ShieldCheck
 } from 'lucide-react';
 import { useResponsive } from '../utils/responsive';
 
@@ -16,37 +16,20 @@ const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem(
 
 const T = '#0D7A87';
 const ROLES = [
-  { value:'DENTIST',    label:'Dentiste',        desc:'Agenda et dossiers patients', color:'#3B4FD8', icon:Stethoscope },
-  { value:'ASSISTANT',  label:'Assistant(e)',    desc:'Accueil et suivi quotidien',  color:'#8B5CF6', icon:UserRound },
-  { value:'ACCOUNTANT', label:'Comptable',       desc:'Factures et paiements',       color:'#F59E0B', icon:Calculator },
-  { value:'ADMIN',      label:'Admin cabinet',   desc:'Gestion complète du cabinet', color:'#0D7A87', icon:ShieldCheck },
+  { value:'DENTIST',    label:'Dentiste',      color:'#3B82F6', bg:'#EFF6FF', icon:Stethoscope },
+  { value:'ASSISTANT',  label:'Assistant(e)',  color:'#8B5CF6', bg:'#EDE9FE', icon:UserRound },
+  { value:'ACCOUNTANT', label:'Comptable',     color:'#F59E0B', bg:'#FFFBEB', icon:Calculator },
+  { value:'ADMIN',      label:'Admin cabinet', color:'#0D7A87', bg:'#F0FDFE', icon:ShieldCheck },
 ];
 const ROLE_LABELS = Object.fromEntries(ROLES.map(r => [r.value, r]));
-const inp = {
-  width:'100%',
-  minHeight:44,
-  padding:'11px 13px',
-  borderRadius:10,
-  border:'1.5px solid #D7DEE8',
-  fontSize:14,
-  fontFamily:'inherit',
-  outline:'none',
-  boxSizing:'border-box',
-  background:'#FFFFFF',
-  color:'#0F172A',
-  transition:'border-color .18s ease, box-shadow .18s ease, background .18s ease'
-};
+const inp = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', transition:'border-color .2s', boxSizing:'border-box' };
 const EMPTY = { full_name:'', email:'', username:'', password:'', role:'DENTIST', phone:'', specialization:'' };
 const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
 const fieldFocus = e => {
   e.target.style.borderColor = T;
-  e.target.style.boxShadow = `0 0 0 3px ${T}18`;
-  e.target.style.background = '#FFFFFF';
 };
 const fieldBlur = e => {
-  e.target.style.borderColor = '#D7DEE8';
-  e.target.style.boxShadow = 'none';
-  e.target.style.background = '#FFFFFF';
+  e.target.style.borderColor = '#E2E8F0';
 };
 
 export default function ClinicUsersTab() {
@@ -193,108 +176,91 @@ export default function ClinicUsersTab() {
       {/* Modal ajout */}
       {modal && (
         <div onClick={e=>e.target===e.currentTarget&&setModal(false)}
-          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(15,23,42,.44)', backdropFilter:'blur(10px) saturate(120%)', WebkitBackdropFilter:'blur(10px) saturate(120%)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding: isMobile ? 0 : 20, overflowY:'auto', overscrollBehavior:'contain' }}>
-          <div style={{ background:'#fff', borderRadius: isMobile ? '22px 22px 0 0' : 18, width:'100%', maxWidth:720, maxHeight: isMobile ? '90dvh' : '88dvh', display:'flex', flexDirection:'column', overflow:'hidden', border:'1px solid rgba(226,232,240,.95)', boxShadow:'0 28px 80px rgba(15,23,42,.26)' }}>
-
-            {/* Header modal */}
-            <div style={{ padding:isMobile ? '18px 18px 16px' : '22px 26px 18px', background:'#FFFFFF', borderBottom:'1px solid #E2E8F0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16, flexShrink:0 }}>
-              <div>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:5 }}>
-                  <div style={{ width:36, height:36, borderRadius:10, background:`${T}14`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    <Users size={18} color={T}/>
-                  </div>
-                  <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:18, color:'#0F172A' }}>Nouvel utilisateur</div>
-                </div>
-                <div style={{ fontSize:13, color:'#64748B', lineHeight:1.45 }}>Ajoutez un membre au cabinet et définissez son rôle d'accès.</div>
-              </div>
-              <button onClick={()=>setModal(false)} aria-label="Fermer" style={{ width:34, height:34, borderRadius:10, background:'#F8FAFC', border:'1px solid #E2E8F0', cursor:'pointer', color:'#64748B', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:isMobile ? '28px 12px' : '60px 16px 32px' }}>
+          <div style={{ background:'#fff', borderRadius:22, padding:isMobile ? 22 : 28, width:'100%', maxWidth:560, maxHeight:isMobile ? 'calc(100dvh - 56px)' : 'none', overflowY:'auto', margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
+            <button onClick={()=>setModal(false)} aria-label="Fermer" style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
                 <X size={16}/>
               </button>
-            </div>
+            <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>👤 Nouvel utilisateur</h2>
 
-            <div style={{ padding:isMobile ? '18px' : '22px 26px 24px', display:'flex', flexDirection:'column', gap:18, overflowY:'auto', WebkitOverflowScrolling:'touch', overscrollBehavior:'contain', minHeight:0, flex:'1 1 auto', background:'#F8FAFC' }}>
-              {/* Formulaire */}
-              <div style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:14, padding:isMobile ? 14 : 18 }}>
-                <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', textTransform:'uppercase', letterSpacing:.7, marginBottom:14 }}>Identité</div>
-                <div style={{ display:'grid', gridTemplateColumns:isMobile ? '1fr' : '1fr 1fr', gap:14 }}>
-                  {[
-                    { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
-                    { label:'Email *',        key:'email',     ph:'rakoto@cabinet.mg', type:'email' },
-                    { label:'Identifiant *',  key:'username',  ph:'rakotoj', type:'text' },
-                    { label:'Téléphone',      key:'phone',     ph:'034 XX XXX XX', type:'tel' },
-                    { label:'Spécialisation', key:'specialization', ph:'Chirurgie dentaire', type:'text' },
-                  ].map(f => (
-                    <div key={f.key} style={{ gridColumn: !isMobile && f.key === 'specialization' ? '1 / -1' : undefined }}>
-                      <label style={{ display:'block', fontSize:12, fontWeight:700, color:'#334155', marginBottom:6 }}>{f.label}</label>
-                      <input type={f.type} placeholder={f.ph} value={form[f.key]}
-                        onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}
-                        style={inp}
-                        onFocus={fieldFocus}
-                        onBlur={fieldBlur}/>
-                    </div>
-                  ))}
-                </div>
+            <form onSubmit={(e)=>{ e.preventDefault(); save(); }} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div style={{ display:'grid', gridTemplateColumns:isMobile ? '1fr' : '1fr 1fr', gap:10 }}>
+                {[
+                  { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
+                  { label:'Email *',        key:'email',     ph:'rakoto@cabinet.mg', type:'email' },
+                  { label:'Identifiant *',  key:'username',  ph:'rakotoj', type:'text' },
+                  { label:'Téléphone',      key:'phone',     ph:'034 XX XXX XX', type:'tel' },
+                  { label:'Spécialisation', key:'specialization', ph:'Chirurgie dentaire', type:'text', wide:true },
+                ].map(f => (
+                  <div key={f.key} style={{ gridColumn: !isMobile && f.wide ? '1/-1' : undefined }}>
+                    <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>{f.label}</label>
+                    <input
+                      type={f.type}
+                      placeholder={f.ph}
+                      value={form[f.key]}
+                      onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}
+                      style={inp}
+                      onFocus={fieldFocus}
+                      onBlur={fieldBlur}
+                      required={['full_name','email','username'].includes(f.key)}
+                    />
+                  </div>
+                ))}
               </div>
 
-              {/* Rôle */}
-              <div style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:14, padding:isMobile ? 14 : 18 }}>
-                <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:12, marginBottom:14 }}>
-                  <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', textTransform:'uppercase', letterSpacing:.7 }}>Rôle</div>
-                  <div style={{ fontSize:11, color:'#64748B' }}>Choix obligatoire</div>
-                </div>
-                <div role="radiogroup" aria-label="Rôle utilisateur" style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:10 }}>
+              <div>
+                <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Rôle *</label>
+                <div role="radiogroup" aria-label="Rôle utilisateur" style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:6 }}>
                   {ROLES.map(r => {
                     const Icon = r.icon;
                     const selected = form.role === r.value;
                     return (
-                      <button key={r.value} onClick={()=>setForm(p=>({...p,role:r.value}))} type="button" role="radio" aria-checked={selected}
-                        style={{ minHeight:76, padding:'12px 13px', borderRadius:12, border:`1.5px solid ${selected ? r.color : '#E2E8F0'}`, background: selected ? r.color + '10' : '#FFFFFF', cursor:'pointer', display:'flex', alignItems:'center', gap:12, color:'#0F172A', textAlign:'left', transition:'border-color .18s ease, background .18s ease, box-shadow .18s ease', boxShadow:selected ? `0 0 0 3px ${r.color}18` : 'none' }}>
-                        <span style={{ width:36, height:36, borderRadius:10, background:r.color + '14', color:r.color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                          <Icon size={18}/>
-                        </span>
-                        <span style={{ flex:1, minWidth:0 }}>
-                          <span style={{ display:'block', fontSize:13, fontWeight:800, color:selected ? r.color : '#0F172A' }}>{r.label}</span>
-                          <span style={{ display:'block', fontSize:11, color:'#64748B', marginTop:2, lineHeight:1.35 }}>{r.desc}</span>
-                        </span>
-                        <span style={{ width:20, height:20, borderRadius:'50%', border:`1.5px solid ${selected ? r.color : '#CBD5E1'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, background:selected ? r.color : '#FFFFFF' }}>
-                          {selected && <CheckCircle size={13} color="#FFFFFF"/>}
-                        </span>
+                      <button
+                        key={r.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={()=>setForm(p=>({...p,role:r.value}))}
+                        style={{ padding:'8px 6px', minHeight:78, borderRadius:10, border:`2px solid ${selected ? r.color : '#E2E8F0'}`, background:selected ? r.bg : '#fff', cursor:'pointer', fontSize:11, fontWeight:700, color:selected ? r.color : '#475569', transition:'all .15s', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:5 }}
+                      >
+                        <Icon size={18}/>
+                        {r.label}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Mot de passe */}
-              <div style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:14, padding:isMobile ? 14 : 18 }}>
-                <div style={{ fontSize:12, fontWeight:800, color:'#0F172A', textTransform:'uppercase', letterSpacing:.7, marginBottom:14 }}>Accès</div>
-                <label style={{ display:'block', fontSize:12, fontWeight:700, color:'#334155', marginBottom:6 }}>Mot de passe *</label>
-                <div style={{ position:'relative', maxWidth:isMobile ? '100%' : 340 }}>
-                  <input type={showPwd ? 'text' : 'password'} placeholder="Ex: Cabinet@2026" value={form.password}
+              <div>
+                <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Mot de passe *</label>
+                <div style={{ position:'relative' }}>
+                  <input
+                    type={showPwd ? 'text' : 'password'}
+                    placeholder="Ex: Cabinet@2026"
+                    value={form.password}
                     onChange={e=>setForm(p=>({...p,password:e.target.value}))}
-                    style={{ ...inp, paddingRight:44 }}
+                    style={{ ...inp, paddingRight:40 }}
                     onFocus={fieldFocus}
-                    onBlur={fieldBlur}/>
+                    onBlur={fieldBlur}
+                    required
+                  />
                   <button type="button" onClick={()=>setShowPwd(s=>!s)} aria-label={showPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                    style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', width:30, height:30, borderRadius:8, background:'#F8FAFC', border:'1px solid #E2E8F0', cursor:'pointer', color:'#64748B', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                    style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8', display:'flex', padding:3 }}>
                     {showPwd ? <EyeOff size={15}/> : <Eye size={15}/>}
                   </button>
                 </div>
-                <div style={{ fontSize:11, color:'#64748B', marginTop:7, lineHeight:1.45 }}>
+                <div style={{ fontSize:11, color:'#64748B', marginTop:5 }}>
                   10 caractères minimum, avec majuscule, minuscule, chiffre et symbole.
                 </div>
               </div>
 
-            </div>
-
-            {/* Boutons */}
-            <div style={{ display:'flex', gap:10, padding:isMobile ? '14px 18px calc(14px + env(safe-area-inset-bottom))' : '16px 26px', borderTop:'1px solid #E2E8F0', background:'#fff', flexShrink:0, boxShadow:'0 -12px 28px rgba(15,23,42,.05)' }}>
-              <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:11, border:'1.5px solid #D7DEE8', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, color:'#475569' }}>Annuler</button>
-              <button onClick={save} disabled={saving}
-                style={{ flex:2, padding:'11px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:800, opacity:saving?.7:1, boxShadow:`0 8px 20px ${T}28` }}>
-                {saving ? 'Création...' : 'Créer l\'utilisateur'}
-              </button>
-            </div>
+              <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
+                <button type="button" onClick={()=>setModal(false)} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+                <button type="submit" disabled={saving} style={{ padding:'9px 22px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:saving?'not-allowed':'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:saving?.7:1 }}>
+                  <Plus size={14}/>{saving ? 'Création...' : "Créer l'utilisateur"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
