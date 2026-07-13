@@ -145,12 +145,36 @@ const fmt   = v => new Intl.NumberFormat('fr-MG').format(v||0)+' Ar';
 const fdate = d => new Date(d).toLocaleDateString('fr-FR');
 
 /* ── Modal ── */
+const modalOverlayStyle = {
+  position:'fixed',
+  inset:0,
+  width:'100vw',
+  minHeight:'100dvh',
+  zIndex:5000,
+  background:'rgba(15,23,42,.55)',
+  backdropFilter:'blur(8px)',
+  WebkitBackdropFilter:'blur(8px)',
+  overflowY:'auto',
+  padding:'80px 16px 32px',
+  boxSizing:'border-box',
+};
+
+const getModalOverlayStyle = () => {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return modalOverlayStyle;
+  const sidebar = document.querySelector('.dpm-sidebar-desktop');
+  const sidebarWidth = sidebar && window.innerWidth >= 768 ? sidebar.getBoundingClientRect().width : 0;
+  return {
+    ...modalOverlayStyle,
+    paddingLeft: sidebarWidth ? sidebarWidth + 16 : 16,
+  };
+};
+
 const Modal = ({open,onClose,title,children,maxW=560}) => {
   if(!open) return null;
   if(typeof document === 'undefined') return null;
 
   const modal = (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,width:'100vw',minHeight:'100dvh',zIndex:5000,background:'rgba(15,23,42,.55)',backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',overflowY:'auto',padding:'80px 16px 32px',boxSizing:'border-box'}}>
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={getModalOverlayStyle()}>
       <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box'}}>
         <button onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
           <X size={15}/>
