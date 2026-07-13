@@ -167,8 +167,8 @@ export default function ClinicUsersTab() {
       {/* Modal ajout */}
       {modal && (
         <div onClick={e=>e.target===e.currentTarget&&setModal(false)}
-          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(10,16,30,.65)', backdropFilter:'blur(4px)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding: isMobile ? 0 : 16 }}>
-          <div style={{ background:'#fff', borderRadius: isMobile ? '20px 20px 0 0' : 20, width:'100%', maxWidth:480, maxHeight:'92vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
+          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(10,16,30,.65)', backdropFilter:'blur(4px)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding: isMobile ? 0 : 16, overflowY:'auto', overscrollBehavior:'contain' }}>
+          <div style={{ background:'#fff', borderRadius: isMobile ? '20px 20px 0 0' : 20, width:'100%', maxWidth:480, maxHeight: isMobile ? '88dvh' : '92dvh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
 
             {/* Header modal */}
             <div style={{ padding:'18px 22px', background:`linear-gradient(135deg,${T},#0A5F6A)`, borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -178,7 +178,7 @@ export default function ClinicUsersTab() {
               </button>
             </div>
 
-            <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
+            <div style={{ padding:'20px 22px calc(20px + env(safe-area-inset-bottom))', display:'flex', flexDirection:'column', gap:14, overflowY:'auto', WebkitOverflowScrolling:'touch', overscrollBehavior:'contain', minHeight:0 }}>
               {/* Formulaire */}
               {[
                 { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
