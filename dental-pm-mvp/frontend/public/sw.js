@@ -1,6 +1,6 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
 // Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
-const BUILD_TIME = '2026-05-28-pwa-vite-assets-1';
+const BUILD_TIME = '2026-07-13-api-fetch-fallback-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
@@ -62,7 +62,16 @@ self.addEventListener('fetch', e => {
   // API same-origin → toujours réseau, jamais de cache.
   // En cas d'échec réseau, ne pas retourner un faux JSON applicatif.
   if (url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(e.request));
+    e.respondWith(
+      fetch(e.request).catch(() => new Response(JSON.stringify({
+        error: 'Connexion au serveur impossible',
+        code: 'NETWORK_ERROR'
+      }), {
+        status: 503,
+        statusText: 'Service Unavailable',
+        headers: { 'Content-Type': 'application/json' }
+      }))
+    );
     return;
   }
 
