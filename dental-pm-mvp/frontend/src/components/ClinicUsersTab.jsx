@@ -21,6 +21,7 @@ const ROLES = [
 const ROLE_LABELS = Object.fromEntries(ROLES.map(r => [r.value, r]));
 const inp = { width:'100%', padding:'10px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box' };
 const EMPTY = { full_name:'', email:'', username:'', password:'', role:'DENTIST', phone:'', specialization:'' };
+const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
 
 export default function ClinicUsersTab() {
   const { isMobile } = useResponsive();
@@ -45,6 +46,9 @@ export default function ClinicUsersTab() {
   const save = async () => {
     if (!form.full_name || !form.email || !form.username || !form.password) {
       toast.error('Tous les champs obligatoires doivent être remplis'); return;
+    }
+    if (!strongPassword.test(form.password)) {
+      toast.error('Mot de passe: 10 caractères minimum avec majuscule, minuscule, chiffre et symbole'); return;
     }
     setSaving(true);
     try {
@@ -210,7 +214,7 @@ export default function ClinicUsersTab() {
               <div>
                 <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Mot de passe *</label>
                 <div style={{ position:'relative' }}>
-                  <input type={showPwd ? 'text' : 'password'} placeholder="Minimum 6 caractères" value={form.password}
+                  <input type={showPwd ? 'text' : 'password'} placeholder="Ex: Cabinet@2026" value={form.password}
                     onChange={e=>setForm(p=>({...p,password:e.target.value}))}
                     style={{ ...inp, paddingRight:40 }}
                     onFocus={e=>{e.target.style.borderColor=T; e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
@@ -219,6 +223,9 @@ export default function ClinicUsersTab() {
                     style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8' }}>
                     {showPwd ? <EyeOff size={15}/> : <Eye size={15}/>}
                   </button>
+                </div>
+                <div style={{ fontSize:11, color:'#64748B', marginTop:5 }}>
+                  10 caractères minimum, avec majuscule, minuscule, chiffre et symbole.
                 </div>
               </div>
 
