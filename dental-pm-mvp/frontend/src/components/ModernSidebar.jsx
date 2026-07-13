@@ -120,7 +120,7 @@ const LogoCSS = () => <style>{`
 const DentalLogo = ({ size=36 }) => (
   <div style={{ width:size, height:size, borderRadius:'50%', overflow:'hidden', flexShrink:0, display:'block',
     boxShadow: theme.shadow }}>
-    <img src="/fix-logo.jpeg" alt="DPM"
+    <img src="/logfix.jpeg" alt="DPM"
       style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
   </div>
 )

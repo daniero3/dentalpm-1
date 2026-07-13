@@ -38,7 +38,7 @@ const LogoAnim = () => (
   <div className="login-logo-orbit" style={{ width:104, height:104, margin:'0 auto 20px', position:'relative' }}>
     <div className="login-logo-pulse" style={{ width:104, height:104, borderRadius:'50%', overflow:'hidden', flexShrink:0,
         boxShadow:'0 0 0 6px rgba(13,122,135,.12), 0 18px 42px rgba(13,122,135,.26)', position:'relative', zIndex:2 }}>
-      <img src="/fix-logo.jpeg" alt="DPM Madagascar"
+      <img src="/logfix.jpeg" alt="DPM Madagascar"
         style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
     </div>
     <div style={{ position:'absolute', right:-2, bottom:8, width:28, height:28, borderRadius:'50%', background:'#10B981', border:'4px solid #fff', display:'flex', alignItems:'center', justifyContent:'center', zIndex:3, boxShadow:'0 8px 18px rgba(16,185,129,.28)' }}>
@@ -49,7 +49,7 @@ const LogoAnim = () => (
 
 const DentalLogo = ({ size = 32 }) => (
   <div style={{ width:size, height:size, borderRadius:'50%', overflow:'hidden', display:'block' }}>
-    <img src="/fix-logo.jpeg" alt="DPM Madagascar"
+    <img src="/logfix.jpeg" alt="DPM Madagascar"
       style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'center', display:'block' }}/>
   </div>
 );

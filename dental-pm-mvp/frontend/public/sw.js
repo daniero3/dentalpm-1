@@ -1,12 +1,13 @@
 // ── DentalPM Service Worker — Cache Busting System ───────────────────────────
 // Version manuelle : changer cette valeur force le navigateur à installer le nouveau SW.
-const BUILD_TIME = '2026-07-13-api-fetch-fallback-1';
+const BUILD_TIME = '2026-07-13-logfix-logo-refresh-1';
 const CACHE      = `dentalpm-${BUILD_TIME}`;
 
 const STATIC = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/logfix.jpeg',
   '/icon-192x192.png',
   '/icon-512x512.png',
 ];

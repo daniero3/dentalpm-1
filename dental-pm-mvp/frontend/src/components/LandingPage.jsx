@@ -223,7 +223,7 @@ const Logo = ({ size=36, glow=false }) => (
       : '0 3px 10px rgba(0,0,0,.22)',
   }}>
     <img
-      src="/fix-logo.jpeg"
+      src="/logfix.jpeg"
       alt="DPM Madagascar"
       width={size}
       height={size}

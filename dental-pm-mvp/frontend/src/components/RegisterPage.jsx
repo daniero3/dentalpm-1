@@ -149,7 +149,7 @@ export default function RegisterPage() {
 
         {/* Logo + titre */}
         <div style={{ textAlign:'center', marginBottom:28 }}>
-          <img className="premium-logo" src="/fix-logo.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', marginBottom:14 }}/>
+          <img className="premium-logo" src="/logfix.jpeg" alt="DPM" width={64} height={64} style={{ borderRadius:'50%', objectFit:'cover', marginBottom:14 }}/>
           <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:24, color:'#0F172A', margin:'0 0 4px' }}>Créer votre cabinet</h1>
           <p style={{ color:'#64748B', fontSize:14, margin:0 }}>Démarrer mon essai gratuit</p>
         </div>
