@@ -178,7 +178,7 @@ export default function ClinicUsersTab() {
               </button>
             </div>
 
-            <div style={{ padding:'20px 22px calc(20px + env(safe-area-inset-bottom))', display:'flex', flexDirection:'column', gap:14, overflowY:'auto', WebkitOverflowScrolling:'touch', overscrollBehavior:'contain', minHeight:0 }}>
+            <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14, overflowY:'auto', WebkitOverflowScrolling:'touch', overscrollBehavior:'contain', minHeight:0, flex:'1 1 auto' }}>
               {/* Formulaire */}
               {[
                 { label:'Nom complet *', key:'full_name', ph:'Dr. Rakoto Jean', type:'text' },
@@ -229,14 +229,15 @@ export default function ClinicUsersTab() {
                 </div>
               </div>
 
-              {/* Boutons */}
-              <div style={{ display:'flex', gap:10, paddingTop:6 }}>
-                <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-                <button onClick={save} disabled={saving}
-                  style={{ flex:2, padding:'11px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, opacity:saving?.7:1 }}>
-                  {saving ? 'Création...' : 'Créer l\'utilisateur'}
-                </button>
-              </div>
+            </div>
+
+            {/* Boutons */}
+            <div style={{ display:'flex', gap:10, padding:'14px 22px calc(14px + env(safe-area-inset-bottom))', borderTop:'1px solid #E2E8F0', background:'#fff', flexShrink:0 }}>
+              <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+              <button onClick={save} disabled={saving}
+                style={{ flex:2, padding:'11px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, opacity:saving?.7:1 }}>
+                {saving ? 'Création...' : 'Créer l\'utilisateur'}
+              </button>
             </div>
           </div>
         </div>
