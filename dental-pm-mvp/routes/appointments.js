@@ -36,7 +36,7 @@ const APPOINTMENT_TYPES    = ['CONSULTATION','TREATMENT','FOLLOW_UP','EMERGENCY'
 
 const isSuperAdmin     = (req) => req.user?.role === 'SUPER_ADMIN';
 const getClinicId      = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId        = (req) => req.user?.id   || req.user?.dataValues?.id || null;
+const getUserId        = (req) => req.user?.id   || req.user?.dataValues?.id || req.user?.userId || null;
 const normalizeDateOnly = (v)  => v ? String(v).split('T')[0] : v;
 
 const normalizeTimeHHMM = (v) => {
@@ -196,6 +196,30 @@ const resolveDentist = async (row, clinicId, req, transaction) => {
   return null;
 };
 
+const resolveAppointmentDentistId = async (dentistId, clinicId, req, transaction = null) => {
+  const requestedDentistId = normalizeText(dentistId);
+  const currentUserId = getUserId(req);
+
+  if (requestedDentistId) {
+    const dentist = await User.findOne({
+      where: {
+        id: requestedDentistId,
+        ...(clinicId ? { clinic_id: clinicId } : {}),
+        role: { [Op.in]: ['DENTIST', 'ADMIN'] }
+      },
+      attributes: ['id'],
+      transaction
+    });
+    return dentist?.id || null;
+  }
+
+  if (req.user?.role === 'DENTIST' && currentUserId) {
+    return currentUserId;
+  }
+
+  return null;
+};
+
 const timeToMinutes = (v) => {
   const hhmm = normalizeTimeHHMM(v);
   const [h, m] = hhmm.split(':').map(Number);
@@ -295,7 +319,7 @@ router.post('/import-csv', upload.single('file'), async (req, res) => {
 
         const payload = {
           patient_id: patient.id,
-          dentist_id,
+          ...(dentist_id ? { dentist_id } : {}),
           clinic_id: clinicId,
           appointment_date: appointmentDate,
           start_time: normalizeTimeForDb(startTime),
@@ -315,6 +339,9 @@ router.post('/import-csv', upload.single('file'), async (req, res) => {
           await existing.update(payload, { transaction });
           result.updated += 1;
         } else {
+          if (!dentist_id) {
+            throw new Error('Dentiste requis ou introuvable dans ce cabinet');
+          }
           await Appointment.create(payload, { transaction });
           result.inserted += 1;
         }
@@ -442,10 +469,11 @@ router.post('/', [
 
     const { patient_id, appointment_date, start_time, end_time, appointment_type, reason, notes, chair_number } = req.body;
     const clinicId = getClinicId(req);
-    const userId   = getUserId(req);
 
-    let dentist_id = req.body.dentist_id || null;
-    if (!dentist_id && req.user?.role === 'DENTIST') dentist_id = userId;
+    const dentist_id = await resolveAppointmentDentistId(req.body.dentist_id, clinicId, req);
+    if (!dentist_id) {
+      return res.status(400).json({ error:'Dentiste requis ou introuvable dans ce cabinet' });
+    }
 
     // Vérifier patient
     const patientWhere = isSuperAdmin(req) ? { id: patient_id } : { id: patient_id, ...(clinicId ? { clinic_id: clinicId } : {}) };

@@ -264,6 +264,7 @@ const AppointmentManagement = () => {
   const { user } = useAuth();
   const [appts,    setAppts]    = useState([]);
   const [patients, setPatients] = useState([]);
+  const [dentists, setDentists] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [isOpen,   setIsOpen]   = useState(false);
   const [isDelOpen,setIsDelOpen]= useState(false);
@@ -293,6 +294,10 @@ const AppointmentManagement = () => {
   const inp = { width:'100%', padding:'9px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'inherit', outline:'none', transition:'border-color .2s' };
   const fi  = e => e.target.style.borderColor = '#0D7A87';
   const bi  = e => e.target.style.borderColor = '#E2E8F0';
+  const defaultDentistId = () => {
+    if (user?.role === 'DENTIST') return user.id;
+    return dentists[0]?.id || '';
+  };
 
   /* Plage de dates selon viewMode */
   const dateRange = useCallback(() => {
@@ -375,12 +380,27 @@ const AppointmentManagement = () => {
       toast.error('Erreur recherche patient');
     }
   };
+
+  const fetchDentists = async () => {
+    try {
+      const r = await axios.get(`${API}/auth/clinic-users`, authH());
+      const list = (r.data.users || [])
+        .filter(u => u.role === 'DENTIST' && u.is_active !== false);
+      setDentists(list);
+      return list;
+    } catch (e) {
+      console.error('fetchDentists error:', e?.response?.data || e.message);
+      toast.error('Erreur chargement dentistes');
+      return [];
+    }
+  };
   
   // useEffect(() => { fetchAppts(); fetchPatients(); }, [fetchAppts]);
 
   useEffect(() => {
     fetchAppts();
     fetchPatients();
+    fetchDentists();
 
     const refreshPatientsOnFocus = () => {
       fetchPatients();
@@ -397,7 +417,7 @@ const AppointmentManagement = () => {
 
   const resetForm = () => setForm({
     patient_id: '',
-    dentist_id: user?.role === 'DENTIST' ? user.id : '',
+    dentist_id: defaultDentistId(),
     appointment_date: selDate,
     start_time: '09:00',
     end_time: '10:00',
@@ -410,10 +430,19 @@ const AppointmentManagement = () => {
 
   const openCreate = async () => {
     setEditA(null);
-    resetForm();
     setPatientSearch('');
     setIsOpen(true);
-    await fetchPatients();
+    const [, loadedDentists] = await Promise.all([fetchPatients(), fetchDentists()]);
+    setForm({
+      patient_id: '',
+      dentist_id: user?.role === 'DENTIST' ? user.id : (loadedDentists[0]?.id || ''),
+      appointment_date: selDate,
+      start_time: '09:00',
+      end_time: '10:00',
+      appointment_type: 'CONSULTATION',
+      reason: '',
+      notes: ''
+    });
   };
   
   const openEdit   = a  => { setEditA(a); setForm({ patient_id:a.patient_id, dentist_id:a.dentist_id||'', appointment_date:a.appointment_date, start_time:a.start_time, end_time:a.end_time, appointment_type:a.appointment_type, reason:a.reason||'', notes:a.notes||'' }); setIsOpen(true); };
@@ -439,8 +468,9 @@ const AppointmentManagement = () => {
     const sm = form.start_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
     const em = form.end_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
     if (em <= sm) { toast.error("L'heure de fin doit être après le début"); return; }
+    if (!form.dentist_id) { toast.error('Veuillez sélectionner un dentiste'); return; }
     try {
-      const p = { ...form }; if (!p.dentist_id) delete p.dentist_id;
+      const p = { ...form };
       if (editA) await axios.put(`${API}/appointments/${editA.id}`, p, authH());
       else       await axios.post(`${API}/appointments`, p, authH());
       toast.success(editA ? 'RDV modifié !' : 'RDV créé !');
@@ -1572,6 +1602,30 @@ const AppointmentManagement = () => {
               onChange={() => {}}
               required
             />
+          </div>
+
+          {/* Dentiste */}
+          <div>
+            <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Dentiste *</label>
+            <select
+              value={form.dentist_id}
+              onChange={e=>setForm({...form,dentist_id:e.target.value})}
+              style={inp}
+              onFocus={fi}
+              onBlur={bi}
+              required
+              disabled={user?.role === 'DENTIST'}
+            >
+              <option value="">Sélectionner un dentiste</option>
+              {dentists.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.full_name || d.username || d.email}
+                </option>
+              ))}
+              {user?.role === 'DENTIST' && !dentists.some(d => d.id === user.id) && (
+                <option value={user.id}>{user.full_name || user.username || user.email || 'Moi'}</option>
+              )}
+            </select>
           </div>
 
           {/* Type */}

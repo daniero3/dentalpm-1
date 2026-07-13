@@ -43,7 +43,7 @@ const Appointment = sequelize.define('appointments', {
 
   dentist_id: {
     type: DataTypes.UUID,
-    allowNull: true
+    allowNull: false
   },
 
   clinic_id: {
