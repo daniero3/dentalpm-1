@@ -9,6 +9,27 @@ const { Op } = require('sequelize');
 
 const router = express.Router();
 
+const normalizeOptionalText = (value) => {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  return text === '' ? null : text;
+};
+
+const normalizeRequiredText = (value) => {
+  if (value === undefined || value === null) return '';
+  return String(value).trim();
+};
+
+const formatSequelizeError = (error) => {
+  if (error?.name === 'SequelizeValidationError' && Array.isArray(error.errors)) {
+    return error.errors.map(e => ({ field: e.path, message: e.message }));
+  }
+  if (error?.name === 'SequelizeUniqueConstraintError' && Array.isArray(error.errors)) {
+    return error.errors.map(e => ({ field: e.path, message: e.message }));
+  }
+  return error?.message || 'Erreur serveur';
+};
+
 // ── Register ──────────────────────────────────────────────────────────────────
 router.post('/register', [
   body('username').isLength({ min:3, max:50 }).matches(/^[a-zA-Z0-9_-]+$/),
@@ -508,7 +529,13 @@ router.post('/clinic-users', authenticateToken, async (req, res) => {
       });
     }
 
-    const { full_name, email, username, password, role = 'DENTIST', phone, specialization } = req.body;
+    const full_name = normalizeRequiredText(req.body.full_name);
+    const email = normalizeRequiredText(req.body.email).toLowerCase();
+    const username = normalizeRequiredText(req.body.username);
+    const password = req.body.password || '';
+    const role = req.body.role || 'DENTIST';
+    const phone = normalizeOptionalText(req.body.phone);
+    const specialization = normalizeOptionalText(req.body.specialization);
     if (!full_name || !email || !username || !password) {
       return res.status(400).json({ error: 'Champs requis: full_name, email, username, password' });
     }
@@ -536,6 +563,9 @@ router.post('/clinic-users', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Create clinic user error:', error);
+    if (['SequelizeValidationError', 'SequelizeUniqueConstraintError'].includes(error?.name)) {
+      return res.status(400).json({ error: 'Données utilisateur invalides', details: formatSequelizeError(error) });
+    }
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });

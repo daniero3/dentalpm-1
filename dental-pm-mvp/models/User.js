@@ -57,7 +57,7 @@ const User = sequelize.define('users', {
     type: DataTypes.STRING(20),
     allowNull: true,
     validate: {
-      is: /^\+261\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/ // Madagascar phone format
+      is: /^(\+261|0)\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{2}$/ // Madagascar phone format
     }
   },
   specialization: {
