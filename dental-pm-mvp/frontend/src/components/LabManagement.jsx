@@ -283,7 +283,7 @@ const LabManagement = () => {
   );
 
   return(
-    <div style={{maxWidth: 1100,margin:'0 auto',paddingBottom:48}}>
+    <div style={{width:'100%',maxWidth: 1400,margin:'0 auto',padding:'0 clamp(12px,1.5vw,24px) 48px'}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* En-tête */}
@@ -470,7 +470,7 @@ const LabManagement = () => {
       )}
 
       {/* ══ MODAL NOUVELLE COMMANDE ══ */}
-      <Modal open={isAddOpen} onClose={()=>{setIsAddOpen(false);setSelLab(null);}} title="Nouvelle commande labo" maxW={560}>
+      <Modal open={isAddOpen} onClose={()=>{setIsAddOpen(false);setSelLab(null);}} title="Nouvelle commande labo" maxW={820}>
         <div style={{display:'flex',flexDirection:'column',gap:13}}>
           {/* Sélection labo partenaire */}
           <div style={{background:'#F0FDFE',border:'1.5px solid #7DD3DA',borderRadius:13,padding:'13px 15px'}}>

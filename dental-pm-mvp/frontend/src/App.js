@@ -489,7 +489,7 @@ const MainLayout = ({ children }) => {
           background:'var(--bg-base)',
           WebkitOverflowScrolling:'touch',
         }}>
-          <div className="dpm-content-shell" style={{ maxWidth:1280, margin:'0 auto', width:'100%' }}>
+          <div className="dpm-content-shell" style={{ maxWidth:1440, margin:'0 auto', width:'100%' }}>
             <PageTransition>{children}</PageTransition>
           </div>
         </main>
