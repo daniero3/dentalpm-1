@@ -17,7 +17,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 700 }) => {
     <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth: maxWidth||560, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button type="button" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
@@ -159,7 +159,7 @@ const SuperAdminClinics = () => {
                       </span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => handleToggleActive(clinic)}
+	                  <button type="button" aria-label={clinic.is_active ? 'Désactiver le cabinet' : 'Activer le cabinet'} onClick={() => handleToggleActive(clinic)}
                     style={{ padding:6, borderRadius:8, border:'none', background:'none', cursor:'pointer', color: clinic.is_active ? '#22c55e' : '#94A3B8' }}
                     title={clinic.is_active ? 'Désactiver' : 'Activer'}>
                     <Power size={16} />
@@ -194,7 +194,7 @@ const SuperAdminClinics = () => {
           <p style={{ fontSize:13, fontWeight:700, color:'#475569', borderBottom:'1px solid #F1F5F9', paddingBottom:8 }}>Informations du cabinet</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div><Label>Nom du cabinet *</Label><input name="name" value={formData.name} onChange={handleChange} placeholder="Cabinet Dentaire..." style={inputStyle} /></div>
-            <div><Label>Ville</Label><input name="city" value={formData.city} onChange={handleChange} style={inputStyle} /></div>
+            <div><Label>Ville</Label><input aria-label="Ville du cabinet" name="city" value={formData.city} onChange={handleChange} style={inputStyle} /></div>
           </div>
           <div><Label>Adresse *</Label><input name="address" value={formData.address} onChange={handleChange} placeholder="123 Rue Analakely" style={inputStyle} /></div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
@@ -202,8 +202,8 @@ const SuperAdminClinics = () => {
             <div><Label>Email *</Label><input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="contact@cabinet.mg" style={inputStyle} /></div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <div><Label>Numéro NIF</Label><input name="nif_number" value={formData.nif_number} onChange={handleChange} style={inputStyle} /></div>
-            <div><Label>Numéro STAT</Label><input name="stat_number" value={formData.stat_number} onChange={handleChange} style={inputStyle} /></div>
+            <div><Label>Numéro NIF</Label><input aria-label="Numéro NIF du cabinet" name="nif_number" value={formData.nif_number} onChange={handleChange} style={inputStyle} /></div>
+            <div><Label>Numéro STAT</Label><input aria-label="Numéro STAT du cabinet" name="stat_number" value={formData.stat_number} onChange={handleChange} style={inputStyle} /></div>
           </div>
           <p style={{ fontSize:13, fontWeight:700, color:'#475569', borderBottom:'1px solid #F1F5F9', paddingBottom:8, paddingTop:8 }}>Administrateur du cabinet</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
@@ -211,10 +211,10 @@ const SuperAdminClinics = () => {
             <div><Label>Nom *</Label><input name="admin_last_name" value={formData.admin_last_name} onChange={handleChange} placeholder="Rakoto" style={inputStyle} /></div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <div><Label>Nom d'utilisateur *</Label><input name="admin_username" value={formData.admin_username} onChange={handleChange} style={inputStyle} /></div>
-            <div><Label>Email admin</Label><input name="admin_email" type="email" value={formData.admin_email} onChange={handleChange} style={inputStyle} /></div>
+            <div><Label>Nom d'utilisateur *</Label><input aria-label="Nom d’utilisateur administrateur" name="admin_username" value={formData.admin_username} onChange={handleChange} style={inputStyle} /></div>
+            <div><Label>Email admin</Label><input aria-label="Email administrateur" name="admin_email" type="email" value={formData.admin_email} onChange={handleChange} style={inputStyle} /></div>
           </div>
-          <div><Label>Mot de passe * (min. 6 caractères)</Label><input name="admin_password" type="password" value={formData.admin_password} onChange={handleChange} style={inputStyle} /></div>
+          <div><Label>Mot de passe * (min. 6 caractères)</Label><input aria-label="Mot de passe administrateur" name="admin_password" type="password" value={formData.admin_password} onChange={handleChange} style={inputStyle} /></div>
         </div>
         <div style={{ display:'flex', justifyContent:'flex-end', gap:8, marginTop:20, paddingTop:16, borderTop:'1px solid #F1F5F9' }}>
           <Button variant="outline" onClick={() => setShowCreateDialog(false)} disabled={creating}>Annuler</Button>

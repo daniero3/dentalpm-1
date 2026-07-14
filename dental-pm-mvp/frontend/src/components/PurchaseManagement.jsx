@@ -104,7 +104,7 @@ const Modal = ({ open, onClose, title, children, maxW = 680 }) => {
     <div onClick={e => e.target === e.currentTarget && onClose()}
       style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff', borderRadius:20, padding:28, width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button type="button" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
           <X size={15}/>
         </button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
@@ -417,7 +417,7 @@ const PurchaseManagement = () => {
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                       <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:17, color:'#0F172A' }}>{fmt(p.total_mga)}</div>
                       <div style={{ display:'flex', gap:7 }}>
-                        <button type="button" onClick={() => handlePrint(p)} style={{ padding:'7px 11px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center' }}>
+                        <button type="button" aria-label="Imprimer le bon de commande" onClick={() => handlePrint(p)} style={{ padding:'7px 11px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center' }}>
                           <Printer size={13} color="#64748B"/>
                         </button>
                         {p.status === 'DRAFT' && (
@@ -624,14 +624,14 @@ const PurchaseManagement = () => {
             <>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 160px', gap:12 }}>
                 <div>
-                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Libellé *</label>
-                  <select value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value, expense_label:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
+	                  <label htmlFor="purchase-expense-category" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Libellé *</label>
+	                  <select id="purchase-expense-category" value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value, expense_label:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
                     {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date</label>
-                  <input type="date" value={expense.expense_date} onChange={e => setExpense(p => ({ ...p, expense_date:e.target.value }))}
+	                  <label htmlFor="purchase-expense-date" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date</label>
+	                  <input id="purchase-expense-date" type="date" value={expense.expense_date} onChange={e => setExpense(p => ({ ...p, expense_date:e.target.value }))}
                     style={inp} onFocus={fi} onBlur={bi}/>
                 </div>
               </div>
@@ -655,8 +655,8 @@ const PurchaseManagement = () => {
           ) : (
             <>
               <div>
-                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fournisseur *</label>
-                <select value={selSup} onChange={e => setSelSup(e.target.value)} style={inp} onFocus={fi} onBlur={bi}>
+	                <label htmlFor="purchase-supplier" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fournisseur *</label>
+	                <select id="purchase-supplier" value={selSup} onChange={e => setSelSup(e.target.value)} style={inp} onFocus={fi} onBlur={bi}>
                   <option value="">Sélectionner un fournisseur...</option>
                   <optgroup label="── Mes fournisseurs ──">
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({TYPE_LABEL[s.type]||s.type})</option>)}
@@ -680,7 +680,7 @@ const PurchaseManagement = () => {
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                     {items.map((item, idx) => (
                       <div key={idx} style={{ display:'flex', gap:8, alignItems:'center', background:'#F8FAFC', borderRadius:11, padding:'10px 12px' }}>
-                        <select value={item.product_id} onChange={e => updateItem(idx, 'product_id', e.target.value)}
+	                        <select aria-label={`Produit de la ligne ${idx + 1}`} value={item.product_id} onChange={e => updateItem(idx, 'product_id', e.target.value)}
                           style={{ ...inp, flex:1 }} onFocus={fi} onBlur={bi}>
                           <option value="">Produit...</option>
                           {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
@@ -690,7 +690,7 @@ const PurchaseManagement = () => {
                         <input type="number" min="0" value={item.unit_price_mga} onChange={e => updateItem(idx,'unit_price_mga',parseFloat(e.target.value)||0)}
                           style={{ ...inp, width:110 }} placeholder="Prix Ar" onFocus={fi} onBlur={bi}/>
                         <span style={{ fontSize:12, color:'#0D7A87', fontWeight:700, whiteSpace:'nowrap', minWidth:90 }}>{fmt(item.qty*item.unit_price_mga)}</span>
-                        <button type="button" onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
+	                        <button type="button" aria-label={`Supprimer l’article ${idx + 1}`} onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
                       </div>
                     ))}
                     <div style={{ display:'flex', justifyContent:'flex-end', padding:'10px 12px', background:'#F0FDFE', borderRadius:11, border:'1px solid #7DD3DA' }}>
@@ -732,12 +732,12 @@ const PurchaseManagement = () => {
                   <div style={{ fontSize:11, color:'#64748B' }}>{item.sup_name} · {fmt(item.price)}/{item.unit}</div>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                  <button type="button" onClick={() => updateCartQty(item.id, item.qty-1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>−</button>
+	                <button type="button" aria-label={`Diminuer la quantité de ${item.name}`} onClick={() => updateCartQty(item.id, item.qty-1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>−</button>
                   <span style={{ fontWeight:700, fontSize:14, minWidth:20, textAlign:'center' }}>{item.qty}</span>
-                  <button type="button" onClick={() => updateCartQty(item.id, item.qty+1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>+</button>
+	                <button type="button" aria-label={`Augmenter la quantité de ${item.name}`} onClick={() => updateCartQty(item.id, item.qty+1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>+</button>
                 </div>
                 <div style={{ fontWeight:800, fontSize:13, color:'#0D7A87', whiteSpace:'nowrap' }}>{fmt(item.price*item.qty)}</div>
-                <button type="button" onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><X size={14}/></button>
+	                <button type="button" aria-label={`Retirer ${item.name} du panier`} onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><X size={14}/></button>
               </div>
             ))}
             <div style={{ background:'#F0FDFE', border:'1px solid #7DD3DA', borderRadius:12, padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>

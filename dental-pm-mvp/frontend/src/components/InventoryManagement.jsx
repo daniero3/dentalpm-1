@@ -53,7 +53,7 @@ const Modal = ({ open, onClose, title, children, maxW=520 }) => {
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff',borderRadius:20,padding:26,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
-        <button type="button" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',color:'#64748B' }}><X size={15}/></button>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',color:'#64748B' }}><X size={15}/></button>
         {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
@@ -164,7 +164,7 @@ const InventoryManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex',gap:8 }}>
-          <button type="button" onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
+          <button type="button" aria-label="Rafraîchir l’inventaire" onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
           <button type="button" onClick={()=>{setForm(emptyForm);setIsAdd(true);}}
@@ -216,9 +216,9 @@ const InventoryManagement = () => {
       <div style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'11px 16px',marginBottom:14,display:'flex',gap:10,flexWrap:'wrap',alignItems:'center' }}>
         <div style={{ display:'flex',alignItems:'center',gap:7,flex:1,minWidth:200 }}>
           <Search size={13} color="#94A3B8"/>
-          <input placeholder="Rechercher produit, SKU..." value={search} onChange={e=>setSearch(e.target.value)}
+          <input aria-label="Rechercher un produit" placeholder="Rechercher produit, SKU..." value={search} onChange={e=>setSearch(e.target.value)}
             style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1 }}/>
-          {search&&<button type="button" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
+          {search&&<button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5 }}>
           {['ALL',...Object.keys(CATS)].map(cat=>(
@@ -305,26 +305,26 @@ const InventoryManagement = () => {
               <input style={inp} value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})} onFocus={fi} onBlur={bi} placeholder="PIECE, BOX, ML..."/>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Catégorie</label>
-              <select style={inp} value={form.category} onChange={e=>setForm({...form,category:e.target.value})} onFocus={fi} onBlur={bi}>
+	              <label htmlFor="inventory-product-category" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Catégorie</label>
+	              <select id="inventory-product-category" style={inp} value={form.category} onChange={e=>setForm({...form,category:e.target.value})} onFocus={fi} onBlur={bi}>
                 {Object.entries(CATS).map(([v,l])=><option key={v} value={v}>{l}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix achat (Ar)</label>
-              <input style={inp} type="number" min="0" value={form.unit_cost_mga} onChange={e=>setForm({...form,unit_cost_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
+	              <label htmlFor="inventory-unit-cost" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix achat (Ar)</label>
+	              <input id="inventory-unit-cost" style={inp} type="number" min="0" value={form.unit_cost_mga} onChange={e=>setForm({...form,unit_cost_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix vente (Ar)</label>
-              <input style={inp} type="number" min="0" value={form.sale_price_mga} onChange={e=>setForm({...form,sale_price_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
+	              <label htmlFor="inventory-sale-price" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix vente (Ar)</label>
+	              <input id="inventory-sale-price" style={inp} type="number" min="0" value={form.sale_price_mga} onChange={e=>setForm({...form,sale_price_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock initial</label>
-              <input style={inp} type="number" min="0" value={form.current_qty} onChange={e=>setForm({...form,current_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
+	              <label htmlFor="inventory-initial-stock" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock initial</label>
+	              <input id="inventory-initial-stock" style={inp} type="number" min="0" value={form.current_qty} onChange={e=>setForm({...form,current_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock minimum</label>
-              <input style={inp} type="number" min="0" value={form.min_qty} onChange={e=>setForm({...form,min_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
+	              <label htmlFor="inventory-min-stock" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock minimum</label>
+	              <input id="inventory-min-stock" style={inp} type="number" min="0" value={form.min_qty} onChange={e=>setForm({...form,min_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
           </div>
           <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>

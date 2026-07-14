@@ -174,7 +174,7 @@ const Modal = ({open,onClose,title,children,maxW=560}) => {
   const modal = (
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={getModalOverlayStyle()}>
       <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box'}}>
-        <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
           <X size={15}/>
         </button>
         {title&&<h2 style={{fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28}}>{title}</h2>}
@@ -352,9 +352,9 @@ const LabManagement = () => {
           <div style={{background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'13px 18px',marginBottom:16,display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,flex:1,minWidth:180}}>
               <Search size={14} color="#94A3B8"/>
-              <input placeholder="Rechercher..." value={search} onChange={e=>setSearch(e.target.value)} style={{...inp,border:'none',background:'transparent',flex:1}}/>
+	              <input aria-label="Rechercher une commande labo" placeholder="Rechercher..." value={search} onChange={e=>setSearch(e.target.value)} style={{...inp,border:'none',background:'transparent',flex:1}}/>
             </div>
-            <select value={filter} onChange={e=>setFilter(e.target.value)} style={{...inp,width:'auto',minWidth:150}}>
+	            <select aria-label="Filtrer les commandes labo par statut" value={filter} onChange={e=>setFilter(e.target.value)} style={{...inp,width:'auto',minWidth:150}}>
               <option value="ALL">Tous les statuts</option>
               {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
             </select>
@@ -390,7 +390,7 @@ const LabManagement = () => {
                         <div style={{width:6,height:6,borderRadius:'50%',background:c.dot}}/>{c.label}
                       </span>
                       <button type="button" onClick={()=>{setSelOrder(o);setIsStatOpen(true);}} style={{padding:'6px 12px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#475569'}}>Statut</button>
-                      <button type="button" onClick={()=>openAuthenticatedPrint(`${API}/labs/orders/${o.id}/print`)} style={{padding:'6px 10px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer'}}>
+	                      <button type="button" aria-label="Imprimer la commande labo" onClick={()=>openAuthenticatedPrint(`${API}/labs/orders/${o.id}/print`)} style={{padding:'6px 10px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer'}}>
                         <Printer size={13} color="#64748B"/>
                       </button>
                     </div>
@@ -516,7 +516,7 @@ const LabManagement = () => {
                     <div style={{fontSize:11,color:'#64748B'}}>{selLab.zone}, {selLab.city} · {selLab.delai}</div>
                   </div>
                 </div>
-                <button type="button" onClick={()=>{setSelLab(null);setForm(f=>({...f,lab_name:''}));}} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><X size={14}/></button>
+	                <button type="button" aria-label="Retirer le laboratoire sélectionné" onClick={()=>{setSelLab(null);setForm(f=>({...f,lab_name:''}));}} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><X size={14}/></button>
               </div>
             ):(
               <>
@@ -540,7 +540,7 @@ const LabManagement = () => {
           {/* Patient */}
           <div>
             <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Patient *</label>
-            <select value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
+            <select aria-label="Patient de la commande labo" value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
               <option value="">Sélectionner un patient...</option>
               {patients.map(p=><option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
             </select>
@@ -548,13 +548,13 @@ const LabManagement = () => {
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div>
               <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Type de travail</label>
-              <select value={form.work_type} onChange={e=>setForm({...form,work_type:e.target.value,lab_cost_mga:''})} style={inp} onFocus={fi} onBlur={bi}>
+              <select aria-label="Type de travail labo" value={form.work_type} onChange={e=>setForm({...form,work_type:e.target.value,lab_cost_mga:''})} style={inp} onFocus={fi} onBlur={bi}>
                 {Object.entries(WORK_TYPES).map(([k,v])=><option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div>
               <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Date limite *</label>
-              <input type="date" value={form.due_date} onChange={e=>setForm({...form,due_date:e.target.value})} style={inp} onFocus={fi} onBlur={bi}/>
+              <input aria-label="Date limite de la commande labo" type="date" value={form.due_date} onChange={e=>setForm({...form,due_date:e.target.value})} style={inp} onFocus={fi} onBlur={bi}/>
             </div>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
