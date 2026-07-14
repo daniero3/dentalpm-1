@@ -27,6 +27,11 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,.08);
   --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
   --font-head: 'Plus Jakarta Sans', sans-serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
+  --motion-instant: 90ms;
+  --motion-fast: 140ms;
+  --motion-base: 180ms;
 }
 
 /* ── Page wrapper ── */
@@ -74,8 +79,10 @@
 }
 .dpm-filter-btn {
   padding: 5px 12px; border-radius: 99px; border: none; cursor: pointer;
-  font-size: 11px; font-weight: 600; transition: all .15s;
+  font-size: 11px; font-weight: 600;
+  transition: transform var(--motion-instant) var(--ease-press), background-color var(--motion-fast) ease, color var(--motion-fast) ease;
 }
+.dpm-filter-btn:active { transform: scale(0.97); }
 .dpm-filter-btn.active  { background: var(--teal); color: #fff; }
 .dpm-filter-btn.inactive{ background: #F1F5F9; color: var(--muted); }
 .dpm-filter-btn.inactive:hover { background: var(--teal-bg); color: var(--teal); }
@@ -84,9 +91,13 @@
 .dpm-card-list  { display: flex; flex-direction: column; gap: 10px; }
 .dpm-card-item  {
   background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--border);
-  padding: 16px 18px; transition: all .15s; cursor: default;
+  padding: 16px 18px;
+  transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) ease, border-color var(--motion-base) ease, background-color var(--motion-base) ease;
+  cursor: default;
 }
-.dpm-card-item:hover { box-shadow: var(--shadow-md); border-color: #CBD5E1; }
+@media (hover: hover) and (pointer: fine) {
+  .dpm-card-item:hover { box-shadow: var(--shadow-md); border-color: #CBD5E1; transform: translateY(-1px); }
+}
 
 /* ── Table ── */
 .dpm-table-wrap {
@@ -119,33 +130,41 @@
   background: linear-gradient(135deg, var(--teal), var(--teal2));
   color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: 700;
   display: inline-flex; align-items: center; gap: 7px;
-  box-shadow: 0 4px 14px rgba(13,122,135,.28); transition: all .2s;
+  box-shadow: 0 4px 14px rgba(13,122,135,.28);
+  transition: transform var(--motion-instant) var(--ease-press), box-shadow var(--motion-fast) ease, background-color var(--motion-fast) ease;
 }
 .dpm-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(13,122,135,.35); }
+.dpm-btn-primary:active { transform: scale(0.97); }
 .dpm-btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 .dpm-btn-secondary {
   padding: 8px 16px; border-radius: 10px; background: #fff;
   color: var(--muted); border: 1.5px solid var(--border); cursor: pointer;
-  font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
+  font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;
+  transition: transform var(--motion-instant) var(--ease-press), border-color var(--motion-fast) ease, color var(--motion-fast) ease, background-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
 }
 .dpm-btn-secondary:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
+.dpm-btn-secondary:active { transform: scale(0.97); }
 .dpm-btn-icon {
   width: 32px; height: 32px; border-radius: 8px; background: #fff;
   border: 1.5px solid var(--border); cursor: pointer; color: var(--muted);
-  display: inline-flex; align-items: center; justify-content: center; transition: all .15s;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform var(--motion-instant) var(--ease-press), border-color var(--motion-fast) ease, color var(--motion-fast) ease, background-color var(--motion-fast) ease;
 }
 .dpm-btn-icon:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-bg); }
+.dpm-btn-icon:active { transform: scale(0.94); }
 .dpm-btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: #FEE2E2; }
 
 /* ── Modal ── */
 .dpm-modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(15,23,42,.6); overflow-y: auto; padding: 40px 16px 32px;
+  backdrop-filter: blur(8px) saturate(130%);
 }
 .dpm-modal {
   background: #fff; border-radius: var(--radius-xl); padding: 26px 28px;
   width: 100%; margin: 0 auto; border: 1px solid var(--border);
   box-shadow: 0 32px 80px rgba(15,23,42,.22); position: relative;
+  animation: dpm-fadeup var(--motion-base) var(--ease-out) both;
 }
 .dpm-modal-title {
   font-family: var(--font-head); font-size: 17px; font-weight: 700;
@@ -154,9 +173,11 @@
 .dpm-modal-close {
   position: absolute; top: 14px; right: 14px; background: var(--surface);
   border: none; cursor: pointer; padding: 7px; border-radius: 8px;
-  display: flex; color: var(--muted); transition: all .15s;
+  display: flex; color: var(--muted);
+  transition: transform var(--motion-instant) var(--ease-press), background-color var(--motion-fast) ease, color var(--motion-fast) ease;
 }
 .dpm-modal-close:hover { background: #F1F5F9; color: var(--text); }
+.dpm-modal-close:active { transform: scale(0.94); }
 
 /* ── Form ── */
 .dpm-form-group { margin-bottom: 14px; }
@@ -164,7 +185,8 @@
 .dpm-input {
   width: 100%; padding: 9px 12px; border-radius: 10px;
   border: 1.5px solid var(--border); font-size: 13px; font-family: inherit;
-  background: #fff; box-sizing: border-box; outline: none; transition: border-color .18s;
+  background: #fff; box-sizing: border-box; outline: none;
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, background-color var(--motion-fast) ease;
 }
 .dpm-input:focus { border-color: var(--teal); }
 .dpm-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
@@ -184,12 +206,13 @@
 
 /* ── Tabs ── */
 .dpm-tabs { display: flex; gap: 4px; background: var(--surface); border-radius: 12px; padding: 4px; border: 1px solid var(--border); }
-.dpm-tab { padding: 7px 16px; border-radius: 9px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s; background: transparent; color: var(--muted); }
+.dpm-tab { padding: 7px 16px; border-radius: 9px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform var(--motion-instant) var(--ease-press), background-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease; background: transparent; color: var(--muted); }
 .dpm-tab.active { background: #fff; color: var(--teal); box-shadow: var(--shadow-sm); }
+.dpm-tab:active { transform: scale(0.97); }
 
 /* ── Animations ── */
-@keyframes dpm-fadeup { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.dpm-fadeup { animation: dpm-fadeup .3s ease both; }
+@keyframes dpm-fadeup { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.dpm-fadeup { animation: dpm-fadeup var(--motion-base) var(--ease-out) both; }
 
 /* ── Responsive global orchestration ── */
 html {
@@ -279,6 +302,13 @@ button svg, a svg, [role="button"] svg {
   .dpm-btn-secondary:hover,
   .btn:hover {
     transform: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dpm-modal,
+  .dpm-fadeup {
+    animation: none !important;
   }
 }
 

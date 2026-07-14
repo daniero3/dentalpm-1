@@ -104,13 +104,15 @@ body, .App {
   border: 1px solid #eaecf0;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  transition: all 0.25s ease;
+  transition: transform var(--motion-base, 180ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), box-shadow var(--motion-base, 180ms) ease, border-color var(--motion-base, 180ms) ease;
 }
 
-.card:hover {
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
-  transform: translateY(-2px);
-  border-color: #d0d5dd;
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
+    transform: translateY(-2px);
+    border-color: #d0d5dd;
+  }
 }
 
 .card-header {
@@ -142,12 +144,15 @@ body, .App {
 
 .tooth-svg {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transform-origin: center;
+  transition: transform var(--motion-fast, 140ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), filter var(--motion-fast, 140ms) ease;
 }
 
-.tooth-svg:hover {
-  transform: scale(1.12);
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+@media (hover: hover) and (pointer: fine) {
+  .tooth-svg:hover {
+    transform: scale(1.08);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  }
 }
 
 .tooth-healthy { fill: #f0f9ff; stroke: #0ea5e9; stroke-width: 2; }
@@ -164,17 +169,19 @@ body, .App {
   border: 1px solid #eaecf0;
   border-radius: 10px;
   cursor: grab;
-  transition: all 0.2s ease;
+  transition: transform var(--motion-fast, 140ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), box-shadow var(--motion-fast, 140ms) ease, border-color var(--motion-fast, 140ms) ease, background-color var(--motion-fast, 140ms) ease;
   user-select: none;
   font-size: 14px;
   color: #374151;
 }
 
-.procedure-item:hover {
-  background: #f8f9fb;
-  border-color: #d0d5dd;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .procedure-item:hover {
+    background: #f8f9fb;
+    border-color: #d0d5dd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
 }
 
 .procedure-item:active {
@@ -210,7 +217,7 @@ body, .App {
   font-size: 14px;
   color: #111827;
   background: #ffffff;
-  transition: all 0.2s ease;
+  transition: border-color var(--motion-fast, 140ms) ease, box-shadow var(--motion-fast, 140ms) ease, background-color var(--motion-fast, 140ms) ease;
 }
 
 .form-input:focus {
@@ -280,7 +287,7 @@ textarea {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.22s ease;
+  transition: transform var(--motion-instant, 90ms) var(--ease-press, cubic-bezier(0.2, 0, 0, 1)), box-shadow var(--motion-fast, 140ms) ease, background-color var(--motion-fast, 140ms) ease, border-color var(--motion-fast, 140ms) ease, color var(--motion-fast, 140ms) ease;
   text-decoration: none;
   letter-spacing: 0;
 }
@@ -293,8 +300,12 @@ textarea {
 
 .btn-primary:hover {
   background: #0a6b75;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(15, 126, 138, 0.4);
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-secondary {
@@ -317,7 +328,7 @@ textarea {
 
 .btn-success:hover {
   background: #059669;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
@@ -329,7 +340,7 @@ textarea {
 
 .btn-danger:hover {
   background: #dc2626;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
 
@@ -412,7 +423,7 @@ textarea {
   border-radius: 14px;
   border: 1px solid #eaecf0;
   padding: 20px 24px;
-  transition: all 0.25s ease;
+  transition: transform var(--motion-base, 180ms) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), box-shadow var(--motion-base, 180ms) ease, border-color var(--motion-base, 180ms) ease;
   position: relative;
   overflow: hidden;
 }
@@ -431,7 +442,7 @@ textarea {
 
 .kpi-card:hover {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.09);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .kpi-card:hover::before {
