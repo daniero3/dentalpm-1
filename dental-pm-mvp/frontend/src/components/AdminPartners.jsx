@@ -9,7 +9,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const CATEGORIES = ['MATERIEL','MEDICAMENT','LABORATOIRE','CONSOMMABLE','EQUIPEMENT','AUTRE'];
 const emptyForm = { name:'', contact_name:'', email:'', phone:'', address:'', city:'', category:'AUTRE', notes:'' };
@@ -82,10 +82,10 @@ export default function AdminPartners() {
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={load} style={{ padding:'9px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#475569' }}>
+          <button type="button" onClick={load} style={{ padding:'9px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, color:'#475569' }}>
             <RefreshCw size={14}/> Actualiser
           </button>
-          <button onClick={openAdd} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:7, fontSize:13, fontWeight:700, boxShadow:`0 4px 12px ${T}30` }}>
+          <button type="button" onClick={openAdd} style={{ padding:'9px 18px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:7, fontSize:13, fontWeight:700, boxShadow:`0 4px 12px ${T}30` }}>
             <Plus size={15}/> Ajouter partenaire
           </button>
         </div>
@@ -99,7 +99,7 @@ export default function AdminPartners() {
           <div style={{ fontSize:48, marginBottom:12 }}>🤝</div>
           <p style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:16, color:'#0F172A', margin:'0 0 6px' }}>Aucun partenaire</p>
           <p style={{ color:'#64748B', fontSize:13, margin:'0 0 20px' }}>Ajoutez des fournisseurs partenaires visibles par tous les cabinets</p>
-          <button onClick={openAdd} style={{ padding:'10px 22px', borderRadius:10, border:'none', background:T, color:'#fff', cursor:'pointer', fontWeight:700, fontSize:13 }}>
+          <button type="button" onClick={openAdd} style={{ padding:'10px 22px', borderRadius:10, border:'none', background:T, color:'#fff', cursor:'pointer', fontWeight:700, fontSize:13 }}>
             <Plus size={14} style={{ marginRight:6 }}/>Ajouter le premier partenaire
           </button>
         </div>
@@ -113,10 +113,10 @@ export default function AdminPartners() {
                   {p.category && <span style={{ fontSize:10, fontWeight:700, background:'#F0FDFE', color:T, border:`1px solid ${T}30`, borderRadius:99, padding:'2px 8px', marginTop:4, display:'inline-block' }}>{p.category}</span>}
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
-                  <button onClick={() => openEdit(p)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
+                  <button type="button" onClick={() => openEdit(p)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
                     <Edit2 size={13} color="#64748B"/>
                   </button>
-                  <button onClick={() => remove(p.id, p.name)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #FEE2E2', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
+                  <button type="button" onClick={() => remove(p.id, p.name)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #FEE2E2', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
                     <Trash2 size={13} color="#EF4444"/>
                   </button>
                 </div>
@@ -139,7 +139,7 @@ export default function AdminPartners() {
           <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
             <div style={{ padding:'18px 22px', borderBottom:'1px solid #F1F5F9', display:'flex', justifyContent:'space-between', alignItems:'center', background:`linear-gradient(135deg,${T},#0A5F6A)`, borderRadius:'20px 20px 0 0' }}>
               <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff' }}>{editing ? 'Modifier le partenaire' : 'Nouveau partenaire'}</div>
-              <button onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}><X size={15}/></button>
+              <button type="button" onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}><X size={15}/></button>
             </div>
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
               {[
@@ -171,8 +171,8 @@ export default function AdminPartners() {
                   onFocus={e=>{e.target.style.borderColor=T;}} onBlur={e=>{e.target.style.borderColor='#E2E8F0';}}/>
               </div>
               <div style={{ display:'flex', gap:8, paddingTop:8 }}>
-                <button onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-                <button onClick={save} disabled={saving} style={{ flex:2, padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', gap:7, opacity:saving?.7:1 }}>
+                <button type="button" onClick={()=>setModal(false)} style={{ flex:1, padding:'11px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+                <button type="button" onClick={save} disabled={saving} style={{ flex:2, padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', cursor:saving?'not-allowed':'pointer', fontSize:13, fontWeight:700, display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', gap:7, opacity:saving?.7:1 }}>
                   {saving ? 'Enregistrement...' : <><Check size={14}/>{editing ? 'Mettre à jour' : 'Ajouter le partenaire'}</>}
                 </button>
               </div>

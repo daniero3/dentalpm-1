@@ -12,7 +12,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const fmt   = n => new Intl.NumberFormat('fr-MG').format(n || 0);
 const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' }) : '—';
 
@@ -253,7 +253,7 @@ function UserView({ user }) {
           const Ico = item.icon;
           const active = sideTab===item.id;
           return (
-            <button key={item.id} onClick={()=>setSideTab(item.id)}
+            <button type="button" key={item.id} onClick={()=>setSideTab(item.id)}
               style={{ width:'100%', display:'flex', alignItems:'center', gap:9, padding:'9px 11px', borderRadius:10, border:'none', cursor:'pointer', marginBottom:3, background:active?'#F0FDFE':'transparent', color:active?'#0D7A87':'#64748B', fontWeight:active?700:500, fontSize:13 }}>
               <Ico size={15} color={active?'#0D7A87':'#94A3B8'}/>{item.label}
             </button>
@@ -315,7 +315,7 @@ function UserView({ user }) {
               <div style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>Renouveler avec Mastercard / Stripe</div>
               <div style={{ fontSize:11, color:'#64748B' }}>Paiement sécurisé — Plan actuel : {plan} ({fmt(PLAN_PRICES[plan]||199000)} Ar/mois)</div>
             </div>
-            <button onClick={()=>stripeCheckout(plan, API)}
+            <button type="button" onClick={()=>stripeCheckout(plan, API)}
               style={{ padding:'9px 18px', borderRadius:10, background:'#635BFF', color:'#fff', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(99,91,255,.3)' }}
               onMouseOver={e=>{e.currentTarget.style.background='#4F46E5';}}
               onMouseOut={e=>{e.currentTarget.style.background='#635BFF';}}>
@@ -388,7 +388,7 @@ function UserView({ user }) {
                 const Ico4 = pc4.icon;
                 const isCurrent = plan === pl;
                 return (
-                  <button key={pl} onClick={()=>stripeCheckout(pl, API)}
+                  <button type="button" key={pl} onClick={()=>stripeCheckout(pl, API)}
                     style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'12px 8px', borderRadius:12, border:`1.5px solid ${isCurrent?'#635BFF':pc4.border}`, background:isCurrent?'#635BFF':pc4.bg, cursor:'pointer', transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 16px rgba(99,91,255,.25)';}}
                     onMouseOut={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
@@ -443,7 +443,7 @@ function UserView({ user }) {
                         <td style={{ padding:'11px 12px', fontSize:11, color:'#64748B' }}>{fdate(p.created_at)}</td>
                         <td style={{ padding:'11px 12px' }}><SBadge status={p.status}/></td>
                         <td style={{ padding:'11px 12px' }}>
-                          <button onClick={()=>downloadInvoicePDF(p)}
+                          <button type="button" onClick={()=>downloadInvoicePDF(p)}
                             style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:7, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#475569' }}
                             onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
                             onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';}}>
@@ -511,7 +511,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
               <div style={{ fontSize:12, color:'rgba(255,255,255,.7)' }}>Détails abonnement</div>
             </div>
           </div>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+          <button type="button" onClick={onClose} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
             <X size={15}/>
           </button>
         </div>
@@ -596,7 +596,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                 <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A' }}>
                   Praticiens ({clinicData.users?.length||0})
                 </div>
-                <button onClick={()=>setShowAddUser(!showAddUser)}
+                <button type="button" onClick={()=>setShowAddUser(!showAddUser)}
                   style={{ padding:'6px 14px', borderRadius:9, border:'none', background:'#0D7A87', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                   + Ajouter praticien
                 </button>
@@ -629,8 +629,8 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                     </select>
                   </div>
                   <div style={{ display:'flex', gap:8 }}>
-                    <button onClick={()=>setShowAddUser(false)} style={{ flex:1, padding:'8px', borderRadius:9, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, color:'#475569' }}>Annuler</button>
-                    <button onClick={()=>onCreateUser(clinicData.clinic?.id)} disabled={userSaving}
+                    <button type="button" onClick={()=>setShowAddUser(false)} style={{ flex:1, padding:'8px', borderRadius:9, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, color:'#475569' }}>Annuler</button>
+                    <button type="button" onClick={()=>onCreateUser(clinicData.clinic?.id)} disabled={userSaving}
                       style={{ flex:2, padding:'8px', borderRadius:9, border:'none', background:'#0D7A87', color:'#fff', cursor:userSaving?'not-allowed':'pointer', fontSize:12, fontWeight:700, opacity:userSaving?0.7:1 }}>
                       {userSaving ? 'Création...' : 'Créer le compte'}
                     </button>
@@ -658,7 +658,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                   const pc4   = PLAN_CFG[pl] || PLAN_CFG.PRO;
                   const Ico4  = pc4.icon;
                   return (
-                    <button key={pl} disabled={actionLoad}
+                    <button type="button" key={pl} disabled={actionLoad}
                       onClick={()=>!actionLoad && onActivate(clinicData.clinic?.id, pl)}
                       style={{ padding:'12px 8px', borderRadius:12, border:`1.5px solid ${pc4.border}`, background:pc4.bg, cursor:actionLoad?'not-allowed':'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:actionLoad?0.6:1 }}
                       onMouseOver={e=>{ if(!actionLoad){e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 16px ${pc4.border}40`;} }}
@@ -672,7 +672,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                   );
                 })}
               </div>
-              <button disabled={actionLoad}
+              <button type="button" disabled={actionLoad}
                 onClick={()=>!actionLoad && onDeactivate(clinicData.clinic?.id)}
                 style={{ width:'100%', padding:'11px', borderRadius:11, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:actionLoad?'not-allowed':'pointer', color:'#991B1B', fontWeight:700, fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:7, opacity:actionLoad?0.6:1 }}
                 onMouseOver={e=>{ if(!actionLoad) e.currentTarget.style.background='#FEE2E2'; }}
@@ -800,7 +800,7 @@ function AdminView() {
           <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A', margin:0 }}>Dashboard Revenus</h2>
           <p style={{ color:'#64748B', fontSize:13, margin:0 }}>Supervision des abonnements DPM Madagascar</p>
         </div>
-        <button onClick={load} style={{ padding:'8px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
+        <button type="button" onClick={load} style={{ padding:'8px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
           <RefreshCw size={13}/> Actualiser
         </button>
       </div>
@@ -883,10 +883,10 @@ function AdminView() {
               </div>
               <span style={{ background:PLAN_CFG[p.plan_code]?.bg||'#F1F5F9', color:PLAN_CFG[p.plan_code]?.text||'#475569', padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{p.plan_code||'—'}</span>
               <div style={{ display:'flex', gap:8 }}>
-                <button onClick={()=>approve(p.id,p.plan_code)} style={{ padding:'7px 14px', borderRadius:9, background:'#0D7A87', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
+                <button type="button" onClick={()=>approve(p.id,p.plan_code)} style={{ padding:'7px 14px', borderRadius:9, background:'#0D7A87', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
                   <CheckCircle size={12}/> Approuver
                 </button>
-                <button onClick={()=>reject(p.id)} style={{ padding:'7px 14px', borderRadius:9, background:'#FEE2E2', color:'#991B1B', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
+                <button type="button" onClick={()=>reject(p.id)} style={{ padding:'7px 14px', borderRadius:9, background:'#FEE2E2', color:'#991B1B', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
                   <X size={12}/> Rejeter
                 </button>
               </div>
@@ -939,8 +939,8 @@ function AdminView() {
                     <td style={{ padding:'10px 12px' }} onClick={e=>e.stopPropagation()}>
                       {tx.status==='PENDING' && (
                         <div style={{ display:'flex', gap:5 }}>
-                          <button onClick={()=>approve(tx.id,tx.plan_code)} style={{ padding:'4px 8px', borderRadius:6, background:'#DCFCE7', color:'#166534', border:'none', cursor:'pointer', fontSize:11, fontWeight:700 }}>✓</button>
-                          <button onClick={()=>reject(tx.id)} style={{ padding:'4px 8px', borderRadius:6, background:'#FEE2E2', color:'#991B1B', border:'none', cursor:'pointer', fontSize:11, fontWeight:700 }}>✕</button>
+                          <button type="button" onClick={()=>approve(tx.id,tx.plan_code)} style={{ padding:'4px 8px', borderRadius:6, background:'#DCFCE7', color:'#166534', border:'none', cursor:'pointer', fontSize:11, fontWeight:700 }}>✓</button>
+                          <button type="button" onClick={()=>reject(tx.id)} style={{ padding:'4px 8px', borderRadius:6, background:'#FEE2E2', color:'#991B1B', border:'none', cursor:'pointer', fontSize:11, fontWeight:700 }}>✕</button>
                         </div>
                       )}
                     </td>
@@ -1028,7 +1028,7 @@ export default function SubscriptionManagement() {
         {isAdmin && (
           <div style={{ display:'flex', gap:4, background:'#F1F5F9', borderRadius:11, padding:4, border:'1px solid #E2E8F0' }}>
             {[{ id:'user',label:'Vue client' },{ id:'admin',label:'Vue admin' }].map(t => (
-              <button key={t.id} onClick={()=>setTab(t.id)}
+              <button type="button" key={t.id} onClick={()=>setTab(t.id)}
                 style={{ padding:'7px 16px', borderRadius:8, border:'none', cursor:'pointer', fontSize:13, fontWeight:600, background:tab===t.id?'#fff':'transparent', color:tab===t.id?'#0D7A87':'#64748B', boxShadow:tab===t.id?'0 1px 4px rgba(0,0,0,.08)':'none' }}>
                 {t.label}
               </button>

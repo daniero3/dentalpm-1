@@ -87,6 +87,7 @@ import CookieBanner from "./components/CookieBanner";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { toast } from "sonner";
 import { preloadCriticalRoutes } from "./utils/routePrefetch";
+import { getStoredJson, removeStoredValue, setStoredJson } from "./utils/versionedStorage";
 
 // Theme Provider
 import { ThemeProvider } from "./components/theme-provider";
@@ -179,9 +180,9 @@ let setGlobalSubscriptionError = null;
 let authExpiryHandled = false;
 
 const clearStoredSession = () => {
-  localStorage.removeItem('user');
-  localStorage.removeItem('dpm_plan');
-  localStorage.removeItem('dpm_user_plan');
+  removeStoredValue('user');
+  removeStoredValue('plan');
+  removeStoredValue('userPlan');
   delete axios.defaults.headers.common['Authorization'];
 };
 
@@ -234,14 +235,12 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try { setUser(JSON.parse(userData)); } catch {}
-    }
+    const cachedUser = getStoredJson('user');
+    if (cachedUser) setUser(cachedUser);
     axios.get(`${API}/auth/profile`, { skipAuthError: true })
       .then(response => {
         setUser(response.data);
-        localStorage.setItem('user', JSON.stringify(response.data));
+        setStoredJson('user', response.data);
       })
       .catch(() => {
         clearStoredSession();
@@ -254,15 +253,15 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { username, password });
       const { user: userData } = response.data;
-      localStorage.setItem('user', JSON.stringify(userData));
+      setStoredJson('user', userData);
       // Stocker le plan depuis la réponse de login (immédiat, pas de fetch supplémentaire)
       const planFromLogin = normalizePlan(response.data.plan || userData.plan || userData.current_plan);
       if (planFromLogin) {
-        localStorage.setItem('dpm_plan', JSON.stringify(planFromLogin));
-        localStorage.setItem('dpm_user_plan', JSON.stringify(planFromLogin));
+        setStoredJson('plan', planFromLogin);
+        setStoredJson('userPlan', planFromLogin);
       } else {
-        localStorage.removeItem('dpm_plan');
-        localStorage.removeItem('dpm_user_plan');
+        removeStoredValue('plan');
+        removeStoredValue('userPlan');
       }
       setUser(userData);
       authExpiryHandled = false;

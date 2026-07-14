@@ -258,7 +258,7 @@ export function ModernTopbar() {
 
         {/* ── Search icon — mobile ── */}
         {isMobile && (
-          <button onClick={openCommand}
+          <button type="button" onClick={openCommand}
             style={{ width:36, height:36, borderRadius:theme.radiusSm, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:theme.textSecondary }}>
             <Search size={16} />
           </button>
@@ -313,7 +313,7 @@ export function ModernTopbar() {
 
         {/* ── Notifications ── */}
         <div ref={notifRef} style={{ position:'relative' }}>
-          <button onClick={() => setIsNotifOpen(!isNotifOpen)}
+          <button type="button" onClick={() => setIsNotifOpen(!isNotifOpen)}
             style={{ width:38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', position:'relative', color:theme.textSecondary, transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=theme.accent; e.currentTarget.style.color=theme.accent; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor=theme.borderDefault; e.currentTarget.style.color=theme.textSecondary; }}>
@@ -331,7 +331,7 @@ export function ModernTopbar() {
                   { title:t('notifications.follow.title'), text:t('notifications.follow.text'), href:'/appointments', tone:theme.accent },
                   { title:t('notifications.finance.title'), text:t('notifications.finance.text'), href:'/reports', tone:theme.accent },
                 ].map(item => (
-                  <button key={item.title} onClick={() => { navigate(item.href); setIsNotifOpen(false) }}
+                  <button type="button" key={item.title} onClick={() => { navigate(item.href); setIsNotifOpen(false) }}
                     style={{ width:'100%', display:'flex', gap:10, padding:'10px', border:'none', borderRadius:12, background:'transparent', cursor:'pointer', textAlign:'left' }}
                     onMouseEnter={e => e.currentTarget.style.background=theme.hover}
                     onMouseLeave={e => e.currentTarget.style.background='transparent'}>
@@ -349,7 +349,7 @@ export function ModernTopbar() {
 
         {/* ── Profile ── */}
         <div ref={profileRef} style={{ position:'relative' }}>
-          <button onClick={() => setIsProfileOpen(!isProfileOpen)}
+          <button type="button" onClick={() => setIsProfileOpen(!isProfileOpen)}
             className='dpm-topbar-control' style={{ display:'flex', alignItems:'center', gap: isMobile ? 0 : 8, padding: isMobile ? 4 : '6px 10px 6px 6px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, cursor:'pointer', transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=theme.accent; e.currentTarget.style.background=theme.pressed; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor=theme.borderDefault; e.currentTarget.style.background=theme.bgElevated; }}>
@@ -384,14 +384,14 @@ export function ModernTopbar() {
                 { icon:User,     label:t('profile.myProfile'),  action:() => { setIsProfileOpen(false) } },
                 { icon:Settings, label:t('profile.settings'),  action:() => { navigate('/settings'); setIsProfileOpen(false) } },
               ].map((item,i) => (
-                <button key={i} onClick={item.action} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'none', border:'none', cursor:'pointer', fontSize:13, color:theme.textSecondary, fontFamily:'var(--font-sans)', transition:'background 0.15s' }}
+                <button type="button" key={i} onClick={item.action} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'none', border:'none', cursor:'pointer', fontSize:13, color:theme.textSecondary, fontFamily:'var(--font-sans)', transition:'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background=theme.hover}
                   onMouseLeave={e => e.currentTarget.style.background='none'}>
                   <item.icon size={15} color={theme.textSecondary} />{item.label}
                 </button>
               ))}
               <div style={{ height:1, background:theme.borderSubtle, margin:'4px 0' }} />
-              <button onClick={handleLogout} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'none', border:'none', cursor:'pointer', fontSize:13, color:theme.danger, fontFamily:'var(--font-sans)', fontWeight:600, transition:'background 0.15s' }}
+              <button type="button" onClick={handleLogout} style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'none', border:'none', cursor:'pointer', fontSize:13, color:theme.danger, fontFamily:'var(--font-sans)', fontWeight:600, transition:'background 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.background=theme.hover}
                 onMouseLeave={e => e.currentTarget.style.background='none'}>
                 <LogOut size={15} color={theme.danger} />{t('profile.logout')}
@@ -418,7 +418,7 @@ export function ModernTopbar() {
                   if (e.key === 'Enter' && filteredCommands[0]) runCommand(filteredCommands[0].href)
                 }}
                 style={{ flex:1, border:'none', outline:'none', fontSize:15, fontFamily:'var(--font-sans)', color:theme.textPrimary, background:'transparent' }} />
-              <button onClick={() => setSearchOpen(false)} style={{ width:32, height:32, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', color:theme.textSecondary, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={17} /></button>
+              <button type="button" onClick={() => setSearchOpen(false)} style={{ width:32, height:32, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', color:theme.textSecondary, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={17} /></button>
             </div>
             <div style={{ maxHeight:isMobile ? '70vh' : 420, overflowY:'auto', padding:'10px' }}>
               {Object.keys(groupedCommands).length === 0 ? (
@@ -429,7 +429,7 @@ export function ModernTopbar() {
                   {items.map(item => {
                     const Icon = item.icon
                     return (
-                      <button key={item.href + item.label} onClick={() => runCommand(item.href)}
+                      <button type="button" key={item.href + item.label} onClick={() => runCommand(item.href)}
                         style={{ width:'100%', display:'flex', alignItems:'center', gap:12, padding:'11px 10px', border:'none', borderRadius:12, background:'transparent', cursor:'pointer', textAlign:'left' }}
                         onMouseEnter={e => { prefetchRoute(item.href); e.currentTarget.style.background=theme.hover }}
                         onFocus={() => prefetchRoute(item.href)}

@@ -220,7 +220,7 @@ export default function PaymentRequestPage() {
           <CheckCircle size={48} color="#166534" style={{margin:'0 auto 12px'}}/>
           <h2 style={{fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:22,color:'#166534',margin:'0 0 8px'}}>🎉 Abonnement activé !</h2>
           <p style={{color:'#166534',margin:0}}>Votre paiement a été confirmé et votre abonnement est maintenant actif.</p>
-          <button className="pb" style={{margin:'16px auto 0',background:'#166534'}} onClick={()=>window.location.href='/'}>
+          <button type="button" className="pb" style={{margin:'16px auto 0',background:'#166534'}} onClick={()=>window.location.href='/'}>
             Accéder au tableau de bord →
           </button>
         </div>
@@ -238,7 +238,7 @@ export default function PaymentRequestPage() {
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
               <input className="pi" value={refInput} onChange={e=>setRefInput(e.target.value)}
                 placeholder="Ex: MVL-2025-123456 ou DPM-ABC123" style={{flex:1,minWidth:200,background:'#fff'}}/>
-              <button className="pb" onClick={verifyRef} disabled={verifying} style={{flexShrink:0}}>
+              <button type="button" className="pb" onClick={verifyRef} disabled={verifying} style={{flexShrink:0}}>
                 {verifying ? <div style={{width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'sp .8s linear infinite'}}/> : <CheckCircle size={14}/>}
                 Vérifier et activer
               </button>
@@ -260,7 +260,7 @@ export default function PaymentRequestPage() {
               <div style={{fontSize:11,fontWeight:700,color:C.teal,textTransform:'uppercase',letterSpacing:1.5,marginBottom:6}}>🔑 Votre référence de paiement</div>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12}}>
                 <code style={{fontFamily:'monospace',fontWeight:800,fontSize:22,color:'#0F172A',letterSpacing:2}}>{instruct.paymentRequest?.reference}</code>
-                <button onClick={()=>copyRef(instruct.paymentRequest?.reference)}
+                <button type="button" onClick={()=>copyRef(instruct.paymentRequest?.reference)}
                   style={{padding:'7px 14px',borderRadius:9,border:'1.5px solid #0D7A87',background:'#fff',color:C.teal,cursor:'pointer',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',gap:5}}>
                   <Copy size={12}/>Copier
                 </button>
@@ -296,7 +296,7 @@ export default function PaymentRequestPage() {
                 <input className="pi" value={refInput} onChange={e=>setRefInput(e.target.value)}
                   placeholder={`Référence transaction (ex: ${instruct.paymentRequest?.reference})`}
                   style={{flex:1,minWidth:200}}/>
-                <button className="pb" onClick={verifyRef} disabled={verifying}>
+                <button type="button" className="pb" onClick={verifyRef} disabled={verifying}>
                   {verifying ? <div style={{width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'sp .8s linear infinite'}}/> : <CheckCircle size={14}/>}
                   Activer maintenant
                 </button>
@@ -313,7 +313,7 @@ export default function PaymentRequestPage() {
               <div style={{display:'flex',alignItems:'center',gap:8,marginTop:14,padding:'10px 14px',background:'#F0FDFE',borderRadius:10}}>
                 <div style={{width:8,height:8,borderRadius:'50%',background:C.teal,animation:'pulse 1.5s ease-in-out infinite'}}/>
                 <span style={{fontSize:12,color:C.teal,fontWeight:600}}>En attente de confirmation automatique MVola/Orange...</span>
-                <button onClick={refresh} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}>
+                <button type="button" onClick={refresh} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}>
                   <RefreshCw size={14}/>
                 </button>
               </div>
@@ -365,7 +365,7 @@ export default function PaymentRequestPage() {
                     </div>
                   ))}
                 </div>
-                <button className="pb" onClick={()=>setStep(2)}>
+                <button type="button" className="pb" onClick={()=>setStep(2)}>
                   Continuer avec {plan} — {fmt(planD?.price)} Ar/mois <ChevronRight size={14}/>
                 </button>
               </div>
@@ -399,8 +399,8 @@ export default function PaymentRequestPage() {
                   ))}
                 </div>
                 <div style={{display:'flex',gap:10}}>
-                  <button className="pg" onClick={()=>setStep(1)}>← Retour</button>
-                  <button className="pb" onClick={()=>setStep(3)}>Voir le récapitulatif →</button>
+                  <button type="button" className="pg" onClick={()=>setStep(1)}>← Retour</button>
+                  <button type="button" className="pb" onClick={()=>setStep(3)}>Voir le récapitulatif →</button>
                 </div>
               </div>
             )}
@@ -429,8 +429,8 @@ export default function PaymentRequestPage() {
                   </p>
                 </div>
                 <div style={{display:'flex',gap:10}}>
-                  <button className="pg" onClick={()=>setStep(2)}>← Retour</button>
-                  <button className="pb" style={{flex:1}} onClick={submit} disabled={busy}>
+                  <button type="button" className="pg" onClick={()=>setStep(2)}>← Retour</button>
+                  <button type="button" className="pb" style={{flex:1}} onClick={submit} disabled={busy}>
                     {busy ? <><div style={{width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'sp .8s linear infinite'}}/>Initialisation...</> : <>✅ Initier le paiement</>}
                   </button>
                 </div>
@@ -444,7 +444,7 @@ export default function PaymentRequestPage() {
       <div style={CARD}>
         <div style={{...HDR, justifyContent:'space-between'}}>
           <span>📜 Historique des paiements</span>
-          <button onClick={refresh} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><RefreshCw size={14}/></button>
+          <button type="button" onClick={refresh} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><RefreshCw size={14}/></button>
         </div>
         <div style={{padding:'16px 22px'}}>
           {hist.length===0 ? (

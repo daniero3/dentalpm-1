@@ -59,7 +59,7 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone, setAdminUs
   };
 
   return (
-    <button onClick={handleClick} disabled={loading}
+    <button type="button" onClick={handleClick} disabled={loading}
       style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, width:'100%', padding:'14px', borderRadius:12, background:loading?'#94A3B8':'#635BFF', color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, border:'none', cursor:loading?'not-allowed':'pointer', marginBottom:14, boxShadow:'0 4px 16px rgba(99,91,255,.35)', boxSizing:'border-box', transition:'all .2s' }}>
       {loading ? '⏳ Redirection vers Stripe...' : '💳 Démarrer mon essai gratuit'}
     </button>
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                     </div>
                   ))}
                 </div>
-                <button className="premium-primary" disabled={!plan} onClick={() => setStep(1)}
+                <button type="button" className="premium-primary" disabled={!plan} onClick={() => setStep(1)}
                   style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:plan ? `linear-gradient(135deg,${T},#13A3B4)` : '#E2E8F0', color:plan?'#fff':'#94A3B8', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:plan?'pointer':'not-allowed', boxShadow:plan?`0 4px 16px ${T}40`:'none', transition:'all .2s' }}>
                   Continuer →
                 </button>
@@ -200,7 +200,7 @@ export default function RegisterPage() {
             {step===1 && !done && (
               <>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
-                  <button onClick={()=>setStep(0)} style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', fontSize:20, padding:0, lineHeight:1 }}>←</button>
+                  <button type="button" onClick={()=>setStep(0)} style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', fontSize:20, padding:0, lineHeight:1 }}>←</button>
                   <div>
                     <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:18, color:'#0F172A', margin:0 }}>Votre cabinet</h2>
                     <p style={{ color:'#64748B', fontSize:12, margin:0 }}>Plan {plan?.name} — {plan?.price} Ar/mois</p>
@@ -238,7 +238,7 @@ export default function RegisterPage() {
                     </select>
                   </div>
                 </div>
-                <button className="premium-primary" disabled={!stepValid} onClick={() => setStep(2)}
+                <button type="button" className="premium-primary" disabled={!stepValid} onClick={() => setStep(2)}
                   style={{ width:'100%', padding:'14px', borderRadius:12, border:'none', background:stepValid?`linear-gradient(135deg,${T},#13A3B4)`:'#E2E8F0', color:stepValid?'#fff':'#94A3B8', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:stepValid?'pointer':'not-allowed', boxShadow:stepValid?`0 4px 16px ${T}40`:'none', transition:'all .2s' }}>
                   Continuer →
                 </button>
@@ -249,7 +249,7 @@ export default function RegisterPage() {
             {step===2 && !done && (
               <>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
-                  <button onClick={()=>setStep(1)} style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', fontSize:20, padding:0, lineHeight:1 }}>←</button>
+                  <button type="button" onClick={()=>setStep(1)} style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', fontSize:20, padding:0, lineHeight:1 }}>←</button>
                   <div>
                     <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:18, color:'#0F172A', margin:0 }}>💳 Modalités de paiement</h2>
                     <p style={{ color:'#64748B', fontSize:12, margin:0 }}>Plan {plan?.name} — {plan?.price} Ar/mois</p>
@@ -293,7 +293,7 @@ export default function RegisterPage() {
                     <div style={{ fontSize:13, color:'#0F172A', marginBottom:4 }}>Email : <strong>{form.email}</strong></div>
                   </div>
                 )}
-                <button onClick={() => navigate('/login')}
+                <button type="button" onClick={() => navigate('/login')}
                   style={{ padding:'13px 32px', borderRadius:12, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, cursor:'pointer', boxShadow:`0 4px 16px ${T}40` }}>
                   Se connecter →
                 </button>
@@ -306,7 +306,7 @@ export default function RegisterPage() {
         {/* Lien retour login */}
         <p style={{ textAlign:'center', marginTop:18, fontSize:13, color:'#94A3B8' }}>
           Déjà un compte ?{' '}
-          <button onClick={() => navigate('/login')} style={{ background:'none', border:'none', cursor:'pointer', color:T, fontWeight:700, fontSize:13 }}>
+          <button type="button" onClick={() => navigate('/login')} style={{ background:'none', border:'none', cursor:'pointer', color:T, fontWeight:700, fontSize:13 }}>
             Se connecter
           </button>
         </p>

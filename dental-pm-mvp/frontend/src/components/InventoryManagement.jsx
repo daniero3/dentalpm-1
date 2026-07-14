@@ -12,7 +12,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const fmt  = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 
 const CATS = {
@@ -53,7 +53,7 @@ const Modal = ({ open, onClose, title, children, maxW=520 }) => {
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff',borderRadius:20,padding:26,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',color:'#64748B' }}><X size={15}/></button>
+        <button type="button" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',color:'#64748B' }}><X size={15}/></button>
         {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
@@ -164,10 +164,10 @@ const InventoryManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex',gap:8 }}>
-          <button onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
+          <button type="button" onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={()=>{setForm(emptyForm);setIsAdd(true);}}
+          <button type="button" onClick={()=>{setForm(emptyForm);setIsAdd(true);}}
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
             <Plus size={15}/>Nouveau produit
           </button>
@@ -202,7 +202,7 @@ const InventoryManagement = () => {
             </div>
             <div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
               {lowStock.map(p=>(
-                <button key={p.id} onClick={()=>openMov(p)}
+                <button type="button" key={p.id} onClick={()=>openMov(p)}
                   style={{ padding:'3px 11px',borderRadius:99,border:'1px solid #FED7AA',background:'#fff',color:'#C2410C',cursor:'pointer',fontSize:12,fontWeight:600 }}>
                   {p.name} — {p.current_qty} {p.unit}
                 </button>
@@ -218,11 +218,11 @@ const InventoryManagement = () => {
           <Search size={13} color="#94A3B8"/>
           <input placeholder="Rechercher produit, SKU..." value={search} onChange={e=>setSearch(e.target.value)}
             style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1 }}/>
-          {search&&<button onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
+          {search&&<button type="button" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5 }}>
           {['ALL',...Object.keys(CATS)].map(cat=>(
-            <button key={cat} onClick={()=>setCatF(cat)}
+            <button type="button" key={cat} onClick={()=>setCatF(cat)}
               style={{ padding:'5px 11px',borderRadius:99,border:'none',cursor:'pointer',fontSize:11,fontWeight:600,background:catF===cat?'#0D7A87':'#F1F5F9',color:catF===cat?'#fff':'#64748B',transition:'all .15s' }}>
               {cat==='ALL'?'Tous':CATS[cat]}
             </button>
@@ -237,7 +237,7 @@ const InventoryManagement = () => {
           <Package size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucun produit</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre premier produit'}</p>
-          <button onClick={()=>{setForm(emptyForm);setIsAdd(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+          <button type="button" onClick={()=>{setForm(emptyForm);setIsAdd(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouveau produit
           </button>
         </div>
@@ -273,7 +273,7 @@ const InventoryManagement = () => {
                     <td style={{ padding:'12px 16px',color:'#64748B',fontSize:12 }}>{p.min_qty} {p.unit}</td>
                     <td style={{ padding:'12px 16px',color:'#0D7A87',fontWeight:700,fontSize:12 }}>{fmt((p.current_qty||0)*(p.unit_cost_mga||0))}</td>
                     <td style={{ padding:'12px 16px' }}>
-                      <button onClick={()=>openMov(p)}
+                      <button type="button" onClick={()=>openMov(p)}
                         style={{ padding:'6px 12px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#0D7A87',display:'flex',alignItems:'center',gap:4,transition:'all .15s' }}
                         onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
                         onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
@@ -367,8 +367,8 @@ const InventoryManagement = () => {
               <input ref={reasonRef} type="text" placeholder="Ex: Réception commande, Utilisation cabinet..." style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>
-              <button onClick={()=>{setIsMov(false);setSelP(null);}} style={{ padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569' }}>Annuler</button>
-              <button onClick={handleMovement} disabled={saving}
+              <button type="button" onClick={()=>{setIsMov(false);setSelP(null);}} style={{ padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569' }}>Annuler</button>
+              <button type="button" onClick={handleMovement} disabled={saving}
                 style={{ padding:'9px 22px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,display:'flex',alignItems:'center',gap:7,opacity:saving?.7:1 }}>
                 {saving?<div style={{ width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'spin .8s linear infinite' }}/>:
                   movType==='IN'?<ArrowUp size={14}/>:movType==='OUT'?<ArrowDown size={14}/>:null}

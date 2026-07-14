@@ -118,7 +118,7 @@ const LAB_AD_EXAMPLES = [
   },
 ];
 
-const authH = () => ({headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});
+const authH = () => ({ withCredentials: true });
 const openAuthenticatedPrint = async (url) => {
   const popup = window.open('', '_blank');
   if (!popup) {
@@ -174,7 +174,7 @@ const Modal = ({open,onClose,title,children,maxW=560}) => {
   const modal = (
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={getModalOverlayStyle()}>
       <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box'}}>
-        <button onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
+        <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
           <X size={15}/>
         </button>
         {title&&<h2 style={{fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28}}>{title}</h2>}
@@ -198,7 +198,7 @@ const TarifSug = ({workType,onSelect,val}) => {
       <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
         {s.map((t,i)=>{
           const sel=String(val)===String(t.m);
-          return(<button key={i} onClick={()=>onSelect(t.m)} style={{padding:'5px 11px',borderRadius:8,border:`1.5px solid ${sel?'#0D7A87':'#7DD3DA'}`,background:sel?'#0D7A87':'#F0FDFE',color:sel?'#fff':'#0D7A87',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all .15s'}}>
+          return(<button type="button" key={i} onClick={()=>onSelect(t.m)} style={{padding:'5px 11px',borderRadius:8,border:`1.5px solid ${sel?'#0D7A87':'#7DD3DA'}`,background:sel?'#0D7A87':'#F0FDFE',color:sel?'#fff':'#0D7A87',fontSize:12,fontWeight:600,cursor:'pointer',transition:'all .15s'}}>
             {t.label} — {new Intl.NumberFormat('fr-MG').format(t.m)} Ar
           </button>);
         })}
@@ -328,10 +328,10 @@ const LabManagement = () => {
           </div>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={fetchOrders} style={{padding:'8px 14px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#475569'}}>
+          <button type="button" onClick={fetchOrders} style={{padding:'8px 14px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#475569'}}>
             <RefreshCw size={13}/>Actualiser
           </button>
-          <button onClick={()=>{setTab('orders');setIsAddOpen(true);}} style={{padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)'}}>
+          <button type="button" onClick={()=>{setTab('orders');setIsAddOpen(true);}} style={{padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)'}}>
             <Plus size={15}/>Nouvelle commande
           </button>
         </div>
@@ -340,7 +340,7 @@ const LabManagement = () => {
       {/* Tabs */}
       <div style={{display:'flex',gap:4,marginBottom:20,background:'#F8FAFC',borderRadius:12,padding:4,border:'1px solid #E2E8F0'}}>
         {[{k:'orders',l:'📋 Commandes',n:orders.length},{k:'partners',l:'🤝 Labos Partenaires',n:PARTNER_LABS.length}].map(t=>(
-          <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:'9px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all .2s',background:tab===t.k?'#fff':'transparent',color:tab===t.k?'#0D7A87':'#64748B',boxShadow:tab===t.k?'0 1px 6px rgba(0,0,0,.08)':'none'}}>
+          <button type="button" key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:'9px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all .2s',background:tab===t.k?'#fff':'transparent',color:tab===t.k?'#0D7A87':'#64748B',boxShadow:tab===t.k?'0 1px 6px rgba(0,0,0,.08)':'none'}}>
             {t.l} <span style={{background:tab===t.k?'#F0FDFE':'#E2E8F0',color:tab===t.k?'#0D7A87':'#94A3B8',borderRadius:99,padding:'1px 7px',fontSize:11,fontWeight:700,marginLeft:4}}>{t.n}</span>
           </button>
         ))}
@@ -367,7 +367,7 @@ const LabManagement = () => {
               <div style={{textAlign:'center',padding:'48px',color:'#94A3B8'}}>
                 <FlaskConical size={40} style={{margin:'0 auto 10px',opacity:.3}}/>
                 <p style={{margin:0,fontSize:14}}>Aucune commande</p>
-                <button onClick={()=>setIsAddOpen(true)} style={{marginTop:14,padding:'9px 18px',borderRadius:10,background:'#0D7A87',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700}}>Créer une commande</button>
+                <button type="button" onClick={()=>setIsAddOpen(true)} style={{marginTop:14,padding:'9px 18px',borderRadius:10,background:'#0D7A87',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700}}>Créer une commande</button>
               </div>
             ):(
               filtered.map((o,idx)=>{
@@ -389,8 +389,8 @@ const LabManagement = () => {
                       <span style={{background:c.bg,color:c.text,borderRadius:99,padding:'4px 12px',fontSize:11,fontWeight:700,display:'flex',alignItems:'center',gap:4}}>
                         <div style={{width:6,height:6,borderRadius:'50%',background:c.dot}}/>{c.label}
                       </span>
-                      <button onClick={()=>{setSelOrder(o);setIsStatOpen(true);}} style={{padding:'6px 12px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#475569'}}>Statut</button>
-                      <button onClick={()=>openAuthenticatedPrint(`${API}/labs/orders/${o.id}/print`)} style={{padding:'6px 10px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer'}}>
+                      <button type="button" onClick={()=>{setSelOrder(o);setIsStatOpen(true);}} style={{padding:'6px 12px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#475569'}}>Statut</button>
+                      <button type="button" onClick={()=>openAuthenticatedPrint(`${API}/labs/orders/${o.id}/print`)} style={{padding:'6px 10px',borderRadius:9,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer'}}>
                         <Printer size={13} color="#64748B"/>
                       </button>
                     </div>
@@ -444,7 +444,7 @@ const LabManagement = () => {
                   <a href={`mailto:${lab.email}`} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:10,border:'1.5px solid #0D7A87',color:'#0D7A87',textDecoration:'none',fontSize:13,fontWeight:600}}>
                     <Mail size={13}/>Envoyer un email
                   </a>
-                  <button onClick={()=>{pickLab(lab);setIsAddOpen(true);setTab('orders');}} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:10,background:'#F0FDFE',color:'#0D7A87',border:'1.5px solid #7DD3DA',cursor:'pointer',fontSize:13,fontWeight:700}}>
+                  <button type="button" onClick={()=>{pickLab(lab);setIsAddOpen(true);setTab('orders');}} style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:10,background:'#F0FDFE',color:'#0D7A87',border:'1.5px solid #7DD3DA',cursor:'pointer',fontSize:13,fontWeight:700}}>
                     <Plus size={13}/>Commander ici
                   </button>
                 </div>
@@ -465,7 +465,7 @@ const LabManagement = () => {
                   <a href={`mailto:${lab.email}`} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px',borderRadius:10,background:'#F8FAFC',color:'#475569',textDecoration:'none',fontSize:12,fontWeight:600}}>
                     <Mail size={12}/>Email
                   </a>
-                  <button onClick={()=>{pickLab(lab);setIsAddOpen(true);setTab('orders');}} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px',borderRadius:10,background:'#0D7A87',color:'#fff',border:'none',cursor:'pointer',fontSize:12,fontWeight:700}}>
+                  <button type="button" onClick={()=>{pickLab(lab);setIsAddOpen(true);setTab('orders');}} style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'8px',borderRadius:10,background:'#0D7A87',color:'#fff',border:'none',cursor:'pointer',fontSize:12,fontWeight:700}}>
                     <Plus size={12}/>Commander
                   </button>
                 </div>
@@ -516,7 +516,7 @@ const LabManagement = () => {
                     <div style={{fontSize:11,color:'#64748B'}}>{selLab.zone}, {selLab.city} · {selLab.delai}</div>
                   </div>
                 </div>
-                <button onClick={()=>{setSelLab(null);setForm(f=>({...f,lab_name:''}));}} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><X size={14}/></button>
+                <button type="button" onClick={()=>{setSelLab(null);setForm(f=>({...f,lab_name:''}));}} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><X size={14}/></button>
               </div>
             ):(
               <>
@@ -578,8 +578,8 @@ const LabManagement = () => {
             <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions spéciales..." style={{...inp,resize:'vertical'}} onFocus={fi} onBlur={bi}/>
           </div>
           <div style={{display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9'}}>
-            <button onClick={()=>{setIsAddOpen(false);setSelLab(null);}} style={{padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569'}}>Annuler</button>
-            <button onClick={handleCreate} disabled={saving} style={{padding:'9px 20px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,display:'flex',alignItems:'center',gap:7}}>
+            <button type="button" onClick={()=>{setIsAddOpen(false);setSelLab(null);}} style={{padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569'}}>Annuler</button>
+            <button type="button" onClick={handleCreate} disabled={saving} style={{padding:'9px 20px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,display:'flex',alignItems:'center',gap:7}}>
               {saving?<Loader2 size={14} style={{animation:'spin .8s linear infinite'}}/>:<Plus size={14}/>}
               Créer la commande
             </button>
@@ -593,7 +593,7 @@ const LabManagement = () => {
           {Object.entries(STATUS).map(([s,c])=>{
             const Icon=c.icon, isCur=selOrder?.status===s;
             return(
-              <button key={s} onClick={()=>!isCur&&handleStatus(s)} disabled={saving||isCur}
+              <button type="button" key={s} onClick={()=>!isCur&&handleStatus(s)} disabled={saving||isCur}
                 style={{padding:'12px 16px',borderRadius:11,border:isCur?`2px solid ${c.dot}`:'1.5px solid #E2E8F0',background:isCur?c.bg:'#fff',cursor:isCur?'default':'pointer',display:'flex',alignItems:'center',gap:10,fontSize:13,fontWeight:600,color:isCur?c.text:'#475569',transition:'all .2s'}}>
                 <Icon size={15} color={isCur?c.dot:'#94A3B8'}/>{c.label}
                 {isCur&&<span style={{marginLeft:'auto',fontSize:11,fontWeight:700}}>✓ Actuel</span>}

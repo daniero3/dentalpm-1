@@ -93,13 +93,13 @@ export default function PWAInstallPrompt() {
             : "Acces rapide depuis votre ecran d'accueil."}
         </div>
         {mode !== 'ios' && (
-          <button onClick={install}
+          <button type="button" onClick={install}
             style={{ marginTop:8, padding:'6px 14px', borderRadius:8, border:'none', background:'#fff', color:'#0D7A87', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}>
             <Download size={12}/> Installer
           </button>
         )}
       </div>
-      <button onClick={dismiss}
+      <button type="button" onClick={dismiss}
         style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,.5)', padding:4, flexShrink:0 }}>
         <X size={14}/>
       </button>

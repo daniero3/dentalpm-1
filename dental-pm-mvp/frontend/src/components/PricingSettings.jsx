@@ -31,7 +31,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const PricingSettings = () => {
   const { user } = useAuth();
@@ -214,9 +214,9 @@ const PricingSettings = () => {
         formData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          withCredentials: true
         }
       );
       toast.success(`Import terminé: ${response.data.inserted || response.data.imported || 0} ajoutés, ${response.data.updated || 0} mis à jour`);

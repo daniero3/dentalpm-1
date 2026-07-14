@@ -19,7 +19,7 @@ const API = BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const C = {
   teal:   '#0D7A87',
@@ -208,7 +208,7 @@ const Dashboard = () => {
             <div style={{ width:6, height:6, borderRadius:'50%', background:'#22C55E' }}/>
             En ligne
           </div>
-          <button onClick={refreshDashboard} disabled={isFetching}
+          <button type="button" onClick={refreshDashboard} disabled={isFetching}
             style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13} style={{ opacity: isFetching ? .5 : 1 }}/>
             {!isMobile && 'Actualiser'}
@@ -372,7 +372,7 @@ const Dashboard = () => {
             { k:'rdv',      l:'📅 Rendez-vous récents',   n:appts.length },
             { k:'factures', l:'🧾 Factures en attente',    n:invs.length },
           ].map(t => (
-            <button key={t.k} onClick={() => changeTab(t.k)}
+            <button type="button" key={t.k} onClick={() => changeTab(t.k)}
               style={{ flex:1, padding:'13px 16px', border:'none', background:'transparent', cursor:'pointer', fontWeight:600, fontSize:13, color:activeTab===t.k?C.teal:'#64748B', borderBottom:activeTab===t.k?`2px solid ${C.teal}`:'2px solid transparent', transition:'color 120ms ease-out, border-color 120ms ease-out' }}>
               {t.l} <span style={{ background:activeTab===t.k?'#F0FDFE':'#F1F5F9', color:activeTab===t.k?C.teal:'#94A3B8', borderRadius:99, padding:'1px 7px', fontSize:11, fontWeight:700, marginLeft:4 }}>{t.n}</span>
             </button>
@@ -553,7 +553,7 @@ const Dashboard = () => {
         <div style={{ background:'#FEE2E2', border:'1px solid #FECACA', borderRadius:12, padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
           <AlertTriangle size={16} color="#EF4444"/>
           <span style={{ fontSize:13, color:'#991B1B', fontWeight:600 }}>Erreur de connexion</span>
-          <button onClick={refreshDashboard} style={{ marginLeft:'auto', padding:'5px 12px', borderRadius:8, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>Réessayer</button>
+          <button type="button" onClick={refreshDashboard} style={{ marginLeft:'auto', padding:'5px 12px', borderRadius:8, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>Réessayer</button>
         </div>
       )}
     </div>

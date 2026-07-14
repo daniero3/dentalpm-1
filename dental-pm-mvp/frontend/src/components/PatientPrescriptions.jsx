@@ -12,7 +12,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API   = `${BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const T      = '#0D7A87';
 const T_DARK = '#0A5F6A';
@@ -311,7 +311,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
               )}
             </div>
           </div>
-          <button onClick={onClose}
+          <button type="button" onClick={onClose}
             style={{ width:34, height:34, borderRadius:9, background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,.85)', flexShrink:0, transition:'all .15s' }}
             onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
             onMouseOut={e=>e.currentTarget.style.background='rgba(255,255,255,.15)'}>
@@ -478,7 +478,7 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
       {/* Filter tabs */}
       <div style={{ padding:'10px 20px', borderBottom:'1px solid #F1F5F9', display:'flex', gap:6, background:'#FAFAFA' }}>
         {FILTERS.map(f => (
-          <button key={f.key} onClick={() => setFilter(f.key)}
+          <button type="button" key={f.key} onClick={() => setFilter(f.key)}
             style={{ padding:'5px 14px', borderRadius:99, border:`1.5px solid ${filter===f.key?T:'#E2E8F0'}`, background:filter===f.key?T:'#fff', color:filter===f.key?'#fff':'#64748B', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6, transition:'all .15s', fontFamily:'inherit' }}>
             {f.label}
             {f.count > 0 && (
@@ -743,7 +743,7 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
 
           {/* Bouton Retour */}
           {!embedded && (
-          <button onClick={() => navigate(-1)}
+          <button type="button" onClick={() => navigate(-1)}
             style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, color:'#475569', flexShrink:0, transition:'all .18s', boxShadow:'0 1px 4px rgba(0,0,0,.06)', fontFamily:'inherit' }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=T;e.currentTarget.style.color=T;e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.boxShadow=`0 2px 10px ${T}18`;}}
             onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';e.currentTarget.style.background='#fff';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.06)';}}>
@@ -786,7 +786,7 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
         </div>
 
         {/* Droite : bouton nouvelle ordonnance */}
-        <button onClick={() => { setForm(emptyForm); setIsCreateOpen(true); }}
+        <button type="button" onClick={() => { setForm(emptyForm); setIsCreateOpen(true); }}
           style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 22px', borderRadius:12, background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, boxShadow:`0 4px 18px ${T}40`, transition:'all .18s', flexShrink:0, fontFamily:'inherit' }}
           onMouseOver={e=>e.currentTarget.style.filter='brightness(1.08)'}
           onMouseOut={e=>e.currentTarget.style.filter='none'}>

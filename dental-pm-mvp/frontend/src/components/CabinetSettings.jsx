@@ -5,13 +5,14 @@ import { Building2, User, Lock, Phone, Mail, MapPin, Save, Eye, EyeOff, Users } 
 import { useAuth } from '../App';
 import ClinicUsersTab from './ClinicUsersTab';
 import { useResponsive } from '../utils/responsive';
+import { getStoredJson } from '../utils/versionedStorage';
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const inp = {
   width:'100%', padding:'10px 12px', borderRadius:10,
@@ -32,10 +33,8 @@ export default function CabinetSettings() {
 
   useEffect(() => {
     // Charger profil user depuis localStorage
-    try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}');
-      setProfile({ full_name: u.full_name||'', email: u.email||'', phone: u.phone||'', specialization: u.specialization||'' });
-    } catch{}
+    const u = getStoredJson('user', {});
+    setProfile({ full_name: u.full_name||'', email: u.email||'', phone: u.phone||'', specialization: u.specialization||'' });
   }, []);
 
   const saveProfile = async () => {
@@ -80,7 +79,7 @@ export default function CabinetSettings() {
           const Icon = t.icon;
           const active = tab === t.id;
           return (
-            <button key={t.id} onClick={()=>setTab(t.id)}
+            <button type="button" key={t.id} onClick={()=>setTab(t.id)}
               style={{ flex:1, padding:'9px 12px', borderRadius:9, border:'none', background:active?'#fff':'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:7, fontSize:13, fontWeight:active?700:500, color:active?T:'#64748B', boxShadow:active?'0 1px 4px rgba(0,0,0,.08)':undefined, transition:'all .15s' }}>
               <Icon size={15}/> {t.label}
             </button>
@@ -138,7 +137,7 @@ export default function CabinetSettings() {
               </div>
             ))}
           </div>
-          <button onClick={saveProfile} disabled={loading}
+          <button type="button" onClick={saveProfile} disabled={loading}
             style={{ padding:'11px 24px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', fontWeight:700, fontSize:13, cursor:loading?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:8, opacity:loading?.7:1 }}>
             <Save size={15}/> {loading?'Enregistrement...':'Enregistrer'}
           </button>
@@ -163,14 +162,14 @@ export default function CabinetSettings() {
                     style={{ ...inp, paddingRight:40 }}
                     onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
                     onBlur={e=>{e.target.style.borderColor='#E2E8F0';e.target.style.boxShadow='none';}}/>
-                  <button onClick={()=>setShowPwd(s=>({...s,[f.key]:!s[f.key]}))}
+                  <button type="button" onClick={()=>setShowPwd(s=>({...s,[f.key]:!s[f.key]}))}
                     style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8' }}>
                     {showPwd[f.key]?<EyeOff size={15}/>:<Eye size={15}/>}
                   </button>
                 </div>
               </div>
             ))}
-            <button onClick={changePassword} disabled={loading}
+            <button type="button" onClick={changePassword} disabled={loading}
               style={{ padding:'11px 24px', borderRadius:11, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', fontWeight:700, fontSize:13, cursor:loading?'not-allowed':'pointer', display:'flex', alignItems:'center', gap:8, alignSelf:'flex-start', opacity:loading?.7:1 }}>
               <Lock size={15}/> {loading?'Modification...':'Changer le mot de passe'}
             </button>

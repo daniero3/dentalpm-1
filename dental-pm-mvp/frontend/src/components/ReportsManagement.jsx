@@ -22,7 +22,7 @@ const API = BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const fmt  = v => new Intl.NumberFormat('fr-MG',{maximumFractionDigits:0}).format(v||0) + ' Ar';
 const fmtShort = v => {
   const n = Number(v || 0);
@@ -122,7 +122,7 @@ const ReportsManagement = () => {
         <div style={{ fontSize:32,marginBottom:12 }}>⚠️</div>
         <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:700,fontSize:16,color:'#991B1B',marginBottom:8 }}>Rapport non disponible</div>
         <div style={{ fontSize:13,color:'#B91C1C',marginBottom:16 }}>Impossible de charger le rapport financier. Vérifiez votre connexion.</div>
-        <button onClick={()=>fetchReport(fromDate, toDate)}
+        <button type="button" onClick={()=>fetchReport(fromDate, toDate)}
           style={{ padding:'9px 20px',borderRadius:10,background:'#DC2626',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700 }}>
           Réessayer
         </button>
@@ -173,7 +173,7 @@ const ReportsManagement = () => {
           <label style={{ fontSize:11,fontWeight:600,color:'#64748B',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em' }}>Au</label>
           <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
         </div>
-        <button onClick={()=>fetchReport(fromDate, toDate)}
+        <button type="button" onClick={()=>fetchReport(fromDate, toDate)}
           style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#3B4FD8,#6366F1)',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 12px rgba(59,79,216,.25)' }}>
           <RefreshCw size={14}/>Actualiser
         </button>

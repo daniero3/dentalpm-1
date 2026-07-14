@@ -86,7 +86,7 @@ const SUPPLIER_AD_EXAMPLES = [
   },
 ];
 
-const authH = () => ({headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});
+const authH = () => ({ withCredentials: true });
 
 const getType = t => SUPPLIER_TYPES.find(x=>x.value===t) || SUPPLIER_TYPES[3];
 
@@ -96,7 +96,7 @@ const Modal = ({open,onClose,title,desc,children}) => {
   return(
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
       <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth: 520,boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
-        <button onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}><X size={15}/></button>
+        <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}><X size={15}/></button>
         <div style={{marginBottom:18,paddingRight:28}}>
           {title&&<h2 style={{fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:0}}>{title}</h2>}
           {desc&&<p style={{fontSize:13,color:'#64748B',marginTop:4}}>{desc}</p>}
@@ -224,10 +224,10 @@ const SupplierManagement = () => {
           </div>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={fetchSuppliers} style={{padding:'8px 14px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#475569'}}>
+          <button type="button" onClick={fetchSuppliers} style={{padding:'8px 14px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#475569'}}>
             <RefreshCw size={13}/>Actualiser
           </button>
-          <button onClick={()=>{resetForm();setIsOpen(true);}} style={{padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(245,158,11,.3)'}}>
+          <button type="button" onClick={()=>{resetForm();setIsOpen(true);}} style={{padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(245,158,11,.3)'}}>
             <Plus size={15}/>Nouveau fournisseur
           </button>
         </div>
@@ -236,7 +236,7 @@ const SupplierManagement = () => {
       {/* Tabs */}
       <div style={{display:'flex',gap:4,marginBottom:20,background:'#F8FAFC',borderRadius:12,padding:4,border:'1px solid #E2E8F0'}}>
         {[{k:'suppliers',l:'📦 Mes fournisseurs',n:filtered.length},{k:'partners',l:'🌟 Fournisseurs partenaires',n:PARTNER_SUPPLIERS.length}].map(t=>(
-          <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:'9px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all .2s',background:tab===t.k?'#fff':'transparent',color:tab===t.k?'#D97706':'#64748B',boxShadow:tab===t.k?'0 1px 6px rgba(0,0,0,.08)':'none'}}>
+          <button type="button" key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:'9px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all .2s',background:tab===t.k?'#fff':'transparent',color:tab===t.k?'#D97706':'#64748B',boxShadow:tab===t.k?'0 1px 6px rgba(0,0,0,.08)':'none'}}>
             {t.l} <span style={{background:tab===t.k?'#FFFBEB':'#E2E8F0',color:tab===t.k?'#D97706':'#94A3B8',borderRadius:99,padding:'1px 7px',fontSize:11,fontWeight:700,marginLeft:4}}>{t.n}</span>
           </button>
         ))}
@@ -263,7 +263,7 @@ const SupplierManagement = () => {
             <div style={{background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'48px',textAlign:'center',color:'#94A3B8'}}>
               <Truck size={40} style={{margin:'0 auto 10px',opacity:.3}}/>
               <p style={{margin:0,fontSize:14}}>Aucun fournisseur</p>
-              <button onClick={()=>{resetForm();setIsOpen(true);}} style={{marginTop:14,padding:'9px 18px',borderRadius:10,background:'#F59E0B',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700}}>
+              <button type="button" onClick={()=>{resetForm();setIsOpen(true);}} style={{marginTop:14,padding:'9px 18px',borderRadius:10,background:'#F59E0B',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700}}>
                 Ajouter un fournisseur
               </button>
             </div>
@@ -284,10 +284,10 @@ const SupplierManagement = () => {
                         </div>
                       </div>
                       <div style={{display:'flex',gap:6}}>
-                        <button onClick={()=>openEdit(s)} style={{padding:'5px 10px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:4,fontSize:12,fontWeight:600,color:'#475569'}}>
+                        <button type="button" onClick={()=>openEdit(s)} style={{padding:'5px 10px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:4,fontSize:12,fontWeight:600,color:'#475569'}}>
                           <Edit size={12}/>Modifier
                         </button>
-                        <button onClick={()=>handleDisable(s)} style={{padding:'5px 8px',borderRadius:8,border:'1.5px solid #FEE2E2',background:'#FFF5F5',cursor:'pointer',display:'flex',alignItems:'center'}} title="Désactiver">
+                        <button type="button" onClick={()=>handleDisable(s)} style={{padding:'5px 8px',borderRadius:8,border:'1.5px solid #FEE2E2',background:'#FFF5F5',cursor:'pointer',display:'flex',alignItems:'center'}} title="Désactiver">
                           <Power size={12} color="#EF4444"/>
                         </button>
                       </div>

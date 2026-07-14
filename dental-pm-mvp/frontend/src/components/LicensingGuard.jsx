@@ -14,6 +14,7 @@ import {
   Users
 } from 'lucide-react';
 import axios from 'axios';
+import { getStoredJson } from '../utils/versionedStorage';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
 const SUBSCRIPTION_PAYMENT_PATH = '/subscription?tab=payment';
@@ -29,11 +30,10 @@ const LicensingGuard = ({ children }) => {
 
   const checkSubscriptionStatus = async () => {
     try {
-      const userStr = localStorage.getItem('user');
+      const user = getStoredJson('user');
       
       // Si SUPER_ADMIN, bypass direct sans appel API
-      if (userStr) {
-        const user = JSON.parse(userStr);
+      if (user) {
         if (user.role === 'SUPER_ADMIN') {
           setSubscriptionStatus({ status: 'SUPER_ADMIN' });
           setLoading(false);
@@ -75,9 +75,8 @@ const LicensingGuard = ({ children }) => {
       }
       // En cas d'erreur API, vérifier le rôle depuis localStorage
       try {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
+        const user = getStoredJson('user');
+        if (user) {
           if (user.role === 'SUPER_ADMIN') {
             setSubscriptionStatus({ status: 'SUPER_ADMIN' });
             return;

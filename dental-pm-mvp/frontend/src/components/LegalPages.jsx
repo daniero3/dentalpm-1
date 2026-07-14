@@ -163,6 +163,7 @@ const LegalPages = () => {
             const Icon = tab.icon;
             return (
               <button
+                type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`p-4 rounded-lg border text-left transition-all ${

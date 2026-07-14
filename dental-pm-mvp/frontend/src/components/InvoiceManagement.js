@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const fmt = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
@@ -63,7 +63,7 @@ const Modal = ({ open, onClose, title, children, maxW=700 }) => {
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'56px 16px 32px' }}>
       <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}><X size={15}/></button>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}><X size={15}/></button>
         {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
@@ -446,10 +446,10 @@ const InvoiceManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex',gap:8 }}>
-          <button onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
+          <button type="button" aria-label="Rafraîchir les factures" onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setPatients([]);setFees([]);setIsOpen(true);}}
+          <button type="button" onClick={()=>{setForm(emptyForm);setPatientSearch('');setPatients([]);setFees([]);setIsOpen(true);}}
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(16,185,129,.3)' }}>
             <Plus size={15}/>Nouvelle Facture
           </button>
@@ -481,15 +481,15 @@ const InvoiceManagement = () => {
       <div style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'11px 16px',marginBottom:16,display:'flex',gap:10,flexWrap:'wrap',alignItems:'center' }}>
         <div style={{ display:'flex',alignItems:'center',gap:7,flex:1,minWidth:200 }}>
           <Search size={13} color="#94A3B8"/>
-          <input placeholder="Rechercher facture, patient..." value={search} onChange={e=>setSearch(e.target.value)}
+          <input aria-label="Rechercher une facture" placeholder="Rechercher facture, patient..." value={search} onChange={e=>setSearch(e.target.value)}
             style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1 }}/>
-          {search&&<button onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
+          {search&&<button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
           {['ALL',...Object.keys(INV_STATUS)].map(s=>{
             const st=INV_STATUS[s];
             return(
-              <button key={s} onClick={()=>{setStatusF(s);fetchInvoices(s!=='ALL'?s:undefined);}}
+              <button type="button" key={s} onClick={()=>{setStatusF(s);fetchInvoices(s!=='ALL'?s:undefined);}}
                 style={{ padding:'5px 11px',borderRadius:99,border:'none',cursor:'pointer',fontSize:11,fontWeight:600,background:statusF===s?(st?.bg||'#F0FDFE'):'#F1F5F9',color:statusF===s?(st?.c||C.teal):'#64748B',transition:'all .15s' }}>
                 {s==='ALL'?'Toutes':st?.l}
               </button>
@@ -531,7 +531,7 @@ const InvoiceManagement = () => {
           <FileText size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucune facture</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre première facture'}</p>
-          <button onClick={()=>{setForm(emptyForm);setPatientSearch('');setPatients([]);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+          <button type="button" onClick={()=>{setForm(emptyForm);setPatientSearch('');setPatients([]);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouvelle facture
           </button>
         </div>
@@ -562,22 +562,22 @@ const InvoiceManagement = () => {
                 {/* Actions */}
                 <div style={{ display:'flex',gap:5,flexShrink:0,alignItems:'center' }}>
                   {!isPaid&&(
-                    <button onClick={()=>openPayModal(inv)}
+                    <button type="button" onClick={()=>openPayModal(inv)}
                       style={{ padding:'6px 12px',borderRadius:9,background:C.green,color:'#fff',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',gap:5 }}>
                       <DollarSign size={12}/>Payer
                     </button>
                   )}
-                  <button onClick={()=>setDetailInv(inv)} title="Détails"
+                  <button type="button" aria-label="Afficher les détails de la facture" onClick={()=>setDetailInv(inv)} title="Détails"
                     style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.borderColor=C.teal;e.currentTarget.style.color=C.teal;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Eye size={13}/>
                   </button>
-                  <button onClick={()=>handlePrint(inv.id)} title="Imprimer"
+                  <button type="button" aria-label="Imprimer la facture" onClick={()=>handlePrint(inv.id)} title="Imprimer"
                     style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Printer size={13}/>
                   </button>
-                  <button onClick={()=>handlePDF(inv.id,inv.invoice_number)} title="PDF"
+                  <button type="button" aria-label="Télécharger la facture en PDF" onClick={()=>handlePDF(inv.id,inv.invoice_number)} title="PDF"
                     style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.borderColor=C.purple;e.currentTarget.style.color=C.purple;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Download size={13}/>
@@ -623,10 +623,10 @@ const InvoiceManagement = () => {
             </div>
             {detailInv.notes&&<div style={{ background:'#FFFBEB',borderRadius:10,padding:'10px 14px',marginBottom:14,fontSize:12,color:'#92400E' }}>📝 {detailInv.notes}</div>}
             <div style={{ display:'flex',gap:8 }}>
-              {getStatus(detailInv)!=='PAID'&&<button onClick={()=>{setDetailInv(null);openPayModal(detailInv);}} style={{ flex:1,padding:'10px',borderRadius:10,background:C.green,color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+              {getStatus(detailInv)!=='PAID'&&<button type="button" onClick={()=>{setDetailInv(null);openPayModal(detailInv);}} style={{ flex:1,padding:'10px',borderRadius:10,background:C.green,color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
                 <DollarSign size={14}/>Enregistrer paiement
               </button>}
-              <button onClick={()=>handlePrint(detailInv.id)} style={{ flex:1,padding:'10px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
+              <button type="button" onClick={()=>handlePrint(detailInv.id)} style={{ flex:1,padding:'10px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',cursor:'pointer',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}>
                 <Printer size={14}/>Imprimer
               </button>
             </div>
@@ -675,8 +675,8 @@ const InvoiceManagement = () => {
             <div style={{ background:'#F0FDFE',borderRadius:14,padding:'16px',border:'1px solid #7DD3DA' }}>
               <div style={{ fontSize:11,fontWeight:700,color:C.teal,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12 }}>+ Nouveau paiement</div>
               <div style={{ marginBottom:12 }}>
-                <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Montant (Ar) *</label>
-                <input type="number" min="0" value={payData.amount_mga} onChange={e=>setPayData({...payData,amount_mga:e.target.value})}
+                <label htmlFor="invoice-payment-amount" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Montant (Ar) *</label>
+                <input id="invoice-payment-amount" type="number" min="0" value={payData.amount_mga} onChange={e=>setPayData({...payData,amount_mga:e.target.value})}
                   placeholder={`Solde restant: ${fmt(payStats.balance_mga!=null?payStats.balance_mga:payInv.total_mga||0)} Ar`}
                   style={inp} onFocus={fi} onBlur={bi}/>
                 {/* Bouton solde complet */}
@@ -701,11 +701,12 @@ const InvoiceManagement = () => {
               {/*<label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Référence (optionnel)</label>
                 <input value={payData.reference_number} onChange={e=>setPayData({...payData,reference_number:e.target.value})}
                   placeholder="N° transaction MVola, chèque..." style={inp} onFocus={fi} onBlur={bi}/>*/}
-              <label style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
+              <label htmlFor="invoice-payment-reference" style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
                   Référence {canUsePaymentReference(payData.payment_method) ? '(optionnel)' : '(non applicable)'}
                 </label>
                 
                 <input
+                  id="invoice-payment-reference"
                   value={payData.reference_number}
                   onChange={(e) => {
                     if (!canUsePaymentReference(payData.payment_method)) return;
@@ -731,7 +732,7 @@ const InvoiceManagement = () => {
                   onBlur={bi}
                 />
               </div>
-              <button onClick={handlePayment} style={{ width:'100%',padding:'12px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+              <button type="button" onClick={handlePayment} style={{ width:'100%',padding:'12px',borderRadius:11,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',border:'none',cursor:'pointer',fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:15,display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
                 <CheckCircle size={16}/>Valider le paiement
               </button>
             </div>
@@ -748,6 +749,7 @@ const InvoiceManagement = () => {
               <div style={{ position:'relative', marginBottom:7 }}>
                 <Search size={13} color="#94A3B8" style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)' }}/>
                 <input
+                  aria-label="Rechercher un patient"
                   value={patientSearch}
                   onChange={e=>setPatientSearch(e.target.value)}
                   placeholder="Rechercher par nom, ID, téléphone, email..."
@@ -756,7 +758,7 @@ const InvoiceManagement = () => {
                   onBlur={bi}
                 />
               </div>
-              <select value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required>
+              <select aria-label="Patient de la facture" value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required>
                 <option value="">Sélectionner...</option>
                 {patientOptions.map(p=><option key={p.id} value={p.id}>{patientIdentifier(p)} · {p.first_name} {p.last_name}{p.phone_primary ? ` · ${p.phone_primary}` : ''}</option>)}
               </select>
@@ -769,8 +771,8 @@ const InvoiceManagement = () => {
               </div>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire *</label>
-              <select value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi} required>
+              <label htmlFor="invoice-pricing-schedule" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire *</label>
+              <select id="invoice-pricing-schedule" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi} required>
                 <option value="">Sélectionner...</option>
                 {schedules.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
@@ -788,7 +790,7 @@ const InvoiceManagement = () => {
                 </button>
               ))}
               <div style={{ display:'flex',alignItems:'center',gap:5 }}>
-                <input type="number" min="0" max="100" value={form.discount_percentage} onChange={e=>setForm({...form,discount_percentage:parseFloat(e.target.value)||0})}
+                <input aria-label="Remise en pourcentage" type="number" min="0" max="100" value={form.discount_percentage} onChange={e=>setForm({...form,discount_percentage:parseFloat(e.target.value)||0})}
                   style={{ ...inp,width:70 }} onFocus={fi} onBlur={bi}/>
                 <span style={{ fontSize:12,color:'#64748B' }}>%</span>
               </div>
@@ -829,7 +831,7 @@ const InvoiceManagement = () => {
                 <div style={{ background:'#F8FAFC',borderRadius:10,padding:'9px 8px',fontSize:11,fontWeight:700,color:C.teal,textAlign:'right',border:'1px solid #E2E8F0' }}>
                   {fmt((item.quantity||0)*(parseFloat(item.unit_price_mga)||0))}
                 </div>
-                <button type="button" onClick={()=>removeItem(i)} style={{ width:28,height:28,borderRadius:7,border:'1px solid #FECACA',background:'#FFF5F5',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#EF4444' }}>
+                <button type="button" aria-label={`Retirer la prestation ${i + 1}`} onClick={()=>removeItem(i)} style={{ width:28,height:28,borderRadius:7,border:'1px solid #FECACA',background:'#FFF5F5',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#EF4444' }}>
                   <X size={12}/>
                 </button>
               </div>

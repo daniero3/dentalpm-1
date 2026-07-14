@@ -12,7 +12,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const T = '#0D7A87';
 
 const BRAND_COLORS = { visa:'#1A1F71', mastercard:'#EB001B', amex:'#2E77BC', default:'#475569' };
@@ -150,7 +150,7 @@ export default function BillingInfo() {
             <div style={{ textAlign:'center', padding:'12px 0' }}>
               <div style={{ fontSize:32, marginBottom:8 }}>💳</div>
               <div style={{ fontSize:13, color:'#64748B', marginBottom:12 }}>Aucune carte enregistrée</div>
-              <button onClick={openPortal} disabled={opening}
+              <button type="button" onClick={openPortal} disabled={opening}
                 style={{ padding:'9px 18px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer', display:'inline-flex', alignItems:'center', gap:7 }}>
                 <CreditCard size={14}/> Ajouter une carte
               </button>
@@ -192,7 +192,7 @@ export default function BillingInfo() {
         <div style={{ padding:'14px 20px', display:'flex', flexDirection:'column', gap:10 }}>
 
           {/* Changer de carte */}
-          <button onClick={openPortal} disabled={opening}
+          <button type="button" onClick={openPortal} disabled={opening}
             style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderRadius:12, border:'1.5px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', transition:'all .15s', textAlign:'left', width:'100%' }}
             onMouseOver={e=>{ e.currentTarget.style.borderColor=T; e.currentTarget.style.background='#F0FDFE'; }}
             onMouseOut={e=>{ e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.background='#F8FAFC'; }}>
@@ -209,7 +209,7 @@ export default function BillingInfo() {
           </button>
 
           {/* Retirer la carte / Annuler */}
-          <button onClick={openPortal} disabled={opening}
+          <button type="button" onClick={openPortal} disabled={opening}
             style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderRadius:12, border:'1.5px solid #FEE2E2', background:'#FFF5F5', cursor:'pointer', transition:'all .15s', textAlign:'left', width:'100%' }}
             onMouseOver={e=>{ e.currentTarget.style.borderColor='#EF4444'; e.currentTarget.style.background='#FEE2E2'; }}
             onMouseOut={e=>{ e.currentTarget.style.borderColor='#FEE2E2'; e.currentTarget.style.background='#FFF5F5'; }}>
@@ -227,7 +227,7 @@ export default function BillingInfo() {
 
           {/* Réactiver */}
           {sub?.cancel_at_period_end && (
-            <button onClick={openPortal} disabled={opening}
+            <button type="button" onClick={openPortal} disabled={opening}
               style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderRadius:12, border:'1.5px solid #BBF7D0', background:'#F0FDF4', cursor:'pointer', transition:'all .15s', textAlign:'left', width:'100%' }}
               onMouseOver={e=>{ e.currentTarget.style.borderColor='#22C55E'; }}
               onMouseOut={e=>{ e.currentTarget.style.borderColor='#BBF7D0'; }}>

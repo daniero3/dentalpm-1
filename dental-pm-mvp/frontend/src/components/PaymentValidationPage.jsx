@@ -139,7 +139,7 @@ export default function PaymentValidationPage() {
       <div style={{display:'flex',gap:10,alignItems:'center',marginBottom:18,flexWrap:'wrap'}}>
         <div style={{display:'flex',gap:6}}>
           {ST_TABS.map(t=>(
-            <button key={t.key} onClick={()=>setFilter(t.key)}
+            <button type="button" key={t.key} onClick={()=>setFilter(t.key)}
               style={{padding:'8px 16px',borderRadius:10,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all .2s',background:filter===t.key?t.dot:'#F1F5F9',color:filter===t.key?'#fff':t.color}}>
               {t.label} ({counts[t.key]})
             </button>
@@ -149,7 +149,7 @@ export default function PaymentValidationPage() {
           style={{flex:1,minWidth:200,padding:'9px 14px',borderRadius:11,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none'}}
           onFocus={e=>e.target.style.borderColor='#0D7A87'}
           onBlur={e=>e.target.style.borderColor='#E2E8F0'}/>
-        <button onClick={refresh} style={{padding:'9px 16px',borderRadius:11,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',fontWeight:600,fontSize:13,cursor:'pointer'}}>
+        <button type="button" onClick={refresh} style={{padding:'9px 16px',borderRadius:11,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',fontWeight:600,fontSize:13,cursor:'pointer'}}>
           🔄 Actualiser
         </button>
       </div>
@@ -222,11 +222,11 @@ export default function PaymentValidationPage() {
                     {/* Actions uniquement si PENDING */}
                     {req.status === 'PENDING' && (
                       <div style={{display:'flex',gap:8}}>
-                        <button className="av-btn" onClick={()=>openModal(req,'reject')}
+                        <button type="button" className="av-btn" onClick={()=>openModal(req,'reject')}
                           style={{background:'#FEE2E2',color:'#991B1B'}}>
                           ✕ Rejeter
                         </button>
-                        <button className="av-btn" onClick={()=>openModal(req,'approve')}
+                        <button type="button" className="av-btn" onClick={()=>openModal(req,'approve')}
                           style={{background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',boxShadow:'0 4px 14px rgba(16,185,129,.3)'}}>
                           ✓ Approuver
                         </button>
@@ -293,10 +293,10 @@ export default function PaymentValidationPage() {
             )}
 
             <div style={{display:'flex',gap:10}}>
-              <button onClick={closeModal} style={{flex:1,padding:'12px',borderRadius:12,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',fontWeight:600,fontSize:14,cursor:'pointer'}}>
+              <button type="button" onClick={closeModal} style={{flex:1,padding:'12px',borderRadius:12,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',fontWeight:600,fontSize:14,cursor:'pointer'}}>
                 Annuler
               </button>
-              <button onClick={doAction} disabled={busy}
+              <button type="button" onClick={doAction} disabled={busy}
                 style={{flex:2,padding:'12px',borderRadius:12,border:'none',background:modal.action==='approve'?'linear-gradient(135deg,#10B981,#059669)':'linear-gradient(135deg,#EF4444,#DC2626)',color:'#fff',fontWeight:700,fontSize:14,cursor:busy?'not-allowed':'pointer',opacity:busy?.7:1}}>
                 {busy ? '⏳ Traitement...' : modal.action==='approve' ? '✅ Confirmer et activer' : '❌ Confirmer le rejet'}
               </button>

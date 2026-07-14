@@ -195,6 +195,7 @@ export default function CookieBanner() {
             {/* Boutons */}
 	            <div className="dpm-cookie-actions" style={{ display: 'flex', gap: 10, flexShrink: 0, alignItems: 'center' }}>
               <button
+                type="button"
                 className="dpm-decline-btn"
                 onClick={() => dismiss('declined')}
                 style={{
@@ -211,6 +212,7 @@ export default function CookieBanner() {
               </button>
 
               <button
+                type="button"
                 className="dpm-accept-btn"
                 onClick={() => dismiss('accepted')}
                 style={{

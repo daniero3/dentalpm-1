@@ -17,7 +17,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 700 }) => {
     <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth: maxWidth||560, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
+        <button type="button" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
@@ -112,7 +112,7 @@ const SuperAdminClinics = () => {
           <h1 className="text-2xl font-bold text-gray-900">Gestion des Cabinets</h1>
           <p className="text-gray-500 text-sm mt-1">{clinics.length} cabinet(s) enregistré(s)</p>
         </div>
-        <button onClick={() => { setError(''); setShowCreateDialog(true); }}
+        <button type="button" onClick={() => { setError(''); setShowCreateDialog(true); }}
           style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:13, cursor:'pointer', boxShadow:'0 2px 12px rgba(13,122,135,0.3)' }}>
           <Plus size={16} />Nouveau Cabinet
         </button>
@@ -122,7 +122,7 @@ const SuperAdminClinics = () => {
       {success && (
         <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', color:'#15803D', padding:'12px 16px', borderRadius:10, display:'flex', justifyContent:'space-between' }}>
           <span>{success}</span>
-          <button onClick={() => setSuccess('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#15803D', fontWeight:700 }}>×</button>
+          <button type="button" onClick={() => setSuccess('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#15803D', fontWeight:700 }}>×</button>
         </div>
       )}
 
@@ -159,7 +159,7 @@ const SuperAdminClinics = () => {
                       </span>
                     </div>
                   </div>
-                  <button onClick={() => handleToggleActive(clinic)}
+                  <button type="button" onClick={() => handleToggleActive(clinic)}
                     style={{ padding:6, borderRadius:8, border:'none', background:'none', cursor:'pointer', color: clinic.is_active ? '#22c55e' : '#94A3B8' }}
                     title={clinic.is_active ? 'Désactiver' : 'Activer'}>
                     <Power size={16} />

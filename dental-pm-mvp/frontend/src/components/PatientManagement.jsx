@@ -17,7 +17,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const calcAge = dob => {
   if (!dob) return null;
@@ -273,7 +273,7 @@ const Avatar = ({ p, size=44 }) => {
 const ActionBtn = ({ icon: Icon, label, to, onClick, color='#0D7A87' }) => {
   const [hover, setHover] = useState(false);
   const btn = (
-    <button title={label} onClick={onClick}
+    <button type="button" title={label} onClick={onClick}
       onMouseOver={() => setHover(true)} onMouseOut={() => setHover(false)}
       style={{ width:44, height:44, borderRadius:12, border:`1.5px solid ${hover?color:'#E2E8F0'}`, background:hover?`${color}12`:'#fff', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:3, color:hover?color:'#94A3B8', transition:'all .18s', flexShrink:0, padding:'4px 2px' }}>
       <Icon size={18}/>
@@ -550,9 +550,9 @@ const PatientManagement = () => {
     try {
       const response = await axios.post(`${API}/patients/import-csv`, formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        withCredentials: true
       });
       const inserted = response.data.inserted || 0;
       const updated = response.data.updated || 0;
@@ -709,10 +709,10 @@ const PatientManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={async () => { await fetchPatients(); await fetchPatientStats(); }} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
+          <button type="button" onClick={async () => { await fetchPatients(); await fetchPatientStats(); }} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#0D7A87', border:'1.5px solid #7DD3DA', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
+          <button type="button" onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#0D7A87', border:'1.5px solid #7DD3DA', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
             <Download size={15}/>Modèle CSV
           </button>
           {canImportPatients && (
@@ -725,6 +725,7 @@ const PatientManagement = () => {
                 style={{ display:'none' }}
               />
               <button
+                type="button"
                 onClick={() => importInputRef.current?.click()}
                 disabled={importing}
                 style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(124,58,237,.25)', opacity: importing ? .75 : 1 }}
@@ -733,7 +734,7 @@ const PatientManagement = () => {
               </button>
             </>
           )}
-          <button onClick={openCreate}
+          <button type="button" onClick={openCreate}
             style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
             <Plus size={15}/>Nouveau Patient
           </button>
@@ -749,7 +750,7 @@ const PatientManagement = () => {
           { icon:'⚠️', l:'Avec allergies', v:stats.allergies, c:'#F59E0B', bg:'#FFFBEB', action:()=>applyStatFilter('ALLERGIES') },
           { icon:'🆕', l:'Ce mois', v:stats.recent, c:'#10B981', bg:'#DCFCE7', action:()=>applyStatFilter('THIS_MONTH') },
         ].map((k,i) => (
-          <button key={i} onClick={k.action} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${(genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total')?k.c:'#E2E8F0'}`, padding:'14px 16px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', alignItems:'center', gap:11 }}
+          <button type="button" key={i} onClick={k.action} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${(genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total')?k.c:'#E2E8F0'}`, padding:'14px 16px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', alignItems:'center', gap:11 }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
             onMouseOut={e=>{e.currentTarget.style.borderColor=((genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total'))?k.c:'#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
             <div style={{ width:36, height:36, borderRadius:10, background:k.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{k.icon}</div>
@@ -787,7 +788,7 @@ const PatientManagement = () => {
             onFocus={()=>setSearchFocused(true)}
             onBlur={()=>setSearchFocused(false)}
             style={{ border:'none', background:'transparent', outline:'none', fontSize:14, flex:1, fontFamily:'inherit', color:'#0F172A', minWidth:0 }}/>
-          {search && <button onClick={()=>{setPage(1);setSearch('');}} style={{ width:28, height:28, borderRadius:9, background:'#EEF6F7', border:'none', cursor:'pointer', color:'#64748B', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>}
+          {search && <button type="button" onClick={()=>{setPage(1);setSearch('');}} style={{ width:28, height:28, borderRadius:9, background:'#EEF6F7', border:'none', cursor:'pointer', color:'#64748B', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>}
         </div>
         <div style={{ width:1, height:24, background:'#E2E8F0' }}/>
         {/* Tri */}
@@ -800,7 +801,7 @@ const PatientManagement = () => {
         {/* Vue */}
         <div style={{ display:'flex', gap:3 }}>
           {[{k:'list',Icon:List},{k:'grid',Icon:Grid}].map(v => (
-            <button key={v.k} onClick={()=>setView(v.k)}
+            <button type="button" key={v.k} onClick={()=>setView(v.k)}
               style={{ width:32, height:32, borderRadius:8, border:'none', cursor:'pointer', background:viewMode===v.k?'#0D7A87':'#F1F5F9', color:viewMode===v.k?'#fff':'#64748B', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}>
               <v.Icon size={14}/>
             </button>
@@ -818,7 +819,7 @@ const PatientManagement = () => {
           <Users size={40} style={{ margin:'0 auto 14px', color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700, color:'#475569', fontSize:15, margin:'0 0 6px' }}>{search ? 'Aucun résultat' : 'Aucun patient'}</p>
           <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 18px' }}>{search ? `Aucun patient ne correspond à "${search}"` : 'Commencez par créer votre premier patient'}</p>
-          {!search && <button onClick={openCreate} style={{ padding:'10px 22px', borderRadius:11, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700 }}>Créer un patient</button>}
+          {!search && <button type="button" onClick={openCreate} style={{ padding:'10px 22px', borderRadius:11, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700 }}>Créer un patient</button>}
         </div>
       ) : viewMode === 'list' ? (
         /* ── VUE LISTE ── */
@@ -893,7 +894,7 @@ const PatientManagement = () => {
                   {p.allergies && <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'5px 10px', fontSize:11, fontWeight:700, color:'#92400E', display:'flex', alignItems:'center', gap:5 }}><AlertTriangle size={10}/>Allergies: {p.allergies}</div>}
                 </div>
                 <div style={{ display:'flex', gap:6, borderTop:'1px solid #F1F5F9', paddingTop:12 }}>
-                  <button onClick={()=>setDetail(p)} style={{ flex:1, padding:'7px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#0D7A87', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}><Eye size={12}/>Fiche</button>
+                  <button type="button" onClick={()=>setDetail(p)} style={{ flex:1, padding:'7px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#0D7A87', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}><Eye size={12}/>Fiche</button>
                   <ActionBtn icon={History}       label="Historique"   onClick={()=>openHistory(p)}          color="#DC2626"/>
                   <ActionBtn icon={Activity}      label="Odontogramme" to={`/patients/${p.id}/odontogram`}  color="#7C3AED"/>
                   <ActionBtn icon={FileText}      label="Documents"    to={`/patients/${p.id}/documents`}   color="#3B82F6"/>
@@ -908,14 +909,14 @@ const PatientManagement = () => {
 
       {pagination.total_pages > 1 && (
         <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginTop:18 }}>
-          <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page <= 1}
+          <button type="button" onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page <= 1}
             style={{ padding:'9px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:page<=1?'#F8FAFC':'#fff', color:page<=1?'#CBD5E1':'#475569', fontWeight:700, cursor:page<=1?'not-allowed':'pointer' }}>
             Précédent
           </button>
           <span style={{ fontSize:13, fontWeight:700, color:'#64748B' }}>
             Page {pagination.current_page} / {pagination.total_pages}
           </span>
-          <button onClick={()=>setPage(p=>Math.min(pagination.total_pages,p+1))} disabled={page >= pagination.total_pages}
+          <button type="button" onClick={()=>setPage(p=>Math.min(pagination.total_pages,p+1))} disabled={page >= pagination.total_pages}
             style={{ padding:'9px 14px', borderRadius:10, border:'1px solid #E2E8F0', background:page>=pagination.total_pages?'#F8FAFC':'#fff', color:page>=pagination.total_pages?'#CBD5E1':'#475569', fontWeight:700, cursor:page>=pagination.total_pages?'not-allowed':'pointer' }}>
             Suivant
           </button>

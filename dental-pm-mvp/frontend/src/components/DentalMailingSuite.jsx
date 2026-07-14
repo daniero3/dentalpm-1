@@ -22,7 +22,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const C = {
   teal: '#0D7A87',
@@ -487,7 +487,7 @@ const DentalMailingSuite = () => {
             Créez une campagne patient en 3 étapes, avec conformité et SMS de secours intégrés.
           </p>
         </div>
-        <button onClick={fetchAll} style={{ ...button, width: 'auto', background: '#fff', color: '#0F172A' }}>
+        <button type="button" onClick={fetchAll} style={{ ...button, width: 'auto', background: '#fff', color: '#0F172A' }}>
           <RefreshCw size={15} /> Actualiser
         </button>
       </div>
@@ -534,6 +534,7 @@ const DentalMailingSuite = () => {
               const active = form.type === type.key;
               return (
                 <button
+                  type="button"
                   key={type.key}
                   onClick={() => setForm((prev) => ({ ...prev, type: type.key }))}
                   style={{
@@ -595,6 +596,7 @@ const DentalMailingSuite = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
               <label style={{ fontSize: 12, fontWeight: 900, color: '#475569' }}>Patients ciblés</label>
               <button
+                type="button"
                 onClick={() => setSelectedPatientIds([])}
                 disabled={selectedPatientIds.length === 0}
                 style={{
@@ -628,6 +630,7 @@ const DentalMailingSuite = () => {
                 const eligible = patientIsEmailEligible(patient);
                 return (
                   <button
+                    type="button"
                     key={patient.id}
                     onClick={() => togglePatient(patient.id)}
                     className="mailing-patient-row"
@@ -704,10 +707,10 @@ const DentalMailingSuite = () => {
 
           <StepTitle number="3" title="Générer et valider" subtitle="Créez le brouillon après contrôle rapide." />
           <div className="mailing-actions-grid">
-            <button onClick={generateEmail} style={{ ...button, background: '#F0FDFE', borderColor: '#7DD3DA', color: C.teal }}>
+            <button type="button" onClick={generateEmail} style={{ ...button, background: '#F0FDFE', borderColor: '#7DD3DA', color: C.teal }}>
               <Sparkles size={16} /> Générer
             </button>
-            <button onClick={createCampaign} disabled={creating} style={{ ...button, background: C.teal, color: '#fff', borderColor: C.teal }}>
+            <button type="button" onClick={createCampaign} disabled={creating} style={{ ...button, background: C.teal, color: '#fff', borderColor: C.teal }}>
               <Mail size={16} /> {creating ? 'Création...' : 'Créer brouillon'}
             </button>
           </div>
@@ -725,6 +728,7 @@ const DentalMailingSuite = () => {
             </div>
             {generated?.body_html && (
               <button
+                type="button"
                 onClick={() => { navigator.clipboard.writeText(generated.body_html); toast.success('HTML copié'); }}
                 style={{ ...button, width: 'auto', background: '#fff', color: '#0F172A' }}
               >
@@ -841,6 +845,7 @@ const DentalMailingSuite = () => {
                 <div className="mailing-campaign-status" style={{ color: C.slate, fontSize: 12 }}>{campaign.status}</div>
               </div>
               <button
+                type="button"
                 onClick={() => sendCampaign(campaign)}
                 disabled={campaign.status === 'SENT' || sendingId === campaign.id}
                 style={{

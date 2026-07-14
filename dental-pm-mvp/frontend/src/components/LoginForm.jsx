@@ -6,6 +6,7 @@ import {
   ShieldCheck, Sparkles, Activity, CalendarCheck, Receipt, Wifi
 } from 'lucide-react';
 import axios from 'axios';
+import { removeStoredValue, setStoredJson } from '../utils/versionedStorage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = BACKEND_URL
@@ -25,11 +26,11 @@ const normalizePlan = (value) => {
 const syncPlanCache = (value) => {
   const plan = normalizePlan(value);
   if (plan) {
-    localStorage.setItem('dpm_plan', JSON.stringify(plan));
-    localStorage.setItem('dpm_user_plan', JSON.stringify(plan));
+    setStoredJson('plan', plan);
+    setStoredJson('userPlan', plan);
   } else {
-    localStorage.removeItem('dpm_plan');
-    localStorage.removeItem('dpm_user_plan');
+    removeStoredValue('plan');
+    removeStoredValue('userPlan');
   }
 };
 
@@ -129,7 +130,7 @@ const LoginForm = () => {
       const loginPlan = normalizePlan(res.data.plan || userData?.plan || userData?.current_plan);
 
       if (userData.role === 'SUPER_ADMIN') {
-        localStorage.setItem('user', JSON.stringify(userData));
+        setStoredJson('user', userData);
         syncPlanCache(null);
         window.location.href = '/';
         return;
@@ -145,7 +146,7 @@ const LoginForm = () => {
         await selectClinic(token, userClinics[0], loginPlan);
       } else {
         // Login direct
-        localStorage.setItem('user', JSON.stringify(userData));
+        setStoredJson('user', userData);
         syncPlanCache(loginPlan);
         window.location.href = '/';
       }
@@ -160,8 +161,8 @@ const LoginForm = () => {
         { clinic_id: clinic.id },
         token || tempToken ? { headers: { Authorization: `Bearer ${token || tempToken}` } } : undefined
       );
-      const { token: finalToken, user: finalUser } = res.data;
-      localStorage.setItem('user', JSON.stringify(finalUser));
+      const { user: finalUser } = res.data;
+      setStoredJson('user', finalUser);
       syncPlanCache(finalUser?.plan || finalUser?.current_plan || clinic?.current_plan || fallbackPlan);
       window.location.href = '/';
     } catch (err) {
@@ -343,7 +344,7 @@ const LoginForm = () => {
             </form>
             <div style={{ textAlign:'center', marginTop:20, paddingTop:20, borderTop:'1px solid #F1F5F9' }}>
               <span style={{ fontSize:13, color:'#64748B' }}>Pas encore abonné ? </span>
-              <button onClick={() => navigate('/register')}
+              <button type="button" onClick={() => navigate('/register')}
                 style={{ fontSize:13, color:'#7C3AED', fontWeight:700, background:'none', border:'none', cursor:'pointer' }}>
                 S&apos;abonner →
               </button>
@@ -355,7 +356,7 @@ const LoginForm = () => {
         {step === STEP_CLINIC && (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-              <button onClick={() => { setStep(STEP_LOGIN); setError(''); }}
+              <button type="button" onClick={() => { setStep(STEP_LOGIN); setError(''); }}
                 style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', padding:4, borderRadius:6 }}>
                 <ArrowLeft size={18}/>
               </button>
@@ -367,7 +368,7 @@ const LoginForm = () => {
             <ErrorBox msg={error} />
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
               {clinics.map(clinic => (
-                <button key={clinic.id} onClick={() => handleSelectClinic(clinic)} disabled={loading}
+                <button type="button" key={clinic.id} onClick={() => handleSelectClinic(clinic)} disabled={loading}
                   style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', borderRadius:12, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', transition:'all 0.18s', textAlign:'left', width:'100%' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor='#0D7A87'; e.currentTarget.style.background='rgba(13,122,135,0.04)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.background='#fff'; }}>
@@ -391,7 +392,7 @@ const LoginForm = () => {
         {step === STEP_REGISTER && (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-              <button onClick={() => { setStep(STEP_LOGIN); setError(''); }}
+              <button type="button" onClick={() => { setStep(STEP_LOGIN); setError(''); }}
                 style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', padding:4, borderRadius:6 }}>
                 <ArrowLeft size={18}/>
               </button>

@@ -12,7 +12,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const T = '#0D7A87';
 const ROLES = [
@@ -109,7 +109,7 @@ export default function ClinicUsersTab() {
             </div>
           </div>
 
-          <button onClick={() => { if (!canAdd) { toast.error(`Limite atteinte. Upgradez votre plan pour ajouter plus d'utilisateurs.`); return; } setModal(true); }}
+          <button type="button" onClick={() => { if (!canAdd) { toast.error(`Limite atteinte. Upgradez votre plan pour ajouter plus d'utilisateurs.`); return; } setModal(true); }}
             style={{ padding:'10px 18px', borderRadius:11, border:'none', background: canAdd ? `linear-gradient(135deg,${T},#13A3B4)` : '#E2E8F0', color: canAdd ? '#fff' : '#94A3B8', fontWeight:700, fontSize:13, cursor: canAdd ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', gap:8, boxShadow: canAdd ? `0 4px 12px ${T}30` : 'none' }}>
             <Plus size={15}/> Ajouter utilisateur
           </button>
@@ -162,7 +162,7 @@ export default function ClinicUsersTab() {
                 </div>
                 {/* Actions */}
                 <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                  <button onClick={() => toggleActive(u)} title={u.is_active ? 'Désactiver' : 'Réactiver'}
+                  <button type="button" onClick={() => toggleActive(u)} title={u.is_active ? 'Désactiver' : 'Réactiver'}
                     style={{ width:34, height:34, borderRadius:9, border:`1px solid ${u.is_active ? '#E2E8F0' : '#BBF7D0'}`, background: u.is_active ? '#F8FAFC' : '#DCFCE7', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
                     {u.is_active ? <UserX size={14} color="#94A3B8"/> : <UserCheck size={14} color="#16A34A"/>}
                   </button>
@@ -178,7 +178,7 @@ export default function ClinicUsersTab() {
         <div onClick={e=>e.target===e.currentTarget&&setModal(false)}
           style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:isMobile ? '28px 12px' : '60px 16px 32px' }}>
           <div style={{ background:'#fff', borderRadius:22, padding:isMobile ? 22 : 28, width:'100%', maxWidth:560, maxHeight:isMobile ? 'calc(100dvh - 56px)' : 'none', overflowY:'auto', margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
-            <button onClick={()=>setModal(false)} aria-label="Fermer" style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
+            <button type="button" onClick={()=>setModal(false)} aria-label="Fermer" style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
                 <X size={16}/>
               </button>
             <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>👤 Nouvel utilisateur</h2>

@@ -9,7 +9,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  withCredentials: true
 });
 
 const STATUSES = {
@@ -46,7 +46,7 @@ const Modal = ({ open, onClose, children }) => {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background:'#fff', borderRadius:16, padding:24, width:'100%', maxWidth:440, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:12, right:12, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
+        <button type="button" onClick={onClose} style={{ position:'absolute', top:12, right:12, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
           <X size={16} />
         </button>
         {children}
@@ -177,7 +177,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
         ? fdatetime(existing.updated_at)
         : '';
     return (
-      <button onClick={() => handleToothClick(toothFdi)}
+      <button type="button" onClick={() => handleToothClick(toothFdi)}
         title={dateLabel ? `Dernière action : ${dateLabel}` : `Dent ${toothFdi}`}
         className={`w-11 h-14 rounded ${color} text-xs font-bold flex flex-col items-center justify-center hover:ring-2 hover:ring-blue-400 transition ${isPending ? 'ring-2 ring-yellow-400' : ''}`}
         data-testid={`tooth-${toothFdi}`}>

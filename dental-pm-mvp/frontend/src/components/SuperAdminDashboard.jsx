@@ -7,7 +7,7 @@ const API = process.env.REACT_APP_API_URL
   || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8001/api' : '/api');
 
 const fmt = (n) => new Intl.NumberFormat('fr-MG').format(n || 0);
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const PLAN_COLORS = {
   ESSENTIAL: { bg:'#DBEAFE', text:'#1D4ED8', border:'#93C5FD' },
@@ -108,7 +108,7 @@ export default function SuperAdminDashboard() {
             DPM Madagascar — Tableau de bord propriétaire
           </p>
         </div>
-        <button onClick={fetchRevenue} style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', color:'#475569' }}>
+        <button type="button" onClick={fetchRevenue} style={{ padding:'8px 16px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', color:'#475569' }}>
           🔄 Actualiser
         </button>
       </div>
@@ -145,7 +145,7 @@ export default function SuperAdminDashboard() {
       {/* Tabs */}
       <div style={{ display:'flex', gap:4, borderBottom:'2px solid #F1F5F9', marginBottom:20 }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
+          <button type="button" key={t.id} onClick={() => setActiveTab(t.id)}
             style={{ padding:'10px 18px', borderRadius:'10px 10px 0 0', border:'none', background: activeTab===t.id ? '#0D7A87' : 'transparent', color: activeTab===t.id ? '#fff' : '#64748B', fontWeight:600, fontSize:13, cursor:'pointer', transition:'all .2s' }}>
             {t.label}
           </button>
@@ -181,12 +181,14 @@ export default function SuperAdminDashboard() {
                     </div>
                     <div style={{ display:'flex', gap:8, flexShrink:0 }}>
                       <button
+                        type="button"
                         onClick={() => approvePayment(p.id, p.plan_code)}
                         disabled={processing === p.id}
                         style={{ padding:'8px 16px', borderRadius:10, background:'linear-gradient(135deg,#16A34A,#15803D)', color:'#fff', border:'none', fontWeight:700, fontSize:13, cursor:'pointer', opacity: processing===p.id ? 0.6 : 1 }}>
                         {processing === p.id ? '...' : '✅ Approuver'}
                       </button>
                       <button
+                        type="button"
                         onClick={() => rejectPayment(p.id)}
                         disabled={processing === p.id}
                         style={{ padding:'8px 16px', borderRadius:10, background:'#FEE2E2', color:'#DC2626', border:'1px solid #FECACA', fontWeight:700, fontSize:13, cursor:'pointer' }}>
@@ -301,7 +303,7 @@ export default function SuperAdminDashboard() {
                 { label:'Gérer les cabinets', count: data?.allClinics?.length, tab:'clinics' },
                 { label:'Abonnements actifs', count: data?.activeSubs?.length, tab:'subs' },
               ].map(a => (
-                <button key={a.tab} onClick={() => setActiveTab(a.tab)}
+                <button type="button" key={a.tab} onClick={() => setActiveTab(a.tab)}
                   style={{ width:'100%', padding:'10px 14px', borderRadius:10, background: a.urgent ? '#DC2626' : 'rgba(255,255,255,0.15)', border: a.urgent ? 'none' : '1px solid rgba(255,255,255,0.2)', color:'#fff', fontWeight:600, fontSize:13, cursor:'pointer', marginBottom:8, textAlign:'left', display:'flex', justifyContent:'space-between' }}>
                   <span>{a.label}</span>
                   <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:99, padding:'1px 8px', fontSize:11 }}>{a.count ?? 0}</span>

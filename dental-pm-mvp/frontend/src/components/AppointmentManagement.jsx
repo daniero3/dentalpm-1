@@ -23,7 +23,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const TYPES = [
   { value:'CONSULTATION', label:'Consultation', color:'#3B82F6', bg:'#EFF6FF', icon:'🩺' },
@@ -71,7 +71,7 @@ const Modal = ({ open, onClose, title, children, maxW=520 }) => {
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={{ position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',overflowY:'auto',padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}>
           <X size={15}/>
         </button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
@@ -101,9 +101,9 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
     <div style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'16px', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
       {/* Header mois */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-        <button onClick={()=>setMonth(new Date(year,mon-1,1))} style={{ background:'none',border:'none',cursor:'pointer',padding:4,borderRadius:8,color:'#64748B',display:'flex' }}><ChevronLeft size={16}/></button>
+        <button type="button" aria-label="Mois précédent" onClick={()=>setMonth(new Date(year,mon-1,1))} style={{ background:'none',border:'none',cursor:'pointer',padding:4,borderRadius:8,color:'#64748B',display:'flex' }}><ChevronLeft size={16}/></button>
         <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:14, color:'#0F172A' }}>{MOIS_FR[mon]} {year}</span>
-        <button onClick={()=>setMonth(new Date(year,mon+1,1))} style={{ background:'none',border:'none',cursor:'pointer',padding:4,borderRadius:8,color:'#64748B',display:'flex' }}><ChevronRight size={16}/></button>
+        <button type="button" aria-label="Mois suivant" onClick={()=>setMonth(new Date(year,mon+1,1))} style={{ background:'none',border:'none',cursor:'pointer',padding:4,borderRadius:8,color:'#64748B',display:'flex' }}><ChevronRight size={16}/></button>
       </div>
       {/* Jours de la semaine */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:2, marginBottom:4 }}>
@@ -118,7 +118,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
           const isToday = dateStr === today();
           const hasAppt = apptDates.has(dateStr);
           return (
-            <button key={i} onClick={() => onSelect(dateStr)}
+            <button type="button" key={i} onClick={() => onSelect(dateStr)}
               style={{ width:'100%', aspectRatio:'1', borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:isSel||isToday?700:400, position:'relative', transition:'all .15s',
                 background: isSel ? '#0D7A87' : isToday ? '#F0FDFE' : 'transparent',
                 color: isSel ? '#fff' : isToday ? '#0D7A87' : '#0F172A',
@@ -131,7 +131,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
           );
         })}
       </div>
-      <button onClick={() => onSelect(today())}
+      <button type="button" onClick={() => onSelect(today())}
         style={{ width:'100%', marginTop:10, padding:'7px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569' }}>
         Aujourd'hui
       </button>
@@ -189,7 +189,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
             {nextStatuses.map(ns => {
               const st = STATUS[ns];
               return (
-                <button key={ns} onClick={() => onStatusChange(a, ns)}
+                <button type="button" key={ns} onClick={() => onStatusChange(a, ns)}
                   style={{ padding:'3px 10px', borderRadius:99, border:`1px solid ${st.dot}`, background:st.bg, color:st.c, fontSize:10, fontWeight:700, cursor:'pointer', transition:'all .15s' }}
                   onMouseOver={e=>{e.currentTarget.style.transform='scale(1.05)';}}
                   onMouseOut={e=>{e.currentTarget.style.transform='scale(1)';}}>
@@ -210,6 +210,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
               e.stopPropagation();
               onPatientDetail?.(patientId);
             }}
+            aria-label="Ouvrir la fiche détaillée du patient"
             title="Fiche détaillée"
             style={{
               width: 30,
@@ -236,19 +237,19 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
             <Eye size={15} />
           </button>
         )}
-        <button onClick={() => onExport(a)} title="Export .ics"
+        <button type="button" aria-label="Exporter le rendez-vous au format ICS" onClick={() => onExport(a)} title="Export .ics"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
           onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
           <Download size={13}/>
         </button>
-        <button onClick={() => onEdit(a)} title="Modifier"
+        <button type="button" aria-label="Modifier le rendez-vous" onClick={() => onEdit(a)} title="Modifier"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#3B82F6';e.currentTarget.style.color='#3B82F6';}}
           onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
           <Edit2 size={13}/>
         </button>
-        <button onClick={() => onDelete(a)} title="Supprimer"
+        <button type="button" aria-label="Supprimer le rendez-vous" onClick={() => onDelete(a)} title="Supprimer"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#EF4444';e.currentTarget.style.color='#EF4444';}}
           onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
@@ -570,9 +571,9 @@ const AppointmentManagement = () => {
     try {
       const response = await axios.post(`${API}/appointments/import-csv`, formData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        withCredentials: true
       });
 
       const inserted = response.data.inserted || 0;
@@ -684,10 +685,10 @@ const AppointmentManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={fetchAppts} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:13, fontWeight:600, color:'#475569' }}>
+          <button type="button" aria-label="Rafraîchir les rendez-vous" onClick={fetchAppts} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#7C3AED', border:'1.5px solid #C4B5FD', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
+          <button type="button" onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#7C3AED', border:'1.5px solid #C4B5FD', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
             <Download size={15}/>Modèle CSV
           </button>
           {canImportAppointments && (
@@ -700,6 +701,7 @@ const AppointmentManagement = () => {
                 style={{ display:'none' }}
               />
               <button
+                type="button"
                 onClick={() => importInputRef.current?.click()}
                 disabled={importing}
                 style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(124,58,237,.25)', opacity: importing ? .75 : 1 }}
@@ -708,7 +710,7 @@ const AppointmentManagement = () => {
               </button>
             </>
           )}
-          <button onClick={openCreate}
+          <button type="button" onClick={openCreate}
             style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(139,92,246,.3)' }}>
             <Plus size={15}/>Nouveau RDV
           </button>
@@ -748,7 +750,7 @@ const AppointmentManagement = () => {
             <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'14px' }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>Types</div>
               {TYPES.map(t => (
-                <button key={t.value} onClick={() => setTypeF(typeF===t.value?'all':t.value)}
+                <button type="button" key={t.value} onClick={() => setTypeF(typeF===t.value?'all':t.value)}
                   style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'6px 8px', borderRadius:8, border:'none', cursor:'pointer', marginBottom:3, background:typeF===t.value?t.bg:'transparent', transition:'all .15s' }}>
                   <div style={{ width:10, height:10, borderRadius:'50%', background:t.color, flexShrink:0 }}/>
                   <span style={{ fontSize:12, fontWeight:typeF===t.value?700:500, color:typeF===t.value?t.color:'#475569' }}>{t.label}</span>
@@ -763,7 +765,7 @@ const AppointmentManagement = () => {
           {/* Barre de navigation + filtres */}
           <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'12px 16px', marginBottom:14, display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
             {/* Toggle calendrier */}
-            <button onClick={()=>setShowCal(s=>!s)}
+            <button type="button" aria-label={showCal ? 'Masquer le calendrier' : 'Afficher le calendrier'} onClick={()=>setShowCal(s=>!s)}
               style={{ padding:'6px 10px', borderRadius:8, border:'1.5px solid #E2E8F0', background:showCal?'#EDE9FE':'#fff', color:showCal?'#7C3AED':'#64748B', cursor:'pointer', display:'flex', alignItems:'center', gap:5, fontSize:12, fontWeight:600 }}>
               <Calendar size={13}/>
             </button>
@@ -771,7 +773,7 @@ const AppointmentManagement = () => {
             {/* Vue mode */}
             <div style={{ display:'flex', gap:3, background:'#F8FAFC', borderRadius:9, padding:3 }}>
               {[['day','Jour'],['week','Semaine'],['all','Tout']].map(([k,l])=>(
-                <button key={k} onClick={()=>setView(k)}
+                <button type="button" key={k} onClick={()=>setView(k)}
                   style={{ padding:'5px 12px', borderRadius:7, border:'none', cursor:'pointer', fontSize:12, fontWeight:600, background:viewMode===k?'#fff':'transparent', color:viewMode===k?'#8B5CF6':'#64748B', boxShadow:viewMode===k?'0 1px 4px rgba(0,0,0,.08)':'none', transition:'all .15s' }}>
                   {l}
                 </button>
@@ -781,24 +783,24 @@ const AppointmentManagement = () => {
             {/* Navigation date (jour/semaine) */}
             {viewMode !== 'all' && (
               <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <button onClick={prevDay} style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronLeft size={14}/></button>
+                <button type="button" aria-label="Période précédente" onClick={prevDay} style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronLeft size={14}/></button>
                 <span style={{ fontSize:13, fontWeight:700, color:'#0F172A', whiteSpace:'nowrap' }}>
                   {viewMode==='day' ? fdateLong(selDate) : `Semaine du ${fdate(dateRange().from)}`}
                 </span>
-                <button onClick={nextDay} style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronRight size={14}/></button>
+                <button type="button" aria-label="Période suivante" onClick={nextDay} style={{ width:28, height:28, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#64748B' }}><ChevronRight size={14}/></button>
               </div>
             )}
 
             {/* Recherche */}
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 1 260px', minWidth:220, background:'#F8FAFC', borderRadius:11, padding:'8px 12px', border:'1px solid #E2E8F0' }}>
               <Search size={13} color="#94A3B8"/>
-              <input placeholder="Rechercher patient, motif..." value={search} onChange={e=>setSearch(e.target.value)}
+              <input aria-label="Rechercher un rendez-vous" placeholder="Rechercher patient, motif..." value={search} onChange={e=>setSearch(e.target.value)}
                 style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, minWidth:0, color:'#0F172A' }}/>
-              {search && <button onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:0 }}><X size={12}/></button>}
+              {search && <button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:0 }}><X size={12}/></button>}
             </div>
 
             {/* Filtre statut */}
-            <select value={statusF} onChange={e=>setStatusF(e.target.value)}
+            <select aria-label="Filtrer les rendez-vous par statut" value={statusF} onChange={e=>setStatusF(e.target.value)}
               style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer', outline:'none' }}>
               <option value="all">Tous statuts</option>
               {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
@@ -819,7 +821,7 @@ const AppointmentManagement = () => {
               <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 18px' }}>
                 {viewMode==='day' ? `Aucun RDV pour le ${fdateLong(selDate)}` : 'Aucun RDV sur cette période'}
               </p>
-              <button onClick={openCreate} style={{ padding:'10px 22px', borderRadius:11, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700 }}>
+              <button type="button" onClick={openCreate} style={{ padding:'10px 22px', borderRadius:11, background:'linear-gradient(135deg,#8B5CF6,#7C3AED)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700 }}>
                 Créer un RDV
               </button>
             </div>
@@ -1506,6 +1508,7 @@ const AppointmentManagement = () => {
           
                   <button
                     type="button"
+                    aria-label="Retirer le patient sélectionné"
                     onClick={() => {
                       setForm(prev => ({ ...prev, patient_id: '' }));
                       setPatientSearch('');
@@ -1542,6 +1545,7 @@ const AppointmentManagement = () => {
                   <Search size={22} style={{ flexShrink: 0, color: '#94A3B8', marginLeft: 10, marginRight: 6}} />
           
                 <input
+                  aria-label="Rechercher un patient"
                   value={patientSearch}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -1631,8 +1635,9 @@ const AppointmentManagement = () => {
 
           {/* Dentiste */}
           <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Dentiste *</label>
+            <label htmlFor="appointment-dentist" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Dentiste *</label>
             <select
+              id="appointment-dentist"
               value={form.dentist_id}
               onChange={e=>setForm({...form,dentist_id:e.target.value})}
               style={inp}
@@ -1670,16 +1675,16 @@ const AppointmentManagement = () => {
           {/* Date + heures */}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
             <div style={{ gridColumn:'1/-1' }}>
-              <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date *</label>
-              <input type="date" value={form.appointment_date} onChange={e=>setForm({...form,appointment_date:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
+              <label htmlFor="appointment-date" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date *</label>
+              <input id="appointment-date" type="date" value={form.appointment_date} onChange={e=>setForm({...form,appointment_date:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
             </div>
             <div>
-              <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Début *</label>
-              <input type="time" value={form.start_time} onChange={e=>setForm({...form,start_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
+              <label htmlFor="appointment-start-time" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Début *</label>
+              <input id="appointment-start-time" type="time" value={form.start_time} onChange={e=>setForm({...form,start_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
             </div>
             <div>
-              <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fin *</label>
-              <input type="time" value={form.end_time} onChange={e=>setForm({...form,end_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
+              <label htmlFor="appointment-end-time" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fin *</label>
+              <input id="appointment-end-time" type="time" value={form.end_time} onChange={e=>setForm({...form,end_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
             </div>
             {/* Durée calculée */}
             <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 12px', background:'#F8FAFC', borderRadius:10, border:'1px solid #E2E8F0' }}>
@@ -1728,8 +1733,8 @@ const AppointmentManagement = () => {
         </div>
         <p style={{ fontSize:13, color:'#64748B', marginBottom:18 }}>Cette action est irréversible. Le rendez-vous sera définitivement supprimé.</p>
         <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
-          <button onClick={()=>setIsDelOpen(false)} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-          <button onClick={handleDelete} style={{ padding:'9px 20px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7 }}>
+          <button type="button" onClick={()=>setIsDelOpen(false)} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+          <button type="button" onClick={handleDelete} style={{ padding:'9px 20px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7 }}>
             <Trash2 size={14}/>Supprimer
           </button>
         </div>

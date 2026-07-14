@@ -20,7 +20,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const BillingRenew = () => {
   const [billingStatus, setBillingStatus] = useState(null);
@@ -73,7 +73,7 @@ const BillingRenew = () => {
   const downloadInvoice = async (year, month) => {
     try {
       const res = await fetch(`${API}/billing/invoice/${year}/${month}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
       });
       if (!res.ok) {
         toast.error('Erreur téléchargement facture');

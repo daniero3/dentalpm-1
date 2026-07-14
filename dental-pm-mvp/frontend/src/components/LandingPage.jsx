@@ -353,7 +353,7 @@ const DashMockup = () => {
         <div style={{flex:1,background:'#F8FAFC',borderRadius:6,padding:'4px 12px',marginLeft:10,display:'flex',alignItems:'center',gap:6}}><div style={{width:7,height:7,borderRadius:'50%',background:'#10B981'}}/><span style={{fontSize:11,color:'#94A3B8'}}>app.dpm-madagascar.com</span></div>
       </div>
       <div style={{display:'flex',gap:3,marginBottom:13,flexWrap:'wrap'}}>
-        {tabs.map((t,i)=><button key={i} onClick={()=>setTab(i)} style={{padding:'4px 9px',borderRadius:7,border:'none',cursor:'pointer',background:tab===i?'var(--teal)':'var(--bg)',color:tab===i?'#fff':'var(--muted)',fontSize:10,fontWeight:700,transition:'all .2s'}}>{t}</button>)}
+        {tabs.map((t,i)=><button type="button" key={i} onClick={()=>setTab(i)} style={{padding:'4px 9px',borderRadius:7,border:'none',cursor:'pointer',background:tab===i?'var(--teal)':'var(--bg)',color:tab===i?'#fff':'var(--muted)',fontSize:10,fontWeight:700,transition:'all .2s'}}>{t}</button>)}
       </div>
       <div style={{flex:1,animation:'fadeIn .35s ease'}} key={tab}>{screens[tab]}</div>
       <div style={{display:'flex',gap:5,justifyContent:'center',marginTop:12}}>
@@ -488,7 +488,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(10,15,20,.75)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn .2s ease'}}>
       <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95vh',overflowY:'auto',position:'relative',animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)',border:'1px solid var(--border)'}}>
         <div style={{width:40,height:4,borderRadius:99,background:'#E2E8F0',margin:'0 auto 18px'}}/>
-        <button onClick={onClose} style={{position:'absolute',top:14,right:14,width:32,height:32,borderRadius:'50%',background:'var(--surface)',border:'none',cursor:'pointer',fontSize:18,color:'var(--muted)'}}>✕</button>
+        <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,width:32,height:32,borderRadius:'50%',background:'var(--surface)',border:'none',cursor:'pointer',fontSize:18,color:'var(--muted)'}}>✕</button>
         {!done?(
           <>
             <div style={{display:'flex',gap:5,marginBottom:18}}>
@@ -525,7 +525,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
                     {['1 praticien','2-3 praticiens','4-5 praticiens','5+ praticiens'].map((o,i)=><option key={i} value={[1,'2-3','4-5','5+'][i]}>{o}</option>)}
                   </select>
                 </div>
-                <button className="btn-main" disabled={!canContinue} onClick={()=>setStep(2)}
+                <button type="button" className="btn-main" disabled={!canContinue} onClick={()=>setStep(2)}
                   style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:canContinue?'pointer':'not-allowed',opacity:canContinue?1:.5}}>
                   Continuer →
                 </button>
@@ -540,11 +540,11 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
                 <div style={{background:'#F0FDFE',border:'1.5px solid var(--teal)',borderRadius:12,padding:'12px 14px',marginBottom:14,color:'var(--teal)',fontSize:13,fontWeight:700,lineHeight:1.5}}>
                   Aucune carte requise pour activer l’essai. Stripe prélèvera automatiquement le plan choisi uniquement à la fin des 30 jours.
                 </div>
-                <button className="btn-main" onClick={submit} disabled={loading}
+                <button type="button" className="btn-main" onClick={submit} disabled={loading}
                   style={{width:'100%',padding:'15px',borderRadius:13,background:'#635BFF',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer',opacity:loading?.6:1}}>
                   {loading?'⏳ Redirection vers Stripe...':'💳 Enregistrer ma carte — 30 jours gratuits'}
                 </button>
-                <button onClick={()=>setStep(1)} style={{width:'100%',marginTop:8,padding:9,background:'none',color:'var(--muted)',border:'none',cursor:'pointer',fontSize:13}}>← Retour</button>
+                <button type="button" onClick={()=>setStep(1)} style={{width:'100%',marginTop:8,padding:9,background:'none',color:'var(--muted)',border:'none',cursor:'pointer',fontSize:13}}>← Retour</button>
               </div>
             )}
           </>
@@ -557,7 +557,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
               <p style={{margin:0,fontSize:13,color:'var(--teal)',fontWeight:700}}>🕐 Votre essai de 30 jours sera activé après l’enregistrement de la carte.</p>
               <p style={{margin:'4px 0 0',color:'var(--slate)',fontSize:13}}>Connectez-vous après validation Stripe avec les identifiants reçus.</p>
             </div>
-            <button className="btn-main" onClick={()=>navigate('/login')}
+            <button type="button" className="btn-main" onClick={()=>navigate('/login')}
               style={{width:'100%',padding:'15px',borderRadius:13,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:16,border:'none',cursor:'pointer'}}>
               Accéder à mon espace →
             </button>
@@ -712,9 +712,9 @@ export default function LandingPage() {
               {[['#services','Fonctionnalités'],['#pourquoi','Avantages'],['#tarifs','Tarifs'],['#faq','FAQ'],['#contact','Contact']].map(([href,label])=>(
                 <a key={href} href={href} className="nav-link" style={{padding:'7px 13px',color:sc?'var(--slate)':'rgba(255,255,255,.8)',fontWeight:500,fontSize:14,borderRadius:9}}>{label}</a>
               ))}
-              <button onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
-              <button onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 30j</button>
-              <button onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
+              <button type="button" onClick={()=>navigate('/login')} style={{marginLeft:8,padding:'8px 18px',borderRadius:10,border:`1.5px solid ${sc?'var(--border)':'rgba(255,255,255,.3)'}`,background:'transparent',color:sc?'var(--ink)':'#fff',fontWeight:600,fontSize:14,cursor:'pointer'}}>Connexion</button>
+              <button type="button" onClick={()=>navigate('/register')} className="btn-main" style={{marginLeft:6,padding:'9px 20px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:14,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>Essai gratuit 30j</button>
+              <button type="button" onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
                 style={{width:38,height:38,borderRadius:10,border:`1.5px solid ${themeButtonBorder}`,background:themeButtonBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:4,flexShrink:0}}
                 onMouseOver={e=>{e.currentTarget.style.borderColor='var(--teal)';}}
                 onMouseOut={e=>{e.currentTarget.style.borderColor=themeButtonBorder;}}>
@@ -729,15 +729,15 @@ export default function LandingPage() {
           {/* Mobile */}
           {isMobile&&(
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <button onClick={()=>navigate('/register')} style={{padding:'7px 12px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>Essai gratuit</button>
-              <button onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
+              <button type="button" onClick={()=>navigate('/register')} style={{padding:'7px 12px',borderRadius:10,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:12,border:'none',cursor:'pointer'}}>Essai gratuit</button>
+              <button type="button" onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
                 style={{width:38,height:38,borderRadius:9,background:sc?themeButtonBg:'rgba(255,255,255,.15)',border:`1.5px solid ${sc?themeButtonBorder:'rgba(255,255,255,.22)'}`,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 {isDark
                   ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
                   : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={sc?'#0D7A87':'#fff'} strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                 }
               </button>
-              <button onClick={()=>setMobMenu(m=>!m)} style={{width:38,height:38,borderRadius:9,background:sc?'var(--surface)':'rgba(255,255,255,.15)',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:5}}>
+              <button type="button" onClick={()=>setMobMenu(m=>!m)} style={{width:38,height:38,borderRadius:9,background:sc?'var(--surface)':'rgba(255,255,255,.15)',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:5}}>
                 {[0,1,2].map(i=><div key={i} style={{width:18,height:2,borderRadius:99,background:sc?'var(--ink)':'#fff',transition:'all .25s',transform:mobMenu&&i===0?'rotate(45deg) translate(5px,5px)':mobMenu&&i===2?'rotate(-45deg) translate(5px,-5px)':mobMenu&&i===1?'scaleX(0)':'none'}}/>)}
               </button>
             </div>
@@ -750,7 +750,7 @@ export default function LandingPage() {
               <a key={href} href={href} onClick={()=>setMobMenu(false)} style={{padding:'11px 14px',color:'var(--ink)',fontWeight:600,fontSize:15,textDecoration:'none',borderRadius:9}}>{label}</a>
             ))}
             <div style={{height:1,background:'var(--border)',margin:'6px 0'}}/>
-            <button onClick={()=>{navigate('/login');setMobMenu(false);}} style={{padding:'11px 14px',borderRadius:9,border:'1.5px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontWeight:600,fontSize:15,cursor:'pointer',textAlign:'left'}}>Connexion</button>
+            <button type="button" onClick={()=>{navigate('/login');setMobMenu(false);}} style={{padding:'11px 14px',borderRadius:9,border:'1.5px solid var(--border)',background:'var(--surface)',color:'var(--ink)',fontWeight:600,fontSize:15,cursor:'pointer',textAlign:'left'}}>Connexion</button>
           </div>
         )}
       </nav>
@@ -781,7 +781,7 @@ export default function LandingPage() {
               DPM centralise toute la gestion de votre cabinet et patients, agenda, facturation, ordonnances, laboratoire. Simple, rapide, 100% adapté aux réalités malgaches.
             </p>
             <div className="au3" style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:isMobile?18:32}}>
-              <button onClick={()=>navigate('/register')} className="btn-main"
+              <button type="button" onClick={()=>navigate('/register')} className="btn-main"
                 style={{padding:isMobile?'13px 18px':'16px 32px',borderRadius:13,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'0 12px 40px rgba(0,0,0,.2)',width:isMobile?'100%':'auto'}}>
                 Essayer gratuitement — 30 jours 
               </button>
@@ -914,7 +914,7 @@ export default function LandingPage() {
                 Rejoignez les cabinets dentaires malgaches qui ont repris le contrôle de leur gestion.
               </p>
               <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
-                <button onClick={()=>navigate('/register')} className="btn-main"
+                <button type="button" onClick={()=>navigate('/register')} className="btn-main"
                   style={{padding:isMobile?'13px 22px':'14px 32px',borderRadius:12,background:'var(--teal)',color:'#fff',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?15:16,border:'none',cursor:'pointer',boxShadow:'var(--sh-teal)'}}>
                   Essayer gratuitement — 30 jours 
                 </button>
@@ -956,7 +956,7 @@ export default function LandingPage() {
         </div>
         <div style={{display:'grid',gridTemplateColumns:c2,gap:isMobile?8:16}}>
           {FEATURES_LIST.map((f,i)=>(
-            <a key={i} href="#services" className="feat-item sr" onClick={e=>e.preventDefault()}
+            <a key={i} href="#services" className="feat-item sr"
               style={{display:'flex',gap:12,alignItems:'flex-start',padding:isMobile?'14px':' 22px 24px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,textDecoration:'none',transitionDelay:`${i*.05}s`}}>
               <div style={{width:isMobile?36:46,height:isMobile?36:46,borderRadius:12,background:`${f.color}15`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:isMobile?20:24,flexShrink:0}}>{f.icon}</div>
               <div>
@@ -984,7 +984,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>navigate('/register')} className="btn-main"
+            <button type="button" onClick={()=>navigate('/register')} className="btn-main"
               style={{marginTop:22,padding:'13px 26px',borderRadius:12,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:15,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
               Essayer gratuitement →
             </button>
@@ -1012,7 +1012,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="sr" style={{transitionDelay:'.15s',display:'flex',flexDirection:'column',gap:11}}>
-            <button onClick={()=>navigate('/register')} className="btn-main"
+            <button type="button" onClick={()=>navigate('/register')} className="btn-main"
               style={{padding:'17px 32px',borderRadius:13,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?16:17,border:'none',cursor:'pointer'}}>
               Commencer maintenant →
             </button>
@@ -1105,7 +1105,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <button onClick={()=>navigate('/register')} className="btn-main"
+            <button type="button" onClick={()=>navigate('/register')} className="btn-main"
               style={{padding:'12px 24px',borderRadius:12,background:'var(--teal)',color:'#fff',fontWeight:700,fontSize:15,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
               Rejoindre DPM →
             </button>
@@ -1143,11 +1143,11 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  <button onClick={()=>navigate('/register')}
+                  <button type="button" onClick={()=>navigate('/register')}
                     style={{display:'block',width:'100%',padding:'12px',borderRadius:11,background:plan.popular?'var(--teal)':'transparent',color:plan.popular?'#fff':'var(--teal)',fontWeight:700,fontSize:14,border:'2px solid var(--teal)',cursor:'pointer',textDecoration:'none',textAlign:'center',boxSizing:'border-box'}}>
                     Démarrer l’essai gratuit →
                   </button>
-                  <button onClick={()=>navigate('/register')} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
+                  <button type="button" onClick={()=>navigate('/register')} style={{width:'100%',padding:'10px',borderRadius:11,background:'transparent',color:'var(--muted)',fontWeight:600,fontSize:13,border:'1px solid var(--border)',cursor:'pointer'}}>
                     Essai gratuit 30 jours
                   </button>
                 </div>
@@ -1198,7 +1198,7 @@ export default function LandingPage() {
             ))}
             <div style={{marginTop:24,padding:'18px 20px',background:'rgba(255,255,255,.07)',borderRadius:14,border:'1px solid rgba(255,255,255,.12)'}}>
               <p style={{color:'rgba(255,255,255,.5)',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:1.5,marginBottom:10}}>PRÊT À COMMENCER ?</p>
-              <button onClick={()=>navigate('/register')} className="btn-main"
+              <button type="button" onClick={()=>navigate('/register')} className="btn-main"
                 style={{padding:'11px 22px',borderRadius:11,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:14,border:'none',cursor:'pointer',width:isMobile?'100%':'auto'}}>
                 Essai gratuit 30 jours 
               </button>
@@ -1224,7 +1224,7 @@ export default function LandingPage() {
                     onFocus={e=>e.target.style.borderColor='rgba(255,255,255,.45)'}
                     onBlur={e=>e.target.style.borderColor='rgba(255,255,255,.15)'}/>
                 </div>
-                <button className="btn-main" onClick={()=>{if(contact.nom&&contact.email&&contact.message)setContactSent(true);}}
+                <button type="button" className="btn-main" onClick={()=>{if(contact.nom&&contact.email&&contact.message)setContactSent(true);}}
                   style={{width:'100%',padding:'14px',borderRadius:12,background:'#fff',color:'var(--teal)',fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:15,border:'none',cursor:'pointer'}}>
                   Envoyer le message 
                 </button>
@@ -1306,7 +1306,7 @@ export default function LandingPage() {
                 &copy; 2026 DANIERO GLOBAL LLC.  DentalPM Madagascar.
             </span>
           {/* <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-            <button onClick={()=>navigate('/login')}
+            <button type="button" onClick={()=>navigate('/login')}
               style={{ padding:'5px 14px', borderRadius:7, border:'1px solid rgba(255,255,255,.15)', background:'transparent', color:'rgba(255,255,255,.45)', cursor:'pointer', fontSize:12, fontWeight:600, transition:'all .2s' }}
               onMouseOver={e=>{ e.currentTarget.style.borderColor='rgba(13,122,135,.6)'; e.currentTarget.style.color='#fff'; }}
               onMouseOut={e=>{ e.currentTarget.style.borderColor='rgba(255,255,255,.15)'; e.currentTarget.style.color='rgba(255,255,255,.45)'; }}>

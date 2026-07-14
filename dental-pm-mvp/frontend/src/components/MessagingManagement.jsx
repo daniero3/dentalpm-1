@@ -11,7 +11,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 
 const fdate = d => d ? new Date(d).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
 const fdateShort = d => d ? new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -48,7 +48,7 @@ const Modal = ({ open, onClose, title, children, maxW = 500 }) => {
     <div onClick={e => e.target === e.currentTarget && onClose()}
       style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff', borderRadius:20, padding:28, width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
+        <button type="button" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
           <X size={15}/>
         </button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
@@ -234,13 +234,13 @@ const MessagingManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button onClick={fetchAll} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
+          <button type="button" onClick={fetchAll} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>Actualiser
           </button>
-          <button onClick={handleBirthday} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:C.purple }}>
+          <button type="button" onClick={handleBirthday} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:C.purple }}>
             <Cake size={13}/>Anniversaires
           </button>
-          <button onClick={handleDispatch} disabled={dispatching}
+          <button type="button" onClick={handleDispatch} disabled={dispatching}
             style={{ padding:'9px 18px', borderRadius:10, background:`linear-gradient(135deg,${C.purple},#9333EA)`, color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:`0 4px 14px rgba(124,58,237,.3)`, opacity:dispatching?.7:1 }}>
             {dispatching ? <div style={{ width:14, height:14, border:'2px solid rgba(255,255,255,.4)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .8s linear infinite' }}/> : <Send size={14}/>}
             Envoyer maintenant
@@ -287,7 +287,7 @@ const MessagingManagement = () => {
           { k:'templates', l:'📝 Templates',              n:templates.length },
           { k:'logs',      l:'📜 Historique',             n:logs.length },
         ].map(t => (
-          <button key={t.k} onClick={() => setTab(t.k)}
+          <button type="button" key={t.k} onClick={() => setTab(t.k)}
             style={{ flex:1, padding:'9px 6px', borderRadius:9, border:'none', cursor:'pointer', fontWeight:600, fontSize:12, transition:'all .2s', background:tab===t.k?'#fff':'transparent', color:tab===t.k?C.purple:'#64748B', boxShadow:tab===t.k?'0 1px 6px rgba(0,0,0,.08)':'none' }}>
             {t.l}
             {t.n !== null && <span style={{ background:tab===t.k?'#EDE9FE':'#E2E8F0', color:tab===t.k?C.purple:'#94A3B8', borderRadius:99, padding:'1px 7px', fontSize:10, fontWeight:700, marginLeft:4 }}>{t.n}</span>}
@@ -308,7 +308,7 @@ const MessagingManagement = () => {
                 { icon:'📝', l:'Créer un template',                  c:C.blue,   action:()=>{setIsNewTpl(true);setEditTpl(null);setTplForm({key:'APPT_REMINDER_24H',channel:'SMS',text:''});}, desc:'Nouveau modèle de message réutilisable' },
                 { icon:'📋', l:'Voir la file d\'attente',            c:C.amber,  action:()=>setTab('queue'), desc:`${stats.QUEUED} message(s) en attente d'envoi` },
               ].map((a,i) => (
-                <button key={i} onClick={a.action}
+                <button type="button" key={i} onClick={a.action}
                   style={{ background:'#fff', borderRadius:14, border:'1.5px solid #E2E8F0', padding:'16px 18px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', flexDirection:'column', gap:8 }}
                   onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.boxShadow=`0 4px 16px ${a.c}20`;}}
                   onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
@@ -355,7 +355,7 @@ const MessagingManagement = () => {
                 );
               })}
               {logs.length > 6 && (
-                <button onClick={() => setTab('logs')} style={{ width:'100%', padding:'12px', background:'#F8FAFC', border:'none', cursor:'pointer', fontSize:12, fontWeight:600, color:C.purple, borderTop:'1px solid #F1F5F9' }}>
+                <button type="button" onClick={() => setTab('logs')} style={{ width:'100%', padding:'12px', background:'#F8FAFC', border:'none', cursor:'pointer', fontSize:12, fontWeight:600, color:C.purple, borderTop:'1px solid #F1F5F9' }}>
                   Voir tout l'historique ({logs.length}) →
                 </button>
               )}
@@ -373,7 +373,7 @@ const MessagingManagement = () => {
               <input placeholder="Rechercher patient..." value={search} onChange={e=>setSearch(e.target.value)}
                 style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1 }}/>
             </div>
-            <button onClick={handleDispatch} disabled={dispatching||stats.QUEUED===0}
+            <button type="button" onClick={handleDispatch} disabled={dispatching||stats.QUEUED===0}
               style={{ padding:'8px 18px', borderRadius:10, background:stats.QUEUED>0?`linear-gradient(135deg,${C.purple},#9333EA)`:'#F1F5F9', color:stats.QUEUED>0?'#fff':'#94A3B8', border:'none', cursor:stats.QUEUED>0?'pointer':'not-allowed', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', gap:6 }}>
               <Send size={13}/>Dispatcher ({stats.QUEUED})
             </button>
@@ -424,7 +424,7 @@ const MessagingManagement = () => {
       {tab === 'templates' && (
         <>
           <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:14 }}>
-            <button onClick={() => { setEditTpl(null); setTplForm({ key:'APPT_REMINDER_24H', channel:'SMS', text:'' }); setIsNewTpl(true); }}
+            <button type="button" onClick={() => { setEditTpl(null); setTplForm({ key:'APPT_REMINDER_24H', channel:'SMS', text:'' }); setIsNewTpl(true); }}
               style={{ padding:'9px 18px', borderRadius:10, background:`linear-gradient(135deg,${C.purple},#9333EA)`, color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, boxShadow:`0 4px 14px rgba(124,58,237,.3)` }}>
               <Plus size={14}/>Nouveau template
             </button>
@@ -435,7 +435,7 @@ const MessagingManagement = () => {
               <FileText size={36} style={{ margin:'0 auto 12px', color:'#CBD5E1' }}/>
               <p style={{ fontWeight:700, color:'#475569', fontSize:15, margin:'0 0 4px' }}>Aucun template</p>
               <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 16px' }}>Créez vos premiers modèles de messages</p>
-              <button onClick={() => { setEditTpl(null); setIsNewTpl(true); }} style={{ padding:'9px 18px', borderRadius:10, background:C.purple, color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>
+              <button type="button" onClick={() => { setEditTpl(null); setIsNewTpl(true); }} style={{ padding:'9px 18px', borderRadius:10, background:C.purple, color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>
                 Créer un template
               </button>
             </div>
@@ -461,7 +461,7 @@ const MessagingManagement = () => {
                         </div>
                       </div>
                       {/* Toggle */}
-                      <button onClick={() => handleToggleTemplate(tpl)}
+                      <button type="button" onClick={() => handleToggleTemplate(tpl)}
                         style={{ background:'none', border:'none', cursor:'pointer', padding:4, display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, color:tpl.is_active?C.green:'#94A3B8' }}>
                         {tpl.is_active ? <ToggleRight size={22} color={C.green}/> : <ToggleLeft size={22} color="#CBD5E1"/>}
                         {tpl.is_active ? 'Actif' : 'Inactif'}
@@ -471,7 +471,7 @@ const MessagingManagement = () => {
                     {/* Texte du template */}
                     <div style={{ background:'#F8FAFC', borderRadius:10, padding:'10px 12px', marginBottom:12, fontSize:12, color:'#475569', lineHeight:1.65, minHeight:52, position:'relative' }}>
                       {tpl.text}
-                      <button onClick={() => copyText(tpl.text)}
+                      <button type="button" onClick={() => copyText(tpl.text)}
                         style={{ position:'absolute', top:6, right:6, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:3 }}>
                         <Copy size={12}/>
                       </button>
@@ -480,11 +480,11 @@ const MessagingManagement = () => {
                     <div style={{ fontSize:10, color:'#94A3B8', marginBottom:12 }}>{info.desc}</div>
 
                     <div style={{ display:'flex', gap:7 }}>
-                      <button onClick={() => { setPreviewTpl(tpl); setIsPreview(true); }}
+                      <button type="button" onClick={() => { setPreviewTpl(tpl); setIsPreview(true); }}
                         style={{ flex:1, padding:'7px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
                         <Eye size={12}/>Aperçu
                       </button>
-                      <button onClick={() => openEdit(tpl)}
+                      <button type="button" onClick={() => openEdit(tpl)}
                         style={{ flex:1, padding:'7px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
                         <Edit2 size={12}/>Modifier
                       </button>
@@ -508,7 +508,7 @@ const MessagingManagement = () => {
             </div>
             <div style={{ display:'flex', gap:5 }}>
               {['ALL','SENT','FAILED'].map(f => (
-                <button key={f} onClick={() => setLogFilter(f)}
+                <button type="button" key={f} onClick={() => setLogFilter(f)}
                   style={{ padding:'7px 13px', borderRadius:99, border:'none', cursor:'pointer', fontSize:11, fontWeight:600, background:logFilter===f?C.purple:'#F1F5F9', color:logFilter===f?'#fff':'#475569', transition:'all .15s' }}>
                   {f==='ALL'?'Tous':f==='SENT'?'✅ Envoyés':'❌ Échoués'}
                 </button>
@@ -581,7 +581,7 @@ const MessagingManagement = () => {
               <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Texte du message</label>
               <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
                 {PLACEHOLDERS.map(p => (
-                  <button key={p} onClick={() => setTplForm(f => ({...f, text: f.text + p}))}
+                  <button type="button" key={p} onClick={() => setTplForm(f => ({...f, text: f.text + p}))}
                     style={{ padding:'2px 8px', borderRadius:99, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', fontSize:10, fontWeight:700, color:'#0D7A87' }}>
                     {p}
                   </button>
@@ -608,8 +608,8 @@ const MessagingManagement = () => {
           )}
 
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
-            <button onClick={() => { setIsNewTpl(false); setEditTpl(null); }} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-            <button onClick={handleCreateTemplate} disabled={!tplForm.key || !tplForm.text.trim()}
+            <button type="button" onClick={() => { setIsNewTpl(false); setEditTpl(null); }} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+            <button type="button" onClick={handleCreateTemplate} disabled={!tplForm.key || !tplForm.text.trim()}
               style={{ padding:'9px 22px', borderRadius:10, background:`linear-gradient(135deg,${C.purple},#9333EA)`, color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:(!tplForm.key||!tplForm.text.trim())?.5:1 }}>
               {editTpl ? <><Edit2 size={14}/>Enregistrer</> : <><Plus size={14}/>Créer</>}
             </button>
@@ -633,7 +633,7 @@ const MessagingManagement = () => {
               <div style={{ fontWeight:600, marginBottom:6, color:'#0F172A' }}>Message brut :</div>
               {previewTpl.text}
             </div>
-            <button onClick={() => copyText(previewTpl.text)}
+            <button type="button" onClick={() => copyText(previewTpl.text)}
               style={{ padding:'10px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
               <Copy size={14}/>Copier le texte
             </button>

@@ -18,7 +18,7 @@ const API = process.env.REACT_APP_BACKEND_URL
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8001/api'
     : '/api';
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const fmt = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 const fdate = d => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
@@ -72,7 +72,7 @@ const Modal = ({ open, onClose, title, children, maxW=640 }) => {
     <div onClick={e=>e.target===e.currentTarget&&onClose()}
       style={getModalOverlayStyle()}>
       <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box' }}>
-        <button onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}><X size={15}/></button>
+        <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}><X size={15}/></button>
         {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}
       </div>
@@ -249,10 +249,10 @@ const QuoteManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex',gap:8 }}>
-          <button onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
+          <button type="button" aria-label="Rafraîchir les devis" onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}}
+          <button type="button" onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}}
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
             <Plus size={15}/>Nouveau Devis
           </button>
@@ -268,7 +268,7 @@ const QuoteManagement = () => {
           {icon:'🔄',l:'Convertis',     v:stats.converted, c:C.purple, bg:'#EDE9FE'},
           {icon:'💰',l:'Valeur acceptés',v:fmt(stats.totalAmt),c:C.teal,bg:'#F0FDFE',raw:true},
         ].map((k,i)=>(
-          <button key={i} onClick={()=>setStatusF(k.l==='Total'?'ALL':k.l==='En attente'?'DRAFT':k.l==='Acceptés'?'ACCEPTED':k.l==='Convertis'?'CONVERTED':'ALL')}
+          <button type="button" key={i} onClick={()=>setStatusF(k.l==='Total'?'ALL':k.l==='En attente'?'DRAFT':k.l==='Acceptés'?'ACCEPTED':k.l==='Convertis'?'CONVERTED':'ALL')}
             style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'13px 15px',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:11,transition:'all .2s' }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
             onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
@@ -285,15 +285,15 @@ const QuoteManagement = () => {
       <div style={{ background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'12px 16px',marginBottom:16,display:'flex',gap:12,flexWrap:'wrap',alignItems:'center',boxShadow:'0 1px 4px rgba(15,23,42,.04)' }}>
         <div style={{ display:'flex',alignItems:'center',gap:8,flex:'1 1 280px',minWidth:220,background:'#F8FAFC',border:'1px solid #E2E8F0',borderRadius:11,padding:'8px 11px' }}>
           <Search size={13} color="#94A3B8"/>
-          <input placeholder="Rechercher devis, patient..." value={search} onChange={e=>setSearch(e.target.value)}
+          <input aria-label="Rechercher un devis" placeholder="Rechercher devis, patient..." value={search} onChange={e=>setSearch(e.target.value)}
             style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0,color:'#0F172A' }}/>
-          {search&&<button onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
+          {search&&<button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
           {['ALL',...Object.keys(Q_STATUS)].map(s=>{
             const st=Q_STATUS[s];
             return(
-              <button key={s} onClick={()=>setStatusF(s)}
+              <button type="button" key={s} onClick={()=>setStatusF(s)}
                 style={{ padding:'5px 11px',borderRadius:99,border:'none',cursor:'pointer',fontSize:11,fontWeight:600,background:statusF===s?(st?.bg||'#F0FDFE'):'#F1F5F9',color:statusF===s?(st?.c||C.teal):'#64748B',transition:'all .15s' }}>
                 {s==='ALL'?'Tous':st?.l}
               </button>
@@ -309,7 +309,7 @@ const QuoteManagement = () => {
           <FileText size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucun devis</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre premier devis'}</p>
-          <button onClick={()=>{setForm(emptyForm);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+          <button type="button" onClick={()=>{setForm(emptyForm);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouveau devis
           </button>
         </div>
@@ -343,14 +343,14 @@ const QuoteManagement = () => {
                       {nexts.map(ns=>{
                         const st=Q_STATUS[ns];
                         return(
-                          <button key={ns} onClick={()=>handleStatusChange(q,ns)}
+                          <button type="button" key={ns} onClick={()=>handleStatusChange(q,ns)}
                             style={{ padding:'2px 9px',borderRadius:99,border:`1px solid ${st.dot}`,background:st.bg,color:st.c,fontSize:10,fontWeight:700,cursor:'pointer',transition:'all .15s' }}>
                             → {st.l}
                           </button>
                         );
                       })}
                       {q.status==='ACCEPTED'&&(
-                        <button onClick={()=>handleConvert(q)}
+                        <button type="button" onClick={()=>handleConvert(q)}
                           style={{ padding:'2px 9px',borderRadius:99,border:'1px solid #8B5CF6',background:'#EDE9FE',color:'#5B21B6',fontSize:10,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:3 }}>
                           <ArrowRight size={9}/>Convertir en facture
                         </button>
@@ -360,17 +360,17 @@ const QuoteManagement = () => {
                 </div>
                 {/* Actions */}
                 <div style={{ display:'flex',gap:5,flexShrink:0 }}>
-                  <button onClick={()=>setDetailQ(q)} title="Détails"
+                  <button type="button" aria-label="Afficher les détails du devis" onClick={()=>setDetailQ(q)} title="Détails"
                     style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.borderColor=C.teal;e.currentTarget.style.color=C.teal;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Eye size={13}/>
                   </button>
-                  <button onClick={()=>handlePrint(q.id)} title="Imprimer"
+                  <button type="button" aria-label="Imprimer le devis" onClick={()=>handlePrint(q.id)} title="Imprimer"
                     style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Printer size={13}/>
                   </button>
-                  <button onClick={()=>handlePDF(q.id,q.invoice_number)} title="PDF"
+                  <button type="button" aria-label="Télécharger le devis en PDF" onClick={()=>handlePDF(q.id,q.invoice_number)} title="PDF"
                     style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.borderColor=C.purple;e.currentTarget.style.color=C.purple;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Download size={13}/>
@@ -417,22 +417,22 @@ const QuoteManagement = () => {
               {(NEXT_STATUS[detailQ.status]||[]).map(ns=>{
                 const st=Q_STATUS[ns];
                 return(
-                  <button key={ns} onClick={()=>handleStatusChange(detailQ,ns)}
+                  <button type="button" key={ns} onClick={()=>handleStatusChange(detailQ,ns)}
                     style={{ padding:'9px',borderRadius:10,border:`1.5px solid ${st.dot}`,background:st.bg,color:st.c,cursor:'pointer',fontSize:12,fontWeight:700 }}>
                     → {st.l}
                   </button>
                 );
               })}
               {detailQ.status==='ACCEPTED'&&(
-                <button onClick={()=>handleConvert(detailQ)}
+                <button type="button" onClick={()=>handleConvert(detailQ)}
                   style={{ padding:'9px',borderRadius:10,border:'1.5px solid #8B5CF6',background:'#EDE9FE',color:'#5B21B6',cursor:'pointer',fontSize:12,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}>
                   <ArrowRight size={13}/>Convertir
                 </button>
               )}
-              <button onClick={()=>handlePrint(detailQ.id)} style={{ padding:'9px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}>
+              <button type="button" onClick={()=>handlePrint(detailQ.id)} style={{ padding:'9px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}>
                 <Printer size={13}/>Imprimer
               </button>
-              <button onClick={()=>handlePDF(detailQ.id,detailQ.invoice_number)} style={{ padding:'9px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}>
+              <button type="button" onClick={()=>handlePDF(detailQ.id,detailQ.invoice_number)} style={{ padding:'9px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',color:'#475569',cursor:'pointer',fontSize:12,fontWeight:600,display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}>
                 <Download size={13}/>PDF
               </button>
             </div>
@@ -453,12 +453,12 @@ const QuoteManagement = () => {
                       <div style={{ fontSize:13,fontWeight:800,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{selectedPatient.first_name} {selectedPatient.last_name}</div>
                       <div style={{ fontSize:11,color:'#0D7A87',fontWeight:700 }}>{patientIdentifier(selectedPatient)}</div>
                     </div>
-                    <button type="button" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
+                    <button type="button" aria-label="Retirer le patient sélectionné" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
                   </div>
                 )}
                 <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                   <Search size={13} color="#94A3B8"/>
-                  <input value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
+                  <input aria-label="Rechercher un patient" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
                 </div>
                 <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
                   {patientMatches.map(p=>(
@@ -474,22 +474,22 @@ const QuoteManagement = () => {
                   {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>}
                 </div>
               </div>
-              <input tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
+              <input aria-label="Patient sélectionné" tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire</label>
-              <select value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi}>
+              <label htmlFor="quote-pricing-schedule" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire</label>
+              <select id="quote-pricing-schedule" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi}>
                 <option value="">Sélectionner...</option>
                 {schedules.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Validité (jours)</label>
-              <input type="number" min="1" value={form.validity_days} onChange={e=>setForm({...form,validity_days:parseInt(e.target.value)||30})} style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="quote-validity-days" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Validité (jours)</label>
+              <input id="quote-validity-days" type="number" min="1" value={form.validity_days} onChange={e=>setForm({...form,validity_days:parseInt(e.target.value)||30})} style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Remise (%)</label>
-              <input type="number" min="0" max="100" value={form.discount_percentage} onChange={e=>setForm({...form,discount_percentage:parseFloat(e.target.value)||0})} style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="quote-discount-percentage" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Remise (%)</label>
+              <input id="quote-discount-percentage" type="number" min="0" max="100" value={form.discount_percentage} onChange={e=>setForm({...form,discount_percentage:parseFloat(e.target.value)||0})} style={inp} onFocus={fi} onBlur={bi}/>
             </div>
           </div>
 
@@ -527,7 +527,7 @@ const QuoteManagement = () => {
                 <div style={{ background:'#F8FAFC',borderRadius:10,padding:'9px 8px',fontSize:11,fontWeight:700,color:C.teal,textAlign:'right',border:'1px solid #E2E8F0' }}>
                   {fmt((item.quantity||0)*(parseFloat(item.unit_price_mga)||0))}
                 </div>
-                <button type="button" onClick={()=>removeItem(i)} style={{ width:28,height:28,borderRadius:7,border:'1px solid #FECACA',background:'#FFF5F5',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#EF4444',flexShrink:0 }}>
+                <button type="button" aria-label={`Retirer la prestation ${i + 1}`} onClick={()=>removeItem(i)} style={{ width:28,height:28,borderRadius:7,border:'1px solid #FECACA',background:'#FFF5F5',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#EF4444',flexShrink:0 }}>
                   <X size={12}/>
                 </button>
               </div>

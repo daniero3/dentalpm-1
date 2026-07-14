@@ -12,7 +12,7 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+const authH = () => ({ withCredentials: true });
 const fmt = v => new Intl.NumberFormat('fr-MG').format(v || 0) + ' Ar';
 const fdate = d => new Date(d).toLocaleDateString('fr-FR');
 
@@ -104,7 +104,7 @@ const Modal = ({ open, onClose, title, children, maxW = 680 }) => {
     <div onClick={e => e.target === e.currentTarget && onClose()}
       style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff', borderRadius:20, padding:28, width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
+        <button type="button" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
           <X size={15}/>
         </button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
@@ -134,7 +134,7 @@ const ArticleCard = ({ art, onAdd, sup }) => {
       </div>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, color:'#0D7A87' }}>{fmt(art.price)}</span>
-        <button onClick={() => onAdd(art, sup)} disabled={isOOS}
+        <button type="button" onClick={() => onAdd(art, sup)} disabled={isOOS}
           style={{ padding:'6px 12px', borderRadius:9, background: isOOS?'#F1F5F9':'#0D7A87', color: isOOS?'#94A3B8':'#fff', border:'none', cursor: isOOS?'not-allowed':'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
           <Plus size={12}/>{isOOS?'Sur commande':'Ajouter'}
         </button>
@@ -320,20 +320,20 @@ const PurchaseManagement = () => {
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           {/* Badge panier */}
           {cart.length > 0 && (
-            <button onClick={() => setShowCart(true)} style={{ position:'relative', padding:'8px 16px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:7, fontSize:13, fontWeight:700, boxShadow:'0 4px 14px rgba(79,70,229,.3)' }}>
+            <button type="button" onClick={() => setShowCart(true)} style={{ position:'relative', padding:'8px 16px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:7, fontSize:13, fontWeight:700, boxShadow:'0 4px 14px rgba(79,70,229,.3)' }}>
               <ShoppingBag size={14}/> Panier
               <span style={{ position:'absolute', top:-6, right:-6, width:20, height:20, borderRadius:'50%', background:'#EF4444', color:'#fff', fontSize:11, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center' }}>
                 {cart.reduce((s,c) => s + c.qty, 0)}
               </span>
             </button>
           )}
-          <button onClick={fetchAll} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
+          <button type="button" onClick={fetchAll} style={{ padding:'8px 14px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>Actualiser
           </button>
-          <button onClick={() => { resetForm(); setFormMode('expense'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(239,68,68,.25)' }}>
+          <button type="button" onClick={() => { resetForm(); setFormMode('expense'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(239,68,68,.25)' }}>
             <Plus size={15}/>Nouvelle dépense
           </button>
-          <button onClick={() => { resetForm(); setFormMode('purchase'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(79,70,229,.3)' }}>
+          <button type="button" onClick={() => { resetForm(); setFormMode('purchase'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700, boxShadow:'0 4px 14px rgba(79,70,229,.3)' }}>
             <Plus size={15}/>Nouveau bon
           </button>
         </div>
@@ -366,7 +366,7 @@ const PurchaseManagement = () => {
           { k:'catalog', l:'🛒 Catalogue partenaires',  n:allArticles.length },
           { k:'partners',l:'🤝 Fournisseurs',            n:PARTNER_CATALOG.length },
         ].map(t => (
-          <button key={t.k} onClick={() => setTab(t.k)}
+          <button type="button" key={t.k} onClick={() => setTab(t.k)}
             style={{ flex:1, padding:'9px', borderRadius:9, border:'none', cursor:'pointer', fontWeight:600, fontSize:13, transition:'all .2s', background:tab===t.k?'#fff':'transparent', color:tab===t.k?'#4F46E5':'#64748B', boxShadow:tab===t.k?'0 1px 6px rgba(0,0,0,.08)':'none' }}>
             {t.l}
             <span style={{ background:tab===t.k?'#EDE9FE':'#E2E8F0', color:tab===t.k?'#4F46E5':'#94A3B8', borderRadius:99, padding:'1px 7px', fontSize:11, fontWeight:700, marginLeft:4 }}>{t.n}</span>
@@ -383,9 +383,9 @@ const PurchaseManagement = () => {
               <p style={{ fontWeight:700, color:'#475569', fontSize:15, margin:'0 0 6px' }}>Aucun bon de commande</p>
               <p style={{ color:'#94A3B8', fontSize:13, margin:'0 0 18px' }}>Ajoutez une dépense cabinet ou créez un bon de commande</p>
               <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
-                <button onClick={() => { resetForm(); setFormMode('expense'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouvelle dépense</button>
-                <button onClick={() => { resetForm(); setFormMode('purchase'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouveau bon</button>
-                <button onClick={() => setTab('catalog')} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', color:'#475569', cursor:'pointer', fontSize:13, fontWeight:600 }}>Voir le catalogue</button>
+                <button type="button" onClick={() => { resetForm(); setFormMode('expense'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#EF4444', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouvelle dépense</button>
+                <button type="button" onClick={() => { resetForm(); setFormMode('purchase'); setIsOpen(true); }} style={{ padding:'9px 18px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', fontSize:13, fontWeight:700 }}>Nouveau bon</button>
+                <button type="button" onClick={() => setTab('catalog')} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', color:'#475569', cursor:'pointer', fontSize:13, fontWeight:600 }}>Voir le catalogue</button>
               </div>
             </div>
           ) : (
@@ -417,11 +417,11 @@ const PurchaseManagement = () => {
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                       <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:17, color:'#0F172A' }}>{fmt(p.total_mga)}</div>
                       <div style={{ display:'flex', gap:7 }}>
-                        <button onClick={() => handlePrint(p)} style={{ padding:'7px 11px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center' }}>
+                        <button type="button" onClick={() => handlePrint(p)} style={{ padding:'7px 11px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center' }}>
                           <Printer size={13} color="#64748B"/>
                         </button>
                         {p.status === 'DRAFT' && (
-                          <button onClick={() => handleReceive(p)} style={{ padding:'7px 14px', borderRadius:9, background:'#10B981', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
+                          <button type="button" onClick={() => handleReceive(p)} style={{ padding:'7px 14px', borderRadius:9, background:'#10B981', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
                             <Check size={13}/>Réceptionner
                           </button>
                         )}
@@ -448,7 +448,7 @@ const PurchaseManagement = () => {
                 <p style={{ fontSize:13, color:'rgba(255,255,255,.75)', margin:0 }}>{allArticles.length} articles disponibles chez {PARTNER_CATALOG.length} fournisseurs partenaires</p>
               </div>
               {cart.length > 0 && (
-                <button onClick={() => setShowCart(true)} style={{ padding:'10px 20px', borderRadius:12, background:'#fff', color:'#4F46E5', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                <button type="button" onClick={() => setShowCart(true)} style={{ padding:'10px 20px', borderRadius:12, background:'#fff', color:'#4F46E5', fontWeight:800, fontSize:14, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
                   <ShoppingBag size={16}/> Panier ({cart.reduce((s,c)=>s+c.qty,0)}) · {fmt(cartTotal())}
                 </button>
               )}
@@ -464,7 +464,7 @@ const PurchaseManagement = () => {
             </div>
             <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
               {CATS.slice(0, 7).map(cat => (
-                <button key={cat} onClick={() => setCatFilter(cat)}
+                <button type="button" key={cat} onClick={() => setCatFilter(cat)}
                   style={{ padding:'4px 11px', borderRadius:99, border:'none', cursor:'pointer', fontSize:11, fontWeight:600, background:catFilter===cat?'#4F46E5':'#F1F5F9', color:catFilter===cat?'#fff':'#475569', transition:'all .15s' }}>
                   {cat}
                 </button>
@@ -579,7 +579,7 @@ const PurchaseManagement = () => {
                   <a href={`mailto:${sup.email}`} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:5, padding:'8px', borderRadius:10, background:'#F8FAFC', color:'#475569', textDecoration:'none', fontSize:12, fontWeight:600 }}>
                     <Mail size={12}/>Email
                   </a>
-                  <button onClick={() => { setCatFilter('Tous'); setTab('catalog'); }}
+                  <button type="button" onClick={() => { setCatFilter('Tous'); setTab('catalog'); }}
                     style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:5, padding:'8px', borderRadius:10, background:'#4F46E5', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700 }}>
                     <ShoppingCart size={12}/>Catalogue
                   </button>
@@ -613,7 +613,7 @@ const PurchaseManagement = () => {
               { k:'expense', l:'Dépense générale' },
               { k:'purchase', l:'Bon fournisseur' }
             ].map(m => (
-              <button key={m.k} onClick={() => setFormMode(m.k)}
+              <button type="button" key={m.k} onClick={() => setFormMode(m.k)}
                 style={{ flex:1, padding:'8px 10px', borderRadius:9, border:'none', cursor:'pointer', fontSize:13, fontWeight:700, background:formMode===m.k?'#fff':'transparent', color:formMode===m.k?'#0F172A':'#64748B', boxShadow:formMode===m.k?'0 1px 6px rgba(0,0,0,.08)':'none' }}>
                 {m.l}
               </button>
@@ -668,13 +668,13 @@ const PurchaseManagement = () => {
               <div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Articles</label>
-                  <button onClick={addItem} style={{ padding:'5px 12px', borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', gap:5 }}>
+                  <button type="button" onClick={addItem} style={{ padding:'5px 12px', borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', gap:5 }}>
                     <Plus size={12}/>Ajouter
                   </button>
                 </div>
                 {items.length === 0 ? (
                   <div style={{ border:'2px dashed #E2E8F0', borderRadius:12, padding:'20px', textAlign:'center', color:'#94A3B8', fontSize:13 }}>
-                    Ajoutez des articles ou utilisez le <button onClick={() => { setIsOpen(false); setTab('catalog'); }} style={{ color:'#4F46E5', fontWeight:700, background:'none', border:'none', cursor:'pointer', fontSize:13 }}>catalogue partenaires</button>
+                    Ajoutez des articles ou utilisez le <button type="button" onClick={() => { setIsOpen(false); setTab('catalog'); }} style={{ color:'#4F46E5', fontWeight:700, background:'none', border:'none', cursor:'pointer', fontSize:13 }}>catalogue partenaires</button>
                   </div>
                 ) : (
                   <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -690,7 +690,7 @@ const PurchaseManagement = () => {
                         <input type="number" min="0" value={item.unit_price_mga} onChange={e => updateItem(idx,'unit_price_mga',parseFloat(e.target.value)||0)}
                           style={{ ...inp, width:110 }} placeholder="Prix Ar" onFocus={fi} onBlur={bi}/>
                         <span style={{ fontSize:12, color:'#0D7A87', fontWeight:700, whiteSpace:'nowrap', minWidth:90 }}>{fmt(item.qty*item.unit_price_mga)}</span>
-                        <button onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
+                        <button type="button" onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
                       </div>
                     ))}
                     <div style={{ display:'flex', justifyContent:'flex-end', padding:'10px 12px', background:'#F0FDFE', borderRadius:11, border:'1px solid #7DD3DA' }}>
@@ -709,8 +709,8 @@ const PurchaseManagement = () => {
           )}
 
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
-            <button onClick={() => { setIsOpen(false); resetForm(); }} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
-            <button onClick={formMode === 'expense' ? handleCreateExpense : handleCreate} disabled={formMode === 'expense' ? (!expense.expense_category || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup || items.length === 0)}
+            <button type="button" onClick={() => { setIsOpen(false); resetForm(); }} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
+            <button type="button" onClick={formMode === 'expense' ? handleCreateExpense : handleCreate} disabled={formMode === 'expense' ? (!expense.expense_category || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup || items.length === 0)}
               style={{ padding:'9px 22px', borderRadius:10, background:formMode === 'expense' ? '#EF4444' : 'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:(formMode === 'expense' ? (!expense.expense_category || parseFloat(expense.amount_mga || 0) <= 0) : (!selSup||!items.length))?.5:1 }}>
               <Check size={14}/>{formMode === 'expense' ? 'Enregistrer la dépense' : 'Créer le bon'}
             </button>
@@ -732,12 +732,12 @@ const PurchaseManagement = () => {
                   <div style={{ fontSize:11, color:'#64748B' }}>{item.sup_name} · {fmt(item.price)}/{item.unit}</div>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-                  <button onClick={() => updateCartQty(item.id, item.qty-1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>−</button>
+                  <button type="button" onClick={() => updateCartQty(item.id, item.qty-1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>−</button>
                   <span style={{ fontWeight:700, fontSize:14, minWidth:20, textAlign:'center' }}>{item.qty}</span>
-                  <button onClick={() => updateCartQty(item.id, item.qty+1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>+</button>
+                  <button type="button" onClick={() => updateCartQty(item.id, item.qty+1)} style={{ width:26, height:26, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontWeight:700, fontSize:14 }}>+</button>
                 </div>
                 <div style={{ fontWeight:800, fontSize:13, color:'#0D7A87', whiteSpace:'nowrap' }}>{fmt(item.price*item.qty)}</div>
-                <button onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><X size={14}/></button>
+                <button type="button" onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><X size={14}/></button>
               </div>
             ))}
             <div style={{ background:'#F0FDFE', border:'1px solid #7DD3DA', borderRadius:12, padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -745,7 +745,7 @@ const PurchaseManagement = () => {
               <span style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:18, color:'#0D7A87' }}>{fmt(cartTotal())}</span>
             </div>
             <p style={{ fontSize:11, color:'#94A3B8', textAlign:'center', margin:0 }}>En cliquant sur "Commander", un email sera ouvert avec votre commande.</p>
-            <button onClick={sendCartOrder} style={{ padding:'13px', borderRadius:12, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+            <button type="button" onClick={sendCartOrder} style={{ padding:'13px', borderRadius:12, background:'linear-gradient(135deg,#4F46E5,#6366F1)', color:'#fff', border:'none', cursor:'pointer', fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
               <Mail size={16}/>Commander par email
             </button>
           </div>
