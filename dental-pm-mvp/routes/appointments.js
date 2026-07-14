@@ -6,15 +6,16 @@ const multer = require('multer');
 const csv = require('csv-parse/sync');
 
 const jwt = require('jsonwebtoken');
+const { getAuthToken } = require('../utils/authCookie');
 const _getClinicId = (req) => {
   const v = req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
   if (v) return v;
-  try { const t = req.headers?.authorization?.split(' ')[1]; return t ? jwt.verify(t, process.env.JWT_SECRET).clinic_id : null; } catch(e) { return null; }
+  try { const t = getAuthToken(req); return t ? jwt.verify(t, process.env.JWT_SECRET).clinic_id : null; } catch(e) { return null; }
 };
 const _getUserId = (req) => {
   const v = req.user?.id || req.user?.dataValues?.id || req.user?.userId;
   if (v) return v;
-  try { const t = req.headers?.authorization?.split(' ')[1]; return t ? jwt.verify(t, process.env.JWT_SECRET).userId : null; } catch(e) { return null; }
+  try { const t = getAuthToken(req); return t ? jwt.verify(t, process.env.JWT_SECRET).userId : null; } catch(e) { return null; }
 };
 const { Op } = require('sequelize');
 

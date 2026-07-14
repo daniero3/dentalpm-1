@@ -6,6 +6,7 @@ import { useAuth } from '../App';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
+import { renderHtmlInPopup } from '../utils/printHtml';
 import {
   FileText, Plus, Search, Eye, Printer, Download, ArrowRight,
   Clock, CheckCircle, XCircle, AlertCircle, X, RefreshCw,
@@ -164,7 +165,7 @@ const QuoteManagement = () => {
 
     try {
       const r = await fetch(`${API}/quotes/${id}/print`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
       });
       if (!r.ok) {
         popup.close();
@@ -173,10 +174,7 @@ const QuoteManagement = () => {
       }
 
       const html = await r.text();
-      popup.document.open();
-      popup.document.write(html);
-      popup.document.close();
-      popup.focus();
+      renderHtmlInPopup(popup, html);
     } catch {
       popup.close();
       toast.error('Erreur impression devis');
@@ -184,7 +182,7 @@ const QuoteManagement = () => {
   };
   const handlePDF = async (id, num) => {
     try {
-      const r=await fetch(`${API}/quotes/${id}/pdf`,{headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});
+      const r=await fetch(`${API}/quotes/${id}/pdf`,{credentials:'include'});
       if(!r.ok){toast.error('Erreur PDF');return;}
       const blob=await r.blob(), url=window.URL.createObjectURL(blob), a=document.createElement('a');
       a.href=url;a.download=`${num||'devis'}.pdf`;document.body.appendChild(a);a.click();document.body.removeChild(a);window.URL.revokeObjectURL(url);

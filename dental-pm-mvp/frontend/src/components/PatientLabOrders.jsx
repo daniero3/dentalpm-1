@@ -6,13 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { FlaskConical, ArrowLeft, User, Loader2, Printer, Clock, CheckCircle, XCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { renderHtmlInPopup } from '../utils/printHtml';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const authHeaders = () => {
-  const token = localStorage.getItem('token');
-  return { headers: { Authorization: `Bearer ${token}` } };
+  return { withCredentials: true };
 };
 
 const WORK_TYPES = {
@@ -77,7 +77,7 @@ const PatientLabOrders = ({ patientIdOverride = null, embedded = false }) => {
     }
     try {
       const res = await fetch(`${API}/labs/orders/${orderId}/print`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
       });
       if (!res.ok) {
         popup.close();
@@ -85,10 +85,7 @@ const PatientLabOrders = ({ patientIdOverride = null, embedded = false }) => {
         return;
       }
       const html = await res.text();
-      popup.document.open();
-      popup.document.write(html);
-      popup.document.close();
-      popup.focus();
+      renderHtmlInPopup(popup, html);
     } catch {
       popup.close();
       toast.error('Erreur impression');

@@ -102,10 +102,10 @@ const PricingSettings = () => {
   };
   // 
   const handleScheduleSelect = (schedule) => {
-    setSelectedSchedule(schedule);
-    fetchFees(schedule.id);
+    setSelectedSchedule(() => schedule);
     setSearchTerm('');
     setCategoryFilter('ALL');
+    fetchFees(schedule.id);
   };
 
   const handleAddFee = async (e) => {

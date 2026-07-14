@@ -445,7 +445,21 @@ const AppointmentManagement = () => {
     });
   };
   
-  const openEdit   = a  => { setEditA(a); setForm({ patient_id:a.patient_id, dentist_id:a.dentist_id||'', appointment_date:a.appointment_date, start_time:a.start_time, end_time:a.end_time, appointment_type:a.appointment_type, reason:a.reason||'', notes:a.notes||'' }); setIsOpen(true); };
+  const openEdit = a => {
+    const nextForm = {
+      patient_id: a.patient_id,
+      dentist_id: a.dentist_id || '',
+      appointment_date: a.appointment_date,
+      start_time: a.start_time,
+      end_time: a.end_time,
+      appointment_type: a.appointment_type,
+      reason: a.reason || '',
+      notes: a.notes || ''
+    };
+    setEditA(() => a);
+    setForm(nextForm);
+    setIsOpen(true);
+  };
 
   const openPatientDetail = async (patientId) => {
     if (!patientId) {
@@ -604,7 +618,7 @@ const AppointmentManagement = () => {
       return;
     }
   
-    setHistoryPatient(patient);
+    setHistoryPatient(() => patient);
     setHistoryItems([]);
     setHistoryLoading(true);
   
@@ -726,7 +740,10 @@ const AppointmentManagement = () => {
         {/* Mini calendrier */}
         {showCal && (
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            <MiniCalendar selectedDate={selDate} onSelect={d=>{setSelDate(d);setView('day');}} appointments={appts}/>
+            <MiniCalendar selectedDate={selDate} onSelect={d => {
+              setSelDate(() => d);
+              setView('day');
+            }} appointments={appts}/>
             {/* Types légende */}
             <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'14px' }}>
               <div style={{ fontSize:11, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1.5, marginBottom:10 }}>Types</div>
@@ -816,7 +833,10 @@ const AppointmentManagement = () => {
               </div>
               {filtered.sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||'')).map((a,i)=>(
                 <div key={a.id} style={{ marginBottom:10 }}>
-                  <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d=>{setDelA(d);setIsDelOpen(true);}} onStatusChange={handleStatusChange} onExport={handleExport} onPatientDetail={openPatientDetail}/>
+                  <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d => {
+                    setDelA(() => d);
+                    setIsDelOpen(true);
+                  }} onStatusChange={handleStatusChange} onExport={handleExport} onPatientDetail={openPatientDetail}/>
                 </div>
               ))}
             </div>
@@ -836,7 +856,10 @@ const AppointmentManagement = () => {
                   </div>
                   {grouped[date].sort((a,b)=>(a.start_time||'').localeCompare(b.start_time||'')).map((a,i)=>(
                     <div key={a.id} style={{ marginBottom:8 }}>
-                      <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d=>{setDelA(d);setIsDelOpen(true);}} onStatusChange={handleStatusChange} onExport={handleExport} onPatientDetail={openPatientDetail}/>
+                      <ApptCard a={a} idx={i} onEdit={openEdit} onDelete={d => {
+                        setDelA(() => d);
+                        setIsDelOpen(true);
+                      }} onStatusChange={handleStatusChange} onExport={handleExport} onPatientDetail={openPatientDetail}/>
                     </div>
                   ))}
                 </div>
@@ -995,6 +1018,8 @@ const AppointmentManagement = () => {
           <iframe
             src={embeddedPatientView.url}
             title={embeddedPatientView.title}
+            sandbox="allow-scripts allow-forms allow-downloads allow-popups"
+            referrerPolicy="same-origin"
             style={{
               width: '100%',
               height: '75vh',

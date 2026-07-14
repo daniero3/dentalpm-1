@@ -115,15 +115,10 @@ const STRIPE_PAYMENT_LINKS = {
 async function stripeCheckout(plan, apiUrl) {
   const directLink = STRIPE_PAYMENT_LINKS[plan] || STRIPE_PAYMENT_LINKS.PRO;
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      // Pas de token — utiliser Payment Link direct
-      window.location.href = directLink;
-      return;
-    }
     const r = await fetch(`${apiUrl}/billing/create-checkout-session`, {
       method: 'POST',
-      headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      headers: { 'Content-Type':'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ plan_code: plan })
     });
     if (r.status === 401) {
@@ -147,7 +142,7 @@ async function downloadInvoicePDF(payment) {
     const month = date.getMonth() + 1;
     const url = `${API}/billing/invoice/${year}/${month}`;
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      credentials: 'include'
     });
     if (!response.ok) {
       // Fallback: télécharger un PDF basique avec les infos du paiement

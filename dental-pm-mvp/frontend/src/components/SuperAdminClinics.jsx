@@ -41,15 +41,12 @@ const SuperAdminClinics = () => {
     admin_username: '', admin_email: '', admin_password: ''
   });
 
-  const token   = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
-
   useEffect(() => { fetchClinics(); }, []);
 
   const fetchClinics = async () => {
     try {
       setLoading(true);
-      const res  = await axios.get(`${API}/admin/clinics`, { headers });
+      const res  = await axios.get(`${API}/admin/clinics`, { withCredentials: true });
       const data = res.data;
       setClinics(Array.isArray(data) ? data : (data.clinics || []));
     } catch (err) {

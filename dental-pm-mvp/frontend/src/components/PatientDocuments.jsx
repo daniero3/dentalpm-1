@@ -127,9 +127,8 @@ const PatientDocuments = ({ patientIdOverride = null, embedded = false }) => {
 
   const handleDownload = async (doc) => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`${API}/documents/${doc.id}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
       if (!res.ok) throw new Error('Download failed');
       const blob = await res.blob();
@@ -144,9 +143,8 @@ const PatientDocuments = ({ patientIdOverride = null, embedded = false }) => {
 
   const handleView = async (doc) => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`${API}/documents/${doc.id}/view`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
       if (!res.ok) { toast.error('Erreur chargement document'); return; }
       const blob = await res.blob();

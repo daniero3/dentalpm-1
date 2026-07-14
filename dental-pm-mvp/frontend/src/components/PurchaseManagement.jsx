@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
+import { renderHtmlInPopup } from '../utils/printHtml';
 import {
   ShoppingCart, Plus, Truck, Package, Check, FileText,
   RefreshCw, Trash2, Printer, X, Search, Star, Zap,
@@ -238,7 +239,7 @@ const PurchaseManagement = () => {
       }
 
       const response = await fetch(`${API}/purchases/${p.id}/print`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -247,10 +248,7 @@ const PurchaseManagement = () => {
       }
 
       const html = await response.text();
-      popup.document.open();
-      popup.document.write(html);
-      popup.document.close();
-      popup.focus();
+      renderHtmlInPopup(popup, html);
     } catch {
       toast.error('Erreur impression');
     }

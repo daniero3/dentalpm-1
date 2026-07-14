@@ -7,7 +7,10 @@ const TabsContext = createContext({ value: '', onChange: () => {} });
 const Tabs = ({ defaultValue, value, onValueChange, children, className = '' }) => {
   const [internal, setInternal] = useState(defaultValue || '');
   const current  = value !== undefined ? value : internal;
-  const onChange = (v) => { setInternal(v); onValueChange?.(v); };
+  const onChange = (v) => {
+    setInternal(() => v);
+    onValueChange?.(v);
+  };
   return (
     <TabsContext.Provider value={{ value: current, onChange }}>
       <div className={className}>{children}</div>

@@ -1,5 +1,6 @@
 const jwt  = require('jsonwebtoken');
 const { User, Clinic } = require('../models');
+const { getAuthToken } = require('../utils/authCookie');
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['ACTIVE', 'TRIAL']);
 const RENEWAL_STATUSES = new Set(['EXPIRED', 'TRIAL_EXPIRED', 'PENDING']);
@@ -61,7 +62,7 @@ async function loadClinicAccess(clinicId) {
 }
 
 const authenticateToken = async (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
+  const token = getAuthToken(req);
   if (!token) return res.status(401).json({ error:"Token d'accès requis", code:'MISSING_TOKEN' });
 
   try {
@@ -125,7 +126,7 @@ const requireRole = (...roles) => (req, res, next) => {
 };
 
 const optionalAuth = async (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
+  const token = getAuthToken(req);
   if (!token) { req.user = null; req.clinic_id = null; return next(); }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

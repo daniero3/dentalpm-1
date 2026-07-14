@@ -40,6 +40,7 @@ const assistantRoutes     = require('./routes/assistant');
 const { getSubscriptionStatus } = require('./middleware/licensing');
 const { authenticateToken: requireAuth, requireClinicScope, requireSuperAdmin, blockSuperAdminFromMedicalData: blockMedical } = require('./middleware/auth');
 const { requireModuleAccess } = require('./utils/permissions');
+const { getAuthToken } = require('./utils/authCookie');
 
 const app  = express();
 const PORT = process.env.PORT || 8001;
@@ -212,6 +213,14 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '1mb', parameterLimit: 100 }));
 app.use('/api', apiRateLimiter);
+
+app.use('/api', (req, res, next) => {
+  if (!req.headers.authorization) {
+    const token = getAuthToken(req);
+    if (token) req.headers.authorization = `Bearer ${token}`;
+  }
+  next();
+});
 
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');

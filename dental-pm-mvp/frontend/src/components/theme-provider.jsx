@@ -29,7 +29,9 @@ export function ThemeProvider({ children, defaultTheme = "light", storageKey = "
     };
   }, [theme, storageKey]);
 
-  const setTheme = nextTheme => setThemeState(nextTheme);
+  const setTheme = (nextTheme) => {
+    setThemeState(() => nextTheme);
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

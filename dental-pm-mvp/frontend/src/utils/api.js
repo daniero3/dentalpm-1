@@ -15,7 +15,6 @@ const CACHE_TTL = 30 * 1000; // 30 secondes
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
 
 async function request(method, path, body = null, options = {}) {
@@ -33,6 +32,7 @@ async function request(method, path, body = null, options = {}) {
   const res = await fetch(url, {
     method,
     headers: getHeaders(),
+    credentials: 'include',
     body: body ? JSON.stringify(body) : null,
   });
 

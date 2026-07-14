@@ -58,7 +58,7 @@ export default function SuperAdminDashboard() {
   useEffect(() => { fetchRevenue(); }, [fetchRevenue]);
 
   const approvePayment = async (id, plan) => {
-    setProcessing(id);
+    setProcessing(() => id);
     try {
       await axios.patch(`${API}/admin/payment-requests/${id}/approve`, { plan }, authH());
       toast.success('✅ Paiement approuvé — abonnement activé !');
@@ -68,7 +68,7 @@ export default function SuperAdminDashboard() {
   };
 
   const rejectPayment = async (id) => {
-    setProcessing(id);
+    setProcessing(() => id);
     try {
       await axios.patch(`${API}/admin/payment-requests/${id}/reject`, { reason: 'Paiement non confirme' }, authH());
       toast.success('Paiement rejeté');

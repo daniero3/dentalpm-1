@@ -129,10 +129,8 @@ const LoginForm = () => {
       const loginPlan = normalizePlan(res.data.plan || userData?.plan || userData?.current_plan);
 
       if (userData.role === 'SUPER_ADMIN') {
-        localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
         syncPlanCache(null);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         window.location.href = '/';
         return;
       }
@@ -147,10 +145,8 @@ const LoginForm = () => {
         await selectClinic(token, userClinics[0], loginPlan);
       } else {
         // Login direct
-        localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
         syncPlanCache(loginPlan);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         window.location.href = '/';
       }
     } catch (err) {
@@ -162,13 +158,11 @@ const LoginForm = () => {
     try {
       const res = await axios.post(`${API}/auth/select-clinic`,
         { clinic_id: clinic.id },
-        { headers: { Authorization: `Bearer ${token || tempToken}` } }
+        token || tempToken ? { headers: { Authorization: `Bearer ${token || tempToken}` } } : undefined
       );
       const { token: finalToken, user: finalUser } = res.data;
-      localStorage.setItem('token', finalToken);
       localStorage.setItem('user', JSON.stringify(finalUser));
       syncPlanCache(finalUser?.plan || finalUser?.current_plan || clinic?.current_plan || fallbackPlan);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${finalToken}`;
       window.location.href = '/';
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur sélection cabinet');

@@ -3,6 +3,7 @@ const { body, validationResult, param, query } = require('express-validator');
 const { Patient, Treatment, Appointment, Invoice, InvoiceItem, AuditLog, User, sequelize } = require('../models');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const { getAuthToken } = require('../utils/authCookie');
 const multer = require('multer');
 const csv = require('csv-parse/sync');
 
@@ -17,7 +18,7 @@ const requireClinicId = async (req, res, next) => {
   // Source 2: token JWT
   if (!clinicId) {
     try {
-      const token = req.headers?.authorization?.split(' ')[1];
+      const token = getAuthToken(req);
       if (token) clinicId = jwt.verify(token, process.env.JWT_SECRET).clinic_id;
     } catch(e) {}
   }
@@ -43,7 +44,7 @@ const getUserId   = (req) => {
   const v = req.user?.id || req.user?.dataValues?.id;
   if (v) return v;
   try {
-    const t = req.headers?.authorization?.split(' ')[1];
+    const t = getAuthToken(req);
     return t ? (jwt.verify(t, process.env.JWT_SECRET).userId || null) : null;
   } catch(e) { return null; }
 };

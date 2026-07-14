@@ -178,8 +178,9 @@ const MessagingManagement = () => {
   };
 
   const openEdit = tpl => {
-    setEditTpl(tpl);
-    setTplForm({ key:tpl.key, channel:tpl.channel, text:tpl.text });
+    const nextForm = { key: tpl.key, channel: tpl.channel, text: tpl.text };
+    setEditTpl(() => tpl);
+    setTplForm(nextForm);
     setIsNewTpl(true);
   };
 

@@ -13,13 +13,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 const authHeaders = () => {
-  const token = localStorage.getItem('token');
-
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  return { withCredentials: true };
 };
 
 const NUM_TO_FDI = {

@@ -608,14 +608,12 @@ export default function LandingPage() {
     } catch { return false; }
   });
   const toggleTheme = () => {
-    setIsDark(d => {
-      const next = !d;
-      try {
-        localStorage.setItem('dental-pm-theme', next ? 'dark' : 'light');
-        localStorage.setItem('dpm_theme', next ? 'dark' : 'light');
-      } catch {}
-      return next;
-    });
+    const next = !isDark;
+    try {
+      localStorage.setItem('dental-pm-theme', next ? 'dark' : 'light');
+      localStorage.setItem('dpm_theme', next ? 'dark' : 'light');
+    } catch {}
+    setIsDark(next);
   };
   useEffect(() => {
     const r = document.documentElement;

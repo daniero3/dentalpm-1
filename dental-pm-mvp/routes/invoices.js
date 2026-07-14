@@ -6,11 +6,12 @@ const { auditLogger } = require('../middleware/auditLogger');
 const { requirePermission } = require('../utils/permissions');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
+const { getAuthToken } = require('../utils/authCookie');
 
 // Lire userId depuis JWT token directement
 const getUserIdFromToken = (req) => {
   try {
-    const token = req.headers['authorization']?.split(' ')[1];
+    const token = getAuthToken(req);
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       return decoded.userId || decoded.id || null;
@@ -35,7 +36,7 @@ const getUserId = (req) => {
 
   // 2. Décoder directement depuis le header Authorization
   try {
-    const token = req.headers['authorization']?.split(' ')[1];
+    const token = getAuthToken(req);
     if (token) {
       const parts  = token.split('.');
       const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));

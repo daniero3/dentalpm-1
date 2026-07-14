@@ -441,8 +441,32 @@ const PatientManagement = () => {
   // 
   const onChange = useCallback((name, val) => setForm(p => ({...p, [name]:val})), []);
 
-  const openCreate = () => { setSelP(null); setForm(emptyForm); setIsOpen(true); };
-  const openEdit   = p  => { setSelP(p);  setForm({ id:p.id||'', patient_number:p.patient_number||'', first_name:p.first_name||'', last_name:p.last_name||'', date_of_birth:p.date_of_birth||'', gender:p.gender||'', phone_primary:p.phone_primary||'', email:p.email||'', address:p.address||'', emergency_contact_name:p.emergency_contact_name||'', emergency_contact_phone:p.emergency_contact_phone||'', medical_history:p.medical_history||'', allergies:p.allergies||'', current_medications:p.current_medications||'' }); setIsOpen(true); };
+  const openCreate = () => {
+    setSelP(null);
+    setForm(emptyForm);
+    setIsOpen(true);
+  };
+  const openEdit = p => {
+    const nextForm = {
+      id: p.id || '',
+      patient_number: p.patient_number || '',
+      first_name: p.first_name || '',
+      last_name: p.last_name || '',
+      date_of_birth: p.date_of_birth || '',
+      gender: p.gender || '',
+      phone_primary: p.phone_primary || '',
+      email: p.email || '',
+      address: p.address || '',
+      emergency_contact_name: p.emergency_contact_name || '',
+      emergency_contact_phone: p.emergency_contact_phone || '',
+      medical_history: p.medical_history || '',
+      allergies: p.allergies || '',
+      current_medications: p.current_medications || ''
+    };
+    setSelP(() => p);
+    setForm(nextForm);
+    setIsOpen(true);
+  };
 
   const handleSubmit = async e => {
     e.preventDefault(); setSaving(true);
@@ -554,7 +578,7 @@ const PatientManagement = () => {
   };
 
   const openHistory = async (patient) => {
-    setHistoryFor(patient);
+    setHistoryFor(() => patient);
     setHistory([]);
     setHistoryLoading(true);
     try {

@@ -29,7 +29,6 @@ const LicensingGuard = ({ children }) => {
 
   const checkSubscriptionStatus = async () => {
     try {
-      const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
       
       // Si SUPER_ADMIN, bypass direct sans appel API
@@ -42,9 +41,7 @@ const LicensingGuard = ({ children }) => {
         }
       }
 
-      const response = await axios.get(`${API}/api/subscription/status`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/api/subscription/status`, { withCredentials: true });
       setSubscriptionStatus(response.data);
     } catch (err) {
       console.error('Subscription status check error:', err);

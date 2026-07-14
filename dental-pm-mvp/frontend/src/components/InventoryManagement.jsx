@@ -125,7 +125,11 @@ const InventoryManagement = () => {
     finally { setSaving(false); }
   };
 
-  const openMov = p => { setSelP(p); setMovType('IN'); setIsMov(true); };
+  const openMov = p => {
+    setSelP(() => p);
+    setMovType('IN');
+    setIsMov(true);
+  };
 
   const filtered = products.filter(p => {
     const ms = catF==='ALL'||p.category===catF;

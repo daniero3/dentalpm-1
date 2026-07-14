@@ -694,7 +694,7 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
   };
 
   const handlePrintById = id => {
-    fetch(`${API}/prescriptions/${id}/pdf`, { headers:{ Authorization:`Bearer ${localStorage.getItem('token')}` } })
+    fetch(`${API}/prescriptions/${id}/pdf`, { credentials:'include' })
       .then(r => { if(!r.ok) throw new Error(); return r.blob(); })
       .then(blob => { const url=window.URL.createObjectURL(blob); window.open(url,'_blank'); setTimeout(()=>window.URL.revokeObjectURL(url),60000); })
       .catch(() => toast.error('Erreur impression'));
@@ -702,7 +702,7 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
 
   const handleDownload = async p => {
     try {
-      const r = await fetch(`${API}/prescriptions/${p.id}/pdf`, { headers:{ Authorization:`Bearer ${localStorage.getItem('token')}` } });
+      const r = await fetch(`${API}/prescriptions/${p.id}/pdf`, { credentials:'include' });
       if (!r.ok) throw new Error();
       const blob=await r.blob(), url=window.URL.createObjectURL(blob), a=document.createElement('a');
       a.href=url; a.download=`${p.number}.pdf`;
@@ -717,8 +717,9 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
     const items   = Array.isArray(content.items) && content.items.length
       ? content.items
       : [emptyItem()];
-    setSelPresc(p);
-    setForm({ items, notes: content.notes || '' });
+    const nextForm = { items, notes: content.notes || '' };
+    setSelPresc(() => p);
+    setForm(nextForm);
     setIsEditOpen(true);
   };
 

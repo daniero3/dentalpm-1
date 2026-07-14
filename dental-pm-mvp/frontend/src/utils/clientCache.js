@@ -13,9 +13,7 @@ const stableStringify = (value) => {
 };
 
 const makeKey = (url, config = {}) => {
-  const token = localStorage.getItem('token') || '';
   return [
-    token.slice(-16),
     url,
     stableStringify(config.params)
   ].join('|');
@@ -30,7 +28,7 @@ export const cachedGet = async (url, config = {}, options = {}) => {
   if (hit && now < hit.expires) return hit.response;
   if (inflight.has(key)) return inflight.get(key);
 
-  const promise = axios.get(url, config).then((response) => {
+  const promise = axios.get(url, { ...config, withCredentials: true }).then((response) => {
     cache.set(key, { response, expires: Date.now() + ttl });
     return response;
   }).finally(() => {

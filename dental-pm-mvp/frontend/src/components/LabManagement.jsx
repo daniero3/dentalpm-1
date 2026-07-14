@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { matchesSearch, patientSearchText, scoreSearchMatch } from '../utils/search';
+import { renderHtmlInPopup } from '../utils/printHtml';
 import PartnerAds from './PartnerAds';
 import {
   FlaskConical, Plus, Printer, RefreshCw, Loader2, Search,
@@ -125,17 +126,14 @@ const openAuthenticatedPrint = async (url) => {
     return;
   }
   try {
-    const r = await fetch(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+    const r = await fetch(url, { credentials: 'include' });
     if (!r.ok) {
       popup.close();
       toast.error('Erreur impression');
       return;
     }
     const html = await r.text();
-    popup.document.open();
-    popup.document.write(html);
-    popup.document.close();
-    popup.focus();
+    renderHtmlInPopup(popup, html);
   } catch {
     popup.close();
     toast.error('Erreur impression');
@@ -287,7 +285,10 @@ const LabManagement = () => {
     catch(e){toast.error(e.response?.data?.error||'Erreur');}
     finally{setSaving(false);}
   };
-  const pickLab = lab=>{setSelLab(lab);setForm(f=>({...f,lab_name:lab.name}));};
+  const pickLab = lab => {
+    setSelLab(() => lab);
+    setForm({ ...form, lab_name: lab.name });
+  };
 
   const activeSearch = search.trim();
   const filtered = orders

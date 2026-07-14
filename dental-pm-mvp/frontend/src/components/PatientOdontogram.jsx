@@ -127,8 +127,9 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
 
   const handleToothClick = useCallback((toothFdi) => {
     const existing = pendingChanges[toothFdi] || odontogram[toothFdi] || {};
-    setSelectedTooth(toothFdi);
-    setEditForm({ status: existing.status || 'HEALTHY', surface: existing.surface || 'NONE', note: existing.note || '' });
+    const nextForm = { status: existing.status || 'HEALTHY', surface: existing.surface || 'NONE', note: existing.note || '' };
+    setSelectedTooth(() => toothFdi);
+    setEditForm(nextForm);
   }, [pendingChanges, odontogram]);
 
   // Handlers memomises — stables entre renders, ne causent pas perte de focus

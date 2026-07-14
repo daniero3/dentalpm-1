@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
+import { renderHtmlInPopup } from '../utils/printHtml';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
   Clock, CheckCircle, AlertCircle, DollarSign, CreditCard,
@@ -297,7 +298,7 @@ const InvoiceManagement = () => {
       }
 
       const response = await fetch(`${API}/invoices/${id}/print`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -306,17 +307,14 @@ const InvoiceManagement = () => {
       }
 
       const html = await response.text();
-      popup.document.open();
-      popup.document.write(html);
-      popup.document.close();
-      popup.focus();
+      renderHtmlInPopup(popup, html);
     } catch (error) {
       toast.error('Erreur impression facture');
     }
   };
   const handlePDF = async (id, num) => {
     try {
-      const r=await fetch(`${API}/invoices/${id}/pdf`,{headers:{Authorization:`Bearer ${localStorage.getItem('token')}`}});
+      const r=await fetch(`${API}/invoices/${id}/pdf`,{credentials:'include'});
       if(!r.ok){toast.error('Erreur PDF');return;}
       const blob=await r.blob(), url=window.URL.createObjectURL(blob), a=document.createElement('a');
       a.href=url;a.download=`${num||'facture'}.pdf`;document.body.appendChild(a);a.click();document.body.removeChild(a);window.URL.revokeObjectURL(url);
@@ -343,7 +341,7 @@ const InvoiceManagement = () => {
   // };
 
   const openPayModal = async inv => {
-    setPayInv(inv);
+    setPayInv(() => inv);
     setIsPayOpen(true);
   
     try {

@@ -19,11 +19,13 @@ export default function PWAInstallPrompt() {
 
     const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
+    let nativePromptTimer = null;
+
     const handler = (e) => {
       e.preventDefault();
-      setPrompt(e);
+      setPrompt(() => e);
       setMode('native');
-      setTimeout(() => setVisible(true), 3000);
+      nativePromptTimer = setTimeout(() => setVisible(true), 3000);
     };
 
     const installedHandler = () => {
@@ -39,6 +41,7 @@ export default function PWAInstallPrompt() {
       setMode('ios');
       const timer = setTimeout(() => setVisible(true), 3000);
       return () => {
+        if (nativePromptTimer) clearTimeout(nativePromptTimer);
         clearTimeout(timer);
         window.removeEventListener('beforeinstallprompt', handler);
         window.removeEventListener('appinstalled', installedHandler);
@@ -46,6 +49,7 @@ export default function PWAInstallPrompt() {
     }
 
     return () => {
+      if (nativePromptTimer) clearTimeout(nativePromptTimer);
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', installedHandler);
     };

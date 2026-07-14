@@ -130,6 +130,7 @@ const RegisterPage = React.lazy(() => import("./components/RegisterPage"));
 const AdminPartners = React.lazy(() => import("./components/AdminPartners"));
 
 const prefetchCoreRoutes = preloadCriticalRoutes;
+axios.defaults.withCredentials = true;
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = BACKEND_URL
@@ -168,10 +169,7 @@ axios.interceptors.request.use(
 // Token automatique sur toutes les requêtes
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token && !config.headers['Authorization']) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
+    config.withCredentials = true;
     return config;
   },
   (error) => Promise.reject(error)
@@ -181,7 +179,6 @@ let setGlobalSubscriptionError = null;
 let authExpiryHandled = false;
 
 const clearStoredSession = () => {
-  localStorage.removeItem('token');
   localStorage.removeItem('user');
   localStorage.removeItem('dpm_plan');
   localStorage.removeItem('dpm_user_plan');
@@ -209,6 +206,7 @@ const AuthProvider = ({ children }) => {
       error => {
         // Ignorer les erreurs d'annulation (Cancel)
         if (axios.isCancel(error)) return Promise.reject(error);
+        if (error.config?.skipAuthError) return Promise.reject(error);
         if (error.response?.status === 403) {
           const code = error.response?.data?.code;
           if (['SUBSCRIPTION_EXPIRED', 'TRIAL_EXPIRED', 'NO_ACTIVE_SUBSCRIPTION'].includes(code)) {
@@ -236,20 +234,26 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    if (userData) {
+      try { setUser(JSON.parse(userData)); } catch {}
     }
-    setLoading(false);
+    axios.get(`${API}/auth/profile`, { skipAuthError: true })
+      .then(response => {
+        setUser(response.data);
+        localStorage.setItem('user', JSON.stringify(response.data));
+      })
+      .catch(() => {
+        clearStoredSession();
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (username, password) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { username, password });
-      const { token, user: userData } = response.data;
-      localStorage.setItem('token', token);
+      const { user: userData } = response.data;
       localStorage.setItem('user', JSON.stringify(userData));
       // Stocker le plan depuis la réponse de login (immédiat, pas de fetch supplémentaire)
       const planFromLogin = normalizePlan(response.data.plan || userData.plan || userData.current_plan);
@@ -260,7 +264,6 @@ const AuthProvider = ({ children }) => {
         localStorage.removeItem('dpm_plan');
         localStorage.removeItem('dpm_user_plan');
       }
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       authExpiryHandled = false;
       prefetchCoreRoutes();
@@ -286,7 +289,8 @@ const AuthProvider = ({ children }) => {
       }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try { await axios.post(`${API}/auth/logout`); } catch {}
     clearStoredSession();
     setUser(null);
     setSubscriptionError(null);

@@ -5,6 +5,7 @@ const { User, Clinic, AuditLog } = require('../models');
 const { authenticateToken, hasActiveClinicAccess, buildClinicAccessError } = require('../middleware/auth');
 const { loginRateLimiter, resetLoginAttempts } = require('../middleware/rateLimiter');
 const { getCurrentPlanForClinic, getCurrentSubscriptionForClinic } = require('../utils/subscriptionResolver');
+const { setAuthCookie, clearAuthCookie } = require('../utils/authCookie');
 const { Op } = require('sequelize');
 
 const router = express.Router();
@@ -130,6 +131,7 @@ router.post('/login', loginRateLimiter, [
       );
       try { await AuditLog.create({ user_id: user.id, action:'LOGIN', resource_type:'auth', ip_address: req.ip, description:`Connexion SUPER_ADMIN: ${user.username}` }); } catch (e) {}
       resetLoginAttempts(req, username);
+      setAuthCookie(res, token);
       return res.json({
         message: 'Connexion réussie', token,
         user: { id: user.id, username: user.username, email: user.email, full_name: user.full_name, role: user.role, clinic_id: null },
@@ -184,6 +186,7 @@ router.post('/login', loginRateLimiter, [
 
     try { await AuditLog.create({ user_id: user.id, action:'LOGIN', resource_type:'auth', ip_address: req.ip, description:`Connexion: ${user.username}` }); } catch (e) {}
     resetLoginAttempts(req, username);
+    setAuthCookie(res, token);
 
     // Récupérer le plan d'abonnement pour la sidebar
     let userPlan = null;
@@ -240,6 +243,7 @@ router.post('/select-clinic', authenticateToken, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
+    setAuthCookie(res, finalToken);
 
     let userPlan = null;
     try {
@@ -264,6 +268,7 @@ router.post('/select-clinic', authenticateToken, async (req, res) => {
 router.post('/logout', authenticateToken, async (req, res) => {
   try {
     try { await AuditLog.create({ user_id: (req.user?.id || req.user?.dataValues?.id), action:'LOGOUT', resource_type:'auth', ip_address: req.ip, description:`Déconnexion: ${req.user.username}` }); } catch (e) {}
+    clearAuthCookie(res);
     res.json({ message:'Déconnexion réussie' });
   } catch (error) { res.status(500).json({ error:'Erreur lors de la déconnexion' }); }
 });

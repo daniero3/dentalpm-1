@@ -166,10 +166,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
 
       setSubscriptionLoaded(false)
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get(`${API}/subscription/status`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        })
+        const response = await axios.get(`${API}/subscription/status`, { withCredentials: true })
         if (!cancelled) setSubscription(response.data || null)
       } catch (error) {
         if (!cancelled) setSubscription(null)

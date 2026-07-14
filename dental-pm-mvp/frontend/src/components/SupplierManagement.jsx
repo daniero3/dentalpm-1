@@ -181,8 +181,9 @@ const SupplierManagement = () => {
   };
 
   const openEdit = sup=>{
-    setEditing(sup);
-    setForm({name:sup.name||'',type:sup.type||'GENERAL',phone:sup.phone||'',email:sup.email||'',city:sup.city||'Antananarivo',address:sup.address||'',notes:sup.notes||''});
+    const nextForm = {name:sup.name||'',type:sup.type||'GENERAL',phone:sup.phone||'',email:sup.email||'',city:sup.city||'Antananarivo',address:sup.address||'',notes:sup.notes||''};
+    setEditing(() => sup);
+    setForm(nextForm);
     setIsOpen(true);
   };
 
