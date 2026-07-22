@@ -135,8 +135,9 @@ export default function AdminPartners() {
 
       {/* Modal ajout/édition */}
       {modal && (
-        <div onClick={e=>e.target===e.currentTarget&&setModal(false)} style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.6)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding:16 }}>
-          <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
+        <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.6)', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center', padding:16 }}>
+          <button type="button" aria-label="Fermer la fenêtre partenaire" onClick={()=>setModal(false)} style={{ position:'absolute', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+          <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)', position:'relative', zIndex:1 }}>
             <div style={{ padding:'18px 22px', borderBottom:'1px solid #F1F5F9', display:'flex', justifyContent:'space-between', alignItems:'center', background:`linear-gradient(135deg,${T},#0A5F6A)`, borderRadius:'20px 20px 0 0' }}>
               <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff' }}>{editing ? 'Modifier le partenaire' : 'Nouveau partenaire'}</div>
               <button type="button" aria-label="Fermer la fenêtre partenaire" onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}><X size={15}/></button>

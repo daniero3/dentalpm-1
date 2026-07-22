@@ -69,9 +69,9 @@ const Modal = ({ open, onClose, title, children, maxW=640 }) => {
   if (typeof document === 'undefined') return null;
 
   const modal = (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()}
-      style={getModalOverlayStyle()}>
-      <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box' }}>
+    <div style={getModalOverlayStyle()}>
+      <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'fixed', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+      <div style={{ background:'#fff',borderRadius:22,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 24px 64px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',zIndex:1,boxSizing:'border-box' }}>
         <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',padding:7,borderRadius:8,display:'flex',alignItems:'center',color:'#64748B' }}><X size={15}/></button>
         {title&&<h2 style={{ fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:'0 0 20px',paddingRight:28 }}>{title}</h2>}
         {children}

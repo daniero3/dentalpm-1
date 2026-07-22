@@ -32,9 +32,6 @@ const Modal = ({ open, onClose, title, description, children }) => {
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -46,6 +43,21 @@ const Modal = ({ open, onClose, title, description, children }) => {
         padding: 16,
       }}
     >
+      <button
+        type="button"
+        aria-label="Fermer la fenêtre"
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          border: 0,
+          padding: 0,
+          background: 'transparent',
+          cursor: 'default',
+        }}
+      />
       <div
         style={{
           background: '#fff',
@@ -54,6 +66,8 @@ const Modal = ({ open, onClose, title, description, children }) => {
           maxWidth: 560,
           padding: 20,
           boxShadow: '0 20px 50px rgba(15, 23, 42, 0.25)',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {(title || description) && (
@@ -280,8 +294,10 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
     const isSelected = selectedTooth?.tooth_position === tooth.tooth_position;
 
     return (
-      <div
+      <button
+        type="button"
         key={tooth.tooth_position}
+        aria-label={`Sélectionner la dent ${getFDINumber(tooth.tooth_position)}`}
         onClick={() => setSelectedTooth(tooth)}
         style={{
           cursor: 'pointer',
@@ -292,6 +308,7 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
           background: '#ffffff',
           minWidth: 0,
           width: '100%',
+          font: 'inherit',
         }}
       >
         <div
@@ -308,7 +325,7 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
         <div style={{ fontSize: 11, fontWeight: 700 }}>
           {getFDINumber(tooth.tooth_position)}
         </div>
-      </div>
+      </button>
     );
   };
 

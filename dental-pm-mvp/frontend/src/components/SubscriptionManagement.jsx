@@ -499,9 +499,9 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
   const status2   = clinicData?.clinic?.subscription_status || 'EXPIRED';
 
   return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()}
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.65)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:560, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.22)', border:'1px solid #E2E8F0' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(10,16,30,.65)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+      <button type="button" aria-label="Fermer la fenêtre cabinet" onClick={onClose} style={{ position:'absolute', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+      <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:560, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.22)', border:'1px solid #E2E8F0', position:'relative', zIndex:1 }}>
 
         {/* Header */}
         <div style={{ padding:'18px 22px', borderBottom:'1px solid #F1F5F9', display:'flex', justifyContent:'space-between', alignItems:'center', background:'linear-gradient(135deg,#0D7A87,#0A5F6A)', borderRadius:'20px 20px 0 0' }}>
@@ -871,7 +871,8 @@ function AdminView() {
           </div>
           {data.pendingPayments.map(p => (
             <div key={p.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#FFFBEB', borderRadius:12, border:'1px solid #FDE68A', marginBottom:8, flexWrap:'wrap' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, flex:1, cursor:'pointer' }}
+              <button type="button" style={{ display:'flex', alignItems:'center', gap:10, flex:1, cursor:'pointer', border:0, padding:0, background:'transparent', textAlign:'left', font:'inherit' }}
+                aria-label={`Voir le cabinet ${p.clinic_name||'Cabinet'}`}
                 onClick={()=>p.clinic_id && openClinic(p.clinic_id, p.clinic_name||'Cabinet')}>
                 <Avatar name={p.clinic_name||'C'} size={36}/>
                 <div>
@@ -881,7 +882,7 @@ function AdminView() {
                   </div>
                   <div style={{ fontSize:11, color:'#64748B' }}>{p.payment_method} — {fmt(p.amount_mga)} Ar — {fdate(p.created_at)}</div>
                 </div>
-              </div>
+              </button>
               <span style={{ background:PLAN_CFG[p.plan_code]?.bg||'#F1F5F9', color:PLAN_CFG[p.plan_code]?.text||'#475569', padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{p.plan_code||'—'}</span>
               <div style={{ display:'flex', gap:8 }}>
                 <button type="button" onClick={()=>approve(p.id,p.plan_code)} style={{ padding:'7px 14px', borderRadius:9, background:'#0D7A87', color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
@@ -963,8 +964,8 @@ function AdminView() {
               const sc  = { ACTIVE:{bg:'#DCFCE7',c:'#166534',l:'Actif'}, TRIAL:{bg:'#DBEAFE',c:'#1E40AF',l:'Essai'}, EXPIRED:{bg:'#FEE2E2',c:'#991B1B',l:'Expiré'}, CANCELLED:{bg:'#F1F5F9',c:'#475569',l:'Annulé'} }[cl.status] || {bg:'#F1F5F9',c:'#475569',l:cl.status};
               const pc2 = PLAN_CFG[cl.plan] || PLAN_CFG.PRO;
               return (
-                <div key={cl.id} onClick={()=>openClinic(cl.id, cl.name)}
-                  style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#F8FAFC', borderRadius:12, border:'1px solid #E2E8F0', cursor:'pointer' }}
+                <button type="button" key={cl.id} aria-label={`Voir le cabinet ${cl.name||'Cabinet'}`} onClick={()=>openClinic(cl.id, cl.name)}
+                  style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#F8FAFC', borderRadius:12, border:'1px solid #E2E8F0', cursor:'pointer', textAlign:'left', font:'inherit' }}
                   onMouseOver={e=>{e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.borderColor='#7DD3DA';}}
                   onMouseOut={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}>
                   <Avatar name={cl.name||'C'} size={38}/>
@@ -975,7 +976,7 @@ function AdminView() {
                   <span style={{ background:pc2.bg, color:pc2.text, padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{cl.plan||'—'}</span>
                   <span style={{ background:sc.bg, color:sc.c, padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{sc.l}</span>
                   <ChevronRight size={14} color="#94A3B8"/>
-                </div>
+                </button>
               );
             })}
           </div>

@@ -173,8 +173,8 @@ export default function RegisterPage() {
                 <p style={{ color:'#64748B', fontSize:13, margin:'0 0 20px' }}>Commencez avec un essai gratuit de 30 jours.</p>
                 <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                   {PLANS.map(p => (
-                    <div className="premium-plan" key={p.name} onClick={() => setPlan(p)}
-                      style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${plan?.name===p.name ? T : '#E2E8F0'}`, background:plan?.name===p.name ? '#F0FDFE' : '#fff', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all .15s', position:'relative' }}
+                    <button type="button" className="premium-plan" key={p.name} aria-label={`Choisir le plan ${p.name}`} onClick={() => setPlan(p)}
+                      style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${plan?.name===p.name ? T : '#E2E8F0'}`, background:plan?.name===p.name ? '#F0FDFE' : '#fff', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all .15s', position:'relative', textAlign:'left', font:'inherit' }}
                       onMouseOver={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#7DD3DA';e.currentTarget.style.background='#FAFFFE';}}}
                       onMouseOut={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}}>
                       {p.popular && <span style={{ position:'absolute', top:-10, left:16, background:T, color:'#fff', fontSize:10, fontWeight:700, padding:'2px 10px', borderRadius:99 }}>⭐ Le plus populaire</span>}
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                         <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:T }}>{p.price} Ar</div>
                         <div style={{ fontSize:11, color:'#94A3B8' }}>/mois</div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <button type="button" className="premium-primary" disabled={!plan} onClick={() => setStep(1)}

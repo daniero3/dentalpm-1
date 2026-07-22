@@ -41,11 +41,9 @@ const actionLabel = action => ({ CREATE:'Création', UPDATE:'Modification', DELE
 const Modal = ({ open, onClose, children }) => {
   if (!open) return null;
   return (
-    <div
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div style={{ background:'#fff', borderRadius:16, padding:24, width:'100%', maxWidth:440, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}>
+      <button type="button" aria-label="Fermer la fenêtre odontogramme" onClick={onClose} style={{ position:'fixed', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+      <div style={{ background:'#fff', borderRadius:16, padding:24, width:'100%', maxWidth:440, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative', zIndex:1 }}>
         <button type="button" aria-label="Fermer la fenêtre odontogramme" onClick={onClose} style={{ position:'absolute', top:12, right:12, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
           <X size={16} />
         </button>

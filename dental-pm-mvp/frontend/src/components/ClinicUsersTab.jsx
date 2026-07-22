@@ -175,9 +175,9 @@ export default function ClinicUsersTab() {
 
       {/* Modal ajout */}
       {modal && (
-        <div onClick={e=>e.target===e.currentTarget&&setModal(false)}
-          style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:isMobile ? '28px 12px' : '60px 16px 32px' }}>
-          <div style={{ background:'#fff', borderRadius:22, padding:isMobile ? 22 : 28, width:'100%', maxWidth:560, maxHeight:isMobile ? 'calc(100dvh - 56px)' : 'none', overflowY:'auto', margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
+        <div style={{ position:'fixed', inset:0, zIndex:1050, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:isMobile ? '28px 12px' : '60px 16px 32px' }}>
+          <button type="button" aria-label="Fermer la fenêtre utilisateur" onClick={()=>setModal(false)} style={{ position:'fixed', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+          <div style={{ background:'#fff', borderRadius:22, padding:isMobile ? 22 : 28, width:'100%', maxWidth:560, maxHeight:isMobile ? 'calc(100dvh - 56px)' : 'none', overflowY:'auto', margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative', zIndex:1 }}>
             <button type="button" onClick={()=>setModal(false)} aria-label="Fermer" style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
                 <X size={16}/>
               </button>

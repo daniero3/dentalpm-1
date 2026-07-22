@@ -172,8 +172,9 @@ const Modal = ({open,onClose,title,children,maxW=560}) => {
   if(typeof document === 'undefined') return null;
 
   const modal = (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={getModalOverlayStyle()}>
-      <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',boxSizing:'border-box'}}>
+    <div style={getModalOverlayStyle()}>
+      <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{position:'fixed',inset:0,width:'100%',height:'100%',border:0,padding:0,background:'transparent',cursor:'default'}} />
+      <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth:maxW,margin:'0 auto',boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',position:'relative',zIndex:1,boxSizing:'border-box'}}>
         <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}>
           <X size={15}/>
         </button>
@@ -208,9 +209,11 @@ const TarifSug = ({workType,onSelect,val}) => {
 };
 
 /* ── Card labo partenaire ── */
-const LabCard = ({lab,onSelect,selected,compact=false}) => (
-  <div onClick={()=>onSelect&&onSelect(lab)}
-    style={{border:selected?'2px solid #0D7A87':'1.5px solid #E2E8F0',borderRadius:16,padding:compact?'13px 15px':'18px 20px',background:selected?'#F0FDFE':'#fff',cursor:onSelect?'pointer':'default',transition:'all .2s',position:'relative',boxShadow:selected?'0 4px 20px rgba(13,122,135,.15)':'0 1px 4px rgba(0,0,0,.04)'}}
+const LabCard = ({lab,onSelect,selected,compact=false}) => {
+  const CardTag = onSelect ? 'button' : 'div';
+  return (
+  <CardTag type={onSelect ? 'button' : undefined} aria-label={onSelect ? `Sélectionner le laboratoire ${lab.name}` : undefined} onClick={onSelect ? ()=>onSelect(lab) : undefined}
+    style={{border:selected?'2px solid #0D7A87':'1.5px solid #E2E8F0',borderRadius:16,padding:compact?'13px 15px':'18px 20px',background:selected?'#F0FDFE':'#fff',cursor:onSelect?'pointer':'default',transition:'all .2s',position:'relative',boxShadow:selected?'0 4px 20px rgba(13,122,135,.15)':'0 1px 4px rgba(0,0,0,.04)',width:'100%',textAlign:'left',font:'inherit'}}
     onMouseOver={e=>{if(!selected&&onSelect){e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.boxShadow='0 4px 16px rgba(13,122,135,.1)';}}}
     onMouseOut={e=>{if(!selected&&onSelect){e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';}}}>
     {lab.featured&&<div style={{position:'absolute',top:-9,right:14,background:'linear-gradient(135deg,#F59E0B,#D97706)',color:'#fff',fontSize:10,fontWeight:800,padding:'2px 10px',borderRadius:99,display:'flex',alignItems:'center',gap:4}}><Zap size={9}/>RECOMMANDÉ</div>}
@@ -238,8 +241,9 @@ const LabCard = ({lab,onSelect,selected,compact=false}) => (
     {!compact&&<p style={{fontSize:12,color:'#475569',lineHeight:1.6,margin:lab.promo?'0 0 8px':0}}>{lab.desc}</p>}
     {!compact&&lab.promo&&<div style={{background:'#FFF7ED',border:'1px solid #FED7AA',borderRadius:8,padding:'5px 10px',fontSize:11,fontWeight:700,color:'#C2410C'}}>🎁 {lab.promo}</div>}
     {selected&&onSelect&&<div style={{position:'absolute',top:10,right:10,width:20,height:20,borderRadius:'50%',background:'#0D7A87',display:'flex',alignItems:'center',justifyContent:'center'}}><CheckCircle size={11} color="#fff"/></div>}
-  </div>
-);
+  </CardTag>
+  );
+};
 
 /* ════════════════════════════════════════════════════════════════════════════ */
 const LabManagement = () => {
@@ -522,14 +526,14 @@ const LabManagement = () => {
               <>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,marginBottom:8}}>
                   {PARTNER_LABS.map(lab=>(
-                    <div key={lab.id} onClick={()=>pickLab(lab)}
-                      style={{padding:'9px 11px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',transition:'all .15s'}}
+                    <button type="button" key={lab.id} aria-label={`Sélectionner le laboratoire ${lab.name}`} onClick={()=>pickLab(lab)}
+                      style={{padding:'9px 11px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',transition:'all .15s',textAlign:'left',font:'inherit'}}
                       onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
                       onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
                       <div style={{fontWeight:700,fontSize:12,color:'#0F172A'}}>{lab.name}</div>
                       <div style={{fontSize:10,color:'#64748B',marginTop:2}}>{lab.city} · ⭐{lab.rating} · {lab.delai}</div>
                       {lab.promo&&<div style={{fontSize:10,color:'#C2410C',fontWeight:600,marginTop:2}}>🎁 {lab.promo}</div>}
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <p style={{fontSize:11,color:'#94A3B8',margin:0,textAlign:'center'}}>Ou saisir le nom manuellement ci-dessous</p>

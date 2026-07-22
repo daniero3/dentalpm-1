@@ -26,9 +26,9 @@ const selectClass    = "flex h-10 w-full rounded-md border border-input bg-backg
 const Modal = ({ open, onClose, title, children, maxWidth = 480 }) => {
   if (!open) return null;
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <button type="button" aria-label="Fermer la fenêtre document" onClick={onClose} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, padding: 0, background: 'transparent', cursor: 'default' }} />
+      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto', position: 'relative', zIndex: 1 }}>
         <button type="button" aria-label="Fermer la fenêtre document" onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4 }}><X size={18} /></button>
         {title && <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 17, fontWeight: 700, color: '#0F172A', margin: '0 0 20px', paddingRight: 24 }}>{title}</h2>}
         {children}

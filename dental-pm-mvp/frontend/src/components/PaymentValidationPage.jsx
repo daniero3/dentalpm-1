@@ -122,7 +122,7 @@ export default function PaymentValidationPage() {
       {/* KPI cards */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14,marginBottom:22}}>
         {ST_TABS.map(t=>(
-          <div key={t.key} style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:`1.5px solid ${filter===t.key?t.dot:'#E8EDF2'}`,boxShadow:filter===t.key?`0 4px 20px ${t.dot}33`:'var(--sh1,0 1px 4px rgba(0,0,0,.05))',cursor:'pointer',transition:'all .2s'}} onClick={()=>setFilter(t.key)}>
+          <button type="button" key={t.key} aria-label={`Filtrer les paiements ${t.label}`} style={{background:'#fff',borderRadius:16,padding:'18px 20px',border:`1.5px solid ${filter===t.key?t.dot:'#E8EDF2'}`,boxShadow:filter===t.key?`0 4px 20px ${t.dot}33`:'var(--sh1,0 1px 4px rgba(0,0,0,.05))',cursor:'pointer',transition:'all .2s',textAlign:'left',font:'inherit'}} onClick={()=>setFilter(t.key)}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
               <div style={{width:10,height:10,borderRadius:'50%',background:t.dot}}/>
               <span style={{fontSize:13,fontWeight:600,color:t.color}}>{t.label}</span>
@@ -131,7 +131,7 @@ export default function PaymentValidationPage() {
               {counts[t.key]}
             </div>
             <div style={{fontSize:12,color:'#94A3B8',marginTop:4}}>demande{counts[t.key]>1?'s':''}</div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -242,8 +242,9 @@ export default function PaymentValidationPage() {
 
       {/* Modal confirmation */}
       {modal && (
-        <div className="overlay" onClick={e=>e.target===e.currentTarget&&closeModal()}>
-          <div className="modal">
+        <div className="overlay">
+          <button type="button" aria-label="Fermer la fenêtre de validation" onClick={closeModal} style={{ position:'fixed', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+          <div className="modal" style={{ position:'relative', zIndex:1 }}>
             {/* Header */}
             <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:22}}>
               <div style={{width:52,height:52,borderRadius:16,background:modal.action==='approve'?'linear-gradient(135deg,#10B981,#059669)':'#FEE2E2',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>

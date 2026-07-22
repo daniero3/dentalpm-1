@@ -348,7 +348,7 @@ export default function PaymentRequestPage() {
                 <h3 style={{fontWeight:700,fontSize:16,color:'#0F172A',margin:'0 0 16px'}}>Choisissez votre plan</h3>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12,marginBottom:22}}>
                   {PLANS.map(p=>(
-                    <div key={p.code} onClick={()=>setPlan(p.code)} style={{border:`2px solid ${plan===p.code?C.teal:'#E2E8F0'}`,borderRadius:16,padding:'18px 16px',cursor:'pointer',background:plan===p.code?'#F0FDFE':'#fff',position:'relative',transition:'all .2s'}}>
+                    <button type="button" key={p.code} aria-label={`Choisir le plan ${p.label}`} onClick={()=>setPlan(p.code)} style={{border:`2px solid ${plan===p.code?C.teal:'#E2E8F0'}`,borderRadius:16,padding:'18px 16px',cursor:'pointer',background:plan===p.code?'#F0FDFE':'#fff',position:'relative',transition:'all .2s',textAlign:'left',font:'inherit'}}>
                       {p.popular && <div style={{position:'absolute',top:-10,left:'50%',transform:'translateX(-50%)',background:C.teal,color:'#fff',fontSize:10,fontWeight:800,padding:'3px 12px',borderRadius:99,whiteSpace:'nowrap'}}>⭐ POPULAIRE</div>}
                       <div style={{fontWeight:800,fontSize:14,color:'#0F172A',marginBottom:2}}>{p.label}</div>
                       <div style={{fontSize:12,color:'#64748B',marginBottom:10}}>{p.desc}</div>
@@ -362,7 +362,7 @@ export default function PaymentRequestPage() {
                           </li>
                         ))}
                       </ul>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <button type="button" className="pb" onClick={()=>setStep(2)}>
@@ -382,8 +382,8 @@ export default function PaymentRequestPage() {
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
                   {METHODS.map(m=>(
-                    <div key={m.code} onClick={()=>setMeth(m.code)}
-                      style={{border:`2px solid ${meth===m.code?C.teal:'#E2E8F0'}`,borderRadius:12,padding:'13px 16px',cursor:'pointer',background:meth===m.code?'#F0FDFE':'#fff',display:'flex',justifyContent:'space-between',alignItems:'center',transition:'all .15s'}}>
+                    <button type="button" key={m.code} aria-label={`Choisir le mode de paiement ${m.name}`} onClick={()=>setMeth(m.code)}
+                      style={{border:`2px solid ${meth===m.code?C.teal:'#E2E8F0'}`,borderRadius:12,padding:'13px 16px',cursor:'pointer',background:meth===m.code?'#F0FDFE':'#fff',display:'flex',justifyContent:'space-between',alignItems:'center',transition:'all .15s',textAlign:'left',font:'inherit'}}>
                       <div style={{display:'flex',alignItems:'center',gap:12}}>
                         <div style={{width:40,height:40,borderRadius:10,background:m.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>{m.emoji}</div>
                         <div>
@@ -395,7 +395,7 @@ export default function PaymentRequestPage() {
                         </div>
                       </div>
                       {meth===m.code && <div style={{width:22,height:22,borderRadius:'50%',background:C.teal,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{color:'#fff',fontSize:12}}>✓</span></div>}
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <div style={{display:'flex',gap:10}}>

@@ -88,7 +88,6 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
 
   return (
     <div
-      onClick={(e) => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed',
         inset: 0,
@@ -101,8 +100,22 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
         justifyContent: 'center'
       }}
     >
+      <button
+        type="button"
+        aria-label="Fermer la fenêtre patient"
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          border: 0,
+          padding: 0,
+          background: 'transparent',
+          cursor: 'default'
+        }}
+      />
       <div
-        onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
           maxWidth: maxW,
@@ -111,7 +124,8 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
           background: '#FFFFFF',
           borderRadius: 28,
           boxShadow: '0 24px 80px rgba(15,23,42,.25)',
-          position: 'relative'
+          position: 'relative',
+          zIndex: 1
         }}
       >
         <button

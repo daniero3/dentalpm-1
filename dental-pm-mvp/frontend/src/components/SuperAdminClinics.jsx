@@ -14,9 +14,9 @@ const API = `${BACKEND_URL}/api`;
 const Modal = ({ open, onClose, title, children, maxWidth = 700 }) => {
   if (!open) return null;
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth: maxWidth||560, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,0.5)', overflowY:'auto', padding:'80px 16px 32px' }}>
+      <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'fixed', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
+      <div style={{ background:'#fff', borderRadius:16, padding:28, width:'100%', maxWidth: maxWidth||560, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative', zIndex:1 }}>
         <button type="button" aria-label="Fermer la fenêtre" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}><X size={18} /></button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
         {children}
