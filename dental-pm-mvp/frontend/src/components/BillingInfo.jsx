@@ -53,7 +53,10 @@ export default function BillingInfo() {
     setOpening(true);
     try {
       const r = await axios.post(`${API}/billing/customer-portal`, {}, authH());
-      if (r.data.url) window.open(r.data.url, '_blank');
+      if (r.data.url) {
+        const portalWindow = window.open(r.data.url, '_blank', 'noopener,noreferrer');
+        if (portalWindow) portalWindow.opener = null;
+      }
     } catch(e) {
       toast.error(e.response?.data?.error || 'Erreur ouverture portail Stripe');
     } finally { setOpening(false); }
