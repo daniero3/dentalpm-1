@@ -76,8 +76,8 @@ const MedSearch = ({ id, value, onChange, suggestions, onPick }) => {
             {value.trim() ? 'Résultats' : 'Fréquents'}
           </div>
           {list.map((m, i) => (
-            <div key={i} onMouseDown={() => { onPick(m); setOpen(false); }}
-              style={{ padding:'9px 14px', cursor:'pointer', borderBottom:i<list.length-1?'1px solid #F8FAFC':'none', transition:'background .1s' }}
+            <button type="button" key={`${m.name}-${m.dosage || ''}-${m.posology || ''}-${m.duration || ''}`} onMouseDown={() => { onPick(m); setOpen(false); }}
+              style={{ width:'100%', border:0, background:'transparent', textAlign:'left', font:'inherit', padding:'9px 14px', cursor:'pointer', borderBottom:i<list.length-1?'1px solid #F8FAFC':'none', transition:'background .1s' }}
               onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
               onMouseOut={e=>e.currentTarget.style.background='transparent'}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -91,7 +91,7 @@ const MedSearch = ({ id, value, onChange, suggestions, onPick }) => {
                   {m.duration && <span>{m.duration}</span>}
                 </div>
               )}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -110,10 +110,9 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
   const filled   = item.medication.trim();
   const complete = filled && item.dosage && item.posology && item.duration;
   return (
-    <div onMouseDown={onActivate}
-      style={{ border:`2px solid ${isActive?T:complete?`${T}45`:'#E2E8F0'}`, borderRadius:13, marginBottom:8, background:isActive?'#fff':complete?'#FAFFFE':'#FAFAFA', transition:'all .18s', boxShadow:isActive?`0 4px 20px ${T}20`:'none', overflow:'hidden', cursor:'pointer' }}>
+    <div style={{ border:`2px solid ${isActive?T:complete?`${T}45`:'#E2E8F0'}`, borderRadius:13, marginBottom:8, background:isActive?'#fff':complete?'#FAFFFE':'#FAFAFA', transition:'all .18s', boxShadow:isActive?`0 4px 20px ${T}20`:'none', overflow:'hidden' }}>
       <div style={{ padding:'10px 14px', background:isActive?'#F0FDFE':complete?'#F0FDFE80':'#F8FAFC', borderBottom:`1px solid ${isActive?T+'30':'#F1F5F9'}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:9, minWidth:0, flex:1 }}>
+        <button type="button" onMouseDown={onActivate} aria-label={`Modifier le médicament ${index + 1}`} style={{ display:'flex', alignItems:'center', gap:9, minWidth:0, flex:1, border:0, padding:0, background:'transparent', textAlign:'left', font:'inherit', cursor:'pointer' }}>
           <div style={{ width:22, height:22, borderRadius:'50%', background:complete?T:isActive?T:'#CBD5E1', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background .18s' }}>
             {complete ? <CheckCircle size={13} color="#fff"/> : <span style={{ fontSize:10, fontWeight:800, color:'#fff' }}>{index+1}</span>}
           </div>
@@ -127,7 +126,7 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
               {item.duration && <span style={{ fontSize:10, background:'#DCFCE7', color:'#166534', padding:'2px 7px', borderRadius:99, fontWeight:600 }}>{item.duration}</span>}
             </div>
           )}
-        </div>
+        </button>
         {total > 1 && (
           <button type="button" aria-label={`Supprimer le médicament ${index + 1}`} onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
             style={{ background:'none', border:'none', cursor:'pointer', color:'#CBD5E1', display:'flex', alignItems:'center', padding:'3px 6px', borderRadius:6, transition:'all .15s', flexShrink:0 }}
@@ -279,15 +278,15 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
   if (!open) return null;
 
   return (
-    <div onClick={e => e.target===e.currentTarget && onClose()}
-      style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(8,20,40,.78)', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'16px', backdropFilter:'blur(4px)', overflowY:'auto' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(8,20,40,.78)', display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'16px', backdropFilter:'blur(4px)', overflowY:'auto' }}>
+      <button type="button" aria-label="Fermer la fenêtre ordonnance" onClick={onClose} style={{ position:'fixed', inset:0, width:'100%', height:'100%', border:0, padding:0, background:'transparent', cursor:'default' }} />
       <style>{`
         @keyframes dpm-slide-up { from{opacity:0;transform:translateY(20px) scale(.98)} to{opacity:1;transform:none} }
         @keyframes dpm-spin { to{transform:rotate(360deg)} }
         .dpm-scroll::-webkit-scrollbar{width:4px}
         .dpm-scroll::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px}
       `}</style>
-      <div style={{ background:'#F1F5F9', width:'100%', maxWidth: 1060, borderRadius:20, overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', display:'flex', flexDirection:'column', maxHeight:'calc(100dvh - 32px)', minHeight:500 }}>
+      <div style={{ background:'#F1F5F9', width:'100%', maxWidth: 1060, borderRadius:20, overflow:'hidden', boxShadow:'0 40px 80px rgba(0,0,0,.38)', border:'1px solid rgba(255,255,255,.1)', animation:'dpm-slide-up .22s cubic-bezier(.22,.61,.36,1)', display:'flex', flexDirection:'column', maxHeight:'calc(100dvh - 32px)', minHeight:500, position:'relative', zIndex:1 }}>
 
         {/* Header */}
         <div style={{ background:`linear-gradient(135deg,${T},${T_DARK})`, padding:'16px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, position:'relative', overflow:'hidden' }}>
@@ -515,10 +514,11 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
                 <div style={{ position:'absolute', left:36, top:52, bottom:0, width:1, background:'#F1F5F9', zIndex:0 }}/>
               )}
 
-              <div style={{ padding:'12px 20px', display:'flex', gap:14, alignItems:'flex-start', position:'relative', transition:'background .15s', cursor:'pointer' }}
-                onClick={() => setExpanded(isExp ? null : p.id)}
+              <div style={{ padding:'12px 20px', display:'flex', gap:14, alignItems:'flex-start', position:'relative', transition:'background .15s' }}
                 onMouseOver={e=>e.currentTarget.style.background='#FAFAFA'}
                 onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                <button type="button" aria-expanded={isExp} aria-label={`${isExp ? 'Réduire' : 'Afficher'} l'ordonnance ${p.number}`} onClick={() => setExpanded(isExp ? null : p.id)}
+                  style={{ display:'flex', gap:14, alignItems:'flex-start', flex:1, minWidth:0, border:0, padding:0, background:'transparent', textAlign:'left', font:'inherit', cursor:'pointer' }}>
 
                 {/* Timeline dot */}
                 <div style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', zIndex:1 }}>
@@ -531,24 +531,12 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
 
                 {/* Content */}
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8, marginBottom:6 }}>
+                  <div style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:6, paddingRight:118 }}>
                     <div style={{ display:'flex', alignItems:'center', flexWrap:'wrap', gap:7 }}>
                       <span style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontWeight:800, fontSize:13, color:'#0F172A', letterSpacing:.2 }}>
                         {p.number}
                       </span>
                       <StatusBadge status={p.status}/>
-                    </div>
-                    {/* Actions */}
-                    <div style={{ display:'flex', gap:2, flexShrink:0 }} onClick={e => e.stopPropagation()}>
-                      {p.status === 'DRAFT' && (
-                        <>
-                          <ActionBtn icon={<Edit2 size={12}/>} title="Modifier" onClick={() => onEdit(p)}/>
-                          <ActionBtn icon={<Send size={12}/>} title="Émettre" color="#059669" onClick={() => onIssue(p)}/>
-                        </>
-                      )}
-                      <ActionBtn icon={<Printer size={12}/>} title="Imprimer" onClick={() => onPrint(p.id)}/>
-                      {p.status !== 'CANCELLED' && <ActionBtn icon={<Download size={12}/>} title="PDF" onClick={() => onDownload(p)}/>}
-                      {p.status !== 'CANCELLED' && <ActionBtn icon={<XCircle size={12}/>} title="Annuler" color="#DC2626" onClick={() => onCancel(p)}/>}
                     </div>
                   </div>
 
@@ -596,6 +584,19 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
                       )}
                     </div>
                   )}
+                </div>
+                </button>
+                {/* Actions */}
+                <div style={{ display:'flex', gap:2, flexShrink:0, position:'absolute', top:12, right:20 }}>
+                  {p.status === 'DRAFT' && (
+                    <>
+                      <ActionBtn icon={<Edit2 size={12}/>} title="Modifier" onClick={() => onEdit(p)}/>
+                      <ActionBtn icon={<Send size={12}/>} title="Émettre" color="#059669" onClick={() => onIssue(p)}/>
+                    </>
+                  )}
+                  <ActionBtn icon={<Printer size={12}/>} title="Imprimer" onClick={() => onPrint(p.id)}/>
+                  {p.status !== 'CANCELLED' && <ActionBtn icon={<Download size={12}/>} title="PDF" onClick={() => onDownload(p)}/>}
+                  {p.status !== 'CANCELLED' && <ActionBtn icon={<XCircle size={12}/>} title="Annuler" color="#DC2626" onClick={() => onCancel(p)}/>}
                 </div>
               </div>
             </div>

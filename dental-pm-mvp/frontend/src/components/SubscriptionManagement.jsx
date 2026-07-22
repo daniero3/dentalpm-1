@@ -917,8 +917,9 @@ function AdminView() {
               </thead>
               <tbody>
                 {txs.slice(0,15).map((tx,i) => (
-                  <tr key={tx.id} style={{ borderBottom:i<Math.min(txs.length,15)-1?'1px solid #F8FAFC':'none', cursor:'pointer' }}
+                  <tr key={tx.id} tabIndex={0} style={{ borderBottom:i<Math.min(txs.length,15)-1?'1px solid #F8FAFC':'none', cursor:'pointer' }}
                     onClick={()=>tx.clinic_id && openClinic(tx.clinic_id, tx.clinic_name||'Cabinet')}
+                    onKeyDown={e=>{if((e.key==='Enter'||e.key===' ')&&tx.clinic_id){e.preventDefault();openClinic(tx.clinic_id, tx.clinic_name||'Cabinet');}}}
                     onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
                     onMouseOut={e=>e.currentTarget.style.background='transparent'}>
                     <td style={{ padding:'10px 12px', fontFamily:'monospace', fontSize:11, color:'#94A3B8' }}>#{(tx.id||'').slice(-6)}</td>

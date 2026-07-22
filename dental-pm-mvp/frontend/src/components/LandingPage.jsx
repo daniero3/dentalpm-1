@@ -260,7 +260,7 @@ const FadeSlider = ({ images, height=480, interval=4500 }) => {
         <p style={{ color:'rgba(255,255,255,.88)',fontSize:12,fontWeight:500,margin:0 }}>{images[cur].caption}</p>
       </div>
       <div style={{ position:'absolute',bottom:12,right:14,zIndex:5,display:'flex',gap:5 }}>
-        {images.map((_,i) => <div key={i} onClick={()=>setCur(i)} style={{ width:i===cur?18:6,height:6,borderRadius:99,background:i===cur?'#fff':'rgba(255,255,255,.4)',cursor:'pointer',transition:'all .4s' }}/>)}
+        {images.map((_,i) => <button type="button" key={i} aria-label={`Afficher l'image ${i + 1}`} onClick={()=>setCur(i)} style={{ width:i===cur?18:6,height:6,borderRadius:99,background:i===cur?'#fff':'rgba(255,255,255,.4)',cursor:'pointer',transition:'all .4s',border:0,padding:0 }}/>)}
       </div>
     </div>
   );
@@ -357,7 +357,7 @@ const DashMockup = () => {
       </div>
       <div style={{flex:1,animation:'fadeIn .35s ease'}} key={tab}>{screens[tab]}</div>
       <div style={{display:'flex',gap:5,justifyContent:'center',marginTop:12}}>
-        {tabs.map((_,i)=><div key={i} onClick={()=>setTab(i)} style={{width:i===tab?18:6,height:6,borderRadius:99,background:i===tab?'#0D7A87':'#E2E8F0',cursor:'pointer',transition:'all .3s'}}/>)}
+        {tabs.map((_,i)=><button type="button" key={i} aria-label={`Afficher l'onglet ${tabs[i]}`} onClick={()=>setTab(i)} style={{width:i===tab?18:6,height:6,borderRadius:99,background:i===tab?'#0D7A87':'#E2E8F0',cursor:'pointer',transition:'all .3s',border:0,padding:0}}/>)}
       </div>
     </div>
   );
@@ -485,8 +485,9 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
   const canContinue = form.cabinet && form.email && form.phone && form.city && passwordStrong && passwordMatch;
   if(!show) return null;
   return (
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(10,15,20,.75)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn .2s ease'}}>
-      <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95dvh',overflowY:'auto',position:'relative',animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)',border:'1px solid var(--border)'}}>
+    <div style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(10,15,20,.75)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn .2s ease'}}>
+      <button type="button" aria-label="Fermer la fenêtre d'inscription" onClick={onClose} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0,padding:0,background:'transparent',cursor:'default'}} />
+      <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95dvh',overflowY:'auto',position:'relative',zIndex:1,animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)',border:'1px solid var(--border)'}}>
         <div style={{width:40,height:4,borderRadius:99,background:'#E2E8F0',margin:'0 auto 18px'}}/>
         <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,width:32,height:32,borderRadius:'50%',background:'var(--surface)',border:'none',cursor:'pointer',fontSize:18,color:'var(--muted)'}}>✕</button>
         {!done?(
@@ -878,7 +879,7 @@ export default function LandingPage() {
                 color:'#0D7A87',
               },
             ].map((item,i)=>(
-              <div key={i} className="sr" onClick={()=>navigate('/register')} style={{
+              <button type="button" key={i} className="sr" aria-label={`Créer un compte pour résoudre: ${item.q}`} onClick={()=>navigate('/register')} style={{
                 background:'rgba(255,255,255,.04)',
                 border:'1px solid rgba(255,255,255,.08)',
                 borderRadius:18,
@@ -888,6 +889,8 @@ export default function LandingPage() {
                 transitionDelay:`${i*.06}s`,
                 position:'relative',
                 overflow:'hidden',
+                textAlign:'left',
+                font:'inherit',
               }}
               onMouseOver={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)';e.currentTarget.style.borderColor='rgba(255,255,255,.18)';e.currentTarget.style.transform='translateY(-4px)';}}
               onMouseOut={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)';e.currentTarget.style.borderColor='rgba(255,255,255,.08)';e.currentTarget.style.transform='translateY(0)';}}>
@@ -899,7 +902,7 @@ export default function LandingPage() {
                 <p style={{fontSize:isMobile?12:13,color:'rgba(255,255,255,.45)',lineHeight:1.65,margin:0}}>{item.pain}</p>
                 {/* Trait couleur bas */}
                 <div style={{position:'absolute',bottom:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${item.color}66,transparent)`,borderRadius:'0 0 18px 18px'}}/>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -1164,12 +1167,12 @@ export default function LandingPage() {
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:8}}>
           {FAQS.map((faq,i)=>(
-            <div key={i} className="faq-item sr" onClick={()=>setOpenFaq(openFaq===i?null:i)}
+            <div key={i} className="faq-item sr"
               style={{background:'var(--surface)',border:`1px solid ${openFaq===i?'var(--teal)':'var(--border)'}`,borderRadius:12,padding:isMobile?'15px 16px':'20px 24px',transitionDelay:`${i*.04}s`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
+              <button type="button" aria-expanded={openFaq===i} onClick={()=>setOpenFaq(openFaq===i?null:i)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,width:'100%',border:0,padding:0,background:'transparent',textAlign:'left',font:'inherit',cursor:'pointer'}}>
                 <p style={{fontFamily:'Bricolage Grotesque',fontWeight:700,fontSize:isMobile?13:15,color:'var(--ink)',margin:0}}>{faq.q}</p>
                 <span style={{color:'var(--teal)',fontSize:22,flexShrink:0,transition:'transform .3s',transform:openFaq===i?'rotate(45deg)':'rotate(0)',fontWeight:300}}>+</span>
-              </div>
+              </button>
               {openFaq===i&&<p style={{color:'var(--slate)',fontSize:isMobile?13:14,lineHeight:1.8,marginTop:10,animation:'fadeIn .3s ease'}}>{faq.a}</p>}
             </div>
           ))}
