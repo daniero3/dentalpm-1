@@ -198,7 +198,9 @@ export default function BillingInfo() {
           <button type="button" onClick={openPortal} disabled={opening}
             style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderRadius:12, border:'1.5px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', transition:'all .15s', textAlign:'left', width:'100%' }}
             onMouseOver={e=>{ e.currentTarget.style.borderColor=T; e.currentTarget.style.background='#F0FDFE'; }}
-            onMouseOut={e=>{ e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.background='#F8FAFC'; }}>
+            onFocus={e=>{ e.currentTarget.style.borderColor=T; e.currentTarget.style.background='#F0FDFE'; }}
+            onMouseOut={e=>{ e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.background='#F8FAFC'; }}
+            onBlur={e=>{ e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.background='#F8FAFC'; }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
               <div style={{ width:36, height:36, borderRadius:10, background:`${T}15`, display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <CreditCard size={16} color={T}/>
@@ -215,7 +217,9 @@ export default function BillingInfo() {
           <button type="button" onClick={openPortal} disabled={opening}
             style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderRadius:12, border:'1.5px solid #FEE2E2', background:'#FFF5F5', cursor:'pointer', transition:'all .15s', textAlign:'left', width:'100%' }}
             onMouseOver={e=>{ e.currentTarget.style.borderColor='#EF4444'; e.currentTarget.style.background='#FEE2E2'; }}
-            onMouseOut={e=>{ e.currentTarget.style.borderColor='#FEE2E2'; e.currentTarget.style.background='#FFF5F5'; }}>
+            onFocus={e=>{ e.currentTarget.style.borderColor='#EF4444'; e.currentTarget.style.background='#FEE2E2'; }}
+            onMouseOut={e=>{ e.currentTarget.style.borderColor='#FEE2E2'; e.currentTarget.style.background='#FFF5F5'; }}
+            onBlur={e=>{ e.currentTarget.style.borderColor='#FEE2E2'; e.currentTarget.style.background='#FFF5F5'; }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
               <div style={{ width:36, height:36, borderRadius:10, background:'#FEE2E2', display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <XCircle size={16} color="#EF4444"/>
@@ -233,7 +237,9 @@ export default function BillingInfo() {
             <button type="button" onClick={openPortal} disabled={opening}
               style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 16px', borderRadius:12, border:'1.5px solid #BBF7D0', background:'#F0FDF4', cursor:'pointer', transition:'all .15s', textAlign:'left', width:'100%' }}
               onMouseOver={e=>{ e.currentTarget.style.borderColor='#22C55E'; }}
-              onMouseOut={e=>{ e.currentTarget.style.borderColor='#BBF7D0'; }}>
+              onFocus={e=>{ e.currentTarget.style.borderColor='#22C55E'; }}
+              onMouseOut={e=>{ e.currentTarget.style.borderColor='#BBF7D0'; }}
+              onBlur={e=>{ e.currentTarget.style.borderColor='#BBF7D0'; }}>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>
                 <div style={{ width:36, height:36, borderRadius:10, background:'#DCFCE7', display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <CheckCircle size={16} color="#16A34A"/>

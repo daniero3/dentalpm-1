@@ -263,8 +263,8 @@ const InventoryManagement = () => {
                 const isLow = p.current_qty<=p.min_qty;
                 const [cc,cbg] = CATCLR[p.category]||CATCLR.OTHER;
                 return(
-                  <tr key={p.id} className="inv-row" style={{ borderBottom:'1px solid #F8FAFC',transition:'background .12s',animationDelay:`${Math.min(idx,.15)*.03}s` }}
-                    onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+	                  <tr key={p.id} className="inv-row" style={{ borderBottom:'1px solid #F8FAFC',transition:'background .12s',animationDelay:`${Math.min(idx,.15)*.03}s` }}
+	                    onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onFocus={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'} onBlur={e=>e.currentTarget.style.background='transparent'}>
                     <td style={{ padding:'12px 16px',fontWeight:700,color:'#0F172A' }}>{p.name}</td>
                     <td style={{ padding:'12px 16px',fontFamily:'monospace',fontSize:11,color:'#64748B' }}>{p.sku}</td>
                     <td style={{ padding:'12px 16px' }}>
@@ -281,9 +281,11 @@ const InventoryManagement = () => {
                     <td style={{ padding:'12px 16px',color:'#0D7A87',fontWeight:700,fontSize:12 }}>{fmt((p.current_qty||0)*(p.unit_cost_mga||0))}</td>
                     <td style={{ padding:'12px 16px' }}>
                       <button type="button" onClick={()=>openMov(p)}
-                        style={{ padding:'6px 12px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#0D7A87',display:'flex',alignItems:'center',gap:4,transition:'all .15s' }}
-                        onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
-                        onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
+	                        style={{ padding:'6px 12px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:12,fontWeight:600,color:'#0D7A87',display:'flex',alignItems:'center',gap:4,transition:'all .15s' }}
+	                        onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
+	                        onFocus={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
+	                        onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}
+	                        onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
                         <ArrowUp size={11}/><ArrowDown size={11}/>Mouvement
                       </button>
                     </td>

@@ -89,9 +89,11 @@ const KPI = React.memo(({ label, value, sub, icon: Icon, color, trend, trendLabe
   const trendColor = isPos ? '#10B981' : isNeg ? '#EF4444' : '#94A3B8';
   const TIcon = isPos ? ArrowUpRight : isNeg ? ArrowDownRight : Minus;
   return (
-    <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'20px 22px', boxShadow:'0 1px 4px rgba(0,0,0,.04)', position:'relative', overflow:'hidden', transition:'box-shadow .2s' }}
-      onMouseOver={e=>e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.08)'}
-      onMouseOut={e=>e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)'}>
+	  <div style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', padding:'20px 22px', boxShadow:'0 1px 4px rgba(0,0,0,.04)', position:'relative', overflow:'hidden', transition:'box-shadow .2s' }}
+	    onMouseOver={e=>e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.08)'}
+	    onFocus={e=>e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.08)'}
+	    onMouseOut={e=>e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)'}
+	    onBlur={e=>e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)'}>
       {/* Fond déco */}
       <div style={{ position:'absolute', top:-16, right:-16, width:80, height:80, borderRadius:'50%', background:`${color}10`, pointerEvents:'none' }}/>
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14 }}>
@@ -506,9 +508,11 @@ const Dashboard = () => {
             .sort((a,b) => new Date(b.time) - new Date(a.time))
             .slice(0, 10)
             .map((item, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:10, transition:'background .15s' }}
-                onMouseOver={e=>e.currentTarget.style.background='#F8FAFC'}
-                onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+	              <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 10px', borderRadius:10, transition:'background .15s' }}
+	                onMouseOver={e=>e.currentTarget.style.background='#F8FAFC'}
+	                onFocus={e=>e.currentTarget.style.background='#F8FAFC'}
+	                onMouseOut={e=>e.currentTarget.style.background='transparent'}
+	                onBlur={e=>e.currentTarget.style.background='transparent'}>
                 <div style={{ width:30, height:30, borderRadius:9, background:`${item.color}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>
                   {item.icon}
                 </div>
