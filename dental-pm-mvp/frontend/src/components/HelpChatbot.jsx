@@ -1118,6 +1118,7 @@ export default function HelpChatbot() {
             background: theme.bgSurface,
           }}>
             <input
+              aria-label="Message au chatbot"
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               disabled={thinking}

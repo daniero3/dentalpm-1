@@ -195,6 +195,7 @@ export default function ClinicUsersTab() {
                   <div key={f.key} style={{ gridColumn: !isMobile && f.wide ? '1/-1' : undefined }}>
                     <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>{f.label}</label>
                     <input
+                      aria-label={f.label}
                       type={f.type}
                       placeholder={f.ph}
                       value={form[f.key]}
@@ -235,6 +236,7 @@ export default function ClinicUsersTab() {
                 <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Mot de passe *</label>
                 <div style={{ position:'relative' }}>
                   <input
+                    aria-label="Mot de passe utilisateur"
                     type={showPwd ? 'text' : 'password'}
                     placeholder="Ex: Cabinet@2026"
                     value={form.password}

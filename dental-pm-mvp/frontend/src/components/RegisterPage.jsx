@@ -70,6 +70,7 @@ const Field = ({ label, name, placeholder, type = 'text', value, onChange, style
   <div className="premium-field" style={{ animationDelay:`${delay}ms` }}>
     <label style={{ display:'block', fontSize:13, fontWeight:700, color:'#475569', marginBottom:5 }}>{label}</label>
     <input
+      aria-label={label}
       type={type}
       placeholder={placeholder}
       value={value}

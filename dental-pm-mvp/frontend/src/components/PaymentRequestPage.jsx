@@ -236,7 +236,7 @@ export default function PaymentRequestPage() {
               Si vous avez déjà effectué le paiement, entrez votre référence de transaction pour une activation immédiate.
             </div>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              <input className="pi" value={refInput} onChange={e=>setRefInput(e.target.value)}
+              <input aria-label="Référence de transaction" className="pi" value={refInput} onChange={e=>setRefInput(e.target.value)}
                 placeholder="Ex: MVL-2025-123456 ou DPM-ABC123" style={{flex:1,minWidth:200,background:'#fff'}}/>
               <button type="button" className="pb" onClick={verifyRef} disabled={verifying} style={{flexShrink:0}}>
                 {verifying ? <div style={{width:14,height:14,border:'2px solid rgba(255,255,255,.4)',borderTopColor:'#fff',borderRadius:'50%',animation:'sp .8s linear infinite'}}/> : <CheckCircle size={14}/>}
@@ -293,7 +293,7 @@ export default function PaymentRequestPage() {
                 ✅ Après avoir effectué le paiement, confirmez ici :
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <input className="pi" value={refInput} onChange={e=>setRefInput(e.target.value)}
+                <input aria-label="Référence de transaction" className="pi" value={refInput} onChange={e=>setRefInput(e.target.value)}
                   placeholder={`Référence transaction (ex: ${instruct.paymentRequest?.reference})`}
                   style={{flex:1,minWidth:200}}/>
                 <button type="button" className="pb" onClick={verifyRef} disabled={verifying}>

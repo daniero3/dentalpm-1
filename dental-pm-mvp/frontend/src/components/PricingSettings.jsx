@@ -371,6 +371,7 @@ const PricingSettings = () => {
                     {canExecuteSchedule(schedule) && (
                       <>
                         <input
+                          aria-label="Fichier d’import des tarifs"
                           type="file"
                           ref={fileInputRef}
                           onChange={handleImportCSV}

@@ -363,6 +363,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
           <div>
             <label style={labelStyle}>Note</label>
             <textarea
+              aria-label="Note de l’odontogramme"
               value={editForm.note}
               onChange={handleNoteChange}
               placeholder="Observations..."

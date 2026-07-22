@@ -236,7 +236,7 @@ export function ModernTopbar() {
         {!isMobile && (
           <div style={{ flex:1, maxWidth: isTablet ? 240 : 380, position:'relative' }}>
             <Search size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:theme.textSecondary, pointerEvents:'none' }} />
-            <input type="text" placeholder={t('topbar.searchPlaceholder')}
+            <input aria-label="Recherche globale" type="text" placeholder={t('topbar.searchPlaceholder')}
               value={searchTerm} onChange={e => {
                 const value = e.target.value
                 startTransition(() => setSearchTerm(value))
@@ -331,7 +331,7 @@ export function ModernTopbar() {
                   { title:t('notifications.follow.title'), text:t('notifications.follow.text'), href:'/appointments', tone:theme.accent },
                   { title:t('notifications.finance.title'), text:t('notifications.finance.text'), href:'/reports', tone:theme.accent },
                 ].map(item => (
-                  <button type="button" key={item.title} onClick={() => { navigate(item.href); setIsNotifOpen(false) }}
+                  <button type="button" aria-label={item.title} key={item.title} onClick={() => { navigate(item.href); setIsNotifOpen(false) }}
                     style={{ width:'100%', display:'flex', gap:10, padding:'10px', border:'none', borderRadius:12, background:'transparent', cursor:'pointer', textAlign:'left' }}
                     onMouseEnter={e => e.currentTarget.style.background=theme.hover}
                     onMouseLeave={e => e.currentTarget.style.background='transparent'}>
@@ -409,7 +409,7 @@ export function ModernTopbar() {
             onClick={e => e.stopPropagation()}>
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px', borderBottom:`1px solid ${theme.borderSubtle}` }}>
               <Search size={18} color={theme.accent} />
-              <input type="text" placeholder={t('topbar.searchPlaceholder')} autoFocus
+              <input aria-label="Recherche globale" type="text" placeholder={t('topbar.searchPlaceholder')} autoFocus
                 value={searchTerm} onChange={e => {
                   const value = e.target.value
                   startTransition(() => setSearchTerm(value))

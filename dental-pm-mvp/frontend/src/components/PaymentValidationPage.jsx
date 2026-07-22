@@ -145,7 +145,7 @@ export default function PaymentValidationPage() {
             </button>
           ))}
         </div>
-        <input type="text" placeholder="Rechercher par cabinet, plan, référence..." value={search} onChange={e=>setSearch(e.target.value)}
+        <input aria-label="Rechercher une validation de paiement" type="text" placeholder="Rechercher par cabinet, plan, référence..." value={search} onChange={e=>setSearch(e.target.value)}
           style={{flex:1,minWidth:200,padding:'9px 14px',borderRadius:11,border:'1.5px solid #E2E8F0',fontSize:13,fontFamily:'inherit',outline:'none'}}
           onFocus={e=>e.target.style.borderColor='#0D7A87'}
           onBlur={e=>e.target.style.borderColor='#E2E8F0'}/>
@@ -286,7 +286,7 @@ export default function PaymentValidationPage() {
                 <label style={{display:'block',fontSize:13,fontWeight:600,color:'#475569',marginBottom:6}}>
                   Motif de rejet <span style={{color:'#EF4444'}}>*</span>
                 </label>
-                <textarea rows={3} className="av-inp" placeholder="Ex: Référence de paiement invalide, montant incorrect..."
+                <textarea aria-label="Motif de rejet" rows={3} className="av-inp" placeholder="Ex: Référence de paiement invalide, montant incorrect..."
                   value={note} onChange={e=>setNote(e.target.value)}/>
                 <p style={{fontSize:12,color:'#94A3B8',marginTop:4}}>Ce message sera visible par le cabinet</p>
               </div>

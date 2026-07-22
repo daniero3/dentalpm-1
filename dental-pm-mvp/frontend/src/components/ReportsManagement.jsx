@@ -167,11 +167,11 @@ const ReportsManagement = () => {
       <div style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'14px 18px',marginBottom:20,display:'flex',gap:12,flexWrap:'wrap',alignItems:'flex-end' }}>
         <div>
           <label style={{ fontSize:11,fontWeight:600,color:'#64748B',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em' }}>Du</label>
-          <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
+          <input aria-label="Date de début du rapport" type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
         </div>
         <div>
           <label style={{ fontSize:11,fontWeight:600,color:'#64748B',display:'block',marginBottom:4,textTransform:'uppercase',letterSpacing:'.05em' }}>Au</label>
-          <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
+          <input aria-label="Date de fin du rapport" type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={inp} onFocus={fi} onBlur={bi}/>
         </div>
         <button type="button" onClick={()=>fetchReport(fromDate, toDate)}
           style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#3B4FD8,#6366F1)',color:'#fff',border:'none',cursor:'pointer',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',gap:6,boxShadow:'0 4px 12px rgba(59,79,216,.25)' }}>

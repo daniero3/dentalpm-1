@@ -152,7 +152,7 @@ export default function AdminPartners() {
               ].map(f => (
                 <div key={f.key}>
                   <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
-                  <input type={f.type} placeholder={f.ph} value={form[f.key]}
+                  <input aria-label={f.label} type={f.type} placeholder={f.ph} value={form[f.key]}
                     onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}
                     style={inp}
                     onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
@@ -161,13 +161,13 @@ export default function AdminPartners() {
               ))}
               <div>
                 <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Catégorie</label>
-                <select value={form.category} onChange={e=>setForm(p=>({...p,category:e.target.value}))} style={{ ...inp, background:'#fff', cursor:'pointer' }}>
+                <select aria-label="Catégorie du partenaire" value={form.category} onChange={e=>setForm(p=>({...p,category:e.target.value}))} style={{ ...inp, background:'#fff', cursor:'pointer' }}>
                   {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
               <div>
                 <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Notes</label>
-                <textarea value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} rows={3} placeholder="Informations complémentaires..." style={{ ...inp, resize:'none', lineHeight:1.6 }}
+                <textarea aria-label="Notes du partenaire" value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} rows={3} placeholder="Informations complémentaires..." style={{ ...inp, resize:'none', lineHeight:1.6 }}
                   onFocus={e=>{e.target.style.borderColor=T;}} onBlur={e=>{e.target.style.borderColor='#E2E8F0';}}/>
               </div>
               <div style={{ display:'flex', gap:8, paddingTop:8 }}>

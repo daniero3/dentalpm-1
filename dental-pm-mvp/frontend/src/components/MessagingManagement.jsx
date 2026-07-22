@@ -370,7 +370,7 @@ const MessagingManagement = () => {
           <div style={{ display:'flex', gap:10, marginBottom:14, alignItems:'center', flexWrap:'wrap' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:200, background:'#fff', borderRadius:10, border:'1.5px solid #E2E8F0', padding:'8px 12px' }}>
               <Search size={13} color="#94A3B8"/>
-              <input placeholder="Rechercher patient..." value={search} onChange={e=>setSearch(e.target.value)}
+              <input aria-label="Rechercher un patient dans la file d’attente" placeholder="Rechercher patient..." value={search} onChange={e=>setSearch(e.target.value)}
                 style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1 }}/>
             </div>
             <button type="button" onClick={handleDispatch} disabled={dispatching||stats.QUEUED===0}
@@ -503,7 +503,7 @@ const MessagingManagement = () => {
           <div style={{ display:'flex', gap:10, marginBottom:14, flexWrap:'wrap', alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:200, background:'#fff', borderRadius:10, border:'1.5px solid #E2E8F0', padding:'8px 12px' }}>
               <Search size={13} color="#94A3B8"/>
-              <input placeholder="Rechercher patient, numéro..." value={search} onChange={e=>setSearch(e.target.value)}
+              <input aria-label="Rechercher dans l’historique des messages" placeholder="Rechercher patient, numéro..." value={search} onChange={e=>setSearch(e.target.value)}
                 style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1 }}/>
             </div>
             <div style={{ display:'flex', gap:5 }}>
@@ -588,7 +588,7 @@ const MessagingManagement = () => {
                 ))}
               </div>
             </div>
-            <textarea value={tplForm.text} onChange={e => setTplForm({...tplForm, text:e.target.value})}
+            <textarea aria-label="Texte du modèle de message" value={tplForm.text} onChange={e => setTplForm({...tplForm, text:e.target.value})}
               rows={4} placeholder="Bonjour {patient_name}, votre RDV est le {date} à {time}..."
               style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
             <div style={{ fontSize:11, color:'#94A3B8', marginTop:4 }}>

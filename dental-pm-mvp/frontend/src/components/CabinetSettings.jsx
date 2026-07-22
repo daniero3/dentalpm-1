@@ -129,7 +129,7 @@ export default function CabinetSettings() {
             ].map(f => (
               <div key={f.key}>
                 <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
-                <input type={f.type||'text'} placeholder={f.ph} value={profile[f.key]||''}
+                <input aria-label={f.label} type={f.type||'text'} placeholder={f.ph} value={profile[f.key]||''}
                   onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))}
                   style={inp}
                   onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
@@ -157,7 +157,7 @@ export default function CabinetSettings() {
               <div key={f.key}>
                 <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
                 <div style={{ position:'relative' }}>
-                  <input type={showPwd[f.key]?'text':'password'} value={pwd[f.key]}
+                  <input aria-label={f.label} type={showPwd[f.key]?'text':'password'} value={pwd[f.key]}
                     onChange={e=>setPwd(p=>({...p,[f.key]:e.target.value}))}
                     style={{ ...inp, paddingRight:40 }}
                     onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}

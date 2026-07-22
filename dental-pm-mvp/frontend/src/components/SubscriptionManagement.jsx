@@ -612,7 +612,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                     ].map(f => (
                       <div key={f.key}>
                         <div style={{ fontSize:10, fontWeight:700, color:'#64748B', marginBottom:3 }}>{f.label}</div>
-                        <input type={f.type} placeholder={f.ph} value={newUser[f.key]||''}
+                        <input aria-label={f.label} type={f.type} placeholder={f.ph} value={newUser[f.key]||''}
                           onChange={e=>setNewUser(u=>({...u,[f.key]:e.target.value}))}
                           style={{ width:'100%', padding:'7px 10px', borderRadius:8, border:'1.5px solid #E2E8F0', fontSize:12, boxSizing:'border-box', outline:'none' }}/>
                       </div>
