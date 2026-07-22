@@ -82,7 +82,14 @@ const InventoryManagement = () => {
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { fetchAll(); }, []);
-  const fetchAll      = async () => { setLoading(true); await Promise.all([fetchProducts(), fetchAlerts()]); setLoading(false); };
+  const fetchAll      = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([fetchProducts(), fetchAlerts()]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchProducts = async () => {
     try {
       const r = await axios.get(`${API}/inventory/products`, authH());

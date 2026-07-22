@@ -33,7 +33,6 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone, setAdminUs
         clinicId = r.data.clinic?.id;
       } catch(e) {
         alert(e.response?.data?.error || 'Erreur création cabinet');
-        setLoading(false);
         return;
       }
 
@@ -50,10 +49,9 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone, setAdminUs
 
       alert('Impossible d’ouvrir Stripe. Réessayez.');
       setDone && setDone(false);
-      setLoading(false);
-      
     } catch(e) {
       alert('Erreur inattendue. Réessayez.');
+    } finally {
       setLoading(false);
     }
   };

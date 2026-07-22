@@ -178,16 +178,20 @@ const LoginForm = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true); setError('');
-    const result = await register(registerData);
-    if (result.success) {
-      setRegisterData({ username:'', email:'', password:'', role:'', full_name:'', clinic_id:'' });
-      setStep(STEP_LOGIN);
-      setError('');
-    } else {
-      setError(result.error || "Erreur lors de l'inscription");
+    setLoading(true);
+    setError('');
+    try {
+      const result = await register(registerData);
+      if (result.success) {
+        setRegisterData({ username:'', email:'', password:'', role:'', full_name:'', clinic_id:'' });
+        setStep(STEP_LOGIN);
+        setError('');
+      } else {
+        setError(result.error || "Erreur lors de l'inscription");
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const ErrorBox = ({ msg }) => msg ? (
