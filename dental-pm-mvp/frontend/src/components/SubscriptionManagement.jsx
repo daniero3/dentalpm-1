@@ -151,12 +151,13 @@ async function downloadInvoicePDF(payment) {
     }
     const blob = await response.blob();
     const link = document.createElement('a');
-    link.href  = window.URL.createObjectURL(blob);
+    const blobUrl = window.URL.createObjectURL(blob);
+    link.href  = blobUrl;
     link.download = `facture-${payment.reference || payment.id?.slice(-6) || 'dpm'}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(link.href);
+    window.URL.revokeObjectURL(blobUrl);
     toast.success('PDF téléchargé');
   } catch (err) {
     console.error(err);

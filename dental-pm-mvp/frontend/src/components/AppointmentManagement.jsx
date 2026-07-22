@@ -554,10 +554,11 @@ const AppointmentManagement = () => {
 
     const blob = new Blob([`${header}\n${sample}\n`], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
     link.download = 'modele_import_rendez_vous.csv';
     link.click();
-    URL.revokeObjectURL(link.href);
+    URL.revokeObjectURL(url);
   };
 
   const handleImportCsv = async (e) => {
