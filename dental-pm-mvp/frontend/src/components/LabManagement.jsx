@@ -560,22 +560,22 @@ const LabManagement = () => {
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div>
               <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Laboratoire</label>
-              <input value={form.lab_name} onChange={e=>setForm({...form,lab_name:e.target.value})} placeholder="Nom du labo" style={inp} onFocus={fi} onBlur={bi}/>
+              <input aria-label="Laboratoire" value={form.lab_name} onChange={e=>setForm({...form,lab_name:e.target.value})} placeholder="Nom du labo" style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
               <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Teinte</label>
-              <input value={form.shade} onChange={e=>setForm({...form,shade:e.target.value})} placeholder="A1, A2..." style={inp} onFocus={fi} onBlur={bi}/>
+              <input aria-label="Teinte" value={form.shade} onChange={e=>setForm({...form,shade:e.target.value})} placeholder="A1, A2..." style={inp} onFocus={fi} onBlur={bi}/>
             </div>
           </div>
           <div style={{background:'rgba(13,122,135,.04)',border:'1.5px solid rgba(13,122,135,.15)',borderRadius:12,padding:'13px 15px'}}>
             <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Coût labo (Ar)</label>
-            <input type="number" value={form.lab_cost_mga} onChange={e=>setForm({...form,lab_cost_mga:e.target.value})} placeholder="Saisir ou choisir ci-dessous" style={inp} onFocus={fi} onBlur={bi}/>
+            <input aria-label="Coût labo" type="number" value={form.lab_cost_mga} onChange={e=>setForm({...form,lab_cost_mga:e.target.value})} placeholder="Saisir ou choisir ci-dessous" style={inp} onFocus={fi} onBlur={bi}/>
             {form.lab_cost_mga&&<p style={{fontSize:12,color:'#0D7A87',fontWeight:700,textAlign:'right',marginTop:3}}>= {fmt(parseFloat(form.lab_cost_mga)||0)}</p>}
             <TarifSug workType={form.work_type} val={form.lab_cost_mga} onSelect={m=>setForm({...form,lab_cost_mga:String(m)})}/>
           </div>
           <div>
             <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Notes</label>
-            <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions spéciales..." style={{...inp,resize:'vertical'}} onFocus={fi} onBlur={bi}/>
+            <textarea aria-label="Notes de la commande labo" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions spéciales..." style={{...inp,resize:'vertical'}} onFocus={fi} onBlur={bi}/>
           </div>
           <div style={{display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9'}}>
             <button type="button" onClick={()=>{setIsAddOpen(false);setSelLab(null);}} style={{padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569'}}>Annuler</button>

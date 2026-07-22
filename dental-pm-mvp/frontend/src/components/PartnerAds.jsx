@@ -41,6 +41,7 @@ const VideoFrame = ({ ad, accent }) => {
   if (ad.videoUrl) {
     return (
       <video
+        aria-label={ad.title ? `Vidéo ${ad.title}` : 'Vidéo publicitaire'}
         src={ad.videoUrl}
         controls
         preload="metadata"
@@ -236,22 +237,22 @@ export default function PartnerAds({
           gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
           gap: 12,
         }}>
-          <input value={form.title} onChange={e => update('title', e.target.value)} placeholder="Titre de l’offre ou article *" required style={fieldStyle} />
-          <input value={form.partner} onChange={e => update('partner', e.target.value)} placeholder={`Nom du ${audienceLabel} *`} required style={fieldStyle} />
-          <select value={form.type} onChange={e => update('type', e.target.value)} style={fieldStyle}>
+          <input aria-label="Titre de la publicité" value={form.title} onChange={e => update('title', e.target.value)} placeholder="Titre de l’offre ou article *" required style={fieldStyle} />
+          <input aria-label={`Nom du ${audienceLabel}`} value={form.partner} onChange={e => update('partner', e.target.value)} placeholder={`Nom du ${audienceLabel} *`} required style={fieldStyle} />
+          <select aria-label="Type de publicité" value={form.type} onChange={e => update('type', e.target.value)} style={fieldStyle}>
             <option value="offer">Offre commerciale</option>
             <option value="article">Article / nouveauté</option>
             <option value="video">Vidéo promotionnelle</option>
           </select>
-          <input value={form.videoUrl} onChange={e => update('videoUrl', e.target.value)} placeholder="URL vidéo https://..." style={fieldStyle} />
+          <input aria-label="URL vidéo" value={form.videoUrl} onChange={e => update('videoUrl', e.target.value)} placeholder="URL vidéo https://..." style={fieldStyle} />
           <label style={{ ...fieldStyle, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#64748B' }}>
             <Upload size={14} color={accent} />
             Prévisualiser une vidéo locale
-            <input type="file" accept="video/*" onChange={onFile} style={{ display: 'none' }} />
+            <input aria-label="Fichier vidéo local" type="file" accept="video/*" onChange={onFile} style={{ display: 'none' }} />
           </label>
-          <input value={form.ctaLabel} onChange={e => update('ctaLabel', e.target.value)} placeholder="Texte bouton, ex: Commander" style={fieldStyle} />
-          <input value={form.ctaUrl} onChange={e => update('ctaUrl', e.target.value)} placeholder="Lien bouton https://..." style={fieldStyle} />
-          <textarea value={form.description} onChange={e => update('description', e.target.value)} placeholder="Description, offre, article ou détails de la publicité" rows={3} style={{ ...fieldStyle, resize: 'vertical', gridColumn: '1 / -1' }} />
+          <input aria-label="Texte du bouton publicitaire" value={form.ctaLabel} onChange={e => update('ctaLabel', e.target.value)} placeholder="Texte bouton, ex: Commander" style={fieldStyle} />
+          <input aria-label="Lien du bouton publicitaire" value={form.ctaUrl} onChange={e => update('ctaUrl', e.target.value)} placeholder="Lien bouton https://..." style={fieldStyle} />
+          <textarea aria-label="Description de la publicité" value={form.description} onChange={e => update('description', e.target.value)} placeholder="Description, offre, article ou détails de la publicité" rows={3} style={{ ...fieldStyle, resize: 'vertical', gridColumn: '1 / -1' }} />
           <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#94A3B8' }}>
               <Link2 size={12} />

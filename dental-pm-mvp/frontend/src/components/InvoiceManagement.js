@@ -676,7 +676,7 @@ const InvoiceManagement = () => {
               <div style={{ fontSize:11,fontWeight:700,color:C.teal,textTransform:'uppercase',letterSpacing:1.5,marginBottom:12 }}>+ Nouveau paiement</div>
               <div style={{ marginBottom:12 }}>
                 <label htmlFor="invoice-payment-amount" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Montant (Ar) *</label>
-                <input id="invoice-payment-amount" type="number" min="0" value={payData.amount_mga} onChange={e=>setPayData({...payData,amount_mga:e.target.value})}
+                <input id="invoice-payment-amount" aria-label="Montant du paiement" type="number" min="0" value={payData.amount_mga} onChange={e=>setPayData({...payData,amount_mga:e.target.value})}
                   placeholder={`Solde restant: ${fmt(payStats.balance_mga!=null?payStats.balance_mga:payInv.total_mga||0)} Ar`}
                   style={inp} onFocus={fi} onBlur={bi}/>
                 {/* Bouton solde complet */}
@@ -707,6 +707,7 @@ const InvoiceManagement = () => {
                 
                 <input
                   id="invoice-payment-reference"
+                  aria-label="Référence du paiement"
                   value={payData.reference_number}
                   onChange={(e) => {
                     if (!canUsePaymentReference(payData.payment_method)) return;
@@ -772,7 +773,7 @@ const InvoiceManagement = () => {
             </div>
             <div>
               <label htmlFor="invoice-pricing-schedule" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire *</label>
-              <select id="invoice-pricing-schedule" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi} required>
+              <select id="invoice-pricing-schedule" aria-label="Grille tarifaire" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi} required>
                 <option value="">Sélectionner...</option>
                 {schedules.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
@@ -803,7 +804,7 @@ const InvoiceManagement = () => {
               <div style={{ fontSize:11,fontWeight:700,color:C.teal,textTransform:'uppercase',letterSpacing:1.5,marginBottom:8 }}>
                 <Sparkles size={11} style={{ display:'inline',marginRight:4 }}/>Actes de la grille
               </div>
-              <input value={feeSearch} onChange={e=>setFeeSearch(e.target.value)} placeholder="Rechercher un acte..." style={{ ...inp,marginBottom:8 }} onFocus={fi} onBlur={bi}/>
+              <input aria-label="Rechercher un acte de la grille" value={feeSearch} onChange={e=>setFeeSearch(e.target.value)} placeholder="Rechercher un acte..." style={{ ...inp,marginBottom:8 }} onFocus={fi} onBlur={bi}/>
               <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
                 {filtFees.map(f=>(
                   <button key={f.id} type="button" onClick={()=>setForm(fm=>({...fm,items:[...fm.items.filter(i=>i.description),{description:f.label,procedure_code:f.procedure_code||'',quantity:1,unit_price_mga:String(f.price_mga),tooth_number:''}]}))}
@@ -825,9 +826,9 @@ const InvoiceManagement = () => {
             </div>
             {form.items.map((item,i)=>(
               <div key={i} style={{ display:'grid',gridTemplateColumns:'1fr 55px 110px 75px 28px',gap:6,marginBottom:6,alignItems:'center' }}>
-                <input value={item.description} onChange={e=>updateItem(i,'description',e.target.value)} placeholder="Description" style={inp} onFocus={fi} onBlur={bi}/>
-                <input type="number" min="1" value={item.quantity} onChange={e=>updateItem(i,'quantity',parseInt(e.target.value)||1)} placeholder="Qté" style={inp} onFocus={fi} onBlur={bi}/>
-                <input type="number" min="0" value={item.unit_price_mga} onChange={e=>updateItem(i,'unit_price_mga',e.target.value)} placeholder="Prix Ar" style={inp} onFocus={fi} onBlur={bi}/>
+                <input aria-label={`Description de la prestation ${i + 1}`} value={item.description} onChange={e=>updateItem(i,'description',e.target.value)} placeholder="Description" style={inp} onFocus={fi} onBlur={bi}/>
+                <input aria-label={`Quantité de la prestation ${i + 1}`} type="number" min="1" value={item.quantity} onChange={e=>updateItem(i,'quantity',parseInt(e.target.value)||1)} placeholder="Qté" style={inp} onFocus={fi} onBlur={bi}/>
+                <input aria-label={`Prix de la prestation ${i + 1}`} type="number" min="0" value={item.unit_price_mga} onChange={e=>updateItem(i,'unit_price_mga',e.target.value)} placeholder="Prix Ar" style={inp} onFocus={fi} onBlur={bi}/>
                 <div style={{ background:'#F8FAFC',borderRadius:10,padding:'9px 8px',fontSize:11,fontWeight:700,color:C.teal,textAlign:'right',border:'1px solid #E2E8F0' }}>
                   {fmt((item.quantity||0)*(parseFloat(item.unit_price_mga)||0))}
                 </div>
@@ -847,7 +848,7 @@ const InvoiceManagement = () => {
 
           <div>
             <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Notes</label>
-            <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Notes internes..." style={{ ...inp,resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+            <textarea aria-label="Notes internes de la facture" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Notes internes..." style={{ ...inp,resize:'vertical' }} onFocus={fi} onBlur={bi}/>
           </div>
 
           <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>

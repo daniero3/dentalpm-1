@@ -459,7 +459,7 @@ const PurchaseManagement = () => {
           <div style={{ background:'#fff', borderRadius:14, border:'1px solid #E2E8F0', padding:'13px 16px', marginBottom:16, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:180 }}>
               <Search size={14} color="#94A3B8"/>
-              <input placeholder="Rechercher article, référence..." value={catSearch} onChange={e => setCatSearch(e.target.value)}
+              <input aria-label="Rechercher un article du catalogue" placeholder="Rechercher article, référence..." value={catSearch} onChange={e => setCatSearch(e.target.value)}
                 style={{ ...inp, border:'none', background:'transparent', flex:1 }} onFocus={fi} onBlur={bi}/>
             </div>
             <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
@@ -625,26 +625,26 @@ const PurchaseManagement = () => {
               <div style={{ display:'grid', gridTemplateColumns:'1fr 160px', gap:12 }}>
                 <div>
 	                  <label htmlFor="purchase-expense-category" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Libellé *</label>
-	                  <select id="purchase-expense-category" value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value, expense_label:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
+		                  <select id="purchase-expense-category" aria-label="Libellé de la dépense" value={expense.expense_category} onChange={e => setExpense(p => ({ ...p, expense_category:e.target.value, expense_label:e.target.value }))} style={inp} onFocus={fi} onBlur={bi}>
                     {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                 </div>
                 <div>
 	                  <label htmlFor="purchase-expense-date" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date</label>
-	                  <input id="purchase-expense-date" type="date" value={expense.expense_date} onChange={e => setExpense(p => ({ ...p, expense_date:e.target.value }))}
+		                  <input id="purchase-expense-date" aria-label="Date de la dépense" type="date" value={expense.expense_date} onChange={e => setExpense(p => ({ ...p, expense_date:e.target.value }))}
                     style={inp} onFocus={fi} onBlur={bi}/>
                 </div>
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:12 }}>
                 <div>
                   <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Montant *</label>
-                  <input type="number" min="0" value={expense.amount_mga} onChange={e => setExpense(p => ({ ...p, amount_mga:e.target.value }))} placeholder="Ar"
+                  <input aria-label="Montant de la dépense" type="number" min="0" value={expense.amount_mga} onChange={e => setExpense(p => ({ ...p, amount_mga:e.target.value }))} placeholder="Ar"
                     style={inp} onFocus={fi} onBlur={bi}/>
                 </div>
               </div>
               <div>
                 <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
-                <textarea value={expense.notes} onChange={e => setExpense(p => ({ ...p, notes:e.target.value }))} rows={2} placeholder="Référence facture, période concernée, remarque..."
+                <textarea aria-label="Notes de la dépense" value={expense.notes} onChange={e => setExpense(p => ({ ...p, notes:e.target.value }))} rows={2} placeholder="Référence facture, période concernée, remarque..."
                   style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
               </div>
               <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:12, padding:'12px 14px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -656,7 +656,7 @@ const PurchaseManagement = () => {
             <>
               <div>
 	                <label htmlFor="purchase-supplier" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fournisseur *</label>
-	                <select id="purchase-supplier" value={selSup} onChange={e => setSelSup(e.target.value)} style={inp} onFocus={fi} onBlur={bi}>
+		                <select id="purchase-supplier" aria-label="Fournisseur" value={selSup} onChange={e => setSelSup(e.target.value)} style={inp} onFocus={fi} onBlur={bi}>
                   <option value="">Sélectionner un fournisseur...</option>
                   <optgroup label="── Mes fournisseurs ──">
                     {suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({TYPE_LABEL[s.type]||s.type})</option>)}
@@ -685,9 +685,9 @@ const PurchaseManagement = () => {
                           <option value="">Produit...</option>
                           {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
                         </select>
-                        <input type="number" min="1" value={item.qty} onChange={e => updateItem(idx,'qty',parseInt(e.target.value)||1)}
+                        <input aria-label={`Quantité de l’article ${idx + 1}`} type="number" min="1" value={item.qty} onChange={e => updateItem(idx,'qty',parseInt(e.target.value)||1)}
                           style={{ ...inp, width:60 }} placeholder="Qté" onFocus={fi} onBlur={bi}/>
-                        <input type="number" min="0" value={item.unit_price_mga} onChange={e => updateItem(idx,'unit_price_mga',parseFloat(e.target.value)||0)}
+                        <input aria-label={`Prix de l’article ${idx + 1}`} type="number" min="0" value={item.unit_price_mga} onChange={e => updateItem(idx,'unit_price_mga',parseFloat(e.target.value)||0)}
                           style={{ ...inp, width:110 }} placeholder="Prix Ar" onFocus={fi} onBlur={bi}/>
                         <span style={{ fontSize:12, color:'#0D7A87', fontWeight:700, whiteSpace:'nowrap', minWidth:90 }}>{fmt(item.qty*item.unit_price_mga)}</span>
 	                        <button type="button" aria-label={`Supprimer l’article ${idx + 1}`} onClick={() => removeItem(idx)} style={{ background:'none', border:'none', cursor:'pointer', color:'#EF4444', padding:4 }}><Trash2 size={14}/></button>
@@ -702,7 +702,7 @@ const PurchaseManagement = () => {
 
               <div>
                 <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Instructions de livraison, notes..."
+                <textarea aria-label="Notes du bon fournisseur" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Instructions de livraison, notes..."
                   style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
               </div>
             </>

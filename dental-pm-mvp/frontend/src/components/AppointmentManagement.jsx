@@ -694,6 +694,7 @@ const AppointmentManagement = () => {
           {canImportAppointments && (
             <>
               <input
+                aria-label="Fichier CSV rendez-vous à importer"
                 ref={importInputRef}
                 type="file"
                 accept=".csv,text/csv"
@@ -1676,15 +1677,15 @@ const AppointmentManagement = () => {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
             <div style={{ gridColumn:'1/-1' }}>
               <label htmlFor="appointment-date" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Date *</label>
-              <input id="appointment-date" type="date" value={form.appointment_date} onChange={e=>setForm({...form,appointment_date:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
+              <input id="appointment-date" aria-label="Date du rendez-vous" type="date" value={form.appointment_date} onChange={e=>setForm({...form,appointment_date:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
             </div>
             <div>
               <label htmlFor="appointment-start-time" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Début *</label>
-              <input id="appointment-start-time" type="time" value={form.start_time} onChange={e=>setForm({...form,start_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
+              <input id="appointment-start-time" aria-label="Heure de début" type="time" value={form.start_time} onChange={e=>setForm({...form,start_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
             </div>
             <div>
               <label htmlFor="appointment-end-time" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Fin *</label>
-              <input id="appointment-end-time" type="time" value={form.end_time} onChange={e=>setForm({...form,end_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
+              <input id="appointment-end-time" aria-label="Heure de fin" type="time" value={form.end_time} onChange={e=>setForm({...form,end_time:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required/>
             </div>
             {/* Durée calculée */}
             <div style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 12px', background:'#F8FAFC', borderRadius:10, border:'1px solid #E2E8F0' }}>
@@ -1704,13 +1705,13 @@ const AppointmentManagement = () => {
           {/* Motif */}
           <div>
             <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Motif</label>
-            <input value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})} placeholder="Ex: Douleur molaire, détartrage..." style={inp} onFocus={fi} onBlur={bi}/>
+            <input aria-label="Motif du rendez-vous" value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})} placeholder="Ex: Douleur molaire, détartrage..." style={inp} onFocus={fi} onBlur={bi}/>
           </div>
 
           {/* Notes */}
           <div>
             <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes internes</label>
-            <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions pour le praticien..." style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+            <textarea aria-label="Notes internes du rendez-vous" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions pour le praticien..." style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
           </div>
 
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>

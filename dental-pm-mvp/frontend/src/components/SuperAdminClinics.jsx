@@ -193,13 +193,13 @@ const SuperAdminClinics = () => {
         <div className="space-y-4">
           <p style={{ fontSize:13, fontWeight:700, color:'#475569', borderBottom:'1px solid #F1F5F9', paddingBottom:8 }}>Informations du cabinet</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <div><Label>Nom du cabinet *</Label><input name="name" value={formData.name} onChange={handleChange} placeholder="Cabinet Dentaire..." style={inputStyle} /></div>
+            <div><Label>Nom du cabinet *</Label><input aria-label="Nom du cabinet" name="name" value={formData.name} onChange={handleChange} placeholder="Cabinet Dentaire..." style={inputStyle} /></div>
             <div><Label>Ville</Label><input aria-label="Ville du cabinet" name="city" value={formData.city} onChange={handleChange} style={inputStyle} /></div>
           </div>
-          <div><Label>Adresse *</Label><input name="address" value={formData.address} onChange={handleChange} placeholder="123 Rue Analakely" style={inputStyle} /></div>
+          <div><Label>Adresse *</Label><input aria-label="Adresse du cabinet" name="address" value={formData.address} onChange={handleChange} placeholder="123 Rue Analakely" style={inputStyle} /></div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <div><Label>Téléphone *</Label><input name="phone" value={formData.phone} onChange={handleChange} placeholder="+261320000001" style={inputStyle} /></div>
-            <div><Label>Email *</Label><input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="contact@cabinet.mg" style={inputStyle} /></div>
+            <div><Label>Téléphone *</Label><input aria-label="Téléphone du cabinet" name="phone" value={formData.phone} onChange={handleChange} placeholder="+261320000001" style={inputStyle} /></div>
+            <div><Label>Email *</Label><input aria-label="Email du cabinet" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="contact@cabinet.mg" style={inputStyle} /></div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div><Label>Numéro NIF</Label><input aria-label="Numéro NIF du cabinet" name="nif_number" value={formData.nif_number} onChange={handleChange} style={inputStyle} /></div>
@@ -207,8 +207,8 @@ const SuperAdminClinics = () => {
           </div>
           <p style={{ fontSize:13, fontWeight:700, color:'#475569', borderBottom:'1px solid #F1F5F9', paddingBottom:8, paddingTop:8 }}>Administrateur du cabinet</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <div><Label>Prénom *</Label><input name="admin_first_name" value={formData.admin_first_name} onChange={handleChange} placeholder="Jean" style={inputStyle} /></div>
-            <div><Label>Nom *</Label><input name="admin_last_name" value={formData.admin_last_name} onChange={handleChange} placeholder="Rakoto" style={inputStyle} /></div>
+            <div><Label>Prénom *</Label><input aria-label="Prénom administrateur" name="admin_first_name" value={formData.admin_first_name} onChange={handleChange} placeholder="Jean" style={inputStyle} /></div>
+            <div><Label>Nom *</Label><input aria-label="Nom administrateur" name="admin_last_name" value={formData.admin_last_name} onChange={handleChange} placeholder="Rakoto" style={inputStyle} /></div>
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div><Label>Nom d'utilisateur *</Label><input aria-label="Nom d’utilisateur administrateur" name="admin_username" value={formData.admin_username} onChange={handleChange} style={inputStyle} /></div>

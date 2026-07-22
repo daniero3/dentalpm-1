@@ -294,37 +294,37 @@ const InventoryManagement = () => {
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
             <div style={{ gridColumn:'1/-1' }}>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Nom *</label>
-              <input style={inp} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} onFocus={fi} onBlur={bi} required placeholder="Ex: Composite A2"/>
+              <input aria-label="Nom du produit" style={inp} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} onFocus={fi} onBlur={bi} required placeholder="Ex: Composite A2"/>
             </div>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>SKU *</label>
-              <input style={inp} value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})} onFocus={fi} onBlur={bi} required placeholder="Ex: CPO-A2"/>
+              <input aria-label="SKU du produit" style={inp} value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})} onFocus={fi} onBlur={bi} required placeholder="Ex: CPO-A2"/>
             </div>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Unité</label>
-              <input style={inp} value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})} onFocus={fi} onBlur={bi} placeholder="PIECE, BOX, ML..."/>
+              <input aria-label="Unité du produit" style={inp} value={form.unit} onChange={e=>setForm({...form,unit:e.target.value})} onFocus={fi} onBlur={bi} placeholder="PIECE, BOX, ML..."/>
             </div>
             <div>
 	              <label htmlFor="inventory-product-category" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Catégorie</label>
-	              <select id="inventory-product-category" style={inp} value={form.category} onChange={e=>setForm({...form,category:e.target.value})} onFocus={fi} onBlur={bi}>
+		              <select id="inventory-product-category" aria-label="Catégorie du produit" style={inp} value={form.category} onChange={e=>setForm({...form,category:e.target.value})} onFocus={fi} onBlur={bi}>
                 {Object.entries(CATS).map(([v,l])=><option key={v} value={v}>{l}</option>)}
               </select>
             </div>
             <div>
 	              <label htmlFor="inventory-unit-cost" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix achat (Ar)</label>
-	              <input id="inventory-unit-cost" style={inp} type="number" min="0" value={form.unit_cost_mga} onChange={e=>setForm({...form,unit_cost_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
+		              <input id="inventory-unit-cost" aria-label="Prix achat" style={inp} type="number" min="0" value={form.unit_cost_mga} onChange={e=>setForm({...form,unit_cost_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
 	              <label htmlFor="inventory-sale-price" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Prix vente (Ar)</label>
-	              <input id="inventory-sale-price" style={inp} type="number" min="0" value={form.sale_price_mga} onChange={e=>setForm({...form,sale_price_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
+		              <input id="inventory-sale-price" aria-label="Prix vente" style={inp} type="number" min="0" value={form.sale_price_mga} onChange={e=>setForm({...form,sale_price_mga:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
 	              <label htmlFor="inventory-initial-stock" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock initial</label>
-	              <input id="inventory-initial-stock" style={inp} type="number" min="0" value={form.current_qty} onChange={e=>setForm({...form,current_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
+		              <input id="inventory-initial-stock" aria-label="Stock initial" style={inp} type="number" min="0" value={form.current_qty} onChange={e=>setForm({...form,current_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
 	              <label htmlFor="inventory-min-stock" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:4 }}>Stock minimum</label>
-	              <input id="inventory-min-stock" style={inp} type="number" min="0" value={form.min_qty} onChange={e=>setForm({...form,min_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
+		              <input id="inventory-min-stock" aria-label="Stock minimum" style={inp} type="number" min="0" value={form.min_qty} onChange={e=>setForm({...form,min_qty:e.target.value})} onFocus={fi} onBlur={bi}/>
             </div>
           </div>
           <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>
@@ -360,11 +360,11 @@ const InventoryManagement = () => {
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>
                 Quantité * {movType==='ADJUST'?'(nouveau total)':''}
               </label>
-              <input ref={qtyRef} type="number" min="1" placeholder="Ex: 10" style={{ ...inp,fontSize:18,fontWeight:700 }} onFocus={fi} onBlur={bi}/>
+              <input ref={qtyRef} aria-label="Quantité du mouvement" type="number" min="1" placeholder="Ex: 10" style={{ ...inp,fontSize:18,fontWeight:700 }} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
               <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Motif *</label>
-              <input ref={reasonRef} type="text" placeholder="Ex: Réception commande, Utilisation cabinet..." style={inp} onFocus={fi} onBlur={bi}/>
+              <input ref={reasonRef} aria-label="Motif du mouvement" type="text" placeholder="Ex: Réception commande, Utilisation cabinet..." style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>
               <button type="button" onClick={()=>{setIsMov(false);setSelP(null);}} style={{ padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569' }}>Annuler</button>
