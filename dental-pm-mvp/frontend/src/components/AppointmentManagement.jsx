@@ -797,13 +797,13 @@ const AppointmentManagement = () => {
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:'1 1 260px', minWidth:220, background:'#F8FAFC', borderRadius:11, padding:'8px 12px', border:'1px solid #E2E8F0' }}>
               <Search size={13} color="#94A3B8"/>
               <input aria-label="Rechercher un rendez-vous" placeholder="Rechercher patient, motif..." value={search} onChange={e=>setSearch(e.target.value)}
-                style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1, minWidth:0, color:'#0F172A' }}/>
+                style={{ border:'none', background:'transparent', fontSize:13, flex:1, minWidth:0, color:'#0F172A' }}/>
               {search && <button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:0 }}><X size={12}/></button>}
             </div>
 
             {/* Filtre statut */}
             <select aria-label="Filtrer les rendez-vous par statut" value={statusF} onChange={e=>setStatusF(e.target.value)}
-              style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer', outline:'none' }}>
+              style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer' }}>
               <option value="all">Tous statuts</option>
               {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
             </select>
@@ -1559,7 +1559,6 @@ const AppointmentManagement = () => {
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    outline: 'none',
                     fontSize: 16,
                     flex: 1,
                     minWidth: 0,

@@ -297,7 +297,7 @@ export function ModernTopbar() {
             value={language}
             onChange={e => setLanguage(e.target.value)}
             aria-label={t('topbar.language')}
-            style={{ border:0, outline:0, background:'transparent', color:theme.textPrimary, fontSize:12, fontWeight:800, fontFamily:'var(--font-sans)', cursor:'pointer', width:isMobile ? 46 : 96 }}
+            style={{ border:0, background:'transparent', color:theme.textPrimary, fontSize:12, fontWeight:800, fontFamily:'var(--font-sans)', cursor:'pointer', width:isMobile ? 46 : 96 }}
           >
             {languageOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -417,7 +417,7 @@ export function ModernTopbar() {
                 onKeyDown={e => {
                   if (e.key === 'Enter' && filteredCommands[0]) runCommand(filteredCommands[0].href)
                 }}
-                style={{ flex:1, border:'none', outline:'none', fontSize:15, fontFamily:'var(--font-sans)', color:theme.textPrimary, background:'transparent' }} />
+                style={{ flex:1, border:'none', fontSize:15, fontFamily:'var(--font-sans)', color:theme.textPrimary, background:'transparent' }} />
               <button type="button" aria-label="Fermer la recherche" onClick={() => setSearchOpen(false)} style={{ width:32, height:32, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', color:theme.textSecondary, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={17} /></button>
             </div>
             <div style={{ maxHeight:isMobile ? '70vh' : 420, overflowY:'auto', padding:'10px' }}>

@@ -1130,7 +1130,6 @@ export default function HelpChatbot() {
                 borderRadius: 10,
                 padding: '10px 11px',
                 fontSize: 13,
-                outline: 'none',
                 color: theme.textPrimary,
                 background: theme.bgElevated,
                 opacity: thinking ? .72 : 1,

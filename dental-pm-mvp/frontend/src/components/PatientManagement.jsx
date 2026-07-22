@@ -803,13 +803,13 @@ const PatientManagement = () => {
           <input aria-label="Rechercher des patients" placeholder="Nom, prénom, ID patient, téléphone, email, ville, assurance..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
             onFocus={()=>setSearchFocused(true)}
             onBlur={()=>setSearchFocused(false)}
-            style={{ border:'none', background:'transparent', outline:'none', fontSize:14, flex:1, fontFamily:'inherit', color:'#0F172A', minWidth:0 }}/>
+            style={{ border:'none', background:'transparent', fontSize:14, flex:1, fontFamily:'inherit', color:'#0F172A', minWidth:0 }}/>
           {search && <button type="button" aria-label="Effacer la recherche patient" onClick={()=>{setPage(1);setSearch('');}} style={{ width:28, height:28, borderRadius:9, background:'#EEF6F7', border:'none', cursor:'pointer', color:'#64748B', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>}
         </div>
         <div style={{ width:1, height:24, background:'#E2E8F0' }}/>
         {/* Tri */}
         <select aria-label="Trier les patients" value={sortBy} onChange={e=>setSort(e.target.value)}
-          style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#F8FAFC', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer', outline:'none' }}>
+          style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#F8FAFC', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer' }}>
           <option value="name">Trier : A→Z</option>
           <option value="recent">Trier : Récents</option>
           <option value="age">Trier : Âge</option>

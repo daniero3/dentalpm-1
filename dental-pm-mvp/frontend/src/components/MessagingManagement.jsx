@@ -371,7 +371,7 @@ const MessagingManagement = () => {
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:200, background:'#fff', borderRadius:10, border:'1.5px solid #E2E8F0', padding:'8px 12px' }}>
               <Search size={13} color="#94A3B8"/>
               <input aria-label="Rechercher un patient dans la file d’attente" placeholder="Rechercher patient..." value={search} onChange={e=>setSearch(e.target.value)}
-                style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1 }}/>
+                style={{ border:'none', background:'transparent', fontSize:13, flex:1 }}/>
             </div>
             <button type="button" onClick={handleDispatch} disabled={dispatching||stats.QUEUED===0}
               style={{ padding:'8px 18px', borderRadius:10, background:stats.QUEUED>0?`linear-gradient(135deg,${C.purple},#9333EA)`:'#F1F5F9', color:stats.QUEUED>0?'#fff':'#94A3B8', border:'none', cursor:stats.QUEUED>0?'pointer':'not-allowed', fontSize:13, fontWeight:700, display:'flex', alignItems:'center', gap:6 }}>
@@ -504,7 +504,7 @@ const MessagingManagement = () => {
             <div style={{ display:'flex', alignItems:'center', gap:8, flex:1, minWidth:200, background:'#fff', borderRadius:10, border:'1.5px solid #E2E8F0', padding:'8px 12px' }}>
               <Search size={13} color="#94A3B8"/>
               <input aria-label="Rechercher dans l’historique des messages" placeholder="Rechercher patient, numéro..." value={search} onChange={e=>setSearch(e.target.value)}
-                style={{ border:'none', background:'transparent', outline:'none', fontSize:13, flex:1 }}/>
+                style={{ border:'none', background:'transparent', fontSize:13, flex:1 }}/>
             </div>
             <div style={{ display:'flex', gap:5 }}>
               {['ALL','SENT','FAILED'].map(f => (

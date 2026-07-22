@@ -286,7 +286,7 @@ const QuoteManagement = () => {
         <div style={{ display:'flex',alignItems:'center',gap:8,flex:'1 1 280px',minWidth:220,background:'#F8FAFC',border:'1px solid #E2E8F0',borderRadius:11,padding:'8px 11px' }}>
           <Search size={13} color="#94A3B8"/>
           <input aria-label="Rechercher un devis" placeholder="Rechercher devis, patient..." value={search} onChange={e=>setSearch(e.target.value)}
-            style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0,color:'#0F172A' }}/>
+            style={{ border:'none',background:'transparent',fontSize:13,flex:1,minWidth:0,color:'#0F172A' }}/>
           {search&&<button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
@@ -458,7 +458,7 @@ const QuoteManagement = () => {
                 )}
                 <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                   <Search size={13} color="#94A3B8"/>
-                  <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
+                  <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',fontSize:13,flex:1,minWidth:0 }} />
                 </div>
                 <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
                   {patientMatches.map(p=>(

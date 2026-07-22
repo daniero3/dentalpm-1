@@ -41,13 +41,11 @@ const BreadcrumbLink = React.forwardRef(({ asChild, className, ...props }, ref) 
 BreadcrumbLink.displayName = "BreadcrumbLink"
 
 const BreadcrumbPage = React.forwardRef(({ className, ...props }, ref) => (
-  <span
-    ref={ref}
-    role="link"
-    aria-disabled="true"
-    aria-current="page"
-    className={cn("font-normal text-foreground", className)}
-    {...props} />
+	  <span
+	    ref={ref}
+	    aria-current="page"
+	    className={cn("font-normal text-foreground", className)}
+	    {...props} />
 ))
 BreadcrumbPage.displayName = "BreadcrumbPage"
 

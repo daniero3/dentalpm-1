@@ -482,7 +482,7 @@ const InvoiceManagement = () => {
         <div style={{ display:'flex',alignItems:'center',gap:7,flex:1,minWidth:200 }}>
           <Search size={13} color="#94A3B8"/>
           <input aria-label="Rechercher une facture" placeholder="Rechercher facture, patient..." value={search} onChange={e=>setSearch(e.target.value)}
-            style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1 }}/>
+            style={{ border:'none',background:'transparent',fontSize:13,flex:1 }}/>
           {search&&<button type="button" aria-label="Effacer la recherche" onClick={()=>setSearch('')} style={{ background:'none',border:'none',cursor:'pointer',color:'#94A3B8',padding:0 }}><X size={12}/></button>}
         </div>
         <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
