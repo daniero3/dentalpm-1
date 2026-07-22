@@ -118,10 +118,12 @@ const Modal = ({ open, onClose, title, children, maxW = 680 }) => {
 const ArticleCard = ({ art, onAdd, sup }) => {
   const isLow = art.stock === 'Limité';
   const isOOS = art.stock === 'Sur commande';
-  return (
-    <div style={{ border:'1.5px solid #E2E8F0', borderRadius:14, padding:'14px 16px', background:'#fff', position:'relative', transition:'all .2s' }}
-      onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.boxShadow='0 4px 16px rgba(13,122,135,.1)';}}
-      onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
+	  return (
+	    <div style={{ border:'1.5px solid #E2E8F0', borderRadius:14, padding:'14px 16px', background:'#fff', position:'relative', transition:'all .2s' }}
+	      onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.boxShadow='0 4px 16px rgba(13,122,135,.1)';}}
+	      onFocus={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.boxShadow='0 4px 16px rgba(13,122,135,.1)';}}
+	      onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}
+	      onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
       {isLow && <div style={{ position:'absolute', top:10, right:10, background:'#FEF3C7', color:'#B45309', fontSize:10, fontWeight:700, padding:'2px 7px', borderRadius:99 }}>Stock limité</div>}
       <div style={{ fontSize:28, marginBottom:8 }}>{art.img}</div>
       <div style={{ fontWeight:700, fontSize:13, color:'#0F172A', marginBottom:3, lineHeight:1.3 }}>{art.name}</div>

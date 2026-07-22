@@ -269,9 +269,11 @@ const QuoteManagement = () => {
           {icon:'💰',l:'Valeur acceptés',v:fmt(stats.totalAmt),c:C.teal,bg:'#F0FDFE',raw:true},
         ].map((k,i)=>(
           <button type="button" key={i} onClick={()=>setStatusF(k.l==='Total'?'ALL':k.l==='En attente'?'DRAFT':k.l==='Acceptés'?'ACCEPTED':k.l==='Convertis'?'CONVERTED':'ALL')}
-            style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'13px 15px',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:11,transition:'all .2s' }}
-            onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
-            onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
+	            style={{ background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'13px 15px',cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:11,transition:'all .2s' }}
+	            onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
+	            onFocus={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
+	            onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}
+	            onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
             <div style={{ width:36,height:36,borderRadius:10,background:k.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18 }}>{k.icon}</div>
             <div>
               <div style={{ fontFamily:'Plus Jakarta Sans',fontWeight:800,fontSize:k.raw?14:20,color:'#0F172A',lineHeight:1 }}>{k.raw?k.v:k.v}</div>
@@ -318,8 +320,8 @@ const QuoteManagement = () => {
           {filtered.map((q,idx)=>{
             const nexts = NEXT_STATUS[q.status]||[];
             return(
-              <div key={q.id} className="q-card" style={{ padding:'15px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',transition:'background .15s',animationDelay:`${Math.min(idx,.15)*.04}s` }}
-                onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+	              <div key={q.id} className="q-card" style={{ padding:'15px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',transition:'background .15s',animationDelay:`${Math.min(idx,.15)*.04}s` }}
+	                onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onFocus={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'} onBlur={e=>e.currentTarget.style.background='transparent'}>
                 {/* Icône */}
                 <div style={{ width:40,height:40,borderRadius:11,background:'#F0FDFE',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
                   <FileText size={18} color={C.teal}/>
@@ -360,19 +362,19 @@ const QuoteManagement = () => {
                 </div>
                 {/* Actions */}
                 <div style={{ display:'flex',gap:5,flexShrink:0 }}>
-                  <button type="button" aria-label="Afficher les détails du devis" onClick={()=>setDetailQ(q)} title="Détails"
-                    style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
-                    onMouseOver={e=>{e.currentTarget.style.borderColor=C.teal;e.currentTarget.style.color=C.teal;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
+	                  <button type="button" aria-label="Afficher les détails du devis" onClick={()=>setDetailQ(q)} title="Détails"
+	                    style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
+	                    onMouseOver={e=>{e.currentTarget.style.borderColor=C.teal;e.currentTarget.style.color=C.teal;}} onFocus={e=>{e.currentTarget.style.borderColor=C.teal;e.currentTarget.style.color=C.teal;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}} onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Eye size={13}/>
                   </button>
-                  <button type="button" aria-label="Imprimer le devis" onClick={()=>handlePrint(q.id)} title="Imprimer"
-                    style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
-                    onMouseOver={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
+	                  <button type="button" aria-label="Imprimer le devis" onClick={()=>handlePrint(q.id)} title="Imprimer"
+	                    style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
+	                    onMouseOver={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}} onFocus={e=>{e.currentTarget.style.borderColor=C.blue;e.currentTarget.style.color=C.blue;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}} onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Printer size={13}/>
                   </button>
-                  <button type="button" aria-label="Télécharger le devis en PDF" onClick={()=>handlePDF(q.id,q.invoice_number)} title="PDF"
-                    style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
-                    onMouseOver={e=>{e.currentTarget.style.borderColor=C.purple;e.currentTarget.style.color=C.purple;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
+	                  <button type="button" aria-label="Télécharger le devis en PDF" onClick={()=>handlePDF(q.id,q.invoice_number)} title="PDF"
+	                    style={{ width:30,height:30,borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:'#94A3B8',transition:'all .15s' }}
+	                    onMouseOver={e=>{e.currentTarget.style.borderColor=C.purple;e.currentTarget.style.color=C.purple;}} onFocus={e=>{e.currentTarget.style.borderColor=C.purple;e.currentTarget.style.color=C.purple;}} onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}} onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
                     <Download size={13}/>
                   </button>
                 </div>

@@ -76,10 +76,12 @@ const MedSearch = ({ id, value, onChange, suggestions, onPick }) => {
             {value.trim() ? 'Résultats' : 'Fréquents'}
           </div>
           {list.map((m, i) => (
-            <button type="button" key={`${m.name}-${m.dosage || ''}-${m.posology || ''}-${m.duration || ''}`} onMouseDown={() => { onPick(m); setOpen(false); }}
-              style={{ width:'100%', border:0, background:'transparent', textAlign:'left', font:'inherit', padding:'9px 14px', cursor:'pointer', borderBottom:i<list.length-1?'1px solid #F8FAFC':'none', transition:'background .1s' }}
-              onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
-              onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+	            <button type="button" key={`${m.name}-${m.dosage || ''}-${m.posology || ''}-${m.duration || ''}`} onMouseDown={() => { onPick(m); setOpen(false); }}
+	              style={{ width:'100%', border:0, background:'transparent', textAlign:'left', font:'inherit', padding:'9px 14px', cursor:'pointer', borderBottom:i<list.length-1?'1px solid #F8FAFC':'none', transition:'background .1s' }}
+	              onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
+	              onFocus={e=>e.currentTarget.style.background='#F0FDFE'}
+	              onMouseOut={e=>e.currentTarget.style.background='transparent'}
+	              onBlur={e=>e.currentTarget.style.background='transparent'}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{m.name}</span>
                 {m.count > 0 && <span style={{ fontSize:10, color:'#94A3B8', background:'#F1F5F9', padding:'1px 7px', borderRadius:99 }}>×{m.count}</span>}
@@ -128,10 +130,12 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
           )}
         </button>
         {total > 1 && (
-          <button type="button" aria-label={`Supprimer le médicament ${index + 1}`} onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
-            style={{ background:'none', border:'none', cursor:'pointer', color:'#CBD5E1', display:'flex', alignItems:'center', padding:'3px 6px', borderRadius:6, transition:'all .15s', flexShrink:0 }}
-            onMouseOver={e=>{e.currentTarget.style.background='#FEE2E2';e.currentTarget.style.color='#EF4444';}}
-            onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='#CBD5E1';}}>
+	          <button type="button" aria-label={`Supprimer le médicament ${index + 1}`} onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
+	            style={{ background:'none', border:'none', cursor:'pointer', color:'#CBD5E1', display:'flex', alignItems:'center', padding:'3px 6px', borderRadius:6, transition:'all .15s', flexShrink:0 }}
+	            onMouseOver={e=>{e.currentTarget.style.background='#FEE2E2';e.currentTarget.style.color='#EF4444';}}
+	            onFocus={e=>{e.currentTarget.style.background='#FEE2E2';e.currentTarget.style.color='#EF4444';}}
+	            onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='#CBD5E1';}}
+	            onBlur={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='#CBD5E1';}}>
             <Trash2 size={12}/>
           </button>
         )}
@@ -311,9 +315,11 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
             </div>
           </div>
           <button type="button" aria-label="Fermer la prescription" onClick={onClose}
-            style={{ width:34, height:34, borderRadius:9, background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,.85)', flexShrink:0, transition:'all .15s' }}
-            onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
-            onMouseOut={e=>e.currentTarget.style.background='rgba(255,255,255,.15)'}>
+	            style={{ width:34, height:34, borderRadius:9, background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,.85)', flexShrink:0, transition:'all .15s' }}
+	            onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
+	            onFocus={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
+	            onMouseOut={e=>e.currentTarget.style.background='rgba(255,255,255,.15)'}
+	            onBlur={e=>e.currentTarget.style.background='rgba(255,255,255,.15)'}>
             <X size={15}/>
           </button>
         </div>
@@ -339,9 +345,11 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
                 {filled.length > 0 && <span style={{ background:`${T}15`, color:T, fontSize:11, fontWeight:700, padding:'2px 9px', borderRadius:99 }}>{filled.length}/{formData.items.length}</span>}
               </div>
               <button type="button" onClick={addItem}
-                style={{ padding:'6px 14px', borderRadius:9, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5, boxShadow:`0 2px 8px ${T}40`, transition:'filter .15s', whiteSpace:'nowrap' }}
-                onMouseOver={e=>e.currentTarget.style.filter='brightness(1.1)'}
-                onMouseOut={e=>e.currentTarget.style.filter='none'}>
+	                style={{ padding:'6px 14px', borderRadius:9, background:T, color:'#fff', border:'none', cursor:'pointer', fontSize:12, fontWeight:700, display:'flex', alignItems:'center', gap:5, boxShadow:`0 2px 8px ${T}40`, transition:'filter .15s', whiteSpace:'nowrap' }}
+	                onMouseOver={e=>e.currentTarget.style.filter='brightness(1.1)'}
+	                onFocus={e=>e.currentTarget.style.filter='brightness(1.1)'}
+	                onMouseOut={e=>e.currentTarget.style.filter='none'}
+	                onBlur={e=>e.currentTarget.style.filter='none'}>
                 <Plus size={12}/> Ajouter un autre médicament
               </button>
             </div>
@@ -396,15 +404,19 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
           </div>
           <div style={{ display:'flex', gap:8 }}>
             <button type="button" onClick={onClose}
-              style={{ padding:'9px 20px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569', transition:'all .15s', fontFamily:'inherit' }}
-              onMouseOver={e=>e.currentTarget.style.borderColor='#94A3B8'}
-              onMouseOut={e=>e.currentTarget.style.borderColor='#E2E8F0'}>
+	              style={{ padding:'9px 20px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569', transition:'all .15s', fontFamily:'inherit' }}
+	              onMouseOver={e=>e.currentTarget.style.borderColor='#94A3B8'}
+	              onFocus={e=>e.currentTarget.style.borderColor='#94A3B8'}
+	              onMouseOut={e=>e.currentTarget.style.borderColor='#E2E8F0'}
+	              onBlur={e=>e.currentTarget.style.borderColor='#E2E8F0'}>
               Annuler
             </button>
             <button type="button" onClick={onSubmit} disabled={saving||filled.length===0}
-              style={{ padding:'9px 24px', borderRadius:10, background:filled.length>0?`linear-gradient(135deg,${T},#13A3B4)`:'#E2E8F0', color:filled.length>0?'#fff':'#94A3B8', border:'none', cursor:filled.length>0?'pointer':'not-allowed', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:8, boxShadow:filled.length>0?`0 4px 16px ${T}40`:'none', transition:'all .2s', fontFamily:'inherit' }}
-              onMouseOver={e=>{if(filled.length>0)e.currentTarget.style.filter='brightness(1.08)';}}
-              onMouseOut={e=>e.currentTarget.style.filter='none'}>
+	              style={{ padding:'9px 24px', borderRadius:10, background:filled.length>0?`linear-gradient(135deg,${T},#13A3B4)`:'#E2E8F0', color:filled.length>0?'#fff':'#94A3B8', border:'none', cursor:filled.length>0?'pointer':'not-allowed', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:8, boxShadow:filled.length>0?`0 4px 16px ${T}40`:'none', transition:'all .2s', fontFamily:'inherit' }}
+	              onMouseOver={e=>{if(filled.length>0)e.currentTarget.style.filter='brightness(1.08)';}}
+	              onFocus={e=>{if(filled.length>0)e.currentTarget.style.filter='brightness(1.08)';}}
+	              onMouseOut={e=>e.currentTarget.style.filter='none'}
+	              onBlur={e=>e.currentTarget.style.filter='none'}>
               {saving
                 ? <><Loader2 size={15} style={{ animation:'dpm-spin .8s linear infinite' }}/> Enregistrement…</>
                 : <><CheckCircle size={15}/> {submitLabel}</>}
@@ -514,9 +526,11 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
                 <div style={{ position:'absolute', left:36, top:52, bottom:0, width:1, background:'#F1F5F9', zIndex:0 }}/>
               )}
 
-              <div style={{ padding:'12px 20px', display:'flex', gap:14, alignItems:'flex-start', position:'relative', transition:'background .15s' }}
-                onMouseOver={e=>e.currentTarget.style.background='#FAFAFA'}
-                onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+	              <div style={{ padding:'12px 20px', display:'flex', gap:14, alignItems:'flex-start', position:'relative', transition:'background .15s' }}
+	                onMouseOver={e=>e.currentTarget.style.background='#FAFAFA'}
+	                onFocus={e=>e.currentTarget.style.background='#FAFAFA'}
+	                onMouseOut={e=>e.currentTarget.style.background='transparent'}
+	                onBlur={e=>e.currentTarget.style.background='transparent'}>
                 <button type="button" aria-expanded={isExp} aria-label={`${isExp ? 'Réduire' : 'Afficher'} l'ordonnance ${p.number}`} onClick={() => setExpanded(isExp ? null : p.id)}
                   style={{ display:'flex', gap:14, alignItems:'flex-start', flex:1, minWidth:0, border:0, padding:0, background:'transparent', textAlign:'left', font:'inherit', cursor:'pointer' }}>
 
@@ -609,9 +623,11 @@ const HistoryPanel = ({ prescriptions, loading, onEdit, onIssue, onCancel, onPri
 
 const ActionBtn = ({ icon, title, color, onClick }) => (
   <button type="button" title={title} onClick={onClick}
-    style={{ width:28, height:28, borderRadius:7, background:'#F8FAFC', border:'1px solid #E2E8F0', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:color||'#64748B', transition:'all .15s' }}
-    onMouseOver={e=>{e.currentTarget.style.background=color?`${color}12`:'#F1F5F9';e.currentTarget.style.borderColor=color||'#CBD5E1';}}
-    onMouseOut={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}>
+	    style={{ width:28, height:28, borderRadius:7, background:'#F8FAFC', border:'1px solid #E2E8F0', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:color||'#64748B', transition:'all .15s' }}
+	    onMouseOver={e=>{e.currentTarget.style.background=color?`${color}12`:'#F1F5F9';e.currentTarget.style.borderColor=color||'#CBD5E1';}}
+	    onFocus={e=>{e.currentTarget.style.background=color?`${color}12`:'#F1F5F9';e.currentTarget.style.borderColor=color||'#CBD5E1';}}
+	    onMouseOut={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}
+	    onBlur={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}>
     {icon}
   </button>
 );
@@ -744,10 +760,12 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
 
           {/* Bouton Retour */}
           {!embedded && (
-          <button type="button" onClick={() => navigate(-1)}
-            style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, color:'#475569', flexShrink:0, transition:'all .18s', boxShadow:'0 1px 4px rgba(0,0,0,.06)', fontFamily:'inherit' }}
-            onMouseOver={e=>{e.currentTarget.style.borderColor=T;e.currentTarget.style.color=T;e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.boxShadow=`0 2px 10px ${T}18`;}}
-            onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';e.currentTarget.style.background='#fff';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.06)';}}>
+	          <button type="button" onClick={() => navigate(-1)}
+	            style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:11, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:700, color:'#475569', flexShrink:0, transition:'all .18s', boxShadow:'0 1px 4px rgba(0,0,0,.06)', fontFamily:'inherit' }}
+	            onMouseOver={e=>{e.currentTarget.style.borderColor=T;e.currentTarget.style.color=T;e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.boxShadow=`0 2px 10px ${T}18`;}}
+	            onFocus={e=>{e.currentTarget.style.borderColor=T;e.currentTarget.style.color=T;e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.boxShadow=`0 2px 10px ${T}18`;}}
+	            onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';e.currentTarget.style.background='#fff';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.06)';}}
+	            onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';e.currentTarget.style.background='#fff';e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.06)';}}>
             <ArrowLeft size={15}/> Retour
           </button>
           )}
@@ -787,10 +805,12 @@ const PatientPrescriptions = ({ patientIdOverride = null, embedded = false }) =>
         </div>
 
         {/* Droite : bouton nouvelle ordonnance */}
-        <button type="button" onClick={() => { setForm(emptyForm); setIsCreateOpen(true); }}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 22px', borderRadius:12, background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, boxShadow:`0 4px 18px ${T}40`, transition:'all .18s', flexShrink:0, fontFamily:'inherit' }}
-          onMouseOver={e=>e.currentTarget.style.filter='brightness(1.08)'}
-          onMouseOut={e=>e.currentTarget.style.filter='none'}>
+	        <button type="button" onClick={() => { setForm(emptyForm); setIsCreateOpen(true); }}
+	          style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 22px', borderRadius:12, background:`linear-gradient(135deg,${T},#13A3B4)`, color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, boxShadow:`0 4px 18px ${T}40`, transition:'all .18s', flexShrink:0, fontFamily:'inherit' }}
+	          onMouseOver={e=>e.currentTarget.style.filter='brightness(1.08)'}
+	          onFocus={e=>e.currentTarget.style.filter='brightness(1.08)'}
+	          onMouseOut={e=>e.currentTarget.style.filter='none'}
+	          onBlur={e=>e.currentTarget.style.filter='none'}>
           <Plus size={16}/> Nouvelle ordonnance
         </button>
       </div>

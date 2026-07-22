@@ -174,9 +174,11 @@ export default function RegisterPage() {
                 <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                   {PLANS.map(p => (
                     <button type="button" className="premium-plan" key={p.name} aria-label={`Choisir le plan ${p.name}`} onClick={() => setPlan(p)}
-                      style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${plan?.name===p.name ? T : '#E2E8F0'}`, background:plan?.name===p.name ? '#F0FDFE' : '#fff', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all .15s', position:'relative', textAlign:'left', font:'inherit' }}
-                      onMouseOver={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#7DD3DA';e.currentTarget.style.background='#FAFFFE';}}}
-                      onMouseOut={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}}>
+	                      style={{ padding:'14px 16px', borderRadius:14, border:`2px solid ${plan?.name===p.name ? T : '#E2E8F0'}`, background:plan?.name===p.name ? '#F0FDFE' : '#fff', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', transition:'all .15s', position:'relative', textAlign:'left', font:'inherit' }}
+	                      onMouseOver={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#7DD3DA';e.currentTarget.style.background='#FAFFFE';}}}
+	                      onFocus={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#7DD3DA';e.currentTarget.style.background='#FAFFFE';}}}
+	                      onMouseOut={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}}
+	                      onBlur={e=>{if(plan?.name!==p.name){e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}}>
                       {p.popular && <span style={{ position:'absolute', top:-10, left:16, background:T, color:'#fff', fontSize:10, fontWeight:700, padding:'2px 10px', borderRadius:99 }}>⭐ Le plus populaire</span>}
                       <div>
                         <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:15, color:'#0F172A' }}>Plan {p.name}</div>

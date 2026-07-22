@@ -309,9 +309,11 @@ const MessagingManagement = () => {
                 { icon:'📋', l:'Voir la file d\'attente',            c:C.amber,  action:()=>setTab('queue'), desc:`${stats.QUEUED} message(s) en attente d'envoi` },
               ].map((a,i) => (
                 <button type="button" key={i} onClick={a.action}
-                  style={{ background:'#fff', borderRadius:14, border:'1.5px solid #E2E8F0', padding:'16px 18px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', flexDirection:'column', gap:8 }}
-                  onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.boxShadow=`0 4px 16px ${a.c}20`;}}
-                  onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
+	                  style={{ background:'#fff', borderRadius:14, border:'1.5px solid #E2E8F0', padding:'16px 18px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', flexDirection:'column', gap:8 }}
+	                  onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.boxShadow=`0 4px 16px ${a.c}20`;}}
+	                  onFocus={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.boxShadow=`0 4px 16px ${a.c}20`;}}
+	                  onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}
+	                  onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
                   <div style={{ fontSize:24 }}>{a.icon}</div>
                   <div style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{a.l}</div>
                   <div style={{ fontSize:11, color:'#94A3B8', lineHeight:1.5 }}>{a.desc}</div>

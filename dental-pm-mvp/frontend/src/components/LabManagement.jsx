@@ -527,9 +527,11 @@ const LabManagement = () => {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,marginBottom:8}}>
                   {PARTNER_LABS.map(lab=>(
                     <button type="button" key={lab.id} aria-label={`Sélectionner le laboratoire ${lab.name}`} onClick={()=>pickLab(lab)}
-                      style={{padding:'9px 11px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',transition:'all .15s',textAlign:'left',font:'inherit'}}
-                      onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
-                      onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
+	                      style={{padding:'9px 11px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',transition:'all .15s',textAlign:'left',font:'inherit'}}
+	                      onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
+	                      onFocus={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.background='#F0FDFE';}}
+	                      onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}
+	                      onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
                       <div style={{fontWeight:700,fontSize:12,color:'#0F172A'}}>{lab.name}</div>
                       <div style={{fontSize:10,color:'#64748B',marginTop:2}}>{lab.city} · ⭐{lab.rating} · {lab.delai}</div>
                       {lab.promo&&<div style={{fontSize:10,color:'#C2410C',fontWeight:600,marginTop:2}}>🎁 {lab.promo}</div>}
