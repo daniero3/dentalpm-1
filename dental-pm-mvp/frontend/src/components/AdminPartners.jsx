@@ -113,10 +113,10 @@ export default function AdminPartners() {
                   {p.category && <span style={{ fontSize:10, fontWeight:700, background:'#F0FDFE', color:T, border:`1px solid ${T}30`, borderRadius:99, padding:'2px 8px', marginTop:4, display:'inline-block' }}>{p.category}</span>}
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
-                  <button type="button" onClick={() => openEdit(p)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
+                  <button type="button" aria-label={`Modifier ${p.name}`} onClick={() => openEdit(p)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #E2E8F0', background:'#F8FAFC', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
                     <Edit2 size={13} color="#64748B"/>
                   </button>
-                  <button type="button" onClick={() => remove(p.id, p.name)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #FEE2E2', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
+                  <button type="button" aria-label={`Supprimer ${p.name}`} onClick={() => remove(p.id, p.name)} style={{ width:30, height:30, borderRadius:8, border:'1px solid #FEE2E2', background:'#FEF2F2', cursor:'pointer', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}>
                     <Trash2 size={13} color="#EF4444"/>
                   </button>
                 </div>
@@ -139,7 +139,7 @@ export default function AdminPartners() {
           <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 32px 80px rgba(0,0,0,.2)' }}>
             <div style={{ padding:'18px 22px', borderBottom:'1px solid #F1F5F9', display:'flex', justifyContent:'space-between', alignItems:'center', background:`linear-gradient(135deg,${T},#0A5F6A)`, borderRadius:'20px 20px 0 0' }}>
               <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:16, color:'#fff' }}>{editing ? 'Modifier le partenaire' : 'Nouveau partenaire'}</div>
-              <button type="button" onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}><X size={15}/></button>
+              <button type="button" aria-label="Fermer la fenêtre partenaire" onClick={()=>setModal(false)} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', color:'#fff', display:'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent:'center' }}><X size={15}/></button>
             </div>
             <div style={{ padding:'20px 22px', display:'flex', flexDirection:'column', gap:14 }}>
               {[
@@ -151,8 +151,8 @@ export default function AdminPartners() {
                 { label:'Adresse',              key:'address',      type:'text',  ph:'Rue X, Tana' },
               ].map(f => (
                 <div key={f.key}>
-                  <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
-                  <input aria-label={f.label} type={f.type} placeholder={f.ph} value={form[f.key]}
+                  <label htmlFor={`admin-partner-${f.key}`} style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>{f.label}</label>
+                  <input id={`admin-partner-${f.key}`} aria-label={f.label} type={f.type} placeholder={f.ph} value={form[f.key]}
                     onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))}
                     style={inp}
                     onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
@@ -160,14 +160,14 @@ export default function AdminPartners() {
                 </div>
               ))}
               <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Catégorie</label>
-                <select aria-label="Catégorie du partenaire" value={form.category} onChange={e=>setForm(p=>({...p,category:e.target.value}))} style={{ ...inp, background:'#fff', cursor:'pointer' }}>
+                <label htmlFor="admin-partner-category" style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Catégorie</label>
+                <select id="admin-partner-category" aria-label="Catégorie du partenaire" value={form.category} onChange={e=>setForm(p=>({...p,category:e.target.value}))} style={{ ...inp, background:'#fff', cursor:'pointer' }}>
                   {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Notes</label>
-                <textarea aria-label="Notes du partenaire" value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} rows={3} placeholder="Informations complémentaires..." style={{ ...inp, resize:'none', lineHeight:1.6 }}
+                <label htmlFor="admin-partner-notes" style={{ display:'block', fontSize:12, fontWeight:600, color:'#475569', marginBottom:5 }}>Notes</label>
+                <textarea id="admin-partner-notes" aria-label="Notes du partenaire" value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} rows={3} placeholder="Informations complémentaires..." style={{ ...inp, resize:'none', lineHeight:1.6 }}
                   onFocus={e=>{e.target.style.borderColor=T;}} onBlur={e=>{e.target.style.borderColor='#E2E8F0';}}/>
               </div>
               <div style={{ display:'flex', gap:8, paddingTop:8 }}>
