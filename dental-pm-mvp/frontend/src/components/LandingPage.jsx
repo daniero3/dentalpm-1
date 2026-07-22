@@ -486,7 +486,7 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
   if(!show) return null;
   return (
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(10,15,20,.75)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn .2s ease'}}>
-      <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95vh',overflowY:'auto',position:'relative',animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)',border:'1px solid var(--border)'}}>
+      <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',maxWidth:520,width:'100%',maxHeight:'95dvh',overflowY:'auto',position:'relative',animation:'scaleIn .3s cubic-bezier(.22,1,.36,1)',border:'1px solid var(--border)'}}>
         <div style={{width:40,height:4,borderRadius:99,background:'#E2E8F0',margin:'0 auto 18px'}}/>
         <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,width:32,height:32,borderRadius:'50%',background:'var(--surface)',border:'none',cursor:'pointer',fontSize:18,color:'var(--muted)'}}>✕</button>
         {!done?(
@@ -689,7 +689,7 @@ export default function LandingPage() {
   );
 
   return (
-    <div className="landing-root" style={{fontFamily:"'Inter',sans-serif",background:'var(--bg)',minHeight:'100vh',overflowX:'hidden'}}>
+    <div className="landing-root" style={{fontFamily:"'Inter',sans-serif",background:'var(--bg)',minHeight:'100dvh',overflowX:'hidden'}}>
       <GlobalCSS/>
 
       {/* ══ NAV ══ */}
@@ -756,7 +756,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ══ HERO ══ */}
-      <section style={{background:'linear-gradient(135deg,var(--teal-dk) 0%,#0A5F6A 50%,var(--teal) 100%)',minHeight:'100vh',display:'flex',alignItems:'center',padding:isMobile?'88px 16px 56px':isTablet?'108px 28px 68px':'120px 56px 80px',position:'relative',overflow:'hidden'}}>
+      <section style={{background:'linear-gradient(135deg,var(--teal-dk) 0%,#0A5F6A 50%,var(--teal) 100%)',minHeight:'100dvh',display:'flex',alignItems:'center',padding:isMobile?'88px 16px 56px':isTablet?'108px 28px 68px':'120px 56px 80px',position:'relative',overflow:'hidden'}}>
         <div style={{position:'absolute',top:'10%',left:'3%',width:isMobile?180:360,height:isMobile?180:360,borderRadius:'50%',background:'radial-gradient(circle,rgba(13,122,135,.45),transparent 70%)',filter:'blur(60px)',animation:'float 12s ease-in-out infinite',pointerEvents:'none'}}/>
         <div style={{position:'absolute',bottom:'10%',right:'3%',width:isMobile?140:280,height:isMobile?140:280,borderRadius:'50%',background:'radial-gradient(circle,rgba(125,211,218,.3),transparent 70%)',filter:'blur(50px)',animation:'float 16s ease-in-out infinite reverse',pointerEvents:'none'}}/>
         <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px)',backgroundSize:'72px 72px',pointerEvents:'none'}}/>

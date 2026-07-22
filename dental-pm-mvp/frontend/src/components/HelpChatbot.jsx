@@ -900,7 +900,7 @@ export default function HelpChatbot() {
       {open && (
         <section className="dpm-chat-panel" style={{
           width: 'min(380px, calc(100vw - 24px))',
-          height: 'min(560px, calc(100vh - 96px))',
+          height: 'min(560px, calc(100dvh - 96px))',
           background: theme.bgSurface,
           border: `1px solid ${theme.border}`,
           borderRadius: 14,

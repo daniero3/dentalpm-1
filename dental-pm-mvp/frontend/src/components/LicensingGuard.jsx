@@ -201,7 +201,7 @@ const LicensingGuard = ({ children }) => {
   // No subscription or clinic
   if (!subscriptionStatus || subscriptionStatus.status === 'NO_SUBSCRIPTION' || subscriptionStatus.status === 'NO_CLINIC') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
             <div className="mx-auto bg-red-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -228,7 +228,7 @@ const LicensingGuard = ({ children }) => {
   // Subscription expired
   if (subscriptionStatus.status === 'EXPIRED' || subscriptionStatus.is_expired) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center p-4">
         <Card className="max-w-lg w-full">
           <CardHeader className="text-center">
             <div className="mx-auto bg-red-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -261,7 +261,7 @@ const LicensingGuard = ({ children }) => {
   // Trial expired
   if (subscriptionStatus.status === 'TRIAL_EXPIRED') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center p-4">
         <Card className="max-w-lg w-full">
           <CardHeader className="text-center">
             <div className="mx-auto bg-orange-100 p-3 rounded-full w-16 h-16 flex items-center justify-center mb-4">

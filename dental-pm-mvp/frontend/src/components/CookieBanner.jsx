@@ -222,7 +222,7 @@ export default function CookieBanner() {
                   cursor: 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
                   boxShadow: '0 4px 16px rgba(13,122,135,.45)',
-                  transition: 'all .25s cubic-bezier(.34,1.56,.64,1)',
+                  transition: 'all .25s cubic-bezier(.16,1,.3,1)',
                   whiteSpace: 'nowrap',
                   display: 'flex', alignItems: 'center', gap: 7,
                   letterSpacing: '-0.01em',

@@ -211,7 +211,7 @@ const LoginForm = () => {
   );
 
   return (
-    <div className="login-premium-page" style={{ minHeight:'100vh', background:'#F8FAFC', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16, position:'relative', overflow:'hidden' }}>
+    <div className="login-premium-page" style={{ minHeight:'100dvh', background:'#F8FAFC', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:16, position:'relative', overflow:'hidden' }}>
       <style>{`
         @keyframes loginFloat { 0%,100%{ transform:translate3d(0,0,0) scale(1); } 50%{ transform:translate3d(0,-16px,0) scale(1.03); } }
         @keyframes loginGlow { 0%,100%{ opacity:.55; transform:scale(1); } 50%{ opacity:.9; transform:scale(1.08); } }

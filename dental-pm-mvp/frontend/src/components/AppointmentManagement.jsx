@@ -278,7 +278,7 @@ const AppointmentManagement = () => {
   const [patientSearch, setPatientSearch] = useState('');
   const [statusF,  setStatusF]  = useState('all');
   const [typeF,    setTypeF]    = useState('all');
-  const [selDate,  setSelDate]  = useState(today());
+  const [selDate,  setSelDate]  = useState(() => today());
   const [viewMode, setView]     = useState('day'); // day | week | all
   const [showCal,  setShowCal]  = useState(true);
   const [importing, setImporting] = useState(false);

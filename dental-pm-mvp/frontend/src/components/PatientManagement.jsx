@@ -106,7 +106,7 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
         style={{
           width: '100%',
           maxWidth: maxW,
-          maxHeight: 'calc(100vh - 48px)',
+          maxHeight: 'calc(100dvh - 48px)',
           overflowY: 'auto',
           background: '#FFFFFF',
           borderRadius: 28,

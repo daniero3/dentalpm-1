@@ -73,7 +73,7 @@ const SubscriptionExpiredPage = ({ errorData, onRetry, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <Card className="max-w-md w-full shadow-xl">
         <CardHeader className="text-center pb-2">
           <div className="mx-auto mb-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-full inline-block">

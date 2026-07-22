@@ -146,11 +146,13 @@ const PartnerAdCard = ({ ad, accent }) => {
   );
 };
 
+const EMPTY_EXAMPLES = [];
+
 export default function PartnerAds({
   title,
   description,
   storageKey,
-  examples = [],
+  examples = EMPTY_EXAMPLES,
   accent = '#0D7A87',
   audienceLabel = 'partenaire',
 }) {

@@ -129,7 +129,7 @@ export default function RegisterPage() {
   const stepValid = form.cabinet && form.practitioner_identifier && form.last_name && form.first_name && form.email && form.phone && form.city && passwordStrong && passwordMatch;
 
   return (
-    <div style={{ minHeight:'100vh', background:'linear-gradient(135deg,#F0FDFE 0%,#E8F7F8 46%,#F8FAFC 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'DM Sans,sans-serif', position:'relative', overflow:'hidden' }}>
+    <div style={{ minHeight:'100dvh', background:'linear-gradient(135deg,#F0FDFE 0%,#E8F7F8 46%,#F8FAFC 100%)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, fontFamily:'DM Sans,sans-serif', position:'relative', overflow:'hidden' }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes softShine{0%{transform:translateX(-120%)}45%,100%{transform:translateX(140%)}}

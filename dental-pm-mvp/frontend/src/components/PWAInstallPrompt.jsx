@@ -80,7 +80,7 @@ export default function PWAInstallPrompt() {
       boxShadow: '0 16px 48px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.1)',
       display: 'flex', alignItems: 'center', gap: 12,
       maxWidth: 300, border: '1px solid rgba(255,255,255,.15)',
-      animation: 'cookieSlideUp .5s cubic-bezier(.34,1.56,.64,1)',
+      animation: 'cookieSlideUp .5s cubic-bezier(.16,1,.3,1)',
     }}>
       <div style={{ width:40, height:40, borderRadius:11, background:'rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
         <Smartphone size={20} color="#fff"/>
