@@ -600,7 +600,7 @@ const DentalMailingSuite = () => {
 
           <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 12, marginBottom: 12, minWidth: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
-              <label style={{ fontSize: 12, fontWeight: 900, color: '#475569' }}>Patients ciblés</label>
+              <span style={{ fontSize: 12, fontWeight: 900, color: '#475569' }}>Patients ciblés</span>
               <button
                 type="button"
                 onClick={() => setSelectedPatientIds([])}

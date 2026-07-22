@@ -1474,7 +1474,7 @@ const AppointmentManagement = () => {
 
           {/* Patient */}
           <div>
-            <label style={{ fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 6, display: 'block' }}>
+            <label htmlFor="appointment-patient-search" style={{ fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 6, display: 'block' }}>
               Patient *
             </label>
           
@@ -1547,6 +1547,7 @@ const AppointmentManagement = () => {
                   <Search size={22} style={{ flexShrink: 0, color: '#94A3B8', marginLeft: 10, marginRight: 6}} />
           
                 <input
+                  id="appointment-patient-search"
                   aria-label="Rechercher un patient"
                   value={patientSearch}
                   onChange={(e) => {
@@ -1662,7 +1663,7 @@ const AppointmentManagement = () => {
 
           {/* Type */}
           <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Type de rendez-vous *</label>
+            <div style={{ fontSize:12, fontWeight:600, color:'#475569', marginBottom:8 }}>Type de rendez-vous *</div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
               {TYPES.map(t => (
                 <button key={t.value} type="button" onClick={()=>setForm({...form,appointment_type:t.value})}
@@ -1705,14 +1706,14 @@ const AppointmentManagement = () => {
 
           {/* Motif */}
           <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Motif</label>
-            <input aria-label="Motif du rendez-vous" value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})} placeholder="Ex: Douleur molaire, détartrage..." style={inp} onFocus={fi} onBlur={bi}/>
+            <label htmlFor="appointment-reason" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Motif</label>
+            <input id="appointment-reason" aria-label="Motif du rendez-vous" value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})} placeholder="Ex: Douleur molaire, détartrage..." style={inp} onFocus={fi} onBlur={bi}/>
           </div>
 
           {/* Notes */}
           <div>
-            <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes internes</label>
-            <textarea aria-label="Notes internes du rendez-vous" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions pour le praticien..." style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+            <label htmlFor="appointment-notes" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes internes</label>
+            <textarea id="appointment-notes" aria-label="Notes internes du rendez-vous" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions pour le praticien..." style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
           </div>
 
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>

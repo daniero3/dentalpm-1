@@ -193,8 +193,9 @@ export default function ClinicUsersTab() {
                   { label:'Spécialisation', key:'specialization', ph:'Chirurgie dentaire', type:'text', wide:true },
                 ].map(f => (
                   <div key={f.key} style={{ gridColumn: !isMobile && f.wide ? '1/-1' : undefined }}>
-                    <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>{f.label}</label>
+                    <label htmlFor={`clinic-user-${f.key}`} style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>{f.label}</label>
                     <input
+                      id={`clinic-user-${f.key}`}
                       aria-label={f.label}
                       type={f.type}
                       placeholder={f.ph}
@@ -210,7 +211,7 @@ export default function ClinicUsersTab() {
               </div>
 
               <div>
-                <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:8 }}>Rôle *</label>
+                <div style={{ fontSize:12, fontWeight:600, color:'#475569', marginBottom:8 }}>Rôle *</div>
                 <div role="radiogroup" aria-label="Rôle utilisateur" style={{ display:'grid', gridTemplateColumns:isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap:6 }}>
                   {ROLES.map(r => {
                     const Icon = r.icon;
@@ -233,9 +234,10 @@ export default function ClinicUsersTab() {
               </div>
 
               <div>
-                <label style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Mot de passe *</label>
+                <label htmlFor="clinic-user-password" style={{ fontSize:12, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Mot de passe *</label>
                 <div style={{ position:'relative' }}>
                   <input
+                    id="clinic-user-password"
                     aria-label="Mot de passe utilisateur"
                     type={showPwd ? 'text' : 'password'}
                     placeholder="Ex: Cabinet@2026"
