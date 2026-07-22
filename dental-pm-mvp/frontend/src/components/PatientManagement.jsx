@@ -180,20 +180,20 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
       </div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
         <div>
-          <label style={labelStyle}>Prénom *</label>
-          <input style={fieldStyle} type="text" placeholder="Jean" value={data.first_name||''} onChange={e=>onChange('first_name',e.target.value)} onFocus={fi} onBlur={bi} required/>
+          <label htmlFor="patient-first-name" style={labelStyle}>Prénom *</label>
+          <input id="patient-first-name" aria-label="Prénom" style={fieldStyle} type="text" placeholder="Jean" value={data.first_name||''} onChange={e=>onChange('first_name',e.target.value)} onFocus={fi} onBlur={bi} required/>
         </div>
         <div>
-          <label style={labelStyle}>Nom *</label>
-          <input style={fieldStyle} type="text" placeholder="Rakoto" value={data.last_name||''} onChange={e=>onChange('last_name',e.target.value)} onFocus={fi} onBlur={bi} required/>
+          <label htmlFor="patient-last-name" style={labelStyle}>Nom *</label>
+          <input id="patient-last-name" aria-label="Nom" style={fieldStyle} type="text" placeholder="Rakoto" value={data.last_name||''} onChange={e=>onChange('last_name',e.target.value)} onFocus={fi} onBlur={bi} required/>
         </div>
         <div>
-          <label style={labelStyle}>Date de naissance</label>
-          <input style={fieldStyle} type="date" value={data.date_of_birth||''} onChange={e=>onChange('date_of_birth',e.target.value)} onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-date-of-birth" style={labelStyle}>Date de naissance</label>
+          <input id="patient-date-of-birth" aria-label="Date de naissance" style={fieldStyle} type="date" value={data.date_of_birth||''} onChange={e=>onChange('date_of_birth',e.target.value)} onFocus={fi} onBlur={bi}/>
         </div>
         <div>
-          <label style={labelStyle}>Sexe</label>
-          <select style={fieldStyle} value={data.gender||''} onChange={e=>onChange('gender',e.target.value)} onFocus={fi} onBlur={bi}>
+          <label htmlFor="patient-gender" style={labelStyle}>Sexe</label>
+          <select id="patient-gender" aria-label="Sexe" style={fieldStyle} value={data.gender||''} onChange={e=>onChange('gender',e.target.value)} onFocus={fi} onBlur={bi}>
             <option value="">Sélectionner...</option>
             <option value="M">Masculin</option>
             <option value="F">Féminin</option>
@@ -208,24 +208,24 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
       <div style={{ fontSize:11, fontWeight:700, color:'#0D7A87', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>📞 Contact</div>
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
         <div>
-          <label style={labelStyle}>Téléphone *</label>
-          <input style={fieldStyle} type="text" placeholder="034 00 000 00" value={data.phone_primary||''} onChange={e=>onChange('phone_primary',e.target.value)} onFocus={fi} onBlur={bi} required/>
+          <label htmlFor="patient-phone-primary" style={labelStyle}>Téléphone *</label>
+          <input id="patient-phone-primary" aria-label="Téléphone" style={fieldStyle} type="text" placeholder="034 00 000 00" value={data.phone_primary||''} onChange={e=>onChange('phone_primary',e.target.value)} onFocus={fi} onBlur={bi} required/>
         </div>
         <div>
-          <label style={labelStyle}>Email</label>
-          <input style={fieldStyle} type="email" placeholder="jean@email.mg" value={data.email||''} onChange={e=>onChange('email',e.target.value)} onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-email" style={labelStyle}>Email</label>
+          <input id="patient-email" aria-label="Email" style={fieldStyle} type="email" placeholder="jean@email.mg" value={data.email||''} onChange={e=>onChange('email',e.target.value)} onFocus={fi} onBlur={bi}/>
         </div>
         <div style={{ gridColumn:'1/-1' }}>
-          <label style={labelStyle}>Adresse</label>
-          <input style={fieldStyle} type="text" placeholder="Antananarivo, Madagascar" value={data.address||''} onChange={e=>onChange('address',e.target.value)} onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-address" style={labelStyle}>Adresse</label>
+          <input id="patient-address" aria-label="Adresse" style={fieldStyle} type="text" placeholder="Antananarivo, Madagascar" value={data.address||''} onChange={e=>onChange('address',e.target.value)} onFocus={fi} onBlur={bi}/>
         </div>
         <div>
-          <label style={labelStyle}>Contact urgence</label>
-          <input style={fieldStyle} type="text" placeholder="Nom" value={data.emergency_contact_name||''} onChange={e=>onChange('emergency_contact_name',e.target.value)} onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-emergency-contact-name" style={labelStyle}>Contact urgence</label>
+          <input id="patient-emergency-contact-name" aria-label="Contact urgence" style={fieldStyle} type="text" placeholder="Nom" value={data.emergency_contact_name||''} onChange={e=>onChange('emergency_contact_name',e.target.value)} onFocus={fi} onBlur={bi}/>
         </div>
         <div>
-          <label style={labelStyle}>Tél. urgence</label>
-          <input style={fieldStyle} type="text" placeholder="+261 34..." value={data.emergency_contact_phone||''} onChange={e=>onChange('emergency_contact_phone',e.target.value)} onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-emergency-contact-phone" style={labelStyle}>Tél. urgence</label>
+          <input id="patient-emergency-contact-phone" aria-label="Téléphone urgence" style={fieldStyle} type="text" placeholder="+261 34..." value={data.emergency_contact_phone||''} onChange={e=>onChange('emergency_contact_phone',e.target.value)} onFocus={fi} onBlur={bi}/>
         </div>
       </div>
     </div>
@@ -235,16 +235,16 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
       <div style={{ fontSize:11, fontWeight:700, color:'#EF4444', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>🏥 Informations médicales</div>
       <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
         <div>
-          <label style={labelStyle}>Antécédents médicaux</label>
-          <textarea style={{ ...fieldStyle, minHeight:60, resize:'vertical' }} value={data.medical_history||''} onChange={e=>onChange('medical_history',e.target.value)} placeholder="Antécédents médicaux..." onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-medical-history" style={labelStyle}>Antécédents médicaux</label>
+          <textarea id="patient-medical-history" aria-label="Antécédents médicaux" style={{ ...fieldStyle, minHeight:60, resize:'vertical' }} value={data.medical_history||''} onChange={e=>onChange('medical_history',e.target.value)} placeholder="Antécédents médicaux..." onFocus={fi} onBlur={bi}/>
         </div>
         <div>
-          <label style={{ ...labelStyle, color:'#DC2626' }}>⚠️ Allergies</label>
-          <textarea style={{ ...fieldStyle, minHeight:48, resize:'vertical', borderColor: data.allergies ? '#FECACA' : '#E2E8F0' }} value={data.allergies||''} onChange={e=>onChange('allergies',e.target.value)} placeholder="Allergies connues..." onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-allergies" style={{ ...labelStyle, color:'#DC2626' }}>⚠️ Allergies</label>
+          <textarea id="patient-allergies" aria-label="Allergies" style={{ ...fieldStyle, minHeight:48, resize:'vertical', borderColor: data.allergies ? '#FECACA' : '#E2E8F0' }} value={data.allergies||''} onChange={e=>onChange('allergies',e.target.value)} placeholder="Allergies connues..." onFocus={fi} onBlur={bi}/>
         </div>
         <div>
-          <label style={labelStyle}>Médicaments actuels</label>
-          <textarea style={{ ...fieldStyle, minHeight:48, resize:'vertical' }} value={data.current_medications||''} onChange={e=>onChange('current_medications',e.target.value)} placeholder="Traitements en cours..." onFocus={fi} onBlur={bi}/>
+          <label htmlFor="patient-current-medications" style={labelStyle}>Médicaments actuels</label>
+          <textarea id="patient-current-medications" aria-label="Médicaments actuels" style={{ ...fieldStyle, minHeight:48, resize:'vertical' }} value={data.current_medications||''} onChange={e=>onChange('current_medications',e.target.value)} placeholder="Traitements en cours..." onFocus={fi} onBlur={bi}/>
         </div>
       </div>
     </div>
@@ -709,7 +709,7 @@ const PatientManagement = () => {
           </div>
         </div>
         <div style={{ display:'flex', gap:8 }}>
-          <button type="button" onClick={async () => { await fetchPatients(); await fetchPatientStats(); }} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
+          <button type="button" aria-label="Actualiser les patients" onClick={async () => { await fetchPatients(); await fetchPatientStats(); }} style={{ padding:'8px 13px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
           <button type="button" onClick={downloadCsvTemplate} style={{ padding:'9px 18px', borderRadius:10, background:'#fff', color:'#0D7A87', border:'1.5px solid #7DD3DA', cursor:'pointer', display:'flex', alignItems:'center', gap:6, fontSize:14, fontWeight:700 }}>
@@ -718,6 +718,7 @@ const PatientManagement = () => {
           {canImportPatients && (
             <>
               <input
+                aria-label="Fichier CSV patients à importer"
                 ref={importInputRef}
                 type="file"
                 accept=".csv,.cvs,text/csv"
@@ -784,7 +785,7 @@ const PatientManagement = () => {
           <span style={{ width:30, height:30, borderRadius:10, background:searchFocused ? '#E6F4F6' : '#F1F5F9', color:searchFocused ? '#0D7A87' : '#94A3B8', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all .18s ease' }}>
             <Search size={15}/>
           </span>
-          <input placeholder="Nom, prénom, ID patient, téléphone, email, ville, assurance..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
+          <input aria-label="Rechercher des patients" placeholder="Nom, prénom, ID patient, téléphone, email, ville, assurance..." value={search} onChange={e=>{setPage(1);setSearch(e.target.value);}}
             onFocus={()=>setSearchFocused(true)}
             onBlur={()=>setSearchFocused(false)}
             style={{ border:'none', background:'transparent', outline:'none', fontSize:14, flex:1, fontFamily:'inherit', color:'#0F172A', minWidth:0 }}/>
@@ -792,7 +793,7 @@ const PatientManagement = () => {
         </div>
         <div style={{ width:1, height:24, background:'#E2E8F0' }}/>
         {/* Tri */}
-        <select value={sortBy} onChange={e=>setSort(e.target.value)}
+        <select aria-label="Trier les patients" value={sortBy} onChange={e=>setSort(e.target.value)}
           style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#F8FAFC', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer', outline:'none' }}>
           <option value="name">Trier : A→Z</option>
           <option value="recent">Trier : Récents</option>
@@ -801,7 +802,7 @@ const PatientManagement = () => {
         {/* Vue */}
         <div style={{ display:'flex', gap:3 }}>
           {[{k:'list',Icon:List},{k:'grid',Icon:Grid}].map(v => (
-            <button type="button" key={v.k} onClick={()=>setView(v.k)}
+            <button type="button" key={v.k} aria-label={v.k === 'list' ? 'Afficher les patients en liste' : 'Afficher les patients en grille'} onClick={()=>setView(v.k)}
               style={{ width:32, height:32, borderRadius:8, border:'none', cursor:'pointer', background:viewMode===v.k?'#0D7A87':'#F1F5F9', color:viewMode===v.k?'#fff':'#64748B', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s' }}>
               <v.Icon size={14}/>
             </button>

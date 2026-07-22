@@ -309,10 +309,10 @@ const LoginForm = () => {
             <ErrorBox msg={error} />
             <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:16 }}>
               <div className="login-field-anim" style={{ animationDelay:'.08s' }}>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Nom d'utilisateur</label>
+                <label htmlFor="login-username" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Nom d'utilisateur</label>
                 <div style={{ position:'relative' }}>
                   <FieldIcon icon={User} />
-                  <input className="login-premium-input" style={inputStyle} type="text" placeholder="admin"
+                  <input id="login-username" aria-label="Nom d'utilisateur" className="login-premium-input" style={inputStyle} type="text" placeholder="admin"
                     autoComplete="username"
                     value={loginData.username} onChange={e => setLoginData({...loginData, username:e.target.value})}
                     onFocus={e => e.target.style.borderColor='#0D7A87'}
@@ -320,15 +320,15 @@ const LoginForm = () => {
                 </div>
               </div>
               <div className="login-field-anim" style={{ animationDelay:'.16s' }}>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Mot de passe</label>
+                <label htmlFor="login-password" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Mot de passe</label>
                 <div style={{ position:'relative' }}>
                   <FieldIcon icon={Lock} />
-                  <input className="login-premium-input" style={{ ...inputStyle, paddingRight:42 }} type={showPassword?'text':'password'} placeholder="••••••••"
+                  <input id="login-password" aria-label="Mot de passe" className="login-premium-input" style={{ ...inputStyle, paddingRight:42 }} type={showPassword?'text':'password'} placeholder="••••••••"
                     autoComplete="current-password"
                     value={loginData.password} onChange={e => setLoginData({...loginData, password:e.target.value})}
                     onFocus={e => e.target.style.borderColor='#0D7A87'}
                     onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  <button type="button" aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} onClick={() => setShowPassword(!showPassword)}
                     style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8' }}>
                     {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
                   </button>
@@ -405,36 +405,36 @@ const LoginForm = () => {
             <form onSubmit={handleRegister} style={{ display:'flex', flexDirection:'column', gap:14 }}>
               {/* Nom complet */}
               <div>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Nom complet *</label>
-                <input style={{ ...inputStyle, paddingLeft:14 }} type="text" placeholder="Dr. Jean Rakoto"
+                <label htmlFor="register-full-name" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Nom complet *</label>
+                <input id="register-full-name" aria-label="Nom complet" style={{ ...inputStyle, paddingLeft:14 }} type="text" placeholder="Dr. Jean Rakoto"
                   value={registerData.full_name} onChange={e => setRegisterData({...registerData, full_name:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
               </div>
               {/* Username */}
               <div>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Identifiant *</label>
-                <input style={{ ...inputStyle, paddingLeft:14 }} type="text" placeholder="jrakoto"
+                <label htmlFor="register-username" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Identifiant *</label>
+                <input id="register-username" aria-label="Identifiant" style={{ ...inputStyle, paddingLeft:14 }} type="text" placeholder="jrakoto"
                   value={registerData.username} onChange={e => setRegisterData({...registerData, username:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
               </div>
               {/* Email */}
               <div>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Email *</label>
-                <input style={{ ...inputStyle, paddingLeft:14 }} type="email" placeholder="jean@cabinet.mg"
+                <label htmlFor="register-email" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Email *</label>
+                <input id="register-email" aria-label="Email" style={{ ...inputStyle, paddingLeft:14 }} type="email" placeholder="jean@cabinet.mg"
                   value={registerData.email} onChange={e => setRegisterData({...registerData, email:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
               </div>
               {/* Mot de passe */}
               <div>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Mot de passe *</label>
-                <input style={{ ...inputStyle, paddingLeft:14 }} type="password" placeholder="••••••••"
+                <label htmlFor="register-password" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Mot de passe *</label>
+                <input id="register-password" aria-label="Mot de passe" style={{ ...inputStyle, paddingLeft:14 }} type="password" placeholder="••••••••"
                   value={registerData.password} onChange={e => setRegisterData({...registerData, password:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required />
               </div>
               {/* Rôle */}
               <div>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Rôle *</label>
-                <select style={{ ...inputStyle, paddingLeft:14 }} value={registerData.role}
+                <label htmlFor="register-role" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>Rôle *</label>
+                <select id="register-role" style={{ ...inputStyle, paddingLeft:14 }} value={registerData.role}
                   onChange={e => setRegisterData({...registerData, role:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required>
                   <option value="">Sélectionnez votre rôle</option>

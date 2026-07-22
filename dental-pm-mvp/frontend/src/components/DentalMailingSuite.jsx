@@ -564,8 +564,10 @@ const DentalMailingSuite = () => {
           <div style={{ height: 22 }} />
           <StepTitle number="2" title="Préparer" subtitle="Les informations essentielles avant génération." />
 
-          <label style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Objectif</label>
+          <label htmlFor="mailing-objective" style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Objectif</label>
           <textarea
+            id="mailing-objective"
+            aria-label="Objectif"
             value={form.objective}
             onChange={(event) => setForm({ ...form, objective: event.target.value })}
             rows={3}
@@ -574,16 +576,20 @@ const DentalMailingSuite = () => {
 
           <div className="mailing-form-grid" style={{ marginBottom: 12 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Segment</label>
+              <label htmlFor="mailing-segment" style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Segment</label>
               <input
+                id="mailing-segment"
+                aria-label="Segment"
                 value={form.segment}
                 onChange={(event) => setForm({ ...form, segment: event.target.value })}
                 style={{ ...input, marginTop: 6 }}
               />
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Envoi programmé</label>
+              <label htmlFor="mailing-scheduled-at" style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>Envoi programmé</label>
               <input
+                id="mailing-scheduled-at"
+                aria-label="Envoi programmé"
                 type="datetime-local"
                 value={form.scheduled_at}
                 onChange={(event) => setForm({ ...form, scheduled_at: event.target.value })}
@@ -615,6 +621,7 @@ const DentalMailingSuite = () => {
             <div style={{ position: 'relative', marginBottom: 8 }}>
               <Search size={15} color={C.slate} style={{ position: 'absolute', left: 11, top: 12 }} />
               <input
+                aria-label="Rechercher un patient cible"
                 value={patientSearch}
                 onChange={(event) => setPatientSearch(event.target.value)}
                 placeholder="Rechercher un patient par nom, téléphone ou email"
@@ -698,8 +705,8 @@ const DentalMailingSuite = () => {
                 ['esp', 'ESP email']
               ].map(([key, label]) => (
                 <div key={key}>
-                  <label style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>{label}</label>
-                  <input value={form.context[key]} onChange={(event) => setContext(key, event.target.value)} style={{ ...input, marginTop: 5 }} />
+                  <label htmlFor={`mailing-context-${key}`} style={{ fontSize: 12, fontWeight: 800, color: '#475569' }}>{label}</label>
+                  <input id={`mailing-context-${key}`} aria-label={label} value={form.context[key]} onChange={(event) => setContext(key, event.target.value)} style={{ ...input, marginTop: 5 }} />
                 </div>
               ))}
             </div>

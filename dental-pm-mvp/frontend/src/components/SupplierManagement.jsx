@@ -249,10 +249,10 @@ const SupplierManagement = () => {
           <div style={{background:'#fff',borderRadius:14,border:'1px solid #E2E8F0',padding:'13px 18px',marginBottom:16,display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
             <div style={{display:'flex',alignItems:'center',gap:8,flex:1,minWidth:180}}>
               <Search size={14} color="#94A3B8"/>
-              <input placeholder="Rechercher fournisseur..." value={search} onChange={e=>setSearch(e.target.value)}
+              <input aria-label="Rechercher un fournisseur" placeholder="Rechercher fournisseur..." value={search} onChange={e=>setSearch(e.target.value)}
                 style={{...inp,border:'none',background:'transparent',flex:1}}/>
             </div>
-            <select value={typeFilter} onChange={e=>setTypeFilter(e.target.value)} style={{...inp,width:'auto',minWidth:150}}>
+            <select aria-label="Filtrer les fournisseurs par type" value={typeFilter} onChange={e=>setTypeFilter(e.target.value)} style={{...inp,width:'auto',minWidth:150}}>
               <option value="ALL">Tous les types</option>
               {SUPPLIER_TYPES.map(t=><option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
@@ -431,34 +431,34 @@ const SupplierManagement = () => {
         <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:13}}>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div style={{gridColumn:'1/-1'}}>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Nom *</label>
-              <input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Nom du fournisseur" style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="supplier-name" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Nom *</label>
+              <input id="supplier-name" aria-label="Nom du fournisseur" required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Nom du fournisseur" style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Type</label>
-              <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
+              <label htmlFor="supplier-type" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Type</label>
+              <select id="supplier-type" aria-label="Type de fournisseur" value={form.type} onChange={e=>setForm({...form,type:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
                 {SUPPLIER_TYPES.map(t=><option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Téléphone</label>
-              <input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="034 XX XXX XX" style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="supplier-phone" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Téléphone</label>
+              <input id="supplier-phone" aria-label="Téléphone du fournisseur" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="034 XX XXX XX" style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Email</label>
-              <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="contact@fournisseur.mg" style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="supplier-email" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Email</label>
+              <input id="supplier-email" aria-label="Email du fournisseur" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="contact@fournisseur.mg" style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Ville</label>
-              <input value={form.city} onChange={e=>setForm({...form,city:e.target.value})} style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="supplier-city" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Ville</label>
+              <input id="supplier-city" aria-label="Ville du fournisseur" value={form.city} onChange={e=>setForm({...form,city:e.target.value})} style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div style={{gridColumn:'1/-1'}}>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Adresse</label>
-              <input value={form.address} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Adresse complète" style={inp} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="supplier-address" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Adresse</label>
+              <input id="supplier-address" aria-label="Adresse du fournisseur" value={form.address} onChange={e=>setForm({...form,address:e.target.value})} placeholder="Adresse complète" style={inp} onFocus={fi} onBlur={bi}/>
             </div>
             <div style={{gridColumn:'1/-1'}}>
-              <label style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Notes</label>
-              <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Informations supplémentaires..." style={{...inp,resize:'vertical'}} onFocus={fi} onBlur={bi}/>
+              <label htmlFor="supplier-notes" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Notes</label>
+              <textarea id="supplier-notes" aria-label="Notes du fournisseur" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Informations supplémentaires..." style={{...inp,resize:'vertical'}} onFocus={fi} onBlur={bi}/>
             </div>
           </div>
           <div style={{display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9'}}>
