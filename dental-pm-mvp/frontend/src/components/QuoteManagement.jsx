@@ -445,7 +445,7 @@ const QuoteManagement = () => {
         <form onSubmit={handleSubmit} style={{ display:'flex',flexDirection:'column',gap:14 }}>
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
+              <label htmlFor="quote-patient-search" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
               <div style={{ border:'1.5px solid #E2E8F0',borderRadius:12,background:'#fff',overflow:'hidden' }}>
                 {selectedPatient && (
                   <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 10px',background:'#F0FDFE',borderBottom:'1px solid #CCFBF1' }}>
@@ -458,7 +458,7 @@ const QuoteManagement = () => {
                 )}
                 <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                   <Search size={13} color="#94A3B8"/>
-                  <input aria-label="Rechercher un patient" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
+                  <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',outline:'none',fontSize:13,flex:1,minWidth:0 }} />
                 </div>
                 <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
                   {patientMatches.map(p=>(
@@ -514,7 +514,7 @@ const QuoteManagement = () => {
           {/* Items */}
           <div>
             <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569' }}>Prestations</label>
+              <span style={{ fontSize:12,fontWeight:600,color:'#475569' }}>Prestations</span>
               <button type="button" onClick={addItem} style={{ padding:'4px 11px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:11,fontWeight:600,color:'#475569',display:'flex',alignItems:'center',gap:4 }}>
                 <Plus size={11}/>Ajouter
               </button>
@@ -543,8 +543,8 @@ const QuoteManagement = () => {
           </div>
 
           <div>
-            <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Notes</label>
-            <textarea aria-label="Notes du devis" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Notes pour le patient..." style={{ ...inp,resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+            <label htmlFor="quote-notes" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Notes</label>
+            <textarea id="quote-notes" aria-label="Notes du devis" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Notes pour le patient..." style={{ ...inp,resize:'vertical' }} onFocus={fi} onBlur={bi}/>
           </div>
 
           <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>

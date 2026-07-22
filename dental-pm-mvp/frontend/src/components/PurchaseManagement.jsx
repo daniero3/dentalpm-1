@@ -637,14 +637,14 @@ const PurchaseManagement = () => {
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:12 }}>
                 <div>
-                  <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Montant *</label>
-                  <input aria-label="Montant de la dépense" type="number" min="0" value={expense.amount_mga} onChange={e => setExpense(p => ({ ...p, amount_mga:e.target.value }))} placeholder="Ar"
+                  <label htmlFor="purchase-expense-amount" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Montant *</label>
+                  <input id="purchase-expense-amount" aria-label="Montant de la dépense" type="number" min="0" value={expense.amount_mga} onChange={e => setExpense(p => ({ ...p, amount_mga:e.target.value }))} placeholder="Ar"
                     style={inp} onFocus={fi} onBlur={bi}/>
                 </div>
               </div>
               <div>
-                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
-                <textarea aria-label="Notes de la dépense" value={expense.notes} onChange={e => setExpense(p => ({ ...p, notes:e.target.value }))} rows={2} placeholder="Référence facture, période concernée, remarque..."
+                <label htmlFor="purchase-expense-notes" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
+                <textarea id="purchase-expense-notes" aria-label="Notes de la dépense" value={expense.notes} onChange={e => setExpense(p => ({ ...p, notes:e.target.value }))} rows={2} placeholder="Référence facture, période concernée, remarque..."
                   style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
               </div>
               <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:12, padding:'12px 14px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -667,7 +667,7 @@ const PurchaseManagement = () => {
               {/* Articles */}
               <div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-                  <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Articles</label>
+                  <span style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Articles</span>
                   <button type="button" onClick={addItem} style={{ padding:'5px 12px', borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#475569', display:'flex', alignItems:'center', gap:5 }}>
                     <Plus size={12}/>Ajouter
                   </button>
@@ -701,8 +701,8 @@ const PurchaseManagement = () => {
               </div>
 
               <div>
-                <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
-                <textarea aria-label="Notes du bon fournisseur" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Instructions de livraison, notes..."
+                <label htmlFor="purchase-order-notes" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Notes</label>
+                <textarea id="purchase-order-notes" aria-label="Notes du bon fournisseur" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Instructions de livraison, notes..."
                   style={{ ...inp, resize:'vertical' }} onFocus={fi} onBlur={bi}/>
               </div>
             </>

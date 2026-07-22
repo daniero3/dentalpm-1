@@ -686,7 +686,7 @@ const InvoiceManagement = () => {
                 </button>}
               </div>
               <div style={{ marginBottom:12 }}>
-                <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:8 }}>Méthode de paiement</label>
+                <div style={{ fontSize:12,fontWeight:600,color:'#475569',marginBottom:8 }}>Méthode de paiement</div>
                 <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6 }}>
                   {PMETHODS.map(m=>(
                     <button key={m.v} type="button" onClick={()=>setPayData(prev => ({...prev, payment_method: m.v, reference_number: canUsePaymentReference(m.v) ? prev.reference_number : ''}))}
@@ -746,10 +746,11 @@ const InvoiceManagement = () => {
         <form onSubmit={handleSubmit} style={{ display:'flex',flexDirection:'column',gap:14 }}>
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
             <div>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
+              <label htmlFor="invoice-patient-search" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
               <div style={{ position:'relative', marginBottom:7 }}>
                 <Search size={13} color="#94A3B8" style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)' }}/>
                 <input
+                  id="invoice-patient-search"
                   aria-label="Rechercher un patient"
                   value={patientSearch}
                   onChange={e=>setPatientSearch(e.target.value)}
@@ -782,7 +783,7 @@ const InvoiceManagement = () => {
 
           {/* Remise présets */}
           <div>
-            <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:6 }}>Remise</label>
+            <div style={{ fontSize:12,fontWeight:600,color:'#475569',marginBottom:6 }}>Remise</div>
             <div style={{ display:'flex',gap:6,flexWrap:'wrap',alignItems:'center' }}>
               {DISCOUNT_PRESETS.map(d=>(
                 <button key={d.n} type="button" onClick={()=>setForm({...form,discount_percentage:d.p})}
@@ -819,7 +820,7 @@ const InvoiceManagement = () => {
           {/* Items */}
           <div>
             <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8 }}>
-              <label style={{ fontSize:12,fontWeight:600,color:'#475569' }}>Prestations</label>
+              <span style={{ fontSize:12,fontWeight:600,color:'#475569' }}>Prestations</span>
               <button type="button" onClick={addItem} style={{ padding:'4px 11px',borderRadius:8,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:11,fontWeight:600,color:'#475569',display:'flex',alignItems:'center',gap:4 }}>
                 <Plus size={11}/>Ajouter
               </button>
@@ -847,8 +848,8 @@ const InvoiceManagement = () => {
           </div>
 
           <div>
-            <label style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Notes</label>
-            <textarea aria-label="Notes internes de la facture" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Notes internes..." style={{ ...inp,resize:'vertical' }} onFocus={fi} onBlur={bi}/>
+            <label htmlFor="invoice-notes" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Notes</label>
+            <textarea id="invoice-notes" aria-label="Notes internes de la facture" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Notes internes..." style={{ ...inp,resize:'vertical' }} onFocus={fi} onBlur={bi}/>
           </div>
 
           <div style={{ display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9' }}>
