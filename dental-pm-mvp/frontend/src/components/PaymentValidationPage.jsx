@@ -283,10 +283,10 @@ export default function PaymentValidationPage() {
               </div>
             ) : (
               <div style={{marginBottom:18}}>
-                <label style={{display:'block',fontSize:13,fontWeight:600,color:'#475569',marginBottom:6}}>
+                <label htmlFor="payment-rejection-note" style={{display:'block',fontSize:13,fontWeight:600,color:'#475569',marginBottom:6}}>
                   Motif de rejet <span style={{color:'#EF4444'}}>*</span>
                 </label>
-                <textarea aria-label="Motif de rejet" rows={3} className="av-inp" placeholder="Ex: Référence de paiement invalide, montant incorrect..."
+                <textarea id="payment-rejection-note" aria-label="Motif de rejet" rows={3} className="av-inp" placeholder="Ex: Référence de paiement invalide, montant incorrect..."
                   value={note} onChange={e=>setNote(e.target.value)}/>
                 <p style={{fontSize:12,color:'#94A3B8',marginTop:4}}>Ce message sera visible par le cabinet</p>
               </div>

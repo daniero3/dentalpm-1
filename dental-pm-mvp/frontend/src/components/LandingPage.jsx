@@ -505,8 +505,8 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
               <div>
                 {[{label:'Nom du cabinet',name:'cabinet',ph:'Cabinet Dentaire Dr. Rakoto',type:'text'},{label:'Email professionnel',name:'email',ph:'contact@cabinet.mg',type:'email'},{label:'Téléphone MVola / Orange',name:'phone',ph:'034 XX XXX XX',type:'tel'},{label:'Ville',name:'city',ph:'Antananarivo',type:'text'},{label:'Mot de passe',name:'password',ph:'Minimum 10 caractères',type:'password'},{label:'Confirmer le mot de passe',name:'confirm_password',ph:'Répétez le mot de passe',type:'password'}].map(f=>(
                   <div key={f.name} style={{marginBottom:12}}>
-                    <label style={{display:'block',fontSize:13,fontWeight:600,color:'var(--slate)',marginBottom:5}}>{f.label} *</label>
-                    <input aria-label={f.label} type={f.type} placeholder={f.ph} required value={form[f.name]} onChange={e=>setForm(p=>({...p,[f.name]:e.target.value}))} style={inp} onFocus={focus} onBlur={blur}/>
+                    <label htmlFor={`landing-register-${f.name}`} style={{display:'block',fontSize:13,fontWeight:600,color:'var(--slate)',marginBottom:5}}>{f.label} *</label>
+                    <input id={`landing-register-${f.name}`} aria-label={f.label} type={f.type} placeholder={f.ph} required value={form[f.name]} onChange={e=>setForm(p=>({...p,[f.name]:e.target.value}))} style={inp} onFocus={focus} onBlur={blur}/>
                   </div>
                 ))}
                 {form.password && !passwordStrong && (
@@ -520,8 +520,8 @@ const InscriptionModal = ({ show, plan, onClose, navigate }) => {
                   </div>
                 )}
                 <div style={{marginBottom:18}}>
-                  <label style={{display:'block',fontSize:13,fontWeight:600,color:'var(--slate)',marginBottom:5}}>Nombre de praticiens</label>
-                  <select value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))} style={{...inp,cursor:'pointer',background:'#fff'}}>
+                  <label htmlFor="landing-register-dentists" style={{display:'block',fontSize:13,fontWeight:600,color:'var(--slate)',marginBottom:5}}>Nombre de praticiens</label>
+                  <select id="landing-register-dentists" value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))} style={{...inp,cursor:'pointer',background:'#fff'}}>
                     {['1 praticien','2-3 praticiens','4-5 praticiens','5+ praticiens'].map((o,i)=><option key={i} value={[1,'2-3','4-5','5+'][i]}>{o}</option>)}
                   </select>
                 </div>
@@ -1210,16 +1210,16 @@ export default function LandingPage() {
                 <h3 style={{fontFamily:'Bricolage Grotesque',fontWeight:800,fontSize:isMobile?18:22,color:'#fff',marginBottom:18}}>Envoyer un message</h3>
                 {[{l:'Votre nom',n:'nom',ph:'Dr. Rakoto Jean',t:'text'},{l:'Email',n:'email',ph:'contact@cabinet.mg',t:'email'}].map(f=>(
                   <div key={f.n} style={{marginBottom:13}}>
-                    <label style={{display:'block',fontSize:13,fontWeight:600,color:'rgba(255,255,255,.6)',marginBottom:5}}>{f.l}</label>
-                    <input aria-label={f.l} type={f.t} placeholder={f.ph} value={contact[f.n]} onChange={e=>setContact(p=>({...p,[f.n]:e.target.value}))}
+                    <label htmlFor={`landing-contact-${f.n}`} style={{display:'block',fontSize:13,fontWeight:600,color:'rgba(255,255,255,.6)',marginBottom:5}}>{f.l}</label>
+                    <input id={`landing-contact-${f.n}`} aria-label={f.l} type={f.t} placeholder={f.ph} value={contact[f.n]} onChange={e=>setContact(p=>({...p,[f.n]:e.target.value}))}
                       style={{width:'100%',padding:'12px 14px',borderRadius:11,border:'1.5px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.07)',color:'#fff',fontSize:16,fontFamily:'Inter,sans-serif',outline:'none',transition:'border-color .2s'}}
                       onFocus={e=>e.target.style.borderColor='rgba(255,255,255,.45)'}
                       onBlur={e=>e.target.style.borderColor='rgba(255,255,255,.15)'}/>
                   </div>
                 ))}
                 <div style={{marginBottom:16}}>
-                  <label style={{display:'block',fontSize:13,fontWeight:600,color:'rgba(255,255,255,.6)',marginBottom:5}}>Message</label>
-                  <textarea aria-label="Message" rows={isMobile?3:5} placeholder="Décrivez votre besoin..." value={contact.message} onChange={e=>setContact(p=>({...p,message:e.target.value}))}
+                  <label htmlFor="landing-contact-message" style={{display:'block',fontSize:13,fontWeight:600,color:'rgba(255,255,255,.6)',marginBottom:5}}>Message</label>
+                  <textarea id="landing-contact-message" aria-label="Message" rows={isMobile?3:5} placeholder="Décrivez votre besoin..." value={contact.message} onChange={e=>setContact(p=>({...p,message:e.target.value}))}
                     style={{width:'100%',padding:'12px 14px',borderRadius:11,border:'1.5px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.07)',color:'#fff',fontSize:16,fontFamily:'Inter,sans-serif',outline:'none',resize:'vertical',transition:'border-color .2s'}}
                     onFocus={e=>e.target.style.borderColor='rgba(255,255,255,.45)'}
                     onBlur={e=>e.target.style.borderColor='rgba(255,255,255,.15)'}/>

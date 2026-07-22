@@ -555,14 +555,14 @@ const MessagingManagement = () => {
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div>
-              <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Type de message</label>
-              <select value={tplForm.key} onChange={e => setTplForm({...tplForm, key:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
+              <label htmlFor="message-template-type" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Type de message</label>
+              <select id="message-template-type" value={tplForm.key} onChange={e => setTplForm({...tplForm, key:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
                 {TEMPLATE_KEYS.map(t => <option key={t.key} value={t.key}>{t.icon} {t.label}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Canal d'envoi</label>
-              <select value={tplForm.channel} onChange={e => setTplForm({...tplForm, channel:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
+              <label htmlFor="message-template-channel" style={{ fontSize:13, fontWeight:600, color:'#475569', display:'block', marginBottom:5 }}>Canal d'envoi</label>
+              <select id="message-template-channel" value={tplForm.channel} onChange={e => setTplForm({...tplForm, channel:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
                 <option value="SMS">📱 SMS</option>
                 <option value="EMAIL">📧 Email</option>
               </select>
@@ -578,7 +578,7 @@ const MessagingManagement = () => {
 
           <div>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:5 }}>
-              <label style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Texte du message</label>
+              <label htmlFor="message-template-text" style={{ fontSize:13, fontWeight:600, color:'#475569' }}>Texte du message</label>
               <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
                 {PLACEHOLDERS.map(p => (
                   <button type="button" key={p} onClick={() => setTplForm(f => ({...f, text: f.text + p}))}

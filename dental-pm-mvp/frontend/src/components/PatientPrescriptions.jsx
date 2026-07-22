@@ -37,7 +37,7 @@ const emptyItem = () => ({ medication:'', dosage:'', posology:'', duration:'' })
    MODAL SUB-COMPONENTS
 ══════════════════════════════════════════════════════ */
 
-const MedSearch = ({ value, onChange, suggestions, onPick }) => {
+const MedSearch = ({ id, value, onChange, suggestions, onPick }) => {
   const [open, setOpen] = useState(false);
   const [list, setList] = useState([]);
   const ref = useRef(null);
@@ -58,14 +58,14 @@ const MedSearch = ({ value, onChange, suggestions, onPick }) => {
     <div ref={ref} style={{ position:'relative' }}>
       <div style={{ position:'relative' }}>
         <Search size={13} style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)', color:'#94A3B8', pointerEvents:'none' }}/>
-        <input aria-label="Nom du médicament" value={value} autoComplete="off" placeholder="Nom du médicament…"
+        <input id={id} aria-label="Nom du médicament" value={value} autoComplete="off" placeholder="Nom du médicament…"
           onChange={e => { onChange(e.target.value); setOpen(true); }}
           onFocus={e => { setOpen(true); e.target.style.borderColor=T; e.target.style.boxShadow=`0 0 0 3px ${T}18`; }}
           onBlur={e  => { e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none'; }}
           style={{ width:'100%', padding:'9px 32px', border:'1.5px solid #E2E8F0', borderRadius:10, fontSize:14, fontWeight:600, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'all .15s', background:'#fff' }}
         />
         {value && (
-          <button type="button" onMouseDown={() => onChange('')} style={{ position:'absolute', right:9, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8', display:'flex', padding:3 }}>
+          <button type="button" aria-label="Effacer le médicament" onMouseDown={() => onChange('')} style={{ position:'absolute', right:9, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#94A3B8', display:'flex', padding:3 }}>
             <X size={12}/>
           </button>
         )}
@@ -140,8 +140,8 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
       {isActive && (
         <div style={{ padding:'14px 16px' }}>
           <div style={{ marginBottom:14 }}>
-            <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:6 }}>Médicament *</label>
-            <MedSearch value={item.medication} onChange={v => onUpdate(index,'medication',v.toUpperCase())} suggestions={suggestions}
+            <label htmlFor={`prescription-medication-${index}`} style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:6 }}>Médicament *</label>
+            <MedSearch id={`prescription-medication-${index}`} value={item.medication} onChange={v => onUpdate(index,'medication',v.toUpperCase())} suggestions={suggestions}
               onPick={m => {
                 onUpdate(index,'medication',m.name.toUpperCase());
                 if(m.dosage)   onUpdate(index,'dosage',m.dosage);
@@ -156,8 +156,8 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
               { field:'duration', label:'Durée',     chips:DURATION, placeholder:'7 j' },
             ].map(({ field, label, chips, placeholder }) => (
               <div key={field}>
-                <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>{label}</label>
-                <input aria-label={`${label} du médicament ${index + 1}`} value={item[field]} placeholder={placeholder} onChange={e => onUpdate(index,field,e.target.value)}
+                <label htmlFor={`prescription-${field}-${index}`} style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>{label}</label>
+                <input id={`prescription-${field}-${index}`} aria-label={`${label} du médicament ${index + 1}`} value={item[field]} placeholder={placeholder} onChange={e => onUpdate(index,field,e.target.value)}
                   onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
                   onBlur={e=>{e.target.style.borderColor='#E2E8F0';e.target.style.boxShadow='none';}}
                   style={{ width:'100%', padding:'8px 10px', border:'1.5px solid #E2E8F0', borderRadius:9, fontSize:13, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'all .15s' }}/>
@@ -360,8 +360,8 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
               </button>
             </div>
             <div style={{ padding:'12px 18px', background:'#fff', borderTop:'1px solid #E2E8F0', flexShrink:0 }}>
-              <label style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>Notes / Instructions complémentaires</label>
-              <textarea aria-label="Notes et instructions complémentaires" value={formData.notes} onChange={e => setFormData({...formData, notes:e.target.value})}
+              <label htmlFor="prescription-notes" style={{ fontSize:10, fontWeight:700, color:'#64748B', textTransform:'uppercase', letterSpacing:'.07em', display:'block', marginBottom:5 }}>Notes / Instructions complémentaires</label>
+              <textarea id="prescription-notes" aria-label="Notes et instructions complémentaires" value={formData.notes} onChange={e => setFormData({...formData, notes:e.target.value})}
                 placeholder="Ex : Prendre avec de la nourriture, éviter l'alcool…" rows={2}
                 onFocus={e=>{e.target.style.borderColor=T;e.target.style.boxShadow=`0 0 0 3px ${T}18`;}}
                 onBlur={e=>{e.target.style.borderColor='#E2E8F0';e.target.style.boxShadow='none';}}

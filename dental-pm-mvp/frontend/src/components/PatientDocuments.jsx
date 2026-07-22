@@ -277,20 +277,20 @@ const PatientDocuments = ({ patientIdOverride = null, embedded = false }) => {
       <Modal open={isUploadOpen} onClose={() => setIsUploadOpen(false)} title="Ajouter un document">
         <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>Catégorie *</label>
-            <select className={selectClass} value={uploadForm.category} onChange={e => setUploadForm(f => ({ ...f, category: e.target.value }))}>
+            <label htmlFor="patient-document-category" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>Catégorie *</label>
+            <select id="patient-document-category" className={selectClass} value={uploadForm.category} onChange={e => setUploadForm(f => ({ ...f, category: e.target.value }))}>
               {Object.entries(CATEGORIES).map(([key, { label }]) => (
                 <option key={key} value={key}>{label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>Description</label>
-            <Input value={uploadForm.description} onChange={e => setUploadForm(f => ({ ...f, description: e.target.value }))} placeholder="Description optionnelle..." />
+            <label htmlFor="patient-document-description" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>Description</label>
+            <Input id="patient-document-description" value={uploadForm.description} onChange={e => setUploadForm(f => ({ ...f, description: e.target.value }))} placeholder="Description optionnelle..." />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>Fichier * (JPG, PNG, PDF — max 5MB)</label>
-            <Input ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileSelect} />
+            <label htmlFor="patient-document-file" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#475569' }}>Fichier * (JPG, PNG, PDF — max 5MB)</label>
+            <Input id="patient-document-file" ref={fileInputRef} type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileSelect} />
             {uploadForm.file && (
               <p style={{ fontSize: 12, color: '#0EA570', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <CheckCircle size={13} /> {uploadForm.file.name} ({formatSize(uploadForm.file.size)})

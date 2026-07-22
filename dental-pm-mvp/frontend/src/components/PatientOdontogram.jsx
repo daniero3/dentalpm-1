@@ -349,20 +349,21 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Statut</label>
-            <select value={editForm.status} onChange={handleStatusChange} style={selectStyle} data-testid="status-select">
+            <label htmlFor="odontogram-status" style={labelStyle}>Statut</label>
+            <select id="odontogram-status" value={editForm.status} onChange={handleStatusChange} style={selectStyle} data-testid="status-select">
               {Object.entries(STATUSES).map(([key, { label }]) => <option key={key} value={key}>{label}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Surface</label>
-            <select value={editForm.surface} onChange={handleSurfaceChange} style={selectStyle}>
+            <label htmlFor="odontogram-surface" style={labelStyle}>Surface</label>
+            <select id="odontogram-surface" value={editForm.surface} onChange={handleSurfaceChange} style={selectStyle}>
               {SURFACES.map(s => <option key={s} value={s}>{SURFACE_LABELS[s]}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Note</label>
+            <label htmlFor="odontogram-note" style={labelStyle}>Note</label>
             <textarea
+              id="odontogram-note"
               aria-label="Note de l’odontogramme"
               value={editForm.note}
               onChange={handleNoteChange}
