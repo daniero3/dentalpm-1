@@ -96,7 +96,7 @@ const Modal = ({open,onClose,title,desc,children}) => {
   return(
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(15,23,42,.55)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
       <div style={{background:'#fff',borderRadius:18,padding:28,width:'100%',maxWidth: 520,boxShadow:'0 20px 60px rgba(15,23,42,.2)',border:'1px solid #E2E8F0',maxHeight:'90vh',overflowY:'auto',position:'relative'}}>
-        <button type="button" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}><X size={15}/></button>
+        <button type="button" aria-label="Fermer la fenêtre fournisseur" onClick={onClose} style={{position:'absolute',top:14,right:14,background:'#F8FAFC',border:'none',cursor:'pointer',color:'#64748B',padding:7,borderRadius:8,display:'flex',alignItems:'center'}}><X size={15}/></button>
         <div style={{marginBottom:18,paddingRight:28}}>
           {title&&<h2 style={{fontFamily:'Plus Jakarta Sans',fontSize:17,fontWeight:700,color:'#0F172A',margin:0}}>{title}</h2>}
           {desc&&<p style={{fontSize:13,color:'#64748B',marginTop:4}}>{desc}</p>}
