@@ -99,7 +99,7 @@ export default function PWAInstallPrompt() {
           </button>
         )}
       </div>
-      <button type="button" onClick={dismiss}
+      <button type="button" aria-label="Fermer l’invite d’installation" onClick={dismiss}
         style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,.5)', padding:4, flexShrink:0 }}>
         <X size={14}/>
       </button>

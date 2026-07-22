@@ -66,8 +66,9 @@ const StripeCheckoutBtn = ({ plan, form, apiUrl, setTempPwd, setDone, setAdminUs
 
 const Field = ({ label, name, placeholder, type = 'text', value, onChange, style, onFocus, onBlur, delay = 0 }) => (
   <div className="premium-field" style={{ animationDelay:`${delay}ms` }}>
-    <label style={{ display:'block', fontSize:13, fontWeight:700, color:'#475569', marginBottom:5 }}>{label}</label>
+    <label htmlFor={`register-${name}`} style={{ display:'block', fontSize:13, fontWeight:700, color:'#475569', marginBottom:5 }}>{label}</label>
     <input
+      id={`register-${name}`}
       aria-label={label}
       type={type}
       placeholder={placeholder}
@@ -228,8 +229,8 @@ export default function RegisterPage() {
                     </div>
                   )}
                   <div className="premium-field" style={{ animationDelay:'300ms' }}>
-                    <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Nombre de praticiens</label>
-                    <select value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))}
+                    <label htmlFor="register-dentists" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:5 }}>Nombre de praticiens</label>
+                    <select id="register-dentists" value={form.dentists} onChange={e=>setForm(p=>({...p,dentists:e.target.value}))}
                       style={{ ...inp, cursor:'pointer', background:'#fff' }}>
                       {['1 praticien','2-3 praticiens','4-5 praticiens','5+ praticiens'].map((o,i)=>(
                         <option key={i} value={['1','2-3','4-5','5+'][i]}>{o}</option>

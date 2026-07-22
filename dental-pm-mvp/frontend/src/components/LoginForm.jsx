@@ -360,7 +360,7 @@ const LoginForm = () => {
         {step === STEP_CLINIC && (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-              <button type="button" onClick={() => { setStep(STEP_LOGIN); setError(''); }}
+              <button type="button" aria-label="Retour à la connexion" onClick={() => { setStep(STEP_LOGIN); setError(''); }}
                 style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', padding:4, borderRadius:6 }}>
                 <ArrowLeft size={18}/>
               </button>
@@ -396,7 +396,7 @@ const LoginForm = () => {
         {step === STEP_REGISTER && (
           <>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-              <button type="button" onClick={() => { setStep(STEP_LOGIN); setError(''); }}
+              <button type="button" aria-label="Retour à la connexion" onClick={() => { setStep(STEP_LOGIN); setError(''); }}
                 style={{ background:'none', border:'none', cursor:'pointer', color:'#64748B', padding:4, borderRadius:6 }}>
                 <ArrowLeft size={18}/>
               </button>
@@ -449,10 +449,10 @@ const LoginForm = () => {
               </div>
               {/* ✅ Sélection Cabinet */}
               <div>
-                <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>
+                <label htmlFor="register-clinic" style={{ display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 }}>
                   Cabinet * {loadingClinics && <span style={{ color:'#94A3B8', fontWeight:400, marginLeft:8 }}>Chargement...</span>}
                 </label>
-                <select style={{ ...inputStyle, paddingLeft:14 }} value={registerData.clinic_id}
+                <select id="register-clinic" style={{ ...inputStyle, paddingLeft:14 }} value={registerData.clinic_id}
                   onChange={e => setRegisterData({...registerData, clinic_id:e.target.value})}
                   onFocus={e => e.target.style.borderColor='#0D7A87'} onBlur={e => e.target.style.borderColor='#E2E8F0'} required>
                   <option value="">Sélectionnez votre cabinet</option>
