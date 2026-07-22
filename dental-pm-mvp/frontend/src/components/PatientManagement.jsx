@@ -289,6 +289,7 @@ const ActionBtn = ({ icon: Icon, label, to, onClick, color='#0D7A87' }) => {
   const btn = (
     <button type="button" title={label} onClick={onClick}
       onMouseOver={() => setHover(true)} onMouseOut={() => setHover(false)}
+      onFocus={() => setHover(true)} onBlur={() => setHover(false)}
       style={{ width:44, height:44, borderRadius:12, border:`1.5px solid ${hover?color:'#E2E8F0'}`, background:hover?`${color}12`:'#fff', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:3, color:hover?color:'#94A3B8', transition:'all .18s', flexShrink:0, padding:'4px 2px' }}>
       <Icon size={18}/>
       <span style={{ fontSize:9, fontWeight:700, color:hover?color:'#94A3B8', lineHeight:1, textAlign:'center', whiteSpace:'nowrap' }}>{label.length > 8 ? label.slice(0,8) : label}</span>
@@ -768,7 +769,9 @@ const PatientManagement = () => {
         ].map((k,i) => (
           <button type="button" key={i} onClick={k.action} style={{ background:'#fff', borderRadius:14, border:`1.5px solid ${(genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total')?k.c:'#E2E8F0'}`, padding:'14px 16px', cursor:'pointer', textAlign:'left', transition:'all .2s', display:'flex', alignItems:'center', gap:11 }}
             onMouseOver={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
-            onMouseOut={e=>{e.currentTarget.style.borderColor=((genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total'))?k.c:'#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
+            onMouseOut={e=>{e.currentTarget.style.borderColor=((genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total'))?k.c:'#E2E8F0';e.currentTarget.style.boxShadow='none';}}
+            onFocus={e=>{e.currentTarget.style.borderColor=k.c;e.currentTarget.style.boxShadow=`0 4px 12px ${k.c}20`;}}
+            onBlur={e=>{e.currentTarget.style.borderColor=((genderFilter==='M'&&k.l==='Hommes')||(genderFilter==='F'&&k.l==='Femmes')||(genderFilter==='ALL'&&k.l==='Total'))?k.c:'#E2E8F0';e.currentTarget.style.boxShadow='none';}}>
             <div style={{ width:36, height:36, borderRadius:10, background:k.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{k.icon}</div>
             <div>
               <div style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A' }}>{k.v}</div>
@@ -848,7 +851,9 @@ const PatientManagement = () => {
               <div key={p.id} className="pt-card"
                 style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:idx<filtered.length-1?'1px solid #F1F5F9':'none', flexWrap:'wrap', gap:14, animationDelay:`${Math.min(idx,.2)*0.04}s`, transition:'background .15s', cursor:'default' }}
                 onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'}
-                onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                onMouseOut={e=>e.currentTarget.style.background='transparent'}
+                onFocus={e=>e.currentTarget.style.background='#FAFBFC'}
+                onBlur={e=>e.currentTarget.style.background='transparent'}>
                 {/* Avatar + infos */}
                 <div style={{ display:'flex', alignItems:'center', gap:14, minWidth:0, flex:1 }}>
                   <Avatar p={p} size={46}/>
@@ -892,7 +897,9 @@ const PatientManagement = () => {
             return (
               <div key={p.id} className="pt-card patient-box" style={{ background:'#fff', borderRadius:22, border:'1.5px solid #E2E8F0', padding:'22px', transition:'all .2s', animationDelay:`${Math.min(idx,.2)*0.04}s` }}
                 onMouseOver={e=>{e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
-                onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}>
+                onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}
+                onFocus={e=>{e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
+                onBlur={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}>
                 <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
                   <Avatar p={p} size={50}/>
                   <div style={{ flex:1, minWidth:0 }}>
@@ -1013,6 +1020,18 @@ const PatientManagement = () => {
                       e.currentTarget.style.boxShadow=`0 6px 16px ${a.c}25`;
                     }}
                     onMouseOut={e=>{
+                      e.currentTarget.style.background=`${a.c}08`;
+                      e.currentTarget.style.borderColor=`${a.c}24`;
+                      e.currentTarget.style.transform='translateY(0)';
+                      e.currentTarget.style.boxShadow='none';
+                    }}
+                    onFocus={e=>{
+                      e.currentTarget.style.background=`${a.c}18`;
+                      e.currentTarget.style.borderColor=a.c;
+                      e.currentTarget.style.transform='translateY(-2px)';
+                      e.currentTarget.style.boxShadow=`0 6px 16px ${a.c}25`;
+                    }}
+                    onBlur={e=>{
                       e.currentTarget.style.background=`${a.c}08`;
                       e.currentTarget.style.borderColor=`${a.c}24`;
                       e.currentTarget.style.transform='translateY(0)';

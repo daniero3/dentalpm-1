@@ -718,7 +718,9 @@ export default function LandingPage() {
               <button type="button" onClick={toggleTheme} title={isDark?'Mode clair':'Mode sombre'}
                 style={{width:38,height:38,borderRadius:10,border:`1.5px solid ${themeButtonBorder}`,background:themeButtonBg,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .3s',marginLeft:4,flexShrink:0}}
                 onMouseOver={e=>{e.currentTarget.style.borderColor='var(--teal)';}}
-                onMouseOut={e=>{e.currentTarget.style.borderColor=themeButtonBorder;}}>
+                onMouseOut={e=>{e.currentTarget.style.borderColor=themeButtonBorder;}}
+                onFocus={e=>{e.currentTarget.style.borderColor='var(--teal)';}}
+                onBlur={e=>{e.currentTarget.style.borderColor=themeButtonBorder;}}>
                 {isDark
                   ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
                   : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D7A87" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
@@ -893,7 +895,9 @@ export default function LandingPage() {
                 font:'inherit',
               }}
               onMouseOver={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)';e.currentTarget.style.borderColor='rgba(255,255,255,.18)';e.currentTarget.style.transform='translateY(-4px)';}}
-              onMouseOut={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)';e.currentTarget.style.borderColor='rgba(255,255,255,.08)';e.currentTarget.style.transform='translateY(0)';}}>
+              onMouseOut={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)';e.currentTarget.style.borderColor='rgba(255,255,255,.08)';e.currentTarget.style.transform='translateY(0)';}}
+              onFocus={e=>{e.currentTarget.style.background='rgba(255,255,255,.08)';e.currentTarget.style.borderColor='rgba(255,255,255,.18)';e.currentTarget.style.transform='translateY(-4px)';}}
+              onBlur={e=>{e.currentTarget.style.background='rgba(255,255,255,.04)';e.currentTarget.style.borderColor='rgba(255,255,255,.08)';e.currentTarget.style.transform='translateY(0)';}}>
                 {/* Pastille couleur */}
                 <div style={{width:44,height:44,borderRadius:13,background:`${item.color}18`,border:`1px solid ${item.color}33`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,marginBottom:14}}>{item.icon}</div>
                 {/* Question */}
@@ -1271,7 +1275,9 @@ export default function LandingPage() {
               <a key={h} href={h}
                 style={{color:'rgba(255,255,255,.4)',fontSize:12,textDecoration:'none',fontWeight:500,transition:'color .2s'}}
                 onMouseOver={e=>e.currentTarget.style.color='#fff'}
-                onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.4)'}>
+                onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,.4)'}
+                onFocus={e=>e.currentTarget.style.color='#fff'}
+                onBlur={e=>e.currentTarget.style.color='rgba(255,255,255,.4)'}>
                 {l}
               </a>
             ))}
@@ -1293,7 +1299,9 @@ export default function LandingPage() {
                 title={s.label}
                 style={{ width:34, height:34, borderRadius:10, background:'rgba(255,255,255,.08)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s', textDecoration:'none', color:'#fff' }}
                 onMouseOver={e=>{ e.currentTarget.style.background='rgba(13,122,135,.4)'; e.currentTarget.style.borderColor='rgba(13,122,135,.6)'; }}
-                onMouseOut={e=>{ e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor='rgba(255,255,255,.1)'; }}>
+                onMouseOut={e=>{ e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor='rgba(255,255,255,.1)'; }}
+                onFocus={e=>{ e.currentTarget.style.background='rgba(13,122,135,.4)'; e.currentTarget.style.borderColor='rgba(13,122,135,.6)'; }}
+                onBlur={e=>{ e.currentTarget.style.background='rgba(255,255,255,.08)'; e.currentTarget.style.borderColor='rgba(255,255,255,.1)'; }}>
                 {s.icon}
               </a>
             ))}

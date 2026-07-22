@@ -319,7 +319,9 @@ function UserView({ user }) {
             <button type="button" onClick={()=>stripeCheckout(plan, API)}
               style={{ padding:'9px 18px', borderRadius:10, background:'#635BFF', color:'#fff', fontWeight:700, fontSize:13, border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:6, whiteSpace:'nowrap', boxShadow:'0 4px 12px rgba(99,91,255,.3)' }}
               onMouseOver={e=>{e.currentTarget.style.background='#4F46E5';}}
-              onMouseOut={e=>{e.currentTarget.style.background='#635BFF';}}>
+              onMouseOut={e=>{e.currentTarget.style.background='#635BFF';}}
+              onFocus={e=>{e.currentTarget.style.background='#4F46E5';}}
+              onBlur={e=>{e.currentTarget.style.background='#635BFF';}}>
               💳 Payer avec Stripe
             </button>
           </div>
@@ -392,7 +394,9 @@ function UserView({ user }) {
                   <button type="button" key={pl} onClick={()=>stripeCheckout(pl, API)}
                     style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'12px 8px', borderRadius:12, border:`1.5px solid ${isCurrent?'#635BFF':pc4.border}`, background:isCurrent?'#635BFF':pc4.bg, cursor:'pointer', transition:'all .15s' }}
                     onMouseOver={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 16px rgba(99,91,255,.25)';}}
-                    onMouseOut={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
+                    onMouseOut={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}
+                    onFocus={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 16px rgba(99,91,255,.25)';}}
+                    onBlur={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='none';}}>
                     <div style={{ width:32, height:32, borderRadius:9, background:isCurrent?'rgba(255,255,255,.2)':pc4.text+'18', display:'flex', alignItems:'center', justifyContent:'center' }}>
                       <Ico4 size={16} color={isCurrent?'#fff':pc4.text}/>
                     </div>
@@ -434,7 +438,9 @@ function UserView({ user }) {
                     {payments.map((p,i) => (
                       <tr key={p.id} style={{ borderBottom:i<payments.length-1?'1px solid #F8FAFC':'none' }}
                         onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'}
-                        onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                        onMouseOut={e=>e.currentTarget.style.background='transparent'}
+                        onFocus={e=>e.currentTarget.style.background='#FAFBFC'}
+                        onBlur={e=>e.currentTarget.style.background='transparent'}>
                         <td style={{ padding:'11px 12px', fontFamily:'monospace', fontSize:11, color:'#64748B' }}>{p.reference||`#${(p.id||'').slice(-6)}`}</td>
                         <td style={{ padding:'11px 12px' }}>
                           <span style={{ background:PLAN_CFG[p.plan_code]?.bg||'#F1F5F9', color:PLAN_CFG[p.plan_code]?.text||'#475569', padding:'2px 8px', borderRadius:99, fontSize:11, fontWeight:700 }}>{p.plan_code||'—'}</span>
@@ -447,7 +453,9 @@ function UserView({ user }) {
                           <button type="button" onClick={()=>downloadInvoicePDF(p)}
                             style={{ display:'flex', alignItems:'center', gap:4, padding:'5px 10px', borderRadius:7, border:'1px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#475569' }}
                             onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
-                            onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';}}>
+                            onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';}}
+                            onFocus={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
+                            onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#475569';}}>
                             <Download size={11}/> PDF
                           </button>
                         </td>
@@ -663,7 +671,9 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                       onClick={()=>!actionLoad && onActivate(clinicData.clinic?.id, pl)}
                       style={{ padding:'12px 8px', borderRadius:12, border:`1.5px solid ${pc4.border}`, background:pc4.bg, cursor:actionLoad?'not-allowed':'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:actionLoad?0.6:1 }}
                       onMouseOver={e=>{ if(!actionLoad){e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 16px ${pc4.border}40`;} }}
-                      onMouseOut={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}>
+                      onMouseOut={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}
+                      onFocus={e=>{ if(!actionLoad){e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 16px ${pc4.border}40`;} }}
+                      onBlur={e=>{ e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}>
                       <div style={{ width:32, height:32, borderRadius:9, background:`${pc4.text}18`, display:'flex', alignItems:'center', justifyContent:'center' }}>
                         <Ico4 size={16} color={pc4.text}/>
                       </div>
@@ -677,7 +687,9 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                 onClick={()=>!actionLoad && onDeactivate(clinicData.clinic?.id)}
                 style={{ width:'100%', padding:'11px', borderRadius:11, border:'1.5px solid #FECACA', background:'#FEF2F2', cursor:actionLoad?'not-allowed':'pointer', color:'#991B1B', fontWeight:700, fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:7, opacity:actionLoad?0.6:1 }}
                 onMouseOver={e=>{ if(!actionLoad) e.currentTarget.style.background='#FEE2E2'; }}
-                onMouseOut={e=>e.currentTarget.style.background='#FEF2F2'}>
+                onMouseOut={e=>e.currentTarget.style.background='#FEF2F2'}
+                onFocus={e=>{ if(!actionLoad) e.currentTarget.style.background='#FEE2E2'; }}
+                onBlur={e=>e.currentTarget.style.background='#FEF2F2'}>
                 {actionLoad
                   ? <div style={{ width:14, height:14, border:'2px solid #991B1B', borderTopColor:'transparent', borderRadius:'50%', animation:'_spin .6s linear infinite' }}/>
                   : <X size={14}/>
@@ -921,7 +933,9 @@ function AdminView() {
                     onClick={()=>tx.clinic_id && openClinic(tx.clinic_id, tx.clinic_name||'Cabinet')}
                     onKeyDown={e=>{if((e.key==='Enter'||e.key===' ')&&tx.clinic_id){e.preventDefault();openClinic(tx.clinic_id, tx.clinic_name||'Cabinet');}}}
                     onMouseOver={e=>e.currentTarget.style.background='#F0FDFE'}
-                    onMouseOut={e=>e.currentTarget.style.background='transparent'}>
+                    onMouseOut={e=>e.currentTarget.style.background='transparent'}
+                    onFocus={e=>e.currentTarget.style.background='#F0FDFE'}
+                    onBlur={e=>e.currentTarget.style.background='transparent'}>
                     <td style={{ padding:'10px 12px', fontFamily:'monospace', fontSize:11, color:'#94A3B8' }}>#{(tx.id||'').slice(-6)}</td>
                     <td style={{ padding:'10px 12px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -968,7 +982,9 @@ function AdminView() {
                 <button type="button" key={cl.id} aria-label={`Voir le cabinet ${cl.name||'Cabinet'}`} onClick={()=>openClinic(cl.id, cl.name)}
                   style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px', background:'#F8FAFC', borderRadius:12, border:'1px solid #E2E8F0', cursor:'pointer', textAlign:'left', font:'inherit' }}
                   onMouseOver={e=>{e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.borderColor='#7DD3DA';}}
-                  onMouseOut={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}>
+                  onMouseOut={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}
+                  onFocus={e=>{e.currentTarget.style.background='#F0FDFE';e.currentTarget.style.borderColor='#7DD3DA';}}
+                  onBlur={e=>{e.currentTarget.style.background='#F8FAFC';e.currentTarget.style.borderColor='#E2E8F0';}}>
                   <Avatar name={cl.name||'C'} size={38}/>
                   <div style={{ flex:1 }}>
                     <div style={{ fontWeight:700, fontSize:13, color:'#0F172A' }}>{cl.name||'Cabinet'}</div>
