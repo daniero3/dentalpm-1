@@ -258,7 +258,7 @@ export function ModernTopbar() {
 
         {/* ── Search icon — mobile ── */}
         {isMobile && (
-          <button type="button" onClick={openCommand}
+          <button type="button" aria-label="Ouvrir la recherche" onClick={openCommand}
             style={{ width:36, height:36, borderRadius:theme.radiusSm, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:theme.textSecondary }}>
             <Search size={16} />
           </button>
@@ -313,7 +313,7 @@ export function ModernTopbar() {
 
         {/* ── Notifications ── */}
         <div ref={notifRef} style={{ position:'relative' }}>
-          <button type="button" onClick={() => setIsNotifOpen(!isNotifOpen)}
+          <button type="button" aria-label="Afficher les notifications" onClick={() => setIsNotifOpen(!isNotifOpen)}
             style={{ width:38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', position:'relative', color:theme.textSecondary, transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=theme.accent; e.currentTarget.style.color=theme.accent; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor=theme.borderDefault; e.currentTarget.style.color=theme.textSecondary; }}>
@@ -418,7 +418,7 @@ export function ModernTopbar() {
                   if (e.key === 'Enter' && filteredCommands[0]) runCommand(filteredCommands[0].href)
                 }}
                 style={{ flex:1, border:'none', outline:'none', fontSize:15, fontFamily:'var(--font-sans)', color:theme.textPrimary, background:'transparent' }} />
-              <button type="button" onClick={() => setSearchOpen(false)} style={{ width:32, height:32, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', color:theme.textSecondary, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={17} /></button>
+              <button type="button" aria-label="Fermer la recherche" onClick={() => setSearchOpen(false)} style={{ width:32, height:32, borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', color:theme.textSecondary, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={17} /></button>
             </div>
             <div style={{ maxHeight:isMobile ? '70vh' : 420, overflowY:'auto', padding:'10px' }}>
               {Object.keys(groupedCommands).length === 0 ? (

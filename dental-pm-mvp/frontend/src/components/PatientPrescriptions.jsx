@@ -129,7 +129,7 @@ const MedCard = ({ item, index, total, isActive, onActivate, onUpdate, onRemove,
           )}
         </div>
         {total > 1 && (
-          <button type="button" onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
+          <button type="button" aria-label={`Supprimer le médicament ${index + 1}`} onMouseDown={e => { e.stopPropagation(); onRemove(index); }}
             style={{ background:'none', border:'none', cursor:'pointer', color:'#CBD5E1', display:'flex', alignItems:'center', padding:'3px 6px', borderRadius:6, transition:'all .15s', flexShrink:0 }}
             onMouseOver={e=>{e.currentTarget.style.background='#FEE2E2';e.currentTarget.style.color='#EF4444';}}
             onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.color='#CBD5E1';}}>
@@ -311,7 +311,7 @@ const PrescriptionModal = ({ open, onClose, title, patient, suggestions, saving,
               )}
             </div>
           </div>
-          <button type="button" onClick={onClose}
+          <button type="button" aria-label="Fermer la prescription" onClick={onClose}
             style={{ width:34, height:34, borderRadius:9, background:'rgba(255,255,255,.15)', border:'1px solid rgba(255,255,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,.85)', flexShrink:0, transition:'all .15s' }}
             onMouseOver={e=>e.currentTarget.style.background='rgba(255,255,255,.28)'}
             onMouseOut={e=>e.currentTarget.style.background='rgba(255,255,255,.15)'}>

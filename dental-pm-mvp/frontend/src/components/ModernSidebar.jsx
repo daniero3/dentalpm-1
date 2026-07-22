@@ -414,13 +414,13 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
   if (isMobile) {
     return (
       <>
-        <button type="button" onClick={() => setMobileOpen(true)}
+        <button type="button" aria-label="Ouvrir le menu" onClick={() => setMobileOpen(true)}
           style={{ position:'fixed', top:'max(14px, env(safe-area-inset-top))', left:'max(12px, env(safe-area-inset-left))', zIndex:1000, width:40, height:40, borderRadius:theme.radiusMd, background:theme.sidebarBg, border:`1px solid ${theme.sidebarBorder}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow }}>
           <Menu size={20} color={theme.sidebarText}/>
         </button>
-        {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:1001, backdropFilter:'blur(8px)' }}/>}
+        {mobileOpen && <button type="button" aria-label="Fermer le menu" onClick={() => setMobileOpen(false)} style={{ position:'fixed', inset:0, background:'var(--bg-overlay)', zIndex:1001, backdropFilter:'blur(8px)', border:0, padding:0, cursor:'pointer' }}/>}
         <div style={{ position:'fixed', left:0, top:0, bottom:0, width:'min(320px, 88vw)', maxWidth:'calc(100vw - 24px)', zIndex:1002, transform: mobileOpen ? 'translateX(0)' : 'translateX(-100%)', transition:'transform .3s cubic-bezier(.4,0,.2,1)' }}>
-          <button type="button" onClick={() => setMobileOpen(false)}
+          <button type="button" aria-label="Fermer le menu" onClick={() => setMobileOpen(false)}
             style={{ position:'absolute', top:'max(14px, env(safe-area-inset-top))', right:14, zIndex:1, width:36, height:36, borderRadius:theme.radiusSm, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:theme.textPrimary }}>
             <X size={16}/>
           </button>
@@ -433,7 +433,7 @@ export function ModernSidebar({ collapsed: controlledCollapsed, onCollapsedChang
   return (
     <div className="dpm-sidebar-desktop" style={{ position:'fixed', left:0, top:0, bottom:0, width: collapsed ? 72 : 264, zIndex:100, transition:'width .25s cubic-bezier(.4,0,.2,1)', flexShrink:0 }}>
       <SidebarContent collapsed={collapsed} onNavClick={null}/>
-      <button type="button" onClick={() => setCollapsed(!collapsed)}
+      <button type="button" aria-label={collapsed ? 'Déplier le menu' : 'Replier le menu'} onClick={() => setCollapsed(!collapsed)}
         style={{ position:'absolute', top:72, right:-12, width:24, height:24, borderRadius:'50%', background:theme.bgElevated, border:`1.5px solid ${theme.borderDefault}`, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:theme.shadow, zIndex:101 }}
         onMouseEnter={e=>e.currentTarget.style.background=theme.pressed}
         onMouseLeave={e=>e.currentTarget.style.background=theme.bgElevated}>

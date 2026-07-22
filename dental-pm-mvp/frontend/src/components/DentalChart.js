@@ -63,6 +63,7 @@ const Modal = ({ open, onClose, title, description, children }) => {
 
               <button
                 type="button"
+                aria-label="Fermer la fenêtre"
                 onClick={onClose}
                 style={{
                   border: 'none',
@@ -421,8 +422,9 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
                   {toothStatuses[selectedTooth.status]?.name || selectedTooth.status}
                 </p>
 
-                <Label>Changer le statut</Label>
+                <Label htmlFor="dental-chart-status">Changer le statut</Label>
                 <select
+                  id="dental-chart-status"
                   onChange={(e) => updateToothStatus(e.target.value)}
                   defaultValue=""
                   style={{
@@ -510,8 +512,9 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
       >
         <div style={{ display: 'grid', gap: 12 }}>
           <div>
-            <Label>Type</Label>
+            <Label htmlFor="dental-procedure-type">Type</Label>
             <select
+              id="dental-procedure-type"
               value={procedureData.procedure_type}
               onChange={(e) =>
                 setProcedureData({ ...procedureData, procedure_type: e.target.value })

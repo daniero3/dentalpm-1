@@ -48,7 +48,7 @@ const Modal = ({ open, onClose, title, children, maxW = 500 }) => {
     <div onClick={e => e.target === e.currentTarget && onClose()}
       style={{ position:'fixed', inset:0, zIndex:1000, background:'rgba(15,23,42,.55)', overflowY:'auto', padding:'60px 16px 32px' }}>
       <div style={{ background:'#fff', borderRadius:20, padding:28, width:'100%', maxWidth:maxW, margin:'0 auto', boxShadow:'0 24px 64px rgba(15,23,42,.2)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button type="button" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
+        <button type="button" aria-label="Fermer la fenêtre de message" onClick={onClose} style={{ position:'absolute', top:14, right:14, background:'#F8FAFC', border:'none', cursor:'pointer', padding:7, borderRadius:8, display:'flex', alignItems:'center', color:'#64748B' }}>
           <X size={15}/>
         </button>
         {title && <h2 style={{ fontFamily:'Plus Jakarta Sans', fontSize:17, fontWeight:700, color:'#0F172A', margin:'0 0 20px', paddingRight:28 }}>{title}</h2>}
@@ -471,7 +471,7 @@ const MessagingManagement = () => {
                     {/* Texte du template */}
                     <div style={{ background:'#F8FAFC', borderRadius:10, padding:'10px 12px', marginBottom:12, fontSize:12, color:'#475569', lineHeight:1.65, minHeight:52, position:'relative' }}>
                       {tpl.text}
-                      <button type="button" onClick={() => copyText(tpl.text)}
+                      <button type="button" aria-label="Copier le texte du template" onClick={() => copyText(tpl.text)}
                         style={{ position:'absolute', top:6, right:6, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:3 }}>
                         <Copy size={12}/>
                       </button>

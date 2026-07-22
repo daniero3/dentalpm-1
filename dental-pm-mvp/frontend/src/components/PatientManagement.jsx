@@ -790,7 +790,7 @@ const PatientManagement = () => {
             onFocus={()=>setSearchFocused(true)}
             onBlur={()=>setSearchFocused(false)}
             style={{ border:'none', background:'transparent', outline:'none', fontSize:14, flex:1, fontFamily:'inherit', color:'#0F172A', minWidth:0 }}/>
-          {search && <button type="button" onClick={()=>{setPage(1);setSearch('');}} style={{ width:28, height:28, borderRadius:9, background:'#EEF6F7', border:'none', cursor:'pointer', color:'#64748B', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>}
+          {search && <button type="button" aria-label="Effacer la recherche patient" onClick={()=>{setPage(1);setSearch('');}} style={{ width:28, height:28, borderRadius:9, background:'#EEF6F7', border:'none', cursor:'pointer', color:'#64748B', padding:0, display:'flex', alignItems:'center', justifyContent:'center' }}><X size={14}/></button>}
         </div>
         <div style={{ width:1, height:24, background:'#E2E8F0' }}/>
         {/* Tri */}

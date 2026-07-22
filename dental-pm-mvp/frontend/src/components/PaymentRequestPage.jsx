@@ -313,7 +313,7 @@ export default function PaymentRequestPage() {
               <div style={{display:'flex',alignItems:'center',gap:8,marginTop:14,padding:'10px 14px',background:'#F0FDFE',borderRadius:10}}>
                 <div style={{width:8,height:8,borderRadius:'50%',background:C.teal,animation:'pulse 1.5s ease-in-out infinite'}}/>
                 <span style={{fontSize:12,color:C.teal,fontWeight:600}}>En attente de confirmation automatique MVola/Orange...</span>
-                <button type="button" onClick={refresh} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}>
+                <button type="button" aria-label="Actualiser le statut du paiement" onClick={refresh} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}>
                   <RefreshCw size={14}/>
                 </button>
               </div>
@@ -444,7 +444,7 @@ export default function PaymentRequestPage() {
       <div style={CARD}>
         <div style={{...HDR, justifyContent:'space-between'}}>
           <span>📜 Historique des paiements</span>
-          <button type="button" onClick={refresh} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><RefreshCw size={14}/></button>
+          <button type="button" aria-label="Actualiser l’historique des paiements" onClick={refresh} style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8'}}><RefreshCw size={14}/></button>
         </div>
         <div style={{padding:'16px 22px'}}>
           {hist.length===0 ? (

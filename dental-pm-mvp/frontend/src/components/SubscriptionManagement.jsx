@@ -512,7 +512,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
               <div style={{ fontSize:12, color:'rgba(255,255,255,.7)' }}>Détails abonnement</div>
             </div>
           </div>
-          <button type="button" onClick={onClose} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+          <button type="button" aria-label="Fermer les détails abonnement" onClick={onClose} style={{ width:32, height:32, borderRadius:8, background:'rgba(255,255,255,.15)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
             <X size={15}/>
           </button>
         </div>
@@ -621,7 +621,7 @@ function ClinicModal({ selClinic, clinicData, clinicLoad, actionLoad, onClose, o
                   </div>
                   <div style={{ marginBottom:8 }}>
                     <div style={{ fontSize:10, fontWeight:700, color:'#64748B', marginBottom:3 }}>Rôle</div>
-                    <select value={newUser.role||'DENTIST'} onChange={e=>setNewUser(u=>({...u,role:e.target.value}))}
+                    <select aria-label="Rôle du nouvel utilisateur" value={newUser.role||'DENTIST'} onChange={e=>setNewUser(u=>({...u,role:e.target.value}))}
                       style={{ width:'100%', padding:'7px 10px', borderRadius:8, border:'1.5px solid #E2E8F0', fontSize:12 }}>
                       <option value="DENTIST">Dentiste</option>
                       <option value="ASSISTANT">Assistant(e)</option>

@@ -29,7 +29,7 @@ const Modal = ({ open, onClose, title, children, maxWidth = 480 }) => {
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15,23,42,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth, boxShadow: '0 16px 48px rgba(15,23,42,0.18)', border: '1px solid #E2E8F0', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
-        <button type="button" onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4 }}><X size={18} /></button>
+        <button type="button" aria-label="Fermer la fenêtre document" onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 4 }}><X size={18} /></button>
         {title && <h2 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 17, fontWeight: 700, color: '#0F172A', margin: '0 0 20px', paddingRight: 24 }}>{title}</h2>}
         {children}
       </div>
@@ -254,11 +254,11 @@ const PatientDocuments = ({ patientIdOverride = null, embedded = false }) => {
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
                       {[
-                        { icon: Eye,      onClick: () => handleView(doc),     color: '#0D7A87' },
-                        { icon: Download, onClick: () => handleDownload(doc), color: '#3B4FD8' },
-                        { icon: Trash2,   onClick: () => handleDelete(doc),   color: '#E63946' },
-                      ].map(({ icon: Icon, onClick, color }, idx) => (
-                        <button type="button" key={idx} onClick={onClick} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color, transition: 'background 0.15s' }}
+                        { icon: Eye,      label: `Voir ${doc.description || doc.file_name || 'le document'}`, onClick: () => handleView(doc),     color: '#0D7A87' },
+                        { icon: Download, label: `Télécharger ${doc.description || doc.file_name || 'le document'}`, onClick: () => handleDownload(doc), color: '#3B4FD8' },
+                        { icon: Trash2,   label: `Supprimer ${doc.description || doc.file_name || 'le document'}`, onClick: () => handleDelete(doc),   color: '#E63946' },
+                      ].map(({ icon: Icon, label, onClick, color }, idx) => (
+                        <button type="button" key={idx} aria-label={label} onClick={onClick} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color, transition: 'background 0.15s' }}
                           onMouseEnter={e => e.currentTarget.style.background = `${color}15`}
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                           <Icon size={15} />

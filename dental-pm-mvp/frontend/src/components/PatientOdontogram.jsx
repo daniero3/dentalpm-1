@@ -46,7 +46,7 @@ const Modal = ({ open, onClose, children }) => {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background:'#fff', borderRadius:16, padding:24, width:'100%', maxWidth:440, margin:'0 auto', boxShadow:'0 16px 48px rgba(15,23,42,0.18)', border:'1px solid #E2E8F0', position:'relative' }}>
-        <button type="button" onClick={onClose} style={{ position:'absolute', top:12, right:12, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
+        <button type="button" aria-label="Fermer la fenêtre odontogramme" onClick={onClose} style={{ position:'absolute', top:12, right:12, background:'none', border:'none', cursor:'pointer', color:'#94A3B8', padding:4 }}>
           <X size={16} />
         </button>
         {children}
