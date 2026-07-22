@@ -124,7 +124,9 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
                 color: isSel ? '#fff' : isToday ? '#0D7A87' : '#0F172A',
               }}
               onMouseOver={e=>{if(!isSel)e.currentTarget.style.background='#F8FAFC';}}
-              onMouseOut={e=>{if(!isSel)e.currentTarget.style.background=isToday?'#F0FDFE':'transparent';}}>
+              onFocus={e=>{if(!isSel)e.currentTarget.style.background='#F8FAFC';}}
+              onMouseOut={e=>{if(!isSel)e.currentTarget.style.background=isToday?'#F0FDFE':'transparent';}}
+              onBlur={e=>{if(!isSel)e.currentTarget.style.background=isToday?'#F0FDFE':'transparent';}}>
               {day}
               {hasAppt && !isSel && <div style={{ position:'absolute', bottom:2, left:'50%', transform:'translateX(-50%)', width:4, height:4, borderRadius:'50%', background:'#0D7A87' }}/>}
             </button>
@@ -157,7 +159,9 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
   return (
     <div className="rdv-card" style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E2E8F0', padding:'16px 18px', display:'flex', gap:14, alignItems:'flex-start', boxShadow:'0 1px 4px rgba(0,0,0,.04)', transition:'all .2s', animationDelay:`${Math.min(idx,.15)*0.05}s`, position:'relative' }}
       onMouseOver={e=>{e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
-      onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}>
+      onFocus={e=>{e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
+      onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}
+      onBlur={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}>
 
       {/* Barre couleur type */}
       <div style={{ width:4, borderRadius:99, background:type.color, alignSelf:'stretch', flexShrink:0, minHeight:60 }}/>
@@ -192,7 +196,9 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
                 <button type="button" key={ns} onClick={() => onStatusChange(a, ns)}
                   style={{ padding:'3px 10px', borderRadius:99, border:`1px solid ${st.dot}`, background:st.bg, color:st.c, fontSize:10, fontWeight:700, cursor:'pointer', transition:'all .15s' }}
                   onMouseOver={e=>{e.currentTarget.style.transform='scale(1.05)';}}
-                  onMouseOut={e=>{e.currentTarget.style.transform='scale(1)';}}>
+                  onFocus={e=>{e.currentTarget.style.transform='scale(1.05)';}}
+                  onMouseOut={e=>{e.currentTarget.style.transform='scale(1)';}}
+                  onBlur={e=>{e.currentTarget.style.transform='scale(1)';}}>
                   → {st.l}
                 </button>
               );
@@ -229,7 +235,15 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
               e.currentTarget.style.borderColor = '#0D7A87';
               e.currentTarget.style.color = '#0D7A87';
             }}
+            onFocus={e => {
+              e.currentTarget.style.borderColor = '#0D7A87';
+              e.currentTarget.style.color = '#0D7A87';
+            }}
             onMouseOut={e => {
+              e.currentTarget.style.borderColor = '#E2E8F0';
+              e.currentTarget.style.color = '#94A3B8';
+            }}
+            onBlur={e => {
               e.currentTarget.style.borderColor = '#E2E8F0';
               e.currentTarget.style.color = '#94A3B8';
             }}
@@ -240,19 +254,25 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
         <button type="button" aria-label="Exporter le rendez-vous au format ICS" onClick={() => onExport(a)} title="Export .ics"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
-          onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
+          onFocus={e=>{e.currentTarget.style.borderColor='#0D7A87';e.currentTarget.style.color='#0D7A87';}}
+          onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}
+          onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
           <Download size={13}/>
         </button>
         <button type="button" aria-label="Modifier le rendez-vous" onClick={() => onEdit(a)} title="Modifier"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#3B82F6';e.currentTarget.style.color='#3B82F6';}}
-          onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
+          onFocus={e=>{e.currentTarget.style.borderColor='#3B82F6';e.currentTarget.style.color='#3B82F6';}}
+          onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}
+          onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
           <Edit2 size={13}/>
         </button>
         <button type="button" aria-label="Supprimer le rendez-vous" onClick={() => onDelete(a)} title="Supprimer"
           style={{ width:30, height:30, borderRadius:8, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', transition:'all .15s' }}
           onMouseOver={e=>{e.currentTarget.style.borderColor='#EF4444';e.currentTarget.style.color='#EF4444';}}
-          onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
+          onFocus={e=>{e.currentTarget.style.borderColor='#EF4444';e.currentTarget.style.color='#EF4444';}}
+          onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}
+          onBlur={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.color='#94A3B8';}}>
           <Trash2 size={13}/>
         </button>
       </div>
