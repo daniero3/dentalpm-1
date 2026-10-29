@@ -110,11 +110,81 @@ const QuoteManagement = () => {
   const [saving,    setSaving]    = useState(false);
   const [feeSearch, setFeeSearch] = useState('');
   const [patientSearch, setPatientSearch] = useState('');
+	
+//AJOUT 1
+const [patientSearchResults, setPatientSearchResults] = useState([]);
+const [patientSearchPage, setPatientSearchPage] = useState(1);
+const [patientSearchTotal, setPatientSearchTotal] = useState(0);
+const [patientSearchLoading, setPatientSearchLoading] = useState(false);
+const [patientSearchError, setPatientSearchError] = useState(false);
+//
 
   const emptyForm = { patient_id:'', schedule_id:'', items:[{ description:'', quantity:1, unit_price_mga:'', tooth_number:'' }], discount_percentage:0, validity_days:30, notes:'' };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { fetchAll(); }, []);
+
+	//AJOUT 1
+		useEffect(() => {
+		  const term = patientSearch.trim();
+		
+		  if (!isOpen || !term) {
+		    setPatientSearchResults([]);
+		    setPatientSearchTotal(0);
+		    setPatientSearchLoading(false);
+		    setPatientSearchError(false);
+		    return;
+		  }
+		
+		  let cancelled = false;
+		  setPatientSearchLoading(true);
+		  setPatientSearchError(false);
+		
+		  const timer = setTimeout(async () => {
+		    try {
+		      const response = await axios.get(`${API}/patients`, {
+		        ...authH(),
+		        params: {
+		          search: term,
+		          page: patientSearchPage,
+		          limit: 50,
+		          fields: 'lookup',
+		          includeTotal: true
+		        }
+		      });
+		
+		      if (cancelled) return;
+		
+		      const rows = response.data.patients || [];
+		
+		      setPatientSearchResults(previous =>
+		        patientSearchPage === 1
+		          ? rows
+		          : [
+		              ...previous,
+		              ...rows.filter(
+		                row => !previous.some(p => p.id === row.id)
+		              )
+		            ]
+		      );
+		
+		      setPatientSearchTotal(
+		        response.data.pagination?.total_count ?? rows.length
+		      );
+		    } catch (error) {
+		      if (!cancelled) setPatientSearchError(true);
+		    } finally {
+		      if (!cancelled) setPatientSearchLoading(false);
+		    }
+		  }, patientSearchPage === 1 ? 250 : 0);
+		
+		  return () => {
+		    cancelled = true;
+		    clearTimeout(timer);
+		  };
+		}, [isOpen, patientSearch, patientSearchPage]);
+	//
+	
 
   const fetchAll = async () => {
     setLoading(true);
@@ -218,13 +288,34 @@ const QuoteManagement = () => {
   };
 
   const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
-  const patientMatches = patients
-    .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
-    .sort((a, b) => patientSearch.trim()
-      ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
-        - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
-      : 0)
-    .slice(0, 8);
+  // const patientMatches = patients
+  //   .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
+  //   .sort((a, b) => patientSearch.trim()
+  //     ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
+  //       - scoreSearchMatch(patientSearch, patientIdentifier(a), patientSearchText(a))
+  //     : 0)
+  //   .slice(0, 8);
+
+	//AJOUT1
+	const patientMatches = [
+  ...(patientSearch.trim()
+    ? patientSearchResults
+    : patients.slice(0, 8))
+].sort((a, b) =>
+  patientSearch.trim()
+    ? scoreSearchMatch(
+        patientSearch,
+        patientIdentifier(b),
+        patientSearchText(b)
+      ) -
+      scoreSearchMatch(
+        patientSearch,
+        patientIdentifier(a),
+        patientSearchText(a)
+      )
+    : 0
+);
+	//
 
   if(loading) return(
     <div style={{ width:'100%',maxWidth: 1400,margin:'0 auto',padding:'0 clamp(12px,1.5vw,24px) 48px' }}>
@@ -460,11 +551,34 @@ const QuoteManagement = () => {
                 )}
                 <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                   <Search size={13} color="#94A3B8"/>
-                  <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} onChange={e=>setPatientSearch(e.target.value)} placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',fontSize:13,flex:1,minWidth:0 }} />
+                  <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} 
+					  {/* onChange={e=>setPatientSearch(e.target.value)}  */}
+					onChange={e => {
+					  setPatientSearch(e.target.value);
+					  setPatientSearchPage(1);
+					  setPatientSearchResults([]);
+					
+					  if (form.patient_id) {
+					    setForm(f => ({ ...f, patient_id: '' }));
+					  }
+					}}
+					  placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',fontSize:13,flex:1,minWidth:0 }} />
                 </div>
                 <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
                   {patientMatches.map(p=>(
-                    <button key={p.id} type="button" onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}}
+                    <button key={p.id} type="button" 
+						{/* onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}} */}
+						onClick={() => {
+						  setPatients(previous =>
+						    previous.some(patient => patient.id === p.id)
+						      ? previous
+						      : [...previous, p]
+						  );
+						
+						  setForm(f => ({ ...f, patient_id: p.id }));
+						  setPatientSearch(`${p.first_name} ${p.last_name}`);
+						  setPatientSearchPage(1);
+						}}
                       style={{ width:'100%',border:0,background:form.patient_id===p.id?'#F0FDFE':'#fff',cursor:'pointer',padding:'8px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,textAlign:'left',borderBottom:'1px solid #F8FAFC' }}>
                       <span style={{ minWidth:0 }}>
                         <span style={{ display:'block',fontSize:13,fontWeight:700,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.first_name} {p.last_name}</span>
@@ -473,7 +587,51 @@ const QuoteManagement = () => {
                       <span style={{ fontSize:10,color:'#0D7A87',fontWeight:800,background:'#E6FAFC',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
                     </button>
                   ))}
-                  {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>}
+                  /* {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>} */
+					{patientSearchLoading && (
+  			<div style={{ padding: 10, fontSize: 12, color: '#0D7A87' }}>
+				    Recherche en cours...
+				  </div>
+				)}
+				
+				{patientSearchError && (
+				  <div style={{ padding: 10, fontSize: 12, color: '#DC2626' }}>
+				    Erreur de recherche. Réessayez.
+				  </div>
+				)}
+				
+				{!patientSearchLoading &&
+				 !patientSearchError &&
+				 patientMatches.length === 0 && (
+				  <div style={{ padding: 10, fontSize: 12, color: '#94A3B8' }}>
+				    Aucun patient trouvé
+				  </div>
+				)}
+				
+				{patientSearch.trim() &&
+				 !patientSearchError &&
+				 patientSearchResults.length < patientSearchTotal && (
+				  <button
+				    type="button"
+				    disabled={patientSearchLoading}
+				    onClick={() => setPatientSearchPage(p => p + 1)}
+				    style={{
+				      width: '100%',
+				      padding: 10,
+				      border: 0,
+				      background: '#E6FAFC',
+				      color: '#0D7A87',
+				      fontSize: 12,
+				      fontWeight: 700,
+				      cursor: 'pointer'
+				    }}
+				  >
+				    {patientSearchLoading
+				      ? 'Chargement...'
+				      : `Afficher plus (${patientSearchResults.length}/${patientSearchTotal})`}
+				  </button>
+				)}
+					{/*  */}
                 </div>
               </div>
               <input aria-label="Patient sélectionné" tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
