@@ -552,7 +552,7 @@ const [patientSearchError, setPatientSearchError] = useState(false);
                 <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
                   <Search size={13} color="#94A3B8"/>
                   <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} 
-					  {/* onChange={e=>setPatientSearch(e.target.value)}  */}
+					  /* onChange={e=>setPatientSearch(e.target.value)}  */
 					onChange={e => {
 					  setPatientSearch(e.target.value);
 					  setPatientSearchPage(1);
@@ -567,7 +567,7 @@ const [patientSearchError, setPatientSearchError] = useState(false);
                 <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
                   {patientMatches.map(p=>(
                     <button key={p.id} type="button" 
-						{/* onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}} */}
+						/* onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}} */
 						onClick={() => {
 						  setPatients(previous =>
 						    previous.some(patient => patient.id === p.id)
@@ -587,7 +587,7 @@ const [patientSearchError, setPatientSearchError] = useState(false);
                       <span style={{ fontSize:10,color:'#0D7A87',fontWeight:800,background:'#E6FAFC',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
                     </button>
                   ))}
-                  {/* /* {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>} */ */}
+                    {/*patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>*/} 
 					{patientSearchLoading && (
   			<div style={{ padding: 10, fontSize: 12, color: '#0D7A87' }}>
 				    Recherche en cours...
