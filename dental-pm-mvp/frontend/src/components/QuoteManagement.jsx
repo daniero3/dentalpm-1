@@ -587,7 +587,7 @@ const [patientSearchError, setPatientSearchError] = useState(false);
                       <span style={{ fontSize:10,color:'#0D7A87',fontWeight:800,background:'#E6FAFC',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
                     </button>
                   ))}
-                  /* {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>} */
+                  {/* /* {patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>} */ */}
 					{patientSearchLoading && (
   			<div style={{ padding: 10, fontSize: 12, color: '#0D7A87' }}>
 				    Recherche en cours...
@@ -631,7 +631,7 @@ const [patientSearchError, setPatientSearchError] = useState(false);
 				      : `Afficher plus (${patientSearchResults.length}/${patientSearchTotal})`}
 				  </button>
 				)}
-					{/*  */}
+					
                 </div>
               </div>
               <input aria-label="Patient sélectionné" tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
