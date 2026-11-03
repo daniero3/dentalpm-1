@@ -148,6 +148,7 @@ const Dashboard = () => {
   const isTablet = w >= 768 && w < 1024;
 
   const [activeTab, setTab] = useState('rdv'); // rdv | factures
+	const [showAnalytics, setShowAnalytics] = useState(false);
   const [, startTransition] = useTransition();
 
   const {
@@ -198,8 +199,8 @@ const Dashboard = () => {
       `}</style>
 
       {/* ── En-tête ── */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-        <div>
+	<div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, order:-4 }}>
+		<div>
           <h1 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:isMobile?20:26, color:'#0F172A', margin:0 }}>
             {greeting} 👋
           </h1>
@@ -219,17 +220,18 @@ const Dashboard = () => {
       </div>
 
       {/* ── KPI Cards ── */}
-      <div className="dash-card" style={{ display:'grid', gridTemplateColumns:cols4, gap:14 }}>
-		<KPI label="Patients actifs" value={kpi?.patients?.total ?? 0} icon={Users} color={C.teal} loading={loading} />
-		<KPI label="RDV aujourd'hui" value={kpi?.appointments?.today ?? 0} icon={Calendar} color={C.blue} sub={`${kpi?.appointments?.monthly ?? 0} ce mois`} loading={loading}/>
-		<KPI label="Revenus du mois" value={kpi?.revenue?.monthly ?? 0} icon={TrendingUp} color={C.green} format="currency" loading={loading}/>
-		<KPI label="Devis et factures en cours" value={kpi?.invoices?.pending ?? 0} icon={FileText} color={C.coral} loading={loading}/>
+     {/* ── KPI essentiels ── */}
+	<div className="dash-card" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,minmax(0,1fr))' : 'repeat(3,minmax(0,1fr))', gap: 14, order: -1}}>
+	  <KPI label="RDV aujourd'hui" value={kpi?.appointments?.today ?? 0} icon={Calendar} color={C.blue} loading={loading}/>
+	  <KPI label="Documents financiers en cours" value={kpi?.invoices?.pending ?? 0} icon={FileText} color={C.amber} loading={loading}/>
+	  <KPI label="Patients actifs" value={kpi?.patients?.total ?? 0} icon={Users} color={C.teal} loading={loading}/>
 	</div>
 
 {/* Centre d'actions du cabinet */}
 <section
   aria-label="Actions prioritaires du cabinet"
   style={{
+	order: -3,
     background: '#FFFFFF',
     border: '1px solid #E2E8F0',
     borderRadius: 18,
@@ -274,13 +276,25 @@ const Dashboard = () => {
         color: C.blue,
         href: '/appointments'
       },
-      {
-        title: 'Nouveau patient',
-        subtitle: 'Créer un dossier',
-        icon: Users,
-        color: C.teal,
-        href: '/patients?action=new'
-      },
+      // {
+      //   title: 'Nouveau patient',
+      //   subtitle: 'Créer un dossier',
+      //   icon: Users,
+      //   color: C.teal,
+      //   href: '/patients?action=new'
+      // },		
+	{
+	  title: 'RDV à vérifier',
+	  subtitle: error
+	    ? 'Données indisponibles'
+	    : loading
+	      ? 'Chargement...'
+	      : `${appts.filter(a => a.status === 'SCHEDULED').length} planifié(s) parmi les ${appts.length} prochains RDV affichés`,
+	  icon: Clock,
+	  color: C.amber,
+	  href: '/appointments'
+	},
+
       {
         title: 'Gestion des devis',
         subtitle: 'Créer ou consulter les devis',
@@ -355,6 +369,28 @@ const Dashboard = () => {
       </Link>
     ))}
   </div>
+	
+<div style={{ marginTop: 16, textAlign: 'right' }}>
+  <button
+    type="button"
+    aria-expanded={showAnalytics}
+    onClick={() => setShowAnalytics(value => !value)}
+    style={{
+      padding: '10px 16px',
+      borderRadius: 10,
+      border: '1px solid #C8DDE0',
+      background: '#FFFFFF',
+      color: '#0D7A87',
+      fontSize: 13,
+      fontWeight: 700,
+      cursor: 'pointer'
+    }}
+  >
+    {showAnalytics
+      ? 'Masquer les analyses détaillées'
+      : 'Afficher les analyses détaillées'}
+  </button>
+</div>
 </section>
 
       {/* ── KPI secondaires ── */}
@@ -498,7 +534,7 @@ const Dashboard = () => {
       </div>
 
       {/* ── Tableau RDV + Factures ── */}
-      <div className="dash-card" style={{ background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,.04)', animationDelay:'.2s' }}>
+      <div className="dash-card" style={{ order:-2, background:'#fff', borderRadius:18, border:'1px solid #E2E8F0', overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,.04)', animationDelay:'.2s' }}>
         {/* Tabs */}
         <div style={{ display:'flex', borderBottom:'1px solid #F1F5F9' }}>
           {[
