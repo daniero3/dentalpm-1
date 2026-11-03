@@ -319,7 +319,65 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
             )}
 
             {/* Items accessibles */}
-            {navItems.map(item => <NavItem key={item.href} item={item}/>)}
+             {/*navItems.map(item => <NavItem key={item.href} item={item}/>)*/}
+
+            
+            {/* AJOUT (03/11/26) */}
+{/* Navigation regroupée par activité */}
+{[
+  {
+    title: 'ACTIVITÉ CLINIQUE',
+    paths: ['/', '/patients', '/appointments', '/lab']
+  },
+  {
+    title: 'DEVIS ET FACTURATION',
+    paths: ['/quotes', '/invoices', '/reports']
+  },
+  {
+    title: 'GESTION DU CABINET',
+    paths: [
+      '/inventory',
+      '/purchases',
+      '/suppliers',
+      '/mailing'
+    ]
+  },
+  {
+    title: 'CONFIGURATION',
+    paths: ['/settings', '/settings/pricing']
+  }
+].map(section => {
+  const items = section.paths
+    .map(path => navItems.find(item => item.href === path))
+    .filter(Boolean);
+
+  if (items.length === 0) return null;
+
+  return (
+    <React.Fragment key={section.title}>
+      {!collapsed && (
+        <div
+          style={{
+            margin: '16px 10px 7px',
+            paddingTop: 8,
+            borderTop: `1px solid ${theme.sidebarBorder}`,
+            color: theme.sidebarTextMuted,
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: '0.06em'
+          }}
+        >
+          {section.title}
+        </div>
+      )}
+
+      {items.map(item => (
+        <NavItem key={item.href} item={item} />
+      ))}
+    </React.Fragment>
+  );
+})}
+{/*  Fin AJOUT (03/11/26) */}
 
             {/* Items verrouillés */}
             {lockedItems.length > 0 && (
