@@ -712,3 +712,120 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* ===============================================
+   DentalPM — Système unifié des barres de recherche
+   =============================================== */
+
+/* Conteneurs de recherche avec icône */
+div:has(> svg):has(> input[aria-label^="Rechercher"]),
+div:has(> span > svg):has(> input[aria-label^="Rechercher"]) {
+  min-height: 46px !important;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 4px 12px !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 13px !important;
+  background: var(--bg-input) !important;
+  box-shadow: 0 2px 7px rgba(15, 43, 48, 0.04) !important;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+/* Survol */
+div:has(> svg):has(> input[aria-label^="Rechercher"]):hover,
+div:has(> span > svg):has(> input[aria-label^="Rechercher"]):hover {
+  border-color: var(--border-focus) !important;
+}
+
+/* Barre active */
+div:has(> svg):has(> input[aria-label^="Rechercher"]):focus-within,
+div:has(> span > svg):has(> input[aria-label^="Rechercher"]):focus-within {
+  border-color: var(--border-focus) !important;
+  box-shadow:
+    0 0 0 3px var(--brand-primary-glow),
+    0 4px 12px rgba(13, 122, 135, 0.06) !important;
+}
+
+/* Champ intégré à une barre avec icône */
+div:has(> svg) > input[aria-label^="Rechercher"],
+div:has(> span > svg) > input[aria-label^="Rechercher"] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  min-height: 36px !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  font-size: 15px !important;
+  font-family: var(--font-sans);
+}
+
+/* Texte indicatif */
+input[aria-label^="Rechercher"]::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.85;
+}
+
+/* Icône de recherche */
+div:has(> input[aria-label^="Rechercher"]) > svg {
+  color: var(--text-secondary) !important;
+  stroke: var(--text-secondary) !important;
+  flex-shrink: 0;
+}
+
+/* Bouton effacer */
+div:has(> input[aria-label^="Rechercher"]) > button[aria-label^="Effacer"] {
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px !important;
+  color: var(--text-secondary) !important;
+}
+
+div:has(> input[aria-label^="Rechercher"]) > button[aria-label^="Effacer"]:hover {
+  background: var(--bg-elevated) !important;
+}
+
+/* Recherche autonome : actes et validations */
+input[aria-label="Rechercher un acte de la grille"],
+input[aria-label="Rechercher une validation de paiement"] {
+  min-height: 44px !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 13px !important;
+  background: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  font-size: 15px !important;
+}
+
+input[aria-label="Rechercher un acte de la grille"]:focus,
+input[aria-label="Rechercher une validation de paiement"]:focus {
+  border-color: var(--border-focus) !important;
+  box-shadow: 0 0 0 3px var(--brand-primary-glow) !important;
+}
+
+/* Recherche globale dans la barre supérieure */
+.dpm-app-topbar input[aria-label="Recherche globale"] {
+  border-radius: 13px !important;
+  border-color: var(--border-default) !important;
+}
+
+/* Adaptation smartphone */
+@media (max-width: 767px) {
+  div:has(> svg):has(> input[aria-label^="Rechercher"]),
+  div:has(> span > svg):has(> input[aria-label^="Rechercher"]) {
+    min-width: 0 !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  input[aria-label^="Rechercher"] {
+    font-size: 16px !important;
+  }
+}
