@@ -193,8 +193,6 @@ const fi = e => { e.target.style.borderColor='#0D7A87'; e.target.style.boxShadow
 const bi = e => { e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none'; };
 
 const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit }) => (
-  //<form onSubmit={onSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
-  // AJOUT (03/11/26)
   <form  className="dpm-patient-form" onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 14px 8px' }} >  
     {/* Section identité */}
     <div style={{ background:'#F8FAFC', borderRadius:12, padding:'14px 16px', marginBottom:2 }}>
@@ -203,14 +201,16 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
         <span>Identifiant patient</span>
         <span>{isEdit ? patientIdentifier(data) : 'Généré automatiquement à la création'}</span>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr<div
+      
+<div
   className="dpm-patient-field-grid"
   style={{
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: 12
   }}
->', gap:12 }}>
+>
+
         <div>
           <label htmlFor="patient-first-name" style={labelStyle}>Prénom *</label>
           <input id="patient-first-name" aria-label="Prénom" style={fieldStyle} type="text" placeholder="Jean" value={data.first_name||''} onChange={e=>onChange('first_name',e.target.value)} onFocus={fi} onBlur={bi} required/>
