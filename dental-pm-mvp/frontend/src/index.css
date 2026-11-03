@@ -557,3 +557,64 @@ textarea:focus-visible {
   }
 }
 
+/* AJOUT (03/11/26) */
+
+/* DentalPM — Formulaire patient premium */
+
+.dpm-patient-form > div:not(:last-child) {
+  padding: 14px 16px !important;
+  margin-bottom: 0 !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px !important;
+}
+
+/* Identité et contact */
+.dpm-patient-form > div:nth-child(1),
+.dpm-patient-form > div:nth-child(2) {
+  background: #ffffff !important;
+}
+
+/* Informations médicales */
+.dpm-patient-form > div:nth-child(3) {
+  background: #fff9f9 !important;
+  border-color: #fee2e2;
+}
+
+/* Champs */
+.dpm-patient-form input,
+.dpm-patient-form select {
+  min-height: 44px;
+}
+
+.dpm-patient-form textarea {
+  min-height: 54px !important;
+  resize: vertical;
+}
+
+/* Boutons de validation */
+.dpm-patient-form > div:last-child {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: #ffffff;
+  padding: 12px 14px !important;
+  border-top: 1px solid #e2e8f0 !important;
+  border-radius: 12px;
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.dpm-patient-form button[type="submit"] {
+  min-height: 44px;
+  min-width: 130px;
+}
+
+/* Adaptation aux petits écrans */
+@media (max-width: 640px) {
+  .dpm-patient-form {
+    padding: 0 8px 8px !important;
+  }
+
+  .dpm-patient-form > div:not(:last-child) {
+    padding: 12px !important;
+  }
+}
