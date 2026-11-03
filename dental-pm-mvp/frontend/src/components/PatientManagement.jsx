@@ -83,7 +83,7 @@ const scorePatientIndex = (index, query, terms, digits) => {
 };
 
 /* ── Modal ── */
-const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
+const Modal = ({ open, onClose, title, children, maxW = 520, compact = false }) => {
   if (!open) return null;
 
   return (
@@ -96,7 +96,7 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
         padding: '24px 16px',
         overflowY: 'auto',
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: compact ? 'center' : 'flex-start',
         justifyContent: 'center'
       }}
     >
@@ -119,7 +119,7 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
         style={{
           width: '100%',
           maxWidth: maxW,
-          maxHeight: 'calc(100dvh - 48px)',
+          maxHeight: compact ? 'min(84dvh, 680px)' : 'calc(100dvh - 48px)',
           overflowY: 'auto',
           background: '#FFFFFF',
           borderRadius: 28,
@@ -132,11 +132,12 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
           type="button"
           onClick={onClose}
           style={{
-            position: 'sticky',
+            position: compact ? 'absolute' : 'sticky',
             top: 14,
-            float: 'right',
+            right: compact ? 14 : undefined,
+            float: compact ? 'none' : 'right',
             zIndex: 20,
-            margin: 14,
+            margin: compact ? 0 : 14,
             width: 38,
             height: 38,
             borderRadius: 999,
@@ -164,7 +165,12 @@ const Modal = ({ open, onClose, title, children, maxW = 520 }) => {
           </div>
         )}
 
-        <div style={{ clear: 'both' }}>
+        <div
+          style={compact
+            ? { padding: '22px 24px 24px' }
+            : { clear: 'both' }
+          }
+        >
           {children}
         </div>
       </div>
@@ -1024,8 +1030,8 @@ const openPatientDetail = async (patient) => {
       {/* ══ MODAL FICHE DÉTAILLÉE ══ */}
       {/* <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={520}> */}
       {/* AJOUT (03/11/26) */}
-      <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={760}>
-        {detail && (
+    <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={680} compact>
+      {detail && (
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
               <Avatar p={detail} size={60}/>
@@ -1043,7 +1049,7 @@ const openPatientDetail = async (patient) => {
 {/* Informations du patient */}
 <div style={{
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))',
   gap: 10,
   marginBottom: 16
 }}>
@@ -1134,7 +1140,7 @@ const openPatientDetail = async (patient) => {
 
   <div style={{
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
     gap: 10
   }}>
     {[
