@@ -436,3 +436,49 @@ th {
   }
 }
 
+
+/* DentalPM P2 — Agenda sur tablette et mobile */
+
+@media (max-width: 1023px) {
+  .dpm-appt-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+
+  /* Boutons de l'en-tête */
+  .dpm-appt-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dpm-appt-header-actions > button {
+    flex: 1 1 120px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  /* Sélection des types de RDV */
+  .dpm-appt-type-grid {
+    grid-template-columns: repeat(
+      2, minmax(0, 1fr)
+    ) !important;
+  }
+
+  .dpm-appt-type-grid button {
+    min-height: 56px;
+  }
+
+  /* Date et heures */
+  .dpm-appt-datetime-grid {
+    grid-template-columns: repeat(
+      2, minmax(0, 1fr)
+    ) !important;
+  }
+
+  .dpm-appt-datetime-grid > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
