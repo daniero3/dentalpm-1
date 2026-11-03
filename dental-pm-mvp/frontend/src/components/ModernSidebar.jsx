@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import axios from "axios"
 import {
-  Home, Users, FileText, Calendar, Settings, Package, Truck,
+  Home, Users, FileText, FilePenLine, ReceiptText, Calendar, Settings, Package, Truck,
   ShoppingCart, FlaskConical, Mail, ChevronLeft, ChevronRight,
   Building2, CreditCard, LayoutDashboard, BarChart3,
   Sparkles, Menu, X, Lock
@@ -62,8 +62,8 @@ const ALL_NAV = [
   { labelKey:"nav.dashboard", href:"/",            icon:Home,         plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.patients",  href:"/patients",    icon:Users,        plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.appointments", href:"/appointments", icon:Calendar, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { labelKey:"nav.quotes",    href:"/quotes",      icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
-  { labelKey:"nav.invoices",  href:"/invoices",    icon:FileText,     plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.quotes", href:"/quotes", icon:FilePenLine, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.invoices", href:"/invoices", icon:ReceiptText, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.purchases", href:"/purchases",   icon:ShoppingCart, plans:['PRO','GROUP'] },
   { labelKey:"nav.suppliers", href:"/suppliers",   icon:Truck,        plans:['PRO','GROUP'] },
   { labelKey:"nav.lab",       href:"/lab",         icon:FlaskConical, plans:['PRO','GROUP'] },
