@@ -217,7 +217,19 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
     const prefetch = React.useMemo(() => createHoverPrefetch(item.href), [item.href])
     const label = t(item.labelKey)
     return (
-      <Link to={item.href} onClick={onNavClick} {...prefetch} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
+     // <Link to={item.href} onClick={onNavClick} {...prefetch} style={{ textDecoration:'none', display:'block', marginBottom:2 }}>
+        <Link
+          to={item.href}
+          onClick={onNavClick}
+          {...prefetch}
+          aria-current={active ? 'page' : undefined}
+          aria-label={collapsed ? label : undefined}
+          style={{
+            textDecoration: 'none',
+            display: 'block',
+            marginBottom: 2
+          }}
+        >
         <div title={collapsed ? label : ''}
           style={{ display:'flex', alignItems:'center', gap:10, padding: collapsed ? '10px 0' : '10px 16px',
             borderRadius:theme.radiusMd, cursor:'pointer', justifyContent: collapsed ? 'center' : 'flex-start',
