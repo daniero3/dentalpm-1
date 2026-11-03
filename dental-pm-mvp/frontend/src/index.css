@@ -499,3 +499,61 @@ div[id="emergent-badge"], [data-emergent], [data-emergent] * {
   top: -9999px !important;
   left: -9999px !important;
 }
+
+
+/* AJOUT (03/11/26)  */
+
+/* DentalPM — Améliorations UX : lisibilité et accessibilité */
+
+:root {
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 15px;
+}
+
+body {
+  line-height: 1.5;
+}
+
+label {
+  font-size: 14px !important;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="date"],
+textarea,
+select {
+  font-size: 15px !important;
+}
+
+thead tr th {
+  font-size: 12px !important;
+}
+
+tbody tr td {
+  font-size: 14px !important;
+}
+
+/* Focus clavier visible */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand-primary) !important;
+  outline-offset: 3px !important;
+}
+
+/* Respecter les préférences d'animation */
+@media (prefers-reduced-motion: reduce) {
+  .dash-card,
+  .dpm-content-shell {
+    animation: none !important;
+  }
+}
+
