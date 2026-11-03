@@ -300,7 +300,9 @@ const AppointmentManagement = () => {
   const [typeF,    setTypeF]    = useState('all');
   const [selDate,  setSelDate]  = useState(() => today());
   const [viewMode, setView]     = useState('day'); // day | week | all
-  const [showCal,  setShowCal]  = useState(true);
+  const [showCal, setShowCal] = useState(
+    () => window.innerWidth >= 1024
+  );
   const [importing, setImporting] = useState(false);
   const importInputRef = useRef(null);
   const [embeddedPatientView, setEmbeddedPatientView] = useState(null);
@@ -449,22 +451,54 @@ const AppointmentManagement = () => {
   
   // const openCreate = () => { setEditA(null); resetForm(); setIsOpen(true); };
 
-  const openCreate = async () => {
-    setEditA(null);
-    setPatientSearch('');
-    setIsOpen(true);
-    const [, loadedDentists] = await Promise.all([fetchPatients(), fetchDentists()]);
-    setForm({
-      patient_id: '',
-      dentist_id: user?.role === 'DENTIST' ? user.id : (loadedDentists[0]?.id || ''),
-      appointment_date: selDate,
-      start_time: '09:00',
-      end_time: '10:00',
-      appointment_type: 'CONSULTATION',
-      reason: '',
-      notes: ''
-    });
-  };
+  // const openCreate = async () => {
+  //   setEditA(null);
+  //   setPatientSearch('');
+  //   setIsOpen(true);
+  //   const [, loadedDentists] = await Promise.all([fetchPatients(), fetchDentists()]);
+  //   setForm({
+  //     patient_id: '',
+  //     dentist_id: user?.role === 'DENTIST' ? user.id : (loadedDentists[0]?.id || ''),
+  //     appointment_date: selDate,
+  //     start_time: '09:00',
+  //     end_time: '10:00',
+  //     appointment_type: 'CONSULTATION',
+  //     reason: '',
+  //     notes: ''
+  //   });
+  // };
+  
+const openCreate = () => {
+  setEditA(null);
+  setPatientSearch('');
+
+  setForm({
+    patient_id: '',
+    dentist_id: defaultDentistId(),
+    appointment_date: selDate,
+    start_time: '09:00',
+    end_time: '10:00',
+    appointment_type: 'CONSULTATION',
+    reason: '',
+    notes: ''
+  });
+
+  setIsOpen(true);
+
+  // Charger les listes sans retarder l'ouverture
+  fetchPatients();
+
+  fetchDentists().then(list => {
+    if (user?.role !== 'DENTIST' && list.length) {
+      setForm(current =>
+        current.dentist_id
+          ? current
+          : { ...current, dentist_id: list[0].id }
+      );
+    }
+  });
+};
+
   
   const openEdit = a => {
     const nextForm = {
@@ -1722,6 +1756,58 @@ const AppointmentManagement = () => {
               </span>
             </div>
           </div>
+          
+{/* Durées rapides de rendez-vous */}
+<div style={{
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  flexWrap: 'wrap'
+}}>
+  <span style={{
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#475569'
+  }}>
+    Durée rapide :
+  </span>
+
+  {[30, 45, 60].map(duration => (
+    <button
+      key={duration}
+      type="button"
+      onClick={() => {
+        setForm(current => {
+          const [hour, minute] =
+            current.start_time.split(':').map(Number);
+
+          const end = hour * 60 + minute + duration;
+
+          if (end >= 1440) return current;
+
+          return {
+            ...current,
+            end_time:
+              `${String(Math.floor(end / 60)).padStart(2, '0')}:` +
+              `${String(end % 60).padStart(2, '0')}`
+          };
+        });
+      }}
+      style={{
+        padding: '9px 13px',
+        borderRadius: 10,
+        border: '1px solid #DDD6FE',
+        background: '#F5F3FF',
+        color: '#6D28D9',
+        cursor: 'pointer',
+        fontSize: 13,
+        fontWeight: 700
+      }}
+    >
+      {duration} min
+    </button>
+  ))}
+</div>
 
           {/* Motif */}
           <div>
