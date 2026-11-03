@@ -361,7 +361,6 @@ const Dashboard = () => {
     ))}
   </div>
 </section>
-// 
 
       {/* ── KPI secondaires ── */}
       <div className="dash-card" style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10, animationDelay:'.05s' }}>
