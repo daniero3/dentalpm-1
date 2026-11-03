@@ -203,7 +203,14 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
         <span>Identifiant patient</span>
         <span>{isEdit ? patientIdentifier(data) : 'Généré automatiquement à la création'}</span>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr<div
+  className="dpm-patient-field-grid"
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 12
+  }}
+>', gap:12 }}>
         <div>
           <label htmlFor="patient-first-name" style={labelStyle}>Prénom *</label>
           <input id="patient-first-name" aria-label="Prénom" style={fieldStyle} type="text" placeholder="Jean" value={data.first_name||''} onChange={e=>onChange('first_name',e.target.value)} onFocus={fi} onBlur={bi} required/>
@@ -231,8 +238,14 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
     {/* Section contact */}
     <div style={{ background:'#F8FAFC', borderRadius:12, padding:'14px 16px', marginBottom:2 }}>
       <div style={{ fontSize:11, fontWeight:700, color:'#0D7A87', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>📞 Contact</div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-        <div>
+<div
+  className="dpm-patient-field-grid"
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 12
+  }}
+>        <div>
           <label htmlFor="patient-phone-primary" style={labelStyle}>Téléphone *</label>
           <input id="patient-phone-primary" aria-label="Téléphone" style={fieldStyle} type="text" placeholder="034 00 000 00" value={data.phone_primary||''} onChange={e=>onChange('phone_primary',e.target.value)} onFocus={fi} onBlur={bi} required/>
         </div>
