@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../App';
@@ -86,7 +87,7 @@ const scorePatientIndex = (index, query, terms, digits) => {
 const Modal = ({ open, onClose, title, children, maxW = 520, compact = false }) => {
   if (!open) return null;
 
-  return (
+  return createPortal (
     <div
       style={{
         position: 'fixed',
@@ -174,7 +175,8 @@ const Modal = ({ open, onClose, title, children, maxW = 520, compact = false }) 
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
