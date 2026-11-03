@@ -650,3 +650,65 @@ textarea:focus-visible {
 .dpm-subtle-scroll:focus-within::-webkit-scrollbar-thumb {
   background: rgba(100, 116, 139, 0.42);
 }
+
+
+/* =========================================
+   DentalPM — P1 Lisibilité & accessibilité
+   ========================================= */
+
+/* Textes secondaires dans les composants */
+.dpm-header-sub,
+.dpm-kpi-label,
+.dpm-filter-btn,
+.dpm-badge,
+.dpm-table th {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Contenu des tableaux */
+.dpm-table td {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Filtres plus confortables au toucher */
+.dpm-filter-btn {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Espacement des champs du formulaire patient */
+.dpm-patient-form input,
+.dpm-patient-form select,
+.dpm-patient-form textarea {
+  line-height: 1.5;
+}
+
+/* Indications plus lisibles dans le formulaire patient */
+.dpm-patient-form input::placeholder,
+.dpm-patient-form textarea::placeholder {
+  color: #64748B;
+  opacity: 1;
+}
+
+/* Réduction des animations si demandée
+   dans les préférences du système */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .pt-card,
+  .q-card,
+  .dpm-content-shell,
+  .dpm-card-item,
+  .dpm-kpi {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .dpm-main,
+  .dpm-subtle-scroll {
+    scroll-behavior: auto !important;
+  }
+}
