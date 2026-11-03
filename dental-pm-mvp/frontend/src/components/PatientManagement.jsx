@@ -482,7 +482,20 @@ const PatientManagement = () => {
     setForm(nextForm);
     setIsOpen(true);
   };
+// AJOUT(03/11/26)
+const openPatientDetail = async (patient) => {
+  try {
+    const response = await axios.get(
+      `${API}/patients/${patient.id}`,
+      authH()
+    );
 
+    setDetail(response.data);
+  } catch (error) {
+    toast.error('Impossible de charger le dossier patient');
+  }
+};
+  // 
   const handleSubmit = async e => {
     e.preventDefault(); setSaving(true);
     try {
@@ -875,16 +888,43 @@ const PatientManagement = () => {
                   </div>
                 </div>
                 {/* Actions */}
-                <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                {/* <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}> */}
                   {/*<ActionBtn icon={Eye}            label="Fiche détaillée"  onClick={()=>setDetail(p)}                        color="#0D7A87"/>*/}
-                  <ActionBtn icon={History}        label="Historique"       onClick={()=>openHistory(p)}                         color="#DC2626"/>
-                  <ActionBtn icon={Activity}       label="Odontogramme"     to={`/patients/${p.id}/odontogram`}                  color="#7C3AED"/>
-                  <ActionBtn icon={FileText}       label="Documents"        to={`/patients/${p.id}/documents`}                   color="#3B82F6"/>
-                  <ActionBtn icon={ClipboardList}  label="Ordonnances"      to={`/patients/${p.id}/prescriptions`}               color="#10B981"/>
-                  <ActionBtn icon={FlaskConical}   label="Labo"             to={`/patients/${p.id}/lab-orders`}                  color="#8B5CF6"/>
-                  <ActionBtn icon={ChevronRight}   label="Fiche dentaire"   to={`/patients/${p.id}/chart`}                       color="#F59E0B"/>
-                  <ActionBtn icon={Edit}           label="Modifier"         onClick={()=>openEdit(p)}                            color="#0D7A87"/>
-                </div>
+                  {/* <ActionBtn icon={History}        label="Historique"       onClick={()=>openHistory(p)}                         color="#DC2626"/> */}
+                  {/* <ActionBtn icon={Activity}       label="Odontogramme"     to={`/patients/${p.id}/odontogram`}                  color="#7C3AED"/> */}
+                  {/* <ActionBtn icon={FileText}       label="Documents"        to={`/patients/${p.id}/documents`}                   color="#3B82F6"/> */}
+                  {/* <ActionBtn icon={ClipboardList}  label="Ordonnances"      to={`/patients/${p.id}/prescriptions`}               color="#10B981"/> */}
+                  {/* <ActionBtn icon={FlaskConical}   label="Labo"             to={`/patients/${p.id}/lab-orders`}                  color="#8B5CF6"/> */}
+                  {/* <ActionBtn icon={ChevronRight}   label="Fiche dentaire"   to={`/patients/${p.id}/chart`}                       color="#F59E0B"/> */}
+                  {/* <ActionBtn icon={Edit}           label="Modifier"         onClick={()=>openEdit(p)}                            color="#0D7A87"/> */}
+                {/* </div> */}
+                
+                {/*  AJOUT (03/11/26)*/}
+
+{/* Action principale du patient */}
+<div style={{ display:'flex', alignItems:'center', gap:8 }}>
+  <button
+    type="button"
+    onClick={() => openPatientDetail(p)}
+    style={{
+      display:'flex',
+      alignItems:'center',
+      justifyContent:'center',
+      gap:8,
+      padding:'11px 16px',
+      borderRadius:12,
+      border:'none',
+      background:'#0D7A87',
+      color:'#FFFFFF',
+      fontSize:13,
+      fontWeight:700,
+      cursor:'pointer'
+    }}
+  >
+    <Eye size={16}/>
+    Ouvrir le dossier
+  </button>
+</div>   
               </div>
             );
           })}
@@ -916,14 +956,43 @@ const PatientManagement = () => {
                   {p.email && <div style={{ display:'flex', alignItems:'center', gap:7, fontSize:12, color:'#475569', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}><Mail size={12} color="#94A3B8"/>{p.email}</div>}
                   {p.allergies && <div style={{ background:'#FEF3C7', border:'1px solid #FDE68A', borderRadius:8, padding:'5px 10px', fontSize:11, fontWeight:700, color:'#92400E', display:'flex', alignItems:'center', gap:5 }}><AlertTriangle size={10}/>Allergies: {p.allergies}</div>}
                 </div>
-                <div style={{ display:'flex', gap:6, borderTop:'1px solid #F1F5F9', paddingTop:12 }}>
+                {/* <div style={{ display:'flex', gap:6, borderTop:'1px solid #F1F5F9', paddingTop:12 }}>
                   <button type="button" onClick={()=>setDetail(p)} style={{ flex:1, padding:'7px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:11, fontWeight:600, color:'#0D7A87', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}><Eye size={12}/>Fiche</button>
                   <ActionBtn icon={History}       label="Historique"   onClick={()=>openHistory(p)}          color="#DC2626"/>
                   <ActionBtn icon={Activity}      label="Odontogramme" to={`/patients/${p.id}/odontogram`}  color="#7C3AED"/>
                   <ActionBtn icon={FileText}      label="Documents"    to={`/patients/${p.id}/documents`}   color="#3B82F6"/>
                   <ActionBtn icon={ClipboardList} label="Ordonnances"  to={`/patients/${p.id}/prescriptions`} color="#10B981"/>
                   <ActionBtn icon={Edit}          label="Modifier"     onClick={()=>openEdit(p)}             color="#0D7A87"/>
-                </div>
+                </div> */}
+{/* AJOUT(03/11/26) */}
+
+<div style={{
+  borderTop:'1px solid #F1F5F9',
+  paddingTop:12
+}}>
+  <button
+    type="button"
+    onClick={() => openPatientDetail(p)}
+    style={{
+      display:'flex',
+      alignItems:'center',
+      justifyContent:'center',
+      gap:8,
+      width:'100%',
+      padding:'11px 16px',
+      borderRadius:12,
+      border:'none',
+      background:'#0D7A87',
+      color:'#FFFFFF',
+      fontWeight:700,
+      fontSize:13,
+      cursor:'pointer'
+    }}
+  >
+    <Eye size={16}/>
+    Ouvrir le dossier
+  </button>
+</div>            
               </div>
             );
           })}
@@ -947,7 +1016,9 @@ const PatientManagement = () => {
       )}
 
       {/* ══ MODAL FICHE DÉTAILLÉE ══ */}
-      <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={520}>
+      {/* <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={520}> */}
+      {/* AJOUT (03/11/26) */}
+      <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={760}>
         {detail && (
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
@@ -991,6 +1062,7 @@ const PatientManagement = () => {
                 { icon:ClipboardList, l:'Ordonnances', to:`/patients/${detail.id}/prescriptions`, c:'#10B981' },
                 { icon:FlaskConical, l:'Labo', to:`/patients/${detail.id}/lab-orders`, c:'#8B5CF6' },
                 { icon:ChevronRight, l:'Fiche dentaire', to:`/patients/${detail.id}/chart`, c:'#F59E0B' },
+                { icon: Edit, l: 'Modifier', onClick: () => { setDetail(null); openEdit(detail); },c: '#0D7A87'},
               ].map((a,i) => {
                 const btn = (
                   <button
