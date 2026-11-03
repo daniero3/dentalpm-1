@@ -482,3 +482,36 @@ th {
     grid-column: 1 / -1;
   }
 }
+
+/* Formulaire patient sur smartphone */
+@media (max-width: 767px) {
+  .dpm-patient-field-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Tableaux lisibles sur mobile et tablette */
+@media (max-width: 1023px) {
+  .dpm-table-wrap,
+  .dpm-table-wrapper,
+  .table-responsive {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .dpm-table-wrap > table,
+  .dpm-table-wrapper > table,
+  .table-responsive > table {
+    display: table !important;
+    min-width: 640px;
+    max-width: none;
+  }
+
+  .dpm-table-wrap th,
+  .dpm-table-wrapper th,
+  .table-responsive th {
+    white-space: nowrap;
+  }
+}
