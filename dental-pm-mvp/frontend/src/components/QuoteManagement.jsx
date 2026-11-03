@@ -194,8 +194,57 @@ const [patientSearchError, setPatientSearchError] = useState(false);
   const fetchQuotes    = async () => { try { const r=await axios.get(`${API}/quotes`,authH()); setQuotes(r.data.quotes||[]); } catch {} };
   const fetchPatients  = async () => { try { const r=await cachedGet(`${API}/patients?limit=500&fields=lookup&includeTotal=false`,authH(),{ttl:CACHE_TTL.medium}); setPatients(r.data.patients||[]); } catch {} };
   const fetchSchedules = async () => { try { const r=await cachedGet(`${API}/pricing-schedules`,authH(),{ttl:CACHE_TTL.long}); setSchedules(r.data.schedules||[]); } catch {} };
-  const fetchFees = async id => { try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
+  // const fetchFees = async id => { try { const r=await cachedGet(`${API}/pricing-schedules/${id}/fees`,authH(),{ttl:CACHE_TTL.long}); setFees(r.data.fees||[]); } catch { setFees([]); } };
+	
+	// AJOUT (03/11/26)
+	
+const fetchFees = async id => {
+  if (!id) {
+    setFees([]);
+    return;
+  }
 
+  try {
+    const response = await axios.get(
+      `${API}/pricing-schedules/${id}/fees`,
+      authH()
+    );
+
+    setFees(response.data.fees || []);
+  } catch (error) {
+    setFees([]);
+    toast.error('Impossible de charger les tarifs');
+  }
+};
+	// 
+	
+// AJOUT (03/11/26)
+	
+const openNewQuote = () => {
+  const defaultSchedule =
+    schedules.find(s => s.type === 'CABINET') ||
+    schedules.find(s => s.is_default) ||
+    schedules[0];
+
+  setForm({
+    ...emptyForm,
+    schedule_id: defaultSchedule?.id || ''
+  });
+
+  setFees([]);
+  setFeeSearch('');
+  setPatientSearch('');
+  setPatientSearchPage(1);
+  setPatientSearchResults([]);
+
+  if (defaultSchedule?.id) {
+    fetchFees(defaultSchedule.id);
+  }
+
+  setIsOpen(true);
+};
+
+	// 
   const addItem    = () => setForm(f=>({...f,items:[...f.items,{description:'',quantity:1,unit_price_mga:'',tooth_number:''}]}));
   const removeItem = i => { if(form.items.length>1) setForm(f=>({...f,items:f.items.filter((_,idx)=>idx!==i)})); };
   const updateItem = (i,k,v) => setForm(f=>{const it=[...f.items];it[i]={...it[i],[k]:v};return{...f,items:it};});
@@ -287,8 +336,22 @@ const [patientSearchError, setPatientSearchError] = useState(false);
     totalAmt: quotes.filter(q=>q.status==='ACCEPTED').reduce((s,q)=>s+parseFloat(q.total_mga||0),0),
   };
 
-  const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
-  // const patientMatches = patients
+  // const filtFees = fees.filter(f=>(f.label||'').toLowerCase().includes(feeSearch.toLowerCase())||(f.procedure_code||'').toLowerCase().includes(feeSearch.toLowerCase())).slice(0,8);
+  // AJOUT (03/11/26)
+	
+const filtFees = fees
+  .filter(f =>
+    matchesSearch(
+      feeSearch,
+      f.procedure_code || '',
+      f.label || '',
+      f.category || ''
+    )
+  )
+  .slice(0, 12);
+
+// 
+// const patientMatches = patients
   //   .filter(p => matchesSearch(patientSearch, patientIdentifier(p), patientSearchText(p)))
   //   .sort((a, b) => patientSearch.trim()
   //     ? scoreSearchMatch(patientSearch, patientIdentifier(b), patientSearchText(b))
@@ -343,7 +406,8 @@ const [patientSearchError, setPatientSearchError] = useState(false);
           <button type="button" aria-label="Rafraîchir les devis" onClick={fetchAll} style={{ padding:'8px 13px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',display:'flex',alignItems:'center',gap:5,fontSize:13,fontWeight:600,color:'#475569' }}>
             <RefreshCw size={13}/>
           </button>
-          <button type="button" onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}}
+          <button type="button" onClick={openNewQuote}
+			  {/* onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}} */}
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
             <Plus size={15}/>Nouveau Devis
           </button>
@@ -402,7 +466,9 @@ const [patientSearchError, setPatientSearchError] = useState(false);
           <FileText size={40} style={{ margin:'0 auto 14px',color:'#CBD5E1' }}/>
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucun devis</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre premier devis'}</p>
-          <button type="button" onClick={()=>{setForm(emptyForm);setIsOpen(true);}} style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
+          <button type="button" onClick={openNewQuote}
+			  {/* onClick={()=>{setForm(emptyForm);setIsOpen(true);}}  */}
+			  style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouveau devis
           </button>
         </div>
