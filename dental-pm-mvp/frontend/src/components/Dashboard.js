@@ -220,17 +220,12 @@ const Dashboard = () => {
 
       {/* ── KPI Cards ── */}
       <div className="dash-card" style={{ display:'grid', gridTemplateColumns:cols4, gap:14 }}>
-        // <KPI label="Patients actifs"     value={kpi?.patients?.total || 0}       icon={Users}      color={C.teal}   trend={5.2}  trendLabel="vs mois dernier" loading={loading}/>
-        // <KPI label="RDV aujourd'hui"     value={kpi?.appointments?.today || 0}    icon={Calendar}   color={C.blue}   trend={0}    sub={`${kpi?.appointments?.monthly||0} ce mois`} loading={loading}/>
-        // <KPI label="Revenus du mois"     value={kpi?.revenue?.monthly || 0}       icon={TrendingUp} color={C.green}  format="currency" trend={12.5} trendLabel="en hausse" loading={loading}/>
-        // <KPI label="Factures impayées"   value={kpi?.invoices?.pending || 0}      icon={FileText}   color={C.coral}  trend={-3.1} trendLabel={kpi?.revenue?.outstanding ? fmt(kpi.revenue.outstanding) : undefined} loading={loading}/>
 		<KPI label="Patients actifs" value={kpi?.patients?.total ?? 0} icon={Users} color={C.teal} loading={loading} />
 		<KPI label="RDV aujourd'hui" value={kpi?.appointments?.today ?? 0} icon={Calendar} color={C.blue} sub={`${kpi?.appointments?.monthly ?? 0} ce mois`} loading={loading}/>
 		<KPI label="Revenus du mois" value={kpi?.revenue?.monthly ?? 0} icon={TrendingUp} color={C.green} format="currency" loading={loading}/>
 		<KPI label="Devis et factures en cours" value={kpi?.invoices?.pending ?? 0} icon={FileText} color={C.coral} loading={loading}/>
 	</div>
 
-// AJOUT (03/11/26)
 {/* Centre d'actions du cabinet */}
 <section
   aria-label="Actions prioritaires du cabinet"
@@ -667,27 +662,6 @@ const Dashboard = () => {
           </div>
         )}
       </div>
-
-      {/* ── Accès rapides ── */}
-      // <div className="dash-card" style={{ animationDelay:'.3s' }}>
-      //   <div style={{ fontSize:11, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>Accès rapides</div>
-      //   <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
-      //     {[
-      //       { icon:'👤', l:'Nouveau patient',   c:C.blue,   href:'/patients' },
-      //       { icon:'📅', l:'Nouveau RDV',        c:C.purple, href:'/appointments' },
-      //       { icon:'🧾', l:'Nouvelle facture',   c:C.green,  href:'/invoices' },
-      //       { icon:'📦', l:'Vérifier le stock',  c:C.coral,  href:'/inventory' },
-      //     ].map(a => (
-      //       <Link key={a.l} to={a.href}
-      //         style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 16px', borderRadius:13, border:'1.5px solid #E2E8F0', background:'#fff', textDecoration:'none', transition:'all .2s' }}
-      //         onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.background=`${a.c}08`;}}
-      //         onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
-      //         <div style={{ width:34, height:34, borderRadius:10, background:`${a.c}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0 }}>{a.icon}</div>
-      //         <span style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>{a.l}</span>
-      //       </Link>
-      //     ))}
-      //   </div>
-      // </div>
 
       {error && (
         <div style={{ background:'#FEE2E2', border:'1px solid #FECACA', borderRadius:12, padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
