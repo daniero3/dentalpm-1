@@ -84,7 +84,7 @@ const scorePatientIndex = (index, query, terms, digits) => {
 };
 
 /* ── Modal ── */
-const Modal = ({ open, onClose, title, children, maxW = 520, compact = false }) => {
+const Modal = ({ open, onClose, title, children, maxW = 520, compact = false, subtleScroll = false }) => {
   if (!open) return null;
 
   return createPortal (
@@ -117,6 +117,7 @@ const Modal = ({ open, onClose, title, children, maxW = 520, compact = false }) 
         }}
       />
       <div
+        className={subtleScroll ? 'dpm-subtle-scroll' : undefined}
         style={{
           width: '100%',
           maxWidth: maxW,
@@ -1456,7 +1457,7 @@ const openPatientDetail = async (patient) => {
       {/* ══ MODAL CRÉER / MODIFIER ══ */}
       {/* <Modal open={isOpen} onClose={()=>setIsOpen(false)} title={selP ? `✏️ Modifier — ${selP.first_name} ${selP.last_name}` : '👤 Nouveau Patient'} maxW={580}> */}
        {/* AJOUT (03/11/26) */}
-      <Modal open={isOpen} onClose={() => setIsOpen(false)} title={selP ? 'Modifier le patient' : 'Nouveau patient'} maxW={720}>
+      <Modal open={isOpen} onClose={() => setIsOpen(false)} title={selP ? 'Modifier le patient' : 'Nouveau patient'} maxW={720} subtleScroll>
       <PatientForm data={form} onChange={onChange} onSubmit={handleSubmit} onCancel={()=>setIsOpen(false)} submitting={saving} isEdit={!!selP}/>
       </Modal>
     </div>
