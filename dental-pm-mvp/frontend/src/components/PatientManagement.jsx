@@ -184,7 +184,9 @@ const fi = e => { e.target.style.borderColor='#0D7A87'; e.target.style.boxShadow
 const bi = e => { e.target.style.borderColor='#E2E8F0'; e.target.style.boxShadow='none'; };
 
 const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit }) => (
-  <form onSubmit={onSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+  //<form onSubmit={onSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
+  // AJOUT (03/11/26)
+  <form  className="dpm-patient-form" onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '0 14px 8px' }} >  
     {/* Section identité */}
     <div style={{ background:'#F8FAFC', borderRadius:12, padding:'14px 16px', marginBottom:2 }}>
       <div style={{ fontSize:11, fontWeight:700, color:'#0D7A87', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>👤 Identité</div>
@@ -266,8 +268,12 @@ const PatientForm = ({ data, onChange, onSubmit, onCancel, submitting, isEdit })
     <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
       <button type="button" onClick={onCancel} style={{ padding:'9px 18px', borderRadius:10, border:'1.5px solid #E2E8F0', background:'#fff', cursor:'pointer', fontSize:13, fontWeight:600, color:'#475569' }}>Annuler</button>
       <button type="submit" disabled={submitting} style={{ padding:'9px 22px', borderRadius:10, background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#fff', border:'none', cursor:'pointer', fontSize:14, fontWeight:700, display:'flex', alignItems:'center', gap:7, opacity:submitting?.7:1 }}>
-        {submitting ? <div style={{ width:14, height:14, border:'2px solid rgba(255,255,255,.4)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .8s linear infinite' }}/> : <Save size={14}/>}
-        {isEdit ? 'Enregistrer' : 'Créer le patient'}
+        {/* /* {submitting ? <div style={{ width:14, height:14, border:'2px solid rgba(255,255,255,.4)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .8s linear infinite' }}/> : <Save size={14}/>}
+        {isEdit ? 'Enregistrer' : 'Créer le patient'} */}
+            {/* AJOUT (03/11/26) */}
+            {submitting
+        ? 'Enregistrement...'
+        : (isEdit ? 'Enregistrer' : 'Créer le patient')}
       </button>
     </div>
   </form>
@@ -1406,8 +1412,10 @@ const openPatientDetail = async (patient) => {
       </Modal>
 
       {/* ══ MODAL CRÉER / MODIFIER ══ */}
-      <Modal open={isOpen} onClose={()=>setIsOpen(false)} title={selP ? `✏️ Modifier — ${selP.first_name} ${selP.last_name}` : '👤 Nouveau Patient'} maxW={580}>
-        <PatientForm data={form} onChange={onChange} onSubmit={handleSubmit} onCancel={()=>setIsOpen(false)} submitting={saving} isEdit={!!selP}/>
+      {/* <Modal open={isOpen} onClose={()=>setIsOpen(false)} title={selP ? `✏️ Modifier — ${selP.first_name} ${selP.last_name}` : '👤 Nouveau Patient'} maxW={580}> */}
+       {/* AJOUT (03/11/26) */}
+      <Modal open={isOpen} onClose={() => setIsOpen(false)} title={selP ? 'Modifier le patient' : 'Nouveau patient'} maxW={720}>
+      <PatientForm data={form} onChange={onChange} onSubmit={handleSubmit} onCancel={()=>setIsOpen(false)} submitting={saving} isEdit={!!selP}/>
       </Modal>
     </div>
   );
