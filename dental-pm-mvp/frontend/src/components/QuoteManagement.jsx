@@ -407,7 +407,7 @@ const filtFees = fees
             <RefreshCw size={13}/>
           </button>
           <button type="button" onClick={openNewQuote}
-			  {/* onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}} */}
+			  /* onClick={()=>{setForm(emptyForm);setFees([]);setIsOpen(true);}} */
             style={{ padding:'9px 18px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontSize:14,fontWeight:700,boxShadow:'0 4px 14px rgba(13,122,135,.3)' }}>
             <Plus size={15}/>Nouveau Devis
           </button>
@@ -467,7 +467,7 @@ const filtFees = fees
           <p style={{ fontWeight:700,color:'#475569',fontSize:15,margin:'0 0 6px' }}>Aucun devis</p>
           <p style={{ color:'#94A3B8',fontSize:13,margin:'0 0 18px' }}>{search?`Aucun résultat pour "${search}"`:'Créez votre premier devis'}</p>
           <button type="button" onClick={openNewQuote}
-			  {/* onClick={()=>{setForm(emptyForm);setIsOpen(true);}}  */}
+			  /* onClick={()=>{setForm(emptyForm);setIsOpen(true);}}  */
 			  style={{ padding:'10px 22px',borderRadius:11,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700 }}>
             Nouveau devis
           </button>
