@@ -496,15 +496,49 @@ const PatientManagement = () => {
   };
 // AJOUT(03/11/26)
 const openPatientDetail = async (patient) => {
+  // try {
+  //   const response = await axios.get(
+  //     `${API}/patients/${patient.id}`,
+  //     authH()
+  //   );
+
+  //   setDetail(response.data);
+  // } catch (error) {
+  //   toast.error('Impossible de charger le dossier patient');
+  // }
+  if (!patient?.id) {
+    toast.error('Patient non identifié');
+    return;
+  }
+
+  // Afficher immédiatement le dossier
+  setDetail(patient);
+
+  // Actualiser ensuite les informations
   try {
     const response = await axios.get(
       `${API}/patients/${patient.id}`,
       authH()
     );
 
-    setDetail(response.data);
+    const fullPatient = response.data;
+
+    if (fullPatient?.id === patient.id) {
+      setDetail(current =>
+        current?.id === patient.id
+          ? fullPatient
+          : current
+      );
+    }
   } catch (error) {
-    toast.error('Impossible de charger le dossier patient');
+    console.error(
+      'Erreur ouverture dossier patient :',
+      error.response?.data || error.message
+    );
+
+    toast.warning(
+      'Dossier affiché depuis la liste. Actualisation impossible : vérifiez les informations avant utilisation clinique.'
+    );
   }
 };
   // 
