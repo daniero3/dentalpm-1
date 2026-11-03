@@ -220,11 +220,148 @@ const Dashboard = () => {
 
       {/* ── KPI Cards ── */}
       <div className="dash-card" style={{ display:'grid', gridTemplateColumns:cols4, gap:14 }}>
-        <KPI label="Patients actifs"     value={kpi?.patients?.total || 0}       icon={Users}      color={C.teal}   trend={5.2}  trendLabel="vs mois dernier" loading={loading}/>
-        <KPI label="RDV aujourd'hui"     value={kpi?.appointments?.today || 0}    icon={Calendar}   color={C.blue}   trend={0}    sub={`${kpi?.appointments?.monthly||0} ce mois`} loading={loading}/>
-        <KPI label="Revenus du mois"     value={kpi?.revenue?.monthly || 0}       icon={TrendingUp} color={C.green}  format="currency" trend={12.5} trendLabel="en hausse" loading={loading}/>
-        <KPI label="Factures impayées"   value={kpi?.invoices?.pending || 0}      icon={FileText}   color={C.coral}  trend={-3.1} trendLabel={kpi?.revenue?.outstanding ? fmt(kpi.revenue.outstanding) : undefined} loading={loading}/>
-      </div>
+        // <KPI label="Patients actifs"     value={kpi?.patients?.total || 0}       icon={Users}      color={C.teal}   trend={5.2}  trendLabel="vs mois dernier" loading={loading}/>
+        // <KPI label="RDV aujourd'hui"     value={kpi?.appointments?.today || 0}    icon={Calendar}   color={C.blue}   trend={0}    sub={`${kpi?.appointments?.monthly||0} ce mois`} loading={loading}/>
+        // <KPI label="Revenus du mois"     value={kpi?.revenue?.monthly || 0}       icon={TrendingUp} color={C.green}  format="currency" trend={12.5} trendLabel="en hausse" loading={loading}/>
+        // <KPI label="Factures impayées"   value={kpi?.invoices?.pending || 0}      icon={FileText}   color={C.coral}  trend={-3.1} trendLabel={kpi?.revenue?.outstanding ? fmt(kpi.revenue.outstanding) : undefined} loading={loading}/>
+		<KPI label="Patients actifs" value={kpi?.patients?.total ?? 0} icon={Users} color={C.teal} loading={loading} />
+		<KPI label="RDV aujourd'hui" value={kpi?.appointments?.today ?? 0} icon={Calendar} color={C.blue} sub={`${kpi?.appointments?.monthly ?? 0} ce mois`} loading={loading}/>
+		<KPI label="Revenus du mois" value={kpi?.revenue?.monthly ?? 0} icon={TrendingUp} color={C.green} format="currency" loading={loading}/>
+		<KPI label="Devis et factures en cours" value={kpi?.invoices?.pending ?? 0} icon={FileText} color={C.coral} loading={loading}/>
+	</div>
+
+// AJOUT (03/11/26)
+{/* Centre d'actions du cabinet */}
+<section
+  aria-label="Actions prioritaires du cabinet"
+  style={{
+    background: '#FFFFFF',
+    border: '1px solid #E2E8F0',
+    borderRadius: 18,
+    padding: '20px',
+    boxShadow: '0 2px 10px rgba(15,23,42,0.04)'
+  }}
+>
+  <div style={{ marginBottom: 16 }}>
+    <h2 style={{
+      margin: 0,
+      color: '#0F172A',
+      fontSize: 18,
+      fontWeight: 800
+    }}>
+      Actions prioritaires
+    </h2>
+
+    <p style={{
+      margin: '5px 0 0',
+      color: '#64748B',
+      fontSize: 13
+    }}>
+      Accédez rapidement aux opérations du cabinet.
+    </p>
+  </div>
+
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns:
+      'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: 12
+  }}>
+    {[
+      {
+        title: 'Planning du jour',
+        subtitle: error
+          ? 'Données indisponibles'
+          : loading
+            ? 'Chargement...'
+            : `${kpi?.appointments?.today ?? 0} RDV enregistrés aujourd'hui`,
+        icon: Calendar,
+        color: C.blue,
+        href: '/appointments'
+      },
+      {
+        title: 'Nouveau patient',
+        subtitle: 'Créer un dossier',
+        icon: Users,
+        color: C.teal,
+        href: '/patients?action=new'
+      },
+      {
+        title: 'Gestion des devis',
+        subtitle: 'Créer ou consulter les devis',
+        icon: FileText,
+        color: C.purple,
+        href: '/quotes'
+      },
+      {
+        title: 'Suivi des factures',
+        subtitle: 'Vérifier les règlements',
+        icon: DollarSign,
+        color: C.amber,
+        href: '/invoices'
+      }
+    ].map(action => (
+      <Link
+        key={action.title}
+        to={action.href}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '15px',
+          borderRadius: 14,
+          border: '1px solid #E2E8F0',
+          background: '#FBFDFD',
+          textDecoration: 'none',
+          minWidth: 0
+        }}
+      >
+        <span style={{
+          width: 42,
+          height: 42,
+          flexShrink: 0,
+          borderRadius: 12,
+          background: `${action.color}14`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <action.icon
+            size={20}
+            color={action.color}
+          />
+        </span>
+
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{
+            display: 'block',
+            color: '#0F172A',
+            fontSize: 14,
+            fontWeight: 750
+          }}>
+            {action.title}
+          </span>
+
+          <span style={{
+            display: 'block',
+            color: '#64748B',
+            fontSize: 12,
+            marginTop: 4,
+            lineHeight: 1.4
+          }}>
+            {action.subtitle}
+          </span>
+        </span>
+
+        <ArrowUpRight
+          size={17}
+          color="#64748B"
+        />
+      </Link>
+    ))}
+  </div>
+</section>
+// 
 
       {/* ── KPI secondaires ── */}
       <div className="dash-card" style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10, animationDelay:'.05s' }}>
@@ -533,25 +670,25 @@ const Dashboard = () => {
       </div>
 
       {/* ── Accès rapides ── */}
-      <div className="dash-card" style={{ animationDelay:'.3s' }}>
-        <div style={{ fontSize:11, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>Accès rapides</div>
-        <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
-          {[
-            { icon:'👤', l:'Nouveau patient',   c:C.blue,   href:'/patients' },
-            { icon:'📅', l:'Nouveau RDV',        c:C.purple, href:'/appointments' },
-            { icon:'🧾', l:'Nouvelle facture',   c:C.green,  href:'/invoices' },
-            { icon:'📦', l:'Vérifier le stock',  c:C.coral,  href:'/inventory' },
-          ].map(a => (
-            <Link key={a.l} to={a.href}
-              style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 16px', borderRadius:13, border:'1.5px solid #E2E8F0', background:'#fff', textDecoration:'none', transition:'all .2s' }}
-              onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.background=`${a.c}08`;}}
-              onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
-              <div style={{ width:34, height:34, borderRadius:10, background:`${a.c}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0 }}>{a.icon}</div>
-              <span style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>{a.l}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
+      // <div className="dash-card" style={{ animationDelay:'.3s' }}>
+      //   <div style={{ fontSize:11, fontWeight:700, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1.5, marginBottom:12 }}>Accès rapides</div>
+      //   <div style={{ display:'grid', gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(4,1fr)', gap:10 }}>
+      //     {[
+      //       { icon:'👤', l:'Nouveau patient',   c:C.blue,   href:'/patients' },
+      //       { icon:'📅', l:'Nouveau RDV',        c:C.purple, href:'/appointments' },
+      //       { icon:'🧾', l:'Nouvelle facture',   c:C.green,  href:'/invoices' },
+      //       { icon:'📦', l:'Vérifier le stock',  c:C.coral,  href:'/inventory' },
+      //     ].map(a => (
+      //       <Link key={a.l} to={a.href}
+      //         style={{ display:'flex', alignItems:'center', gap:10, padding:'13px 16px', borderRadius:13, border:'1.5px solid #E2E8F0', background:'#fff', textDecoration:'none', transition:'all .2s' }}
+      //         onMouseOver={e=>{e.currentTarget.style.borderColor=a.c;e.currentTarget.style.background=`${a.c}08`;}}
+      //         onMouseOut={e=>{e.currentTarget.style.borderColor='#E2E8F0';e.currentTarget.style.background='#fff';}}>
+      //         <div style={{ width:34, height:34, borderRadius:10, background:`${a.c}15`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, flexShrink:0 }}>{a.icon}</div>
+      //         <span style={{ fontSize:13, fontWeight:700, color:'#0F172A' }}>{a.l}</span>
+      //       </Link>
+      //     ))}
+      //   </div>
+      // </div>
 
       {error && (
         <div style={{ background:'#FEE2E2', border:'1px solid #FECACA', borderRadius:12, padding:'14px 18px', display:'flex', alignItems:'center', gap:10 }}>
