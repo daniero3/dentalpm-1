@@ -1033,17 +1033,75 @@ const openPatientDetail = async (patient) => {
               </div>
             </div>
            {/* Infos */}
-            {[
-              { icon:Phone,    l:'Téléphone',          v:detail.phone_primary },
-              { icon:Mail,     l:'Email',              v:detail.email },
-              { icon:MapPin,   l:'Adresse',            v:detail.address },
-              { icon:Shield,   l:'Contact urgence',    v:detail.emergency_contact_name ? `${detail.emergency_contact_name} · ${detail.emergency_contact_phone||''}` : null },
-            ].filter(r=>r.v).map((row,i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:'1px solid #F8FAFC' }}>
-                <div style={{ width:30, height:30, borderRadius:8, background:'#F8FAFC', display:'flex', alignItems:'center', justifyContent:'center' }}><row.icon size={13} color="#64748B"/></div>
-                <div><div style={{ fontSize:10, fontWeight:600, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1 }}>{row.l}</div><div style={{ fontSize:13, color:'#0F172A', fontWeight:500 }}>{row.v}</div></div>
-              </div>
-            ))}
+
+{/* Informations du patient */}
+<div style={{
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gap: 10,
+  marginBottom: 16
+}}>
+  {[
+    { icon: Phone, l: 'Téléphone', v: detail.phone_primary },
+    { icon: Mail, l: 'Email', v: detail.email },
+    { icon: MapPin, l: 'Adresse', v: detail.address },
+    {
+      icon: Shield,
+      l: "Contact d'urgence",
+      v: detail.emergency_contact_name
+        ? `${detail.emergency_contact_name} · ${detail.emergency_contact_phone || ''}`
+        : null
+    }
+  ].filter(row => row.v).map(row => (
+    <div
+      key={row.l}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        padding: '12px 14px',
+        border: '1px solid #E2E8F0',
+        borderRadius: 12,
+        background: '#F8FAFC',
+        minWidth: 0
+      }}
+    >
+      <row.icon size={17} color="#0D7A87"/>
+
+      <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+        <div style={{
+          fontSize: 11,
+          color: '#64748B',
+          fontWeight: 700,
+          marginBottom: 4
+        }}>
+          {row.l}
+        </div>
+        <div style={{
+          fontSize: 13,
+          color: '#0F172A',
+          fontWeight: 600
+        }}>
+          {row.v}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+            
+             {
+               /* [ */
+            //   { icon:Phone,    l:'Téléphone',          v:detail.phone_primary },
+            //   { icon:Mail,     l:'Email',              v:detail.email },
+            //   { icon:MapPin,   l:'Adresse',            v:detail.address },
+            //   { icon:Shield,   l:'Contact urgence',    v:detail.emergency_contact_name ? `${detail.emergency_contact_name} · ${detail.emergency_contact_phone||''}` : null },
+            // ].filter(r=>r.v).map((row,i) => (
+            //   <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:'1px solid #F8FAFC' }}>
+            //     <div style={{ width:30, height:30, borderRadius:8, background:'#F8FAFC', display:'flex', alignItems:'center', justifyContent:'center' }}><row.icon size={13} color="#64748B"/></div>
+            //     <div><div style={{ fontSize:10, fontWeight:600, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1 }}>{row.l}</div><div style={{ fontSize:13, color:'#0F172A', fontWeight:500 }}>{row.v}</div></div>
+            //   </div>
+            /* ))}  */}
+               
             {/* Médical */}
             {(detail.allergies||detail.medical_history||detail.current_medications) && (
               <div style={{ background:'#FFF5F5', borderRadius:12, padding:'14px', marginTop:14 }}>
@@ -1054,7 +1112,90 @@ const openPatientDetail = async (patient) => {
               </div>
             )}
             {/* Accès rapides */}
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:18 }}>
+
+{/* Accès rapides du dossier patient */}
+<div style={{
+  marginTop: 22
+}}>
+  <div style={{
+    fontSize: 14,
+    fontWeight: 800,
+    color: '#0F172A',
+    marginBottom: 12
+  }}>
+    Actions du dossier
+  </div>
+
+  <div style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+    gap: 10
+  }}>
+    {[
+      { icon: Activity, l: 'Odontogramme', to: `/patients/${detail.id}/odontogram`, c: '#7C3AED' },
+      { icon: History, l: 'Historique', onClick: () => { setDetail(null); openHistory(detail); }, c: '#DC2626' },
+      { icon: FileText, l: 'Documents', to: `/patients/${detail.id}/documents`, c: '#2563EB' },
+      { icon: ClipboardList, l: 'Ordonnances', to: `/patients/${detail.id}/prescriptions`, c: '#059669' },
+      { icon: FlaskConical, l: 'Laboratoire', to: `/patients/${detail.id}/lab-orders`, c: '#8B5CF6' },
+      { icon: ChevronRight, l: 'Fiche dentaire', to: `/patients/${detail.id}/chart`, c: '#D97706' },
+      { icon: Edit, l: 'Modifier', onClick: () => { setDetail(null); openEdit(detail); }, c: '#0D7A87' }
+    ].map(a => {
+      const Action = a.to ? Link : 'button';
+
+      return (
+        <Action
+          key={a.l}
+          {...(a.to
+            ? { to: a.to, onClick: () => setDetail(null) }
+            : { type: 'button', onClick: a.onClick }
+          )}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            width: '100%',
+            minHeight: 62,
+            padding: '11px 13px',
+            border: '1px solid #E2E8F0',
+            borderRadius: 13,
+            background: '#FFFFFF',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            textAlign: 'left',
+            boxSizing: 'border-box'
+          }}
+        >
+          <span style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: `${a.c}12`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <a.icon size={18} color={a.c}/>
+          </span>
+
+          <span style={{
+            flex: 1,
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#243746'
+          }}>
+            {a.l}
+          </span>
+
+          <ChevronRight size={15} color="#94A3B8"/>
+        </Action>
+      );
+    })}
+  </div>
+</div>
+
+            
+            {/* <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, marginTop:18 }}>
               {[
                 { icon:Activity, l:'Odontogramme', to:`/patients/${detail.id}/odontogram`, c:'#7C3AED' },
                 { icon:History, l:'Historique', onClick:()=>{setDetail(null);openHistory(detail);}, c:'#DC2626' },
@@ -1138,7 +1279,7 @@ const openPatientDetail = async (patient) => {
                   ? <Link key={i} to={a.to} style={{ textDecoration:'none' }} onClick={()=>setDetail(null)}>{btn}</Link>
                   : btn;
               })}
-            </div>
+            </div> */}
           </div>
         )}
       </Modal>
