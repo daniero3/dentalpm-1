@@ -248,11 +248,11 @@ export function ModernTopbar() {
               onFocus={e => { openCommand(); e.target.style.borderColor=theme.accent; e.target.style.background=theme.bgBase; e.target.style.boxShadow='0 0 0 3px var(--accent-glow)'; }}
               onBlur={e => { e.target.style.borderColor=theme.borderDefault; e.target.style.background=theme.bgBase; e.target.style.boxShadow='none'; }}
             />
-            {!isTablet && (
+            {/*!isTablet && (
               <div style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', display:'flex', alignItems:'center', gap:3, padding:'2px 7px', borderRadius:8, border:`1px solid ${theme.borderDefault}`, color:theme.textSecondary, fontSize:10, fontWeight:800, background:theme.bgElevated, pointerEvents:'none' }}>
                 <Command size={10}/>
               </div>
-            )}
+            )*/}
           </div>
         )}
 
