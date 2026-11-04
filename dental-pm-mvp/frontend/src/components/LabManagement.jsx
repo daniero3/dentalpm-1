@@ -363,7 +363,7 @@ const LabManagement = () => {
               {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
-          <div style={{background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',overflow:'hidden'}}>
+          <div className="dpm-lab-list" style={{background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',overflow:'hidden'}}>
             <div style={{padding:'13px 20px',borderBottom:'1px solid #F1F5F9'}}>
               <span style={{fontWeight:700,fontSize:14,color:'#0F172A'}}>{filtered.length} commande(s)</span>
             </div>
@@ -377,7 +377,7 @@ const LabManagement = () => {
               filtered.map((o,idx)=>{
                 const c=STATUS[o.status]||STATUS.CREATED, Icon=c.icon;
                 return(
-                  <div key={o.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',flexWrap:'wrap',gap:10}}>
+                  <div key={o.id} className="dpm-list-entry" style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',flexWrap:'wrap',gap:10}}>
                     <div style={{display:'flex',alignItems:'center',gap:12}}>
                       <div style={{width:36,height:36,borderRadius:10,background:c.bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon size={16} color={c.text}/></div>
                       <div>
