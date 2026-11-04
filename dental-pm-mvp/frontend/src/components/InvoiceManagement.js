@@ -543,7 +543,7 @@ const InvoiceManagement = () => {
             const isPaid = st==='PAID';
             const isOverdue = st==='OVERDUE';
             return(
-	              <div key={inv.id} className="inv-card" style={{ padding:'15px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',transition:'background .15s',animationDelay:`${Math.min(idx,.15)*.04}s`,borderLeft:`3px solid ${stInfo.dot}` }}
+	              <div key={inv.id} className="inv-card dpm-list-entry" style={{ padding:'15px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',transition:'background .15s',animationDelay:`${Math.min(idx,.15)*.04}s`,borderLeft:`3px solid ${stInfo.dot}` }}
 	                onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onFocus={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'} onBlur={e=>e.currentTarget.style.background='transparent'}>
                 {/* Infos */}
                 <div style={{ flex:1,minWidth:0 }}>
