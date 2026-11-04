@@ -587,8 +587,12 @@ const PricingSettings = () => {
                 </div>
 
                 {/* Fees Table */}
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
+                {/* <div className="border rounded-lg overflow-hidden"> */}
+                  {/* <Table> */}
+                
+<div className="border rounded-lg dpm-list-table-frame">
+  <Table className="dpm-list-table">
+
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[100px]">Code</TableHead>
