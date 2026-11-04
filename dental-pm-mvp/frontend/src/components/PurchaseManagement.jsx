@@ -396,7 +396,7 @@ const PurchaseManagement = () => {
                 const st = STATUS[p.status] || STATUS.CANCELLED;
                 const isExpense = p.expense_type === 'GENERAL_EXPENSE';
                 return (
-                  <div key={p.id} className="pu-card" style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, animationDelay:`${idx*.04}s`, boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
+                  <div key={p.id} className="pu-card dpm-list-entry" style={{ background:'#fff', borderRadius:16, border:'1px solid #E2E8F0', padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, animationDelay:`${idx*.04}s`, boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                       <div style={{ width:42, height:42, borderRadius:12, background:st.bg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                         {isExpense ? <FileText size={18} color={st.c}/> : <ShoppingCart size={18} color={st.c}/>}
