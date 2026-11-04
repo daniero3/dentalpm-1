@@ -834,7 +834,7 @@ const openPatientDetail = async (patient) => {
       </div>
 
       {/* ── KPIs ── */}
-      <div className="pt-card" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:14, marginBottom:22 }}>
+      <div className="pt-card dpm-list-entry" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:14, marginBottom:22 }}>
         {[
           { icon:'👥', l:'Total', v:stats.total, c:'#0D7A87', bg:'#F0FDFE', action:()=>applyStatFilter('ALL') },
           { icon:'👨', l:'Hommes', v:stats.men, c:'#3B82F6', bg:'#EFF6FF', action:()=>applyStatFilter('M') },
@@ -917,13 +917,13 @@ const openPatientDetail = async (patient) => {
         </div>
       ) : viewMode === 'list' ? (
         /* ── VUE LISTE ── */
-        <div className="patient-box" style={{ background:'#fff', borderRadius:22, border:'1px solid #E2E8F0', overflow:'hidden' }}>
+        <div className="patient-box dpm-list-surface" style={{ background:'#fff', borderRadius:22, border:'1px solid #E2E8F0', overflow:'hidden' }}>
           {filtered.map((p, idx) => {
             const age = calcAge(p.date_of_birth);
             const gc  = GENDER_COLOR[p.gender];
             const gb  = GENDER_BG[p.gender];
             return (
-              <div key={p.id} className="pt-card"
+              <div key={p.id} className="pt-card dpm-list-entry"
                 style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 24px', borderBottom:idx<filtered.length-1?'1px solid #F1F5F9':'none', flexWrap:'wrap', gap:14, animationDelay:`${Math.min(idx,.2)*0.04}s`, transition:'background .15s', cursor:'default' }}
                 onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'}
                 onMouseOut={e=>e.currentTarget.style.background='transparent'}
