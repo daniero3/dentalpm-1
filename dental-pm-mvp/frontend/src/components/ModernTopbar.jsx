@@ -225,7 +225,7 @@ export function ModernTopbar() {
         contain: 'none',
       }}>
 
-        {!isMobile && (
+        {/*!isMobile && (
           <div style={{ minWidth: 150, maxWidth: 240 }}>
             <p style={{ margin:0, fontSize:'var(--text-xs)', fontWeight:'var(--font-medium)', color:theme.textSecondary }}>DentalPM</p>
             <p style={{ margin:0, fontSize:'var(--text-base)', fontWeight:'var(--font-semibold)', color:theme.textPrimary, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{breadcrumb}</p>
@@ -264,11 +264,11 @@ export function ModernTopbar() {
           </button>
         )}
 
-        <div style={{ flex:1 }} />
+        {/* <div style={{ flex:1 }} /> */}
 
         {!isMobile && (
           <button type="button" onClick={() => navigate('/appointments')}
-            style={{ height:38, display:'inline-flex', alignItems:'center', justifyContent:'center', gap:'var(--space-2)', padding:'0 var(--space-4)', borderRadius:theme.radiusMd, border:`1px solid ${theme.accent}`, background:theme.accent, color:theme.bgSurface, fontSize:'var(--text-sm)', fontWeight:'var(--font-semibold)', cursor:'pointer', boxShadow:'var(--shadow-sm)', transition:theme.transition }}
+            style={{ height:38, flexShrink: 0, whiteSpace: 'nowrap', display:'inline-flex', alignItems:'center', justifyContent:'center', gap:'var(--space-2)', padding:'0 var(--space-4)', borderRadius:theme.radiusMd, border:`1px solid ${theme.accent}`, background:theme.accent, color:theme.bgSurface, fontSize:'var(--text-sm)', fontWeight:'var(--font-semibold)', cursor:'pointer', boxShadow:'var(--shadow-sm)', transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.background=theme.accentHover; e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow=theme.shadow }}
             onMouseLeave={e => { e.currentTarget.style.background=theme.accent; e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow-sm)' }}
             onMouseDown={e => { e.currentTarget.style.transform='scale(0.97)' }}
