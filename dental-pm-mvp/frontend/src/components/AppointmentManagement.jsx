@@ -157,7 +157,7 @@ const MiniCalendar = ({ selectedDate, onSelect, appointments }) => {
   })();
 
   return (
-    <div className="rdv-card" style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E2E8F0', padding:'16px 18px', display:'flex', gap:14, alignItems:'flex-start', boxShadow:'0 1px 4px rgba(0,0,0,.04)', transition:'all .2s', animationDelay:`${Math.min(idx,.15)*0.05}s`, position:'relative' }}
+    <div className="rdv-card dpm-list-entry" style={{ background:'#fff', borderRadius:16, border:'1.5px solid #E2E8F0', padding:'16px 18px', display:'flex', gap:14, alignItems:'flex-start', boxShadow:'0 1px 4px rgba(0,0,0,.04)', transition:'all .2s', animationDelay:`${Math.min(idx,.15)*0.05}s`, position:'relative' }}
       onMouseOver={e=>{e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
       onFocus={e=>{e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,.08)';e.currentTarget.style.borderColor='#CBD5E1';}}
       onMouseOut={e=>{e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.04)';e.currentTarget.style.borderColor='#E2E8F0';}}
