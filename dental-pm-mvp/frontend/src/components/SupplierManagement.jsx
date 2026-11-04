@@ -269,11 +269,11 @@ const SupplierManagement = () => {
               </button>
             </div>
           ):(
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:14}}>
+            <div className="dpm-list-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:14}}>
               {filtered.map(s=>{
                 const t=getType(s.type);
                 return(
-                  <div key={s.id} style={{background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'18px 20px',boxShadow:'0 1px 4px rgba(0,0,0,.04)',opacity:s.is_active===false?.55:1}}>
+                  <div key={s.id} className="dpm-list-entry" style={{background:'#fff',borderRadius:16,border:'1px solid #E2E8F0',padding:'18px 20px',boxShadow:'0 1px 4px rgba(0,0,0,.04)',opacity:s.is_active===false?.55:1}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
                       <div style={{display:'flex',alignItems:'center',gap:10}}>
                         <div style={{width:38,height:38,borderRadius:11,background:`${t.bg}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
