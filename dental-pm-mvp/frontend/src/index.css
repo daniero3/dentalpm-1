@@ -848,3 +848,121 @@ input[type="search"][aria-label="Recherche d'un acte tarifaire"]:focus {
   border-color: #0D7A87 !important;
   box-shadow: 0 0 0 3px rgba(13,122,135,0.12) !important;
 }
+
+
+/* ===========================================
+   DentalPM — Design unifié des listes
+   =========================================== */
+
+/* Conteneur des listes */
+.dpm-list-surface {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  padding: 10px !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 18px !important;
+  overflow: visible !important;
+}
+
+/* Chaque carte ou ligne */
+.dpm-list-entry {
+  min-width: 0;
+  padding: 14px 16px !important;
+  border-radius: 14px !important;
+  background: var(--bg-surface) !important;
+  box-shadow:
+    0 0 0 1px var(--border-subtle),
+    0 2px 6px rgba(15, 43, 48, 0.04) !important;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.dpm-list-surface > .dpm-list-entry {
+  border-bottom: 0 !important;
+}
+
+.dpm-list-entry:hover,
+.dpm-list-entry:focus-within {
+  background: var(--bg-subtle) !important;
+  box-shadow:
+    0 0 0 1px var(--border-default),
+    0 5px 14px rgba(13, 122, 135, 0.08) !important;
+}
+
+/* Cartes fournisseurs */
+.dpm-list-grid {
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 280px), 1fr)) !important;
+  gap: 12px !important;
+}
+
+/* Commandes de laboratoire */
+.dpm-lab-list > .dpm-list-entry {
+  margin: 8px 10px;
+}
+
+/* Tableaux de données */
+.dpm-list-table-frame {
+  overflow-x: auto !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 16px !important;
+  background: var(--bg-surface);
+  overscroll-behavior-x: contain;
+}
+
+.dpm-list-table {
+  display: table !important;
+  width: 100% !important;
+  min-width: 680px;
+  border-spacing: 0 !important;
+}
+
+.dpm-list-table thead tr {
+  background: var(--bg-elevated) !important;
+}
+
+.dpm-list-table thead th {
+  padding: 13px 15px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--text-secondary) !important;
+  white-space: nowrap;
+}
+
+.dpm-list-table tbody td {
+  padding: 13px 15px !important;
+  font-size: 14px !important;
+  line-height: 1.5;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dpm-list-table tbody tr:hover {
+  background: var(--bg-subtle) !important;
+}
+
+/* Smartphone */
+@media (max-width: 767px) {
+  .dpm-list-surface {
+    padding: 7px !important;
+    gap: 8px !important;
+  }
+
+  .dpm-list-entry {
+    padding: 12px !important;
+  }
+
+  .dpm-list-table {
+    min-width: 680px;
+  }
+}
+
+/* Accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  .dpm-list-entry {
+    transition: none !important;
+  }
+}
