@@ -18,6 +18,14 @@ import {
   Activity, FileText, ClipboardList, FlaskConical, History
 } from 'lucide-react';
 
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem
+} from './ui/select';
+
 const API = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
   : typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -856,11 +864,36 @@ const openCreate = () => {
             </div>
 
             {/* Filtre statut */}
-            <select aria-label="Filtrer les rendez-vous par statut" value={statusF} onChange={e=>setStatusF(e.target.value)}
+            {/* <select aria-label="Filtrer les rendez-vous par statut" value={statusF} onChange={e=>setStatusF(e.target.value)}
               style={{ padding:'6px 10px', borderRadius:9, border:'1.5px solid #E2E8F0', background:'#fff', fontSize:12, fontWeight:600, color:'#475569', cursor:'pointer' }}>
               <option value="all">Tous statuts</option>
               {Object.entries(STATUS).map(([k,v])=><option key={k} value={k}>{v.l}</option>)}
-            </select>
+            </select> */}
+            
+          {/* Filtre statut — Menu Premium */}
+          <Select
+            value={statusF}
+            onValueChange={setStatusF}
+          >
+            <SelectTrigger
+              aria-label="Filtrer les rendez-vous par statut"
+              className="w-full sm:w-[190px]"
+            >
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+          
+            <SelectContent position="popper" align="start">
+              <SelectItem value="all">
+                Tous les statuts
+              </SelectItem>
+          
+              {Object.entries(STATUS).map(([key, status]) => (
+                <SelectItem key={key} value={key}>
+                  {status.l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
             <span style={{ fontSize:11, color:'#94A3B8', whiteSpace:'nowrap' }}>{filtered.length} RDV</span>
           </div>
