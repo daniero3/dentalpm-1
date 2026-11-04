@@ -536,7 +536,16 @@ const InvoiceManagement = () => {
           </button>
         </div>
       ):(
-        <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',overflow:'hidden' }}>
+        
+<div
+  className="dpm-list-surface"
+  style={{
+    background: '#fff',
+    borderRadius: 18,
+    border: '1px solid #E2E8F0',
+    overflow: 'hidden'
+  }}
+>
           {filtered.map((inv,idx)=>{
             const st = getStatus(inv);
             const stInfo = INV_STATUS[st] || INV_STATUS.DRAFT;
