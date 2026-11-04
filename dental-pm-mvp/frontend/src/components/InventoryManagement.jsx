@@ -249,8 +249,27 @@ const InventoryManagement = () => {
           </button>
         </div>
       ):(
-        <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',overflow:'hidden' }}>
-          <table style={{ width:'100%',borderCollapse:'collapse',fontSize:13 }}>
+        //<div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',overflow:'hidden' }}>
+          //<table style={{ width:'100%',borderCollapse:'collapse',fontSize:13 }}>
+		
+<div
+  className="dpm-list-table-frame"
+  style={{
+    background: '#fff',
+    borderRadius: 18,
+    border: '1px solid #E2E8F0',
+    overflow: 'hidden'
+  }}
+>
+  <table
+    className="dpm-list-table"
+    style={{
+      width: '100%',
+      borderCollapse: 'collapse',
+      fontSize: 13
+    }}
+  >
+
             <thead>
               <tr style={{ background:'#F8FAFC' }}>
                 {['Produit','SKU','Catégorie','Stock','Min.','Valeur stock','Actions'].map(h=>(
