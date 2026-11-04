@@ -467,8 +467,9 @@ const PricingSettings = () => {
                 )}
 
                 {/* Filters */}
-                <div className="flex gap-4 mb-4">
-                  <div
+                {/* <div className="flex gap-4 mb-4"> */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                  {/* <div
                     style={{
                       position: 'relative',
                       width: '100%'
@@ -514,9 +515,65 @@ const PricingSettings = () => {
                         boxShadow: '0 4px 14px rgba(13, 122, 135, 0.08)'
                       }}
                     />
-                  </div>
+                  </div> */}
+                  
+<div style={{
+  position: 'relative',
+  width: '100%',
+  minWidth: 0,
+  flex: 1
+}}>
+  <Search
+    size={17}
+    style={{
+      position: 'absolute',
+      left: 14,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      color: '#0D7A87',
+      pointerEvents: 'none',
+      zIndex: 2
+    }}
+  />
+
+  <Input
+    type="search"
+    aria-label="Recherche d'un acte tarifaire"
+    placeholder="Rechercher par code ou nom de l'acte..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    onFocus={(e) => {
+      e.currentTarget.style.borderColor = '#0D7A87';
+      e.currentTarget.style.boxShadow =
+        '0 0 0 3px rgba(13,122,135,0.12)';
+    }}
+    onBlur={(e) => {
+      e.currentTarget.style.borderColor = '#C8DDE0';
+      e.currentTarget.style.boxShadow =
+        '0 2px 7px rgba(15,43,48,0.04)';
+    }}
+    style={{
+      width: '100%',
+      height: 46,
+      paddingLeft: 43,
+      paddingRight: 14,
+      borderRadius: 13,
+      border: '1px solid #C8DDE0',
+      background: '#FFFFFF',
+      color: '#0F2B30',
+      fontSize: 15,
+      fontWeight: 400,
+      outline: 'none',
+      boxSizing: 'border-box',
+      boxShadow: '0 2px 7px rgba(15,43,48,0.04)',
+      transition: 'border-color 180ms ease, box-shadow 180ms ease'
+    }}
+  />
+</div>
+
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-[200px]">
+                    {/* <SelectTrigger className="w-[200px]"> */}
+                    <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Catégorie" />
                     </SelectTrigger>
                     <SelectContent>
