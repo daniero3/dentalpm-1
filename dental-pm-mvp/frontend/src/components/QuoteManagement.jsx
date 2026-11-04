@@ -477,7 +477,7 @@ const filtFees = fees
           {filtered.map((q,idx)=>{
             const nexts = NEXT_STATUS[q.status]||[];
             return(
-	              <div key={q.id} className="q-card" style={{ padding:'15px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',transition:'background .15s',animationDelay:`${Math.min(idx,.15)*.04}s` }}
+	              <div key={q.id} className="q-card dpm-list-entry" style={{ padding:'15px 20px',borderBottom:idx<filtered.length-1?'1px solid #F8FAFC':'none',display:'flex',alignItems:'center',gap:14,flexWrap:'wrap',transition:'background .15s',animationDelay:`${Math.min(idx,.15)*.04}s` }}
 	                onMouseOver={e=>e.currentTarget.style.background='#FAFBFC'} onFocus={e=>e.currentTarget.style.background='#FAFBFC'} onMouseOut={e=>e.currentTarget.style.background='transparent'} onBlur={e=>e.currentTarget.style.background='transparent'}>
                 {/* Icône */}
                 <div style={{ width:40,height:40,borderRadius:11,background:'#F0FDFE',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
