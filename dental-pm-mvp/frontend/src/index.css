@@ -1264,3 +1264,79 @@ button[role="combobox"][data-state]:focus-visible {
   color: var(--brand-primary) !important;
   font-weight: 700;
 }
+
+
+/* ==========================================
+   DentalPM — Correction alignement des menus
+   ========================================== */
+
+/* Menus déroulants classiques */
+select:not([multiple]) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  height: 44px !important;
+  min-height: 44px !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis;
+
+  line-height: normal !important;
+  vertical-align: middle;
+
+  border-radius: 12px !important;
+  border: 1px solid var(--border-default) !important;
+
+  padding: 0 38px 0 14px !important;
+  background-color: var(--bg-input) !important;
+
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Sélecteur de tri des patients */
+select[aria-label="Trier les patients"] {
+  min-width: 155px !important;
+}
+
+/* Sélecteur de langue : cadre unique */
+.dpm-app-topbar label:has(> select) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center;
+  gap: 8px !important;
+
+  height: 44px !important;
+  flex-shrink: 0;
+  white-space: nowrap !important;
+
+  border-radius: 12px !important;
+}
+
+/* Champ de langue */
+.dpm-app-topbar label > select {
+  width: 122px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+
+  padding: 0 28px 0 2px !important;
+
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+/* Format mobile */
+@media (max-width: 767px) {
+  .dpm-app-topbar label > select {
+    width: 68px !important;
+    padding-right: 23px !important;
+  }
+}
