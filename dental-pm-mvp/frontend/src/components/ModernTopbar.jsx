@@ -250,7 +250,7 @@ export function ModernTopbar() {
             />
             {!isTablet && (
               <div style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', display:'flex', alignItems:'center', gap:3, padding:'2px 7px', borderRadius:8, border:`1px solid ${theme.borderDefault}`, color:theme.textSecondary, fontSize:10, fontWeight:800, background:theme.bgElevated, pointerEvents:'none' }}>
-                <Command size={10}/> K
+                <Command size={10}/>
               </div>
             )}
           </div>
