@@ -473,7 +473,15 @@ const filtFees = fees
           </button>
         </div>
       ):(
-        <div style={{ background:'#fff',borderRadius:18,border:'1px solid #E2E8F0',overflow:'hidden' }}>
+<div
+  className="dpm-list-surface"
+  style={{
+    background: '#fff',
+    borderRadius: 18,
+    border: '1px solid #E2E8F0',
+    overflow: 'hidden'
+  }}
+>
           {filtered.map((q,idx)=>{
             const nexts = NEXT_STATUS[q.status]||[];
             return(
