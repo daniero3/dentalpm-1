@@ -829,3 +829,22 @@ input[aria-label="Rechercher une validation de paiement"]:focus {
     font-size: 16px !important;
   }
 }
+
+
+/* DentalPM — Correction recherche Tarifs des actes */
+
+input[type="search"][aria-label="Recherche d'un acte tarifaire"] {
+  height: 46px !important;
+  border-radius: 13px !important;
+  border: 1px solid #C8DDE0 !important;
+  background: #FFFFFF !important;
+  color: #0F2B30 !important;
+  font-size: 15px !important;
+  padding-left: 43px !important;
+  box-shadow: 0 2px 7px rgba(15,43,48,0.04);
+}
+
+input[type="search"][aria-label="Recherche d'un acte tarifaire"]:focus {
+  border-color: #0D7A87 !important;
+  box-shadow: 0 0 0 3px rgba(13,122,135,0.12) !important;
+}
