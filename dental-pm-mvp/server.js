@@ -35,6 +35,7 @@ const messagingRoutes     = require('./routes/messaging');
 const purchasesRoutes     = require('./routes/purchases');
 const onboardingRoutes    = require('./routes/onboarding');
 const dentalChartRoutes   = require('./routes/dental-chart');
+const dentalRecordRoutes  = require('./routes/dental-records');
 const assistantRoutes     = require('./routes/assistant');
 
 const { getSubscriptionStatus } = require('./middleware/licensing');
@@ -360,6 +361,7 @@ app.use('/api/assistant',        requireAuth, requireClinicScope, assistantRoute
 app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('prescriptions'), prescriptionRoutes);
 app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('dental_chart'), odontogramRoutes);
 app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('dental_chart'), dentalChartRoutes);
+app.use('/api', requireAuth, requireClinicScope, blockMedical, requireModuleAccess('dental_chart'), dentalRecordRoutes);
 
 app.get('/api/subscription/status', requireAuth, getSubscriptionStatus);
 

@@ -80,7 +80,7 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
 import "./App.css";
 import "./components/dpm.css";
 import "./components/mobile.css";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useParams, BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
 import CookieBanner from "./components/CookieBanner";
@@ -97,9 +97,13 @@ import { LanguageProvider } from "./components/language-provider";
 const LoginForm = React.lazy(() => import("./components/LoginForm"));
 const LandingPage = React.lazy(() => import("./components/LandingPage"));
 const SubscriptionManagement = React.lazy(() => import('./components/SubscriptionManagement'));
+const LegacyDentalChartRedirect = () => {
+  const { patientId } = useParams();
+  return <Navigate to={`/patients/${patientId}/odontogram`} replace />;
+};
+
 const Dashboard = React.lazy(() => import("./components/Dashboard"));
 const PatientManagement = React.lazy(() => import("./components/PatientManagement"));
-const DentalChart = React.lazy(() => import("./components/DentalChart"));
 const InvoiceManagement = React.lazy(() => import("./components/InvoiceManagement"));
 const QuoteManagement = React.lazy(() => import("./components/QuoteManagement"));
 const PatientDocuments = React.lazy(() => import("./components/PatientDocuments"));
@@ -526,7 +530,7 @@ function App() {
                 <Route path="/login" element={<LoginRedirect />} />
                 <Route path="/" element={<ProtectedRoute><LicensingGuard><MainLayout><Dashboard /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/patients" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
-                <Route path="/patients/:patientId/chart" element={<ProtectedRoute><LicensingGuard><MainLayout><DentalChart /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/patients/:patientId/chart" element={<ProtectedRoute><LegacyDentalChartRedirect /></ProtectedRoute>} />
                 <Route path="/patients/:patientId/documents" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientDocuments /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/patients/:patientId/prescriptions" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientPrescriptions /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/patients/:patientId/odontogram" element={<ProtectedRoute><LicensingGuard><MainLayout><PatientOdontogram /></MainLayout></LicensingGuard></ProtectedRoute>} />

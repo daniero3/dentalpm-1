@@ -1194,12 +1194,11 @@ const openPatientDetail = async (patient) => {
     gap: 10
   }}>
     {[
-      { icon: Activity, l: 'Odontogramme', to: `/patients/${detail.id}/odontogram`, c: '#7C3AED' },
+      { icon: Activity, l: 'Dossier dentaire', to: `/patients/${detail.id}/odontogram`, c: '#7C3AED' },
       { icon: History, l: 'Historique', onClick: () => { setDetail(null); openHistory(detail); }, c: '#DC2626' },
       { icon: FileText, l: 'Documents', to: `/patients/${detail.id}/documents`, c: '#2563EB' },
       { icon: ClipboardList, l: 'Ordonnances', to: `/patients/${detail.id}/prescriptions`, c: '#059669' },
       { icon: FlaskConical, l: 'Laboratoire', to: `/patients/${detail.id}/lab-orders`, c: '#8B5CF6' },
-      { icon: ChevronRight, l: 'Fiche dentaire', to: `/patients/${detail.id}/chart`, c: '#D97706' },
       { icon: Edit, l: 'Modifier', onClick: () => { setDetail(null); openEdit(detail); }, c: '#0D7A87' }
     ].map(a => {
       const Action = a.to ? Link : 'button';
