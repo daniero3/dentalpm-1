@@ -141,11 +141,15 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
     crowned: { name: 'Couronnée', color: '#f59e0b' },
     implant: { name: 'Implant', color: '#8b5cf6' },
   };
-
+  unassessed: {
+    name: 'Non évaluée',
+    color: '#e2e8f0'
+  },
   const generateEmptyChart = () =>
     Array.from({ length: 32 }, (_, i) => ({
       tooth_position: String(i + 1),
-      status: 'healthy',
+      // status: 'healthy',
+      status: null,
       procedures: [],
       notes: '',
     }));
@@ -201,7 +205,8 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
           return {
             ...tooth,
             tooth_fdi: fdi,
-            status: statusMap[od.status] || 'healthy',
+            // status: statusMap[od.status] || 'healthy',
+            status: statusMap[od.status] ?? null,
             procedures: [],
             notes: od.note || '',
           };
@@ -211,7 +216,8 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
       setTeethRecords(
         records.map((tooth) => ({
           ...tooth,
-          status: tooth.status || 'healthy',
+          // status: tooth.status || 'healthy',
+          status: tooth.status ?? null,
           procedures: Array.isArray(tooth.procedures) ? tooth.procedures : [],
         }))
       );
@@ -290,7 +296,8 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   };
 
   const renderTooth = (tooth) => {
-    const status = toothStatuses[tooth.status] || toothStatuses.healthy;
+    // const status = toothStatuses[tooth.status] || toothStatuses.healthy;
+    const status = toothStatuses[tooth.status] || toothStatuses.unassessed;
     const isSelected = selectedTooth?.tooth_position === tooth.tooth_position;
 
     return (
@@ -403,7 +410,8 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
               <strong>Légende :</strong>
 
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
-                {Object.entries(toothStatuses).map(([key, value]) => (
+                // {Object.entries(toothStatuses).map(([key, value]) => (
+              {Object.entries(toothStatuses).filter(([key]) => key !== 'unassessed').map(([key, value]) => (
                   <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span
                       style={{
