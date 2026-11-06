@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import {
+  clinicDateISO,
+  shiftCivilDays,
+  shiftCivilMonths,
+  civilWeekRange,
+  formatCivilDate
+} from '../utils/clinicDate.mjs';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
@@ -62,9 +69,22 @@ const QUICK_STATUS_NEXT = {
 const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const JOURS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 
-const today   = () => new Date().toISOString().split('T')[0];
-const fdate   = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' }) : '—';
-const fdateLong = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
+// const today   = () => new Date().toISOString().split('T')[0];
+// const fdate   = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' }) : '—';
+// const fdateLong = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '—';
+const today = () => clinicDateISO();
+
+const fdate = d => formatCivilDate(d, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short'
+});
+
+const fdateLong = d => formatCivilDate(d, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+});
 const getType = v => TYPES.find(t => t.value === v) || TYPES[0];
 
 /* ── Skeleton ── */
@@ -331,20 +351,38 @@ const AppointmentManagement = () => {
   };
 
   /* Plage de dates selon viewMode */
+  // const dateRange = useCallback(() => {
+  //   if (viewMode === 'day') return { from: selDate, to: selDate };
+  //   if (viewMode === 'week') {
+  //     const d = new Date(selDate + 'T00:00:00');
+  //     const dow = d.getDay();
+  //     const mon = new Date(d); mon.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+  //     const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  //     return { from: mon.toISOString().split('T')[0], to: sun.toISOString().split('T')[0] };
+  //   }
+  //   const d = new Date();
+  //   const from = new Date(d); from.setMonth(d.getMonth() - 1);
+  //   const to   = new Date(d); to.setMonth(d.getMonth() + 3);
+  //   return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] };
+  // }, [selDate, viewMode]);
   const dateRange = useCallback(() => {
-    if (viewMode === 'day') return { from: selDate, to: selDate };
-    if (viewMode === 'week') {
-      const d = new Date(selDate + 'T00:00:00');
-      const dow = d.getDay();
-      const mon = new Date(d); mon.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
-      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-      return { from: mon.toISOString().split('T')[0], to: sun.toISOString().split('T')[0] };
-    }
-    const d = new Date();
-    const from = new Date(d); from.setMonth(d.getMonth() - 1);
-    const to   = new Date(d); to.setMonth(d.getMonth() + 3);
-    return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] };
-  }, [selDate, viewMode]);
+  if (viewMode === 'day') {
+    return {
+      from: selDate,
+      to: selDate
+    };
+  }
+
+  if (viewMode === 'week') {
+    return civilWeekRange(selDate);
+  }
+
+  return {
+    from: shiftCivilMonths(today(), -1),
+    to: shiftCivilMonths(today(), 3)
+  };
+}, [selDate, viewMode]);
+  
 
   const fetchAppts = useCallback(async () => {
     setLoading(true);
@@ -377,7 +415,7 @@ const AppointmentManagement = () => {
   
       const list = r.data.patients || r.data.data || (Array.isArray(r.data) ? r.data : []);
   
-      console.log('Patients chargés pour agenda:', list.length, list);
+      // console.log('Patients chargés pour agenda:', list.length, list);
   
       setPatients(list);
     } catch (e) {
@@ -724,8 +762,15 @@ const openCreate = () => {
   const sortedDates = Object.keys(grouped).sort();
 
   /* Navigation jour */
-  const prevDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()-1); setSelDate(d.toISOString().split('T')[0]); };
-  const nextDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()+1); setSelDate(d.toISOString().split('T')[0]); };
+  // const prevDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()-1); setSelDate(d.toISOString().split('T')[0]); };
+  // const nextDay = () => { const d = new Date(selDate + 'T00:00:00'); d.setDate(d.getDate()+1); setSelDate(d.toISOString().split('T')[0]); };
+  const prevDay = () => {
+  setSelDate(shiftCivilDays(selDate, -1));
+};
+
+const nextDay = () => {
+  setSelDate(shiftCivilDays(selDate, 1));
+};
 
   return (
     <div style={{ maxWidth: 1200, margin:'0 auto', paddingBottom:48 }}>
