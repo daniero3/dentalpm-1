@@ -81,7 +81,8 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
   const [loading, setLoading]             = useState(true);
   const [saving, setSaving]               = useState(false);
   const [selectedTooth, setSelectedTooth] = useState(null);
-  const [editForm, setEditForm]           = useState({ status:'HEALTHY', surface:'NONE', note:'' });
+  // const [editForm, setEditForm]           = useState({ status:'HEALTHY', surface:'NONE', note:'' });
+  const [editForm, setEditForm] = useState({ status: '', surface: 'NONE', note: ''});
   const [pendingChanges, setPendingChanges] = useState({});
   const [toothHistory, setToothHistory]   = useState([]);
   const [notification, setNotification]   = useState(null);
@@ -125,7 +126,8 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
 
   const handleToothClick = useCallback((toothFdi) => {
     const existing = pendingChanges[toothFdi] || odontogram[toothFdi] || {};
-    const nextForm = { status: existing.status || 'HEALTHY', surface: existing.surface || 'NONE', note: existing.note || '' };
+    // const nextForm = { status: existing.status || 'HEALTHY', surface: existing.surface || 'NONE', note: existing.note || '' };
+    const nextForm = { status: existing.status || '', surface: existing.surface || 'NONE', note: existing.note || '' };
     setSelectedTooth(() => toothFdi);
     setEditForm(nextForm);
   }, [pendingChanges, odontogram]);
@@ -136,6 +138,10 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
   const handleNoteChange    = useCallback(e => setEditForm(p => ({ ...p, note:    e.target.value })), []);
 
   const handleSaveTooth = useCallback(() => {
+    if (!selectedTooth || !editForm.status) {
+      notify('error', 'Veuillez sélectionner un état clinique avant de valider.');
+      return;
+    }
     const actionDate = new Date().toISOString();
     setPendingChanges(prev => ({
       ...prev,
@@ -160,10 +166,19 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
     } finally { setSaving(false); }
   };
 
+  // const getToothDisplay = (toothFdi) => {
+  //   const data = pendingChanges[toothFdi] || odontogram[toothFdi];
+  //   if (!data || data.status === 'HEALTHY') return { color:'bg-white border-2 border-gray-300', isPending:!!pendingChanges[toothFdi] };
+  //   return { color:(STATUSES[data.status]||STATUSES.HEALTHY).color, isPending:!!pendingChanges[toothFdi] };
+  // };
   const getToothDisplay = (toothFdi) => {
     const data = pendingChanges[toothFdi] || odontogram[toothFdi];
-    if (!data || data.status === 'HEALTHY') return { color:'bg-white border-2 border-gray-300', isPending:!!pendingChanges[toothFdi] };
-    return { color:(STATUSES[data.status]||STATUSES.HEALTHY).color, isPending:!!pendingChanges[toothFdi] };
+    const isPending = !!pendingChanges[toothFdi];
+    if (!data?.status) {
+      return { color: 'bg-slate-100 border-2 border-dashed border-slate-400 text-slate-600', label: 'Non évaluée', isPending };
+    }
+    const status = STATUSES[data.status];
+    return { color: status ? status.color : 'bg-amber-50 border-2 border-amber-500', label: status?.label || 'État non reconnu', isPending };
   };
 
   const ToothButton = ({ toothFdi }) => {
@@ -232,14 +247,33 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
 
       <Card>
         <CardContent className="pt-4">
-          <div className="flex flex-wrap gap-3">
+          {/* <div className="flex flex-wrap gap-3">
             {Object.entries(STATUSES).map(([key, { label, color }]) => (
               <div key={key} className="flex items-center gap-1">
                 <div className={`w-4 h-4 rounded ${color}`} />
                 <span className="text-xs">{label}</span>
               </div>
             ))}
-          </div>
+          </div> */}
+          
+<div className="flex flex-wrap gap-3">
+
+  {/* Dent sans évaluation clinique enregistrée */}
+  <div className="flex items-center gap-1">
+    <div className="w-4 h-4 rounded bg-slate-100 border-2 border-dashed border-slate-400" />
+    <span className="text-xs">Non évaluée</span>
+  </div>
+
+  {/* États dentaires enregistrés */}
+  {Object.entries(STATUSES).map(([key, { label, color }]) => (
+    <div key={key} className="flex items-center gap-1">
+      <div className={`w-4 h-4 rounded ${color}`} />
+      <span className="text-xs">{label}</span>
+    </div>
+  ))}
+
+</div>
+
         </CardContent>
       </Card>
 
@@ -349,6 +383,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
           <div>
             <label htmlFor="odontogram-status" style={labelStyle}>Statut</label>
             <select id="odontogram-status" value={editForm.status} onChange={handleStatusChange} style={selectStyle} data-testid="status-select">
+              <option value="" disabled> Sélectionner un état après examen </option>
               {Object.entries(STATUSES).map(([key, { label }]) => <option key={key} value={key}>{label}</option>)}
             </select>
           </div>
