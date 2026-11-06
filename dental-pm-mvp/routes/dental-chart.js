@@ -12,7 +12,8 @@ const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || req.u
 function generateEmptyTeeth() {
   return Array.from({ length: 32 }, (_, i) => ({
     tooth_position: String(i + 1),
-    status: 'healthy',
+    // status: 'healthy',
+    status: null,
     procedures: [],
     notes: ''
   }));
