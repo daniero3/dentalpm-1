@@ -1,6 +1,7 @@
 const express = require('express');
 const { param, body, validationResult } = require('express-validator');
 const { ToothStatus, ToothHistory, Patient, User, AuditLog } = require('../models');
+const sequelize = require('../database/connection');
 
 const router = express.Router();
 
@@ -79,111 +80,204 @@ router.get('/patients/:patientId/odontogram', [
   }
 });
 
+
 /**
  * PUT /api/patients/:patientId/odontogram
+ * Sauvegarde atomique des dents et de leur historique.
  */
 router.put('/patients/:patientId/odontogram', [
   param('patientId').isUUID(),
-  body('teeth').isArray({ min: 1 })
+  body('teeth').isArray({ min: 1, max: 52 })
 ], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
+  const errors = validationResult(req);
 
-    const clinicId = getClinicId(req);
-    const userId   = getUserId(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: 'Données invalides'
+    });
+  }
 
-    console.log('[odontogram PUT] clinicId:', clinicId, '| userId:', userId);
+  const clinicId = getClinicId(req);
+  const userId = getUserId(req);
 
-    // Trouver le patient
-    const wherePatient = { id: req.params.patientId };
-    if (clinicId) wherePatient.clinic_id = clinicId;
+  if (!clinicId || !userId) {
+    return res.status(403).json({
+      error: 'Cabinet ou utilisateur non identifié'
+    });
+  }
 
-    const patient = await Patient.findOne({ where: wherePatient });
-    if (!patient) return res.status(404).json({ error:'Patient non trouvé' });
+  const teeth = req.body.teeth;
+  const seen = new Set();
 
-    const { teeth } = req.body;
-    const results = { created:0, updated:0, skipped:0 };
-
-    for (const tooth of teeth) {
-      if (!tooth.tooth_fdi || !VALID_FDI.includes(String(tooth.tooth_fdi))) {
-        results.skipped++; continue;
-      }
-      if (tooth.status && !VALID_STATUSES.includes(tooth.status)) {
-        results.skipped++; continue;
-      }
-
-      try {
-        const whereClause = {
-          patient_id: req.params.patientId,
-          tooth_fdi:  String(tooth.tooth_fdi)
-        };
-        if (clinicId) whereClause.clinic_id = clinicId;
-
-        const defaults = {
-          patient_id:  req.params.patientId,
-          tooth_fdi:   String(tooth.tooth_fdi),
-          surface:     tooth.surface || null,
-          status:      tooth.status  || 'HEALTHY',
-          note:        tooth.note    || null,
-          updated_by:  userId
-        };
-        if (clinicId) defaults.clinic_id = clinicId;
-
-        const [record, created] = await ToothStatus.findOrCreate({
-          where: whereClause,
-          defaults
-        });
-
-        if (!created) {
-          await record.update({
-            surface:    tooth.surface !== undefined ? (tooth.surface || null) : record.surface,
-            status:     tooth.status  || record.status,
-            note:       tooth.note    !== undefined ? tooth.note : record.note,
-            updated_by: userId
-          });
-          results.updated++;
-        } else {
-          results.created++;
-        }
-
-        // Historique non-fatal
-        try {
-          const histDefaults = {
-            patient_id:   req.params.patientId,
-            tooth_fdi:    String(tooth.tooth_fdi),
-            surface:      tooth.surface || null,
-            status:       tooth.status  || 'HEALTHY',
-            note:         tooth.note    || null,
-            action:       created ? 'CREATE' : 'UPDATE',
-            performed_by: userId
-          };
-          if (clinicId) histDefaults.clinic_id = clinicId;
-          await ToothHistory.create(histDefaults);
-        } catch (h) { console.warn('History (non-fatal):', h.message); }
-
-      } catch (e) {
-        console.error(`Tooth ${tooth.tooth_fdi} error:`, e.message);
-        results.skipped++;
-      }
+  // Vérifier toutes les dents avant la première écriture.
+  for (const tooth of teeth) {
+    if (
+      !tooth ||
+      typeof tooth !== 'object' ||
+      Array.isArray(tooth)
+    ) {
+      return res.status(400).json({
+        error: 'Dent invalide'
+      });
     }
 
-    // AuditLog non-fatal
-    try {
-      await AuditLog.create({
-        user_id: userId, action:'UPDATE',
-        resource_type:'odontogram', resource_id: req.params.patientId,
-        new_values: results, ip_address: req.ip,
-        description:`Odontogramme: ${results.created} créés, ${results.updated} modifiés`
-      });
-    } catch (e) { console.warn('AuditLog (non-fatal):', e.message); }
+    const fdi = String(tooth.tooth_fdi ?? '');
 
-    return res.json({ message:'Odontogramme mis à jour', results });
+    if (
+      !VALID_FDI.includes(fdi) ||
+      seen.has(fdi) ||
+      !VALID_STATUSES.includes(tooth.status) ||
+      (
+        tooth.surface != null &&
+        (
+          typeof tooth.surface !== 'string' ||
+          tooth.surface.length > 20
+        )
+      ) ||
+      (
+        tooth.note != null &&
+        (
+          typeof tooth.note !== 'string' ||
+          tooth.note.length > 10000
+        )
+      )
+    ) {
+      return res.status(400).json({
+        error: 'Dent, état ou champ invalide, ou dent répétée'
+      });
+    }
+
+    seen.add(fdi);
+  }
+
+  try {
+    const results = await sequelize.transaction(
+      async (transaction) => {
+        // Sérialiser les écritures de ce patient dans cette route.
+        const patient = await Patient.findOne({
+          where: {
+            id: req.params.patientId,
+            clinic_id: clinicId
+          },
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+
+        if (!patient) {
+          const error = new Error(
+            'Patient non trouvé dans ce cabinet'
+          );
+          error.httpStatus = 404;
+          throw error;
+        }
+
+        const counts = {
+          created: 0,
+          updated: 0,
+          skipped: 0
+        };
+
+        for (const tooth of teeth) {
+          const fdi = String(tooth.tooth_fdi);
+
+          const where = {
+            patient_id: req.params.patientId,
+            clinic_id: clinicId,
+            tooth_fdi: fdi
+          };
+
+          const defaults = {
+            ...where,
+            status: tooth.status,
+            surface: tooth.surface || null,
+            note: tooth.note || null,
+            updated_by: userId
+          };
+
+          const [record, created] =
+            await ToothStatus.findOrCreate({
+              where,
+              defaults,
+              transaction
+            });
+
+          if (!created) {
+            const changes = {
+              status: tooth.status,
+              updated_by: userId
+            };
+
+            if (Object.hasOwn(tooth, 'surface')) {
+              changes.surface = tooth.surface || null;
+            }
+
+            if (Object.hasOwn(tooth, 'note')) {
+              changes.note = tooth.note || null;
+            }
+
+            await record.update(changes, {
+              transaction
+            });
+          }
+
+          // L'historique appartient à la même transaction.
+          await ToothHistory.create({
+            patient_id: req.params.patientId,
+            clinic_id: clinicId,
+            tooth_fdi: fdi,
+            status: record.status,
+            surface: record.surface || null,
+            note: record.note || null,
+            action: created ? 'CREATE' : 'UPDATE',
+            performed_by: userId
+          }, {
+            transaction
+          });
+
+          if (created) {
+            counts.created += 1;
+          } else {
+            counts.updated += 1;
+          }
+        }
+
+        // Trace d'audit sans divulguer les notes cliniques.
+        await AuditLog.create({
+          user_id: userId,
+          clinic_id: clinicId,
+          action: 'UPDATE',
+          resource_type: 'odontogram',
+          resource_id: req.params.patientId,
+          new_values: counts,
+          ip_address: req.ip,
+          description: 'Enregistrement de l’odontogramme'
+        }, {
+          transaction
+        });
+
+        return counts;
+      }
+    );
+
+    return res.json({
+      message: 'Odontogramme enregistré',
+      results
+    });
+
   } catch (error) {
-    console.error('Update odontogram error:', error);
-    return res.status(500).json({ error:'Erreur serveur', details: error.message });
+    console.error(
+      'Odontogram transaction error:',
+      error.name
+    );
+
+    return res.status(error.httpStatus || 500).json({
+      error: error.httpStatus
+        ? 'Patient non trouvé dans ce cabinet'
+        : 'Enregistrement non confirmé. Vérifiez avant de réessayer.'
+    });
   }
 });
+
 
 /**
  * GET /api/patients/:patientId/odontogram/history
