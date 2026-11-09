@@ -126,6 +126,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
   const [patient, setPatient]             = useState(null);
   const [odontogram, setOdontogram]       = useState({});
   const [loading, setLoading]             = useState(true);
+  const [odontogramError, setOdontogramError] = useState(null);
   const [saving, setSaving]               = useState(false);
   const [selectedTooth, setSelectedTooth] = useState(null);
   // const [editForm, setEditForm]           = useState({ status:'HEALTHY', surface:'NONE', note:'' });
@@ -140,8 +141,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
   }, []);
 
   useEffect(() => {
-    if (!patientId || patientId === 'undefined') { setLoading(false); return; }
-    fetchPatient();
+if (!patientId || patientId === 'undefined') { setOdontogramError('Patient non identifié. Impossible de charger le dossier.'); setLoading(false); return; }    fetchPatient();
     fetchOdontogram();
     fetchHistory();
   }, [patientId]);
@@ -153,14 +153,45 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
     } catch (err) { if (!axios.isCancel(err)) console.error('Patient error:', err); }
   };
 
-  const fetchOdontogram = async () => {
-    try {
-      const res = await axios.get(`${API}/patients/${patientId}/odontogram`, authHeaders());
-      setOdontogram(res.data.odontogram || {});
-    } catch (err) {
-      if (!axios.isCancel(err)) notify('error', 'Erreur chargement odontogramme');
-    } finally { setLoading(false); }
-  };
+  
+const fetchOdontogram = async () => {
+  setLoading(true);
+  setOdontogramError(null);
+
+  try {
+    const response = await axios.get(
+      `${API}/patients/${patientId}/odontogram`,
+      authHeaders()
+    );
+
+    const data = response.data?.odontogram;
+
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      Array.isArray(data)
+    ) {
+      throw new Error('Réponse odontogramme invalide');
+    }
+
+    setOdontogram(data);
+    return true;
+
+  } catch (error) {
+    if (!axios.isCancel(error)) {
+      setOdontogramError(
+        'Impossible de récupérer les données dentaires. ' +
+        'Vérifiez la connexion au serveur puis réessayez.'
+      );
+    }
+
+    return false;
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchHistory = async () => {
     try {
@@ -354,6 +385,43 @@ const closeEditor = () => {
       <div className="dpm-skeleton h-10 w-full" />
     </div>
   );
+  
+if (odontogramError) {
+  return (
+    <div
+      role="alert"
+      className="mx-auto my-8 max-w-xl rounded-2xl border border-orange-200 bg-orange-50 p-8 text-center"
+    >
+      <h2 className="mb-3 text-xl font-bold text-orange-900">
+        Odontogramme indisponible
+      </h2>
+
+      <p className="mb-5 text-sm leading-6 text-orange-800">
+        {odontogramError}
+      </p>
+
+      {Object.keys(pendingChanges).length > 0 && (
+        <p className="mb-5 rounded-lg bg-amber-100 p-3 text-sm text-amber-900">
+          Des modifications non sauvegardées sont encore
+          présentes dans cette session. Ne fermez pas
+          cette page avant de vérifier leur enregistrement.
+        </p>
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        disabled={saving}
+        onClick={() => {
+          fetchOdontogram();
+        }}
+      >
+        <RefreshCw className="mr-2 h-4 w-4" />
+        Réessayer le chargement
+      </Button>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6" data-testid="patient-odontogram">
@@ -368,7 +436,7 @@ const closeEditor = () => {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={fetchOdontogram}><RefreshCw className="h-4 w-4 mr-2" />Recharger</Button>
+          <Button variant="outline" onClick={fetchOdontogram} disabled={saving || hasUnsavedChanges} title={ hasUnsavedChanges ? 'Terminez ou sauvegardez vos modifications avant de recharger.' : 'Recharger les données' } ><RefreshCw className="h-4 w-4 mr-2" />Recharger</Button>
           <Button onClick={handleSaveAll} disabled={saving || !Object.keys(pendingChanges).length}
             className="text-white" data-testid="save-all-btn"
             style={{ backgroundColor: '#16a34a', borderColor: '#16a34a', color: '#fff', opacity: saving || !Object.keys(pendingChanges).length ? 0.75 : 1 }}>
