@@ -186,6 +186,24 @@ const toothStatuses = {
       ) {
         throw new Error('Réponse odontogramme invalide');
       }
+      
+const chartResponse = await axios.get(
+  `${API}/patients/${patientId}/dental-chart`,
+  authHeaders()
+);
+
+const storedRecords = chartResponse.data?.teeth_records;
+
+if (!Array.isArray(storedRecords)) {
+  throw new Error('Réponse des actes dentaires invalide');
+}
+
+const storedByPosition = new Map(
+  storedRecords.map(tooth => [
+    String(tooth.tooth_position),
+    tooth
+  ])
+);
       let records = generateEmptyChart();
 
       if (data?.odontogram && typeof data.odontogram === 'object') {
@@ -227,14 +245,43 @@ const toothStatuses = {
         });
       }
 
-      setTeethRecords(
-        records.map((tooth) => ({
+      // setTeethRecords(
+      //   records.map((tooth) => ({
+      //     ...tooth,
+      //     // status: tooth.status || 'healthy',
+      //     status: tooth.status ?? null,
+      //     procedures: Array.isArray(tooth.procedures) ? tooth.procedures : [],
+      //   }))
+      // );
+      
+      const mergedRecords = records.map(tooth => {
+        const stored = storedByPosition.get(
+          String(tooth.tooth_position)
+        );
+      
+        return {
           ...tooth,
-          // status: tooth.status || 'healthy',
           status: tooth.status ?? null,
-          procedures: Array.isArray(tooth.procedures) ? tooth.procedures : [],
-        }))
-      );
+          procedures: Array.isArray(stored?.procedures)
+            ? stored.procedures
+            : [],
+          notes: tooth.notes || stored?.notes || ''
+        };
+      });
+      
+      setTeethRecords(mergedRecords);
+      
+      setSelectedTooth(previous => {
+        if (!previous) return null;
+      
+        return mergedRecords.find(
+          tooth =>
+            String(tooth.tooth_position) ===
+            String(previous.tooth_position)
+        ) || null;
+      });
+      
+      return true;
     } catch (error) {
         console.error('Erreur chargement fiche dentaire:', error);
       
@@ -243,7 +290,7 @@ const toothStatuses = {
           'Le schéma ne peut pas être affiché de manière fiable. ' +
           'Vérifiez la connexion puis réessayez.'
         );
-      
+      return false;
       } finally {
         setLoading(false);
       }
@@ -259,44 +306,101 @@ const toothStatuses = {
     fetchDentalChart();
   }, [patientId]);
 
-  const addProcedure = async () => {
-    if (!selectedTooth) return;
+  
+const addProcedure = async () => {
+  if (!selectedTooth) return;
 
-    try {
-      const updatedTooth = {
-        ...selectedTooth,
-        procedures: [
-          ...(selectedTooth.procedures || []),
-          {
-            ...procedureData,
-            cost_mga: parseFloat(procedureData.cost_mga) || 0,
-          },
-        ],
-      };
+  if (
+    !procedureData.procedure_type ||
+    !procedureData.procedure_name.trim()
+  ) {
+    toast.error('Renseignez le type et le nom de la procédure.');
+    return;
+  }
 
-      await axios.put(
-        `${API}/patients/${patientId}/dental-chart/tooth/${selectedTooth.tooth_position}`,
-        updatedTooth,
-        authHeaders()
-      );
+  try {
+    const chartResponse = await axios.get(
+      `${API}/patients/${patientId}/dental-chart`,
+      authHeaders()
+    );
 
-      toast.success('Procédure ajoutée');
-      await fetchDentalChart();
-      setProcedureDialog(false);
+    const records = chartResponse.data?.teeth_records;
 
-      setProcedureData({
-        procedure_type: '',
-        procedure_name: '',
-        description: '',
-        cost_mga: '',
-        date_performed: '',
-        notes: '',
-      });
-    } catch (error) {
-      toast.error("Erreur lors de l'ajout");
+    if (!Array.isArray(records)) {
+      throw new Error('Dossier dentaire indisponible');
     }
-  };
 
+    const currentTooth = records.find(
+      tooth =>
+        String(tooth.tooth_position) ===
+        String(selectedTooth.tooth_position)
+    );
+
+    if (!currentTooth) {
+      throw new Error('Dent introuvable dans la fiche');
+    }
+
+    const existingProcedures = Array.isArray(currentTooth.procedures)
+      ? currentTooth.procedures
+      : [];
+
+    const newProcedure = {
+      ...procedureData,
+      cost_mga: parseFloat(procedureData.cost_mga) || 0
+    };
+
+    const updatedProcedures = [
+      ...existingProcedures,
+      newProcedure
+    ];
+
+    const response = await axios.put(
+      `${API}/patients/${patientId}/dental-chart/tooth/${selectedTooth.tooth_position}`,
+      {
+        procedures: updatedProcedures
+      },
+      authHeaders()
+    );
+
+    const savedProcedures = response.data?.tooth?.procedures;
+
+    if (
+      !Array.isArray(savedProcedures) ||
+      savedProcedures.length !== updatedProcedures.length
+    ) {
+      throw new Error('Enregistrement non confirmé');
+    }
+
+    const reloaded = await fetchDentalChart();
+
+    if (!reloaded) {
+      toast.error(
+        'Procédure envoyée au serveur, mais rechargement non vérifié.'
+      );
+      return;
+    }
+
+    toast.success('Procédure enregistrée et rechargée.');
+
+    setProcedureDialog(false);
+
+    setProcedureData({
+      procedure_type: '',
+      procedure_name: '',
+      description: '',
+      cost_mga: '',
+      date_performed: '',
+      notes: ''
+    });
+
+  } catch (error) {
+    console.error('Erreur enregistrement procédure:', error);
+
+    toast.error(
+      'Enregistrement non confirmé. Vérifiez le dossier avant de réessayer.'
+    );
+  }
+};
   
 const updateToothStatus = async (status) => {
   if (!selectedTooth || !status) return;
