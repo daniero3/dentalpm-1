@@ -3,8 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { ArrowLeft, User, Loader2, Save, RefreshCw, X, History, CalendarClock } from 'lucide-react';
-
+import { ArrowLeft, User, Loader2, Save, RefreshCw, X, History, CalendarClock, Info, CheckCircle2, AlertCircle } from 'lucide-react';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
@@ -58,20 +57,68 @@ const selectStyle = { width:'100%', padding:'8px 12px', borderRadius:10, border:
 const labelStyle  = { display:'block', fontSize:13, fontWeight:600, color:'#475569', marginBottom:6 };
 const textareaStyle = { width:'100%', padding:'8px 12px', borderRadius:10, border:'1.5px solid #E2E8F0', fontSize:13, fontFamily:'DM Sans,sans-serif', color:'#0F172A', background:'#fff', resize:'vertical', outline:'none', boxSizing:'border-box' };
 
+
 const Notification = ({ notification }) => {
   if (!notification) return null;
-  const colors = {
-    success: { bg:'#DCFCE7', border:'#BBF7D0', color:'#15803D', icon:'OK' },
-    error:   { bg:'#FEE2E2', border:'#FECACA', color:'#B91C1C', icon:'!' },
-    info:    { bg:'#DBEAFE', border:'#BFDBFE', color:'#1D4ED8', icon:'i' }
+
+  const styles = {
+    success: {
+      bg: '#ECFDF5',
+      border: '#A7F3D0',
+      color: '#047857',
+      icon: CheckCircle2
+    },
+    error: {
+      bg: '#FEF2F2',
+      border: '#FECACA',
+      color: '#B91C1C',
+      icon: AlertCircle
+    },
+    info: {
+      bg: '#EFF6FF',
+      border: '#BFDBFE',
+      color: '#1D4ED8',
+      icon: Info
+    }
   };
-  const c = colors[notification.type] || colors.info;
+
+  const current = styles[notification.type] || styles.info;
+  const IconComponent = current.icon;
+
   return (
-    <div style={{ padding:'12px 16px', borderRadius:10, fontSize:13, fontWeight:600, display:'flex', alignItems:'center', gap:8, background:c.bg, color:c.color, border:`1px solid ${c.border}` }}>
-      [{c.icon}] {notification.msg}
+    <div
+      role={notification.type === 'error' ? 'alert' : 'status'}
+      aria-live={notification.type === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '14px 18px',
+        borderRadius: 12,
+        backgroundColor: current.bg,
+        border: `1px solid ${current.border}`,
+        color: current.color,
+        fontSize: 14,
+        fontWeight: 500,
+        lineHeight: 1.5,
+        boxShadow: '0 2px 8px rgba(15,23,42,0.04)'
+      }}
+    >
+      <IconComponent
+        size={20}
+        strokeWidth={2}
+        style={{ flexShrink: 0 }}
+        aria-hidden="true"
+      />
+
+      <span style={{ flex: 1 }}>
+        {notification.msg}
+      </span>
     </div>
   );
 };
+
 
 const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {  
   const params = useParams();
