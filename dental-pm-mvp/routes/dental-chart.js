@@ -1,113 +1,272 @@
 const express = require('express');
 const { param, validationResult } = require('express-validator');
+const sequelize = require('../database/connection');
 
 const router = express.Router();
 
-// ✅ Helpers clinic_id et user_id — lisent depuis toutes les sources
-const getClinicId = (req) => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id || null;
-const getUserId   = (req) => req.user?.id   || req.user?.dataValues?.id || req.user?.userId || null;
-
-// ✅ Subscription verifiee cote frontend
+const fail = (status, message) =>
+  Object.assign(new Error(message), { httpStatus: status });
 
 function generateEmptyTeeth() {
   return Array.from({ length: 32 }, (_, i) => ({
     tooth_position: String(i + 1),
-    // status: 'healthy',
     status: null,
     procedures: [],
     notes: ''
   }));
 }
 
-// GET /api/patients/:patientId/dental-chart
+function readTeethRecords(chart) {
+  if (!chart) return generateEmptyTeeth();
+
+  let records = chart.teeth_records;
+
+  if (typeof records === 'string') {
+    try {
+      records = JSON.parse(records);
+    } catch {
+      throw fail(409, 'Fiche dentaire illisible. Aucune modification effectuée.');
+    }
+  }
+
+  if (
+    !Array.isArray(records) ||
+    !records.every(tooth =>
+      tooth &&
+      typeof tooth === 'object' &&
+      tooth.tooth_position != null
+    )
+  ) {
+    throw fail(409, 'Fiche dentaire incohérente. Aucune modification effectuée.');
+  }
+
+  return records;
+}
+
+function respondError(res, error, action) {
+  if (error.httpStatus) {
+    return res.status(error.httpStatus).json({ error: error.message });
+  }
+
+  console.error(`Dental-chart ${action}:`, error.name);
+
+  return res.status(500).json({
+    error: 'Erreur serveur. Aucune réussite confirmée.'
+  });
+}
+
+// Lecture seule : ne crée pas de fiche en base.
 router.get('/patients/:patientId/dental-chart', [
   param('patientId').isUUID()
 ], async (req, res) => {
+  if (!validationResult(req).isEmpty()) {
+    return res.status(400).json({ error: 'Identifiant patient invalide' });
+  }
+
+  if (!req.clinic_id) {
+    return res.status(403).json({ error: 'Cabinet non identifié' });
+  }
+
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ error: 'Données invalides' });
-
-    const { patientId } = req.params;
-    const sequelize = require('../database/connection');
-
     const [patient] = await sequelize.query(
-      `SELECT id FROM patients WHERE id = $1 AND clinic_id = $2 LIMIT 1`,
-      { bind: [patientId, req.clinic_id], type: 'SELECT' }
-    );
-    if (!patient) return res.status(404).json({ error: 'Patient non trouvé' });
-
-    let [chart] = await sequelize.query(
-      `SELECT * FROM dental_charts WHERE patient_id = $1 AND clinic_id = $2 LIMIT 1`,
-      { bind: [patientId, req.clinic_id], type: 'SELECT' }
+      'SELECT id FROM patients WHERE id = $1 AND clinic_id = $2 LIMIT 1',
+      {
+        bind: [req.params.patientId, req.clinic_id],
+        type: 'SELECT'
+      }
     );
 
-    if (!chart) {
-      const teeth = generateEmptyTeeth();
-      await sequelize.query(
-        `INSERT INTO dental_charts (id, patient_id, clinic_id, teeth_records, created_at, updated_at)
-         VALUES (uuid_generate_v4(), $1, $2, $3, NOW(), NOW())`,
-        { bind: [patientId, req.clinic_id, JSON.stringify(teeth)] }
-      );
-      [chart] = await sequelize.query(
-        `SELECT * FROM dental_charts WHERE patient_id = $1 AND clinic_id = $2 LIMIT 1`,
-        { bind: [patientId, req.clinic_id], type: 'SELECT' }
-      );
+    if (!patient) {
+      return res.status(404).json({
+        error: 'Patient non trouvé dans ce cabinet'
+      });
     }
 
-    let teethRecords = chart.teeth_records;
-    if (typeof teethRecords === 'string') teethRecords = JSON.parse(teethRecords);
-    if (!Array.isArray(teethRecords)) teethRecords = generateEmptyTeeth();
+    const [chart] = await sequelize.query(
+      'SELECT id, teeth_records FROM dental_charts WHERE patient_id = $1 AND clinic_id = $2 LIMIT 1',
+      {
+        bind: [req.params.patientId, req.clinic_id],
+        type: 'SELECT'
+      }
+    );
 
-    res.json({ id: chart.id, patient_id: patientId, teeth_records: teethRecords });
+    return res.json({
+      id: chart?.id || null,
+      patient_id: req.params.patientId,
+      teeth_records: readTeethRecords(chart)
+    });
   } catch (error) {
-    console.error('Get dental chart error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    return respondError(res, error, 'GET');
   }
 });
 
-// PUT /api/patients/:patientId/dental-chart/tooth/:toothPosition
-router.put('/patients/:patientId/dental-chart/tooth/:toothPosition', async (req, res) => {
-  try {
-    const { patientId, toothPosition } = req.params;
-    const sequelize = require('../database/connection');
+// Ajout contrôlé d'une procédure : ne modifie pas le statut dentaire.
+router.put('/patients/:patientId/dental-chart/tooth/:toothPosition', [
+  param('patientId').isUUID(),
+  param('toothPosition').isInt({ min: 1, max: 32 })
+], async (req, res) => {
+  if (!validationResult(req).isEmpty()) {
+    return res.status(400).json({ error: 'Paramètres invalides' });
+  }
 
-    let [chart] = await sequelize.query(
-      `SELECT * FROM dental_charts WHERE patient_id = $1 AND clinic_id = $2 LIMIT 1`,
-      { bind: [patientId, req.clinic_id], type: 'SELECT' }
-    );
+  if (!req.clinic_id) {
+    return res.status(403).json({ error: 'Cabinet non identifié' });
+  }
 
-    let teethRecords = chart?.teeth_records;
-    if (typeof teethRecords === 'string') teethRecords = JSON.parse(teethRecords);
-    if (!Array.isArray(teethRecords)) teethRecords = generateEmptyTeeth();
+  const incoming = req.body?.procedures;
 
-    const idx = teethRecords.findIndex(t => String(t.tooth_position) === String(toothPosition));
-    if (idx === -1) return res.status(404).json({ error: 'Dent non trouvée' });
+  if (
+    !req.body ||
+    Object.keys(req.body).some(key => key !== 'procedures') ||
+    !Array.isArray(incoming) ||
+    incoming.length < 1 ||
+    incoming.length > 500
+  ) {
+    return res.status(400).json({ error: 'Liste de procédures invalide' });
+  }
 
-    teethRecords[idx] = {
-      ...teethRecords[idx],
-      ...req.body,
-      tooth_position: String(toothPosition),
-      procedures: Array.isArray(req.body.procedures) ? req.body.procedures : (teethRecords[idx].procedures || [])
-    };
+  const last = incoming[incoming.length - 1];
+  const cost = Number(last?.cost_mga);
 
-    if (!chart) {
-      await sequelize.query(
-        `INSERT INTO dental_charts (id, patient_id, clinic_id, teeth_records, created_at, updated_at)
-         VALUES (uuid_generate_v4(), $1, $2, $3, NOW(), NOW())`,
-        { bind: [patientId, req.clinic_id, JSON.stringify(teethRecords)] }
-      );
-    } else {
-      await sequelize.query(
-        `UPDATE dental_charts SET teeth_records = $1, updated_at = NOW()
-         WHERE patient_id = $2 AND clinic_id = $3`,
-        { bind: [JSON.stringify(teethRecords), patientId, req.clinic_id] }
-      );
+  if (
+    !last ||
+    typeof last !== 'object' ||
+    Array.isArray(last) ||
+    typeof last.procedure_type !== 'string' ||
+    !last.procedure_type.trim() ||
+    typeof last.procedure_name !== 'string' ||
+    !last.procedure_name.trim() ||
+    !Number.isFinite(cost) ||
+    cost < 0
+  ) {
+    return res.status(400).json({
+      error: 'Procédure incomplète ou coût invalide'
+    });
+  }
+
+  const date = last.date_performed || '';
+
+  if (date) {
+    const parsed = new Date(`${date}T00:00:00Z`);
+    if (
+      typeof date !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      Number.isNaN(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10) !== date
+    ) {
+      return res.status(400).json({ error: 'Date de procédure invalide' });
     }
+  }
 
-    res.json({ message: 'Dent mise à jour', tooth: teethRecords[idx] });
+  const newProcedure = {
+    procedure_type: last.procedure_type.trim(),
+    procedure_name: last.procedure_name.trim(),
+    description: typeof last.description === 'string' ? last.description : '',
+    cost_mga: cost,
+    date_performed: date,
+    notes: typeof last.notes === 'string' ? last.notes : ''
+  };
+
+  try {
+    const savedTooth = await sequelize.transaction(async transaction => {
+      // Le verrou patient sérialise les écritures de cette route.
+      const [patient] = await sequelize.query(
+        'SELECT id FROM patients WHERE id = $1 AND clinic_id = $2 FOR UPDATE',
+        {
+          bind: [req.params.patientId, req.clinic_id],
+          type: 'SELECT',
+          transaction
+        }
+      );
+
+      if (!patient) {
+        throw fail(404, 'Patient non trouvé dans ce cabinet');
+      }
+
+      const [chart] = await sequelize.query(
+        'SELECT id, teeth_records FROM dental_charts WHERE patient_id = $1 AND clinic_id = $2 LIMIT 1 FOR UPDATE',
+        {
+          bind: [req.params.patientId, req.clinic_id],
+          type: 'SELECT',
+          transaction
+        }
+      );
+
+      const records = readTeethRecords(chart);
+      const index = records.findIndex(tooth =>
+        String(tooth.tooth_position) ===
+        String(req.params.toothPosition)
+      );
+
+      if (index < 0) {
+        throw fail(409, 'Dent introuvable dans la fiche existante');
+      }
+
+      const previous = records[index].procedures;
+      if (!Array.isArray(previous)) {
+        throw fail(409, 'Procédures existantes illisibles');
+      }
+
+      // Le client doit transmettre l'ancienne liste exacte + 1 procédure.
+      const unchangedPrefix =
+        incoming.length === previous.length + 1 &&
+        previous.every((procedure, i) =>
+          JSON.stringify(procedure) === JSON.stringify(incoming[i])
+        );
+
+      if (!unchangedPrefix) {
+        throw fail(
+          409,
+          'Conflit : le dossier a changé. Rechargez avant un nouvel ajout.'
+        );
+      }
+
+      const updatedTooth = {
+        ...records[index],
+        procedures: [...previous, newProcedure]
+      };
+
+      const updatedRecords = records.slice();
+      updatedRecords[index] = updatedTooth;
+
+      if (chart) {
+        await sequelize.query(
+          'UPDATE dental_charts SET teeth_records = $1, updated_at = NOW() WHERE id = $2 AND patient_id = $3 AND clinic_id = $4',
+          {
+            bind: [
+              JSON.stringify(updatedRecords),
+              chart.id,
+              req.params.patientId,
+              req.clinic_id
+            ],
+            transaction
+          }
+        );
+      } else {
+        await sequelize.query(
+          `INSERT INTO dental_charts
+           (id, patient_id, clinic_id, teeth_records, created_at, updated_at)
+           VALUES (uuid_generate_v4(), $1, $2, $3, NOW(), NOW())`,
+          {
+            bind: [
+              req.params.patientId,
+              req.clinic_id,
+              JSON.stringify(updatedRecords)
+            ],
+            transaction
+          }
+        );
+      }
+
+      return updatedTooth;
+    });
+
+    return res.json({
+      message: 'Procédure ajoutée',
+      tooth: savedTooth
+    });
   } catch (error) {
-    console.error('Update tooth error:', error);
-    res.status(500).json({ error: 'Erreur serveur', details: error.message });
+    return respondError(res, error, 'PUT');
   }
 });
 
