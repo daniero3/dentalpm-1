@@ -134,7 +134,8 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
     endodontics: { name: 'Endodontie', color: '#ef4444' },
   };
 
-  const toothStatuses = {
+  
+const toothStatuses = {
   unassessed: {
     name: 'Non évaluée',
     color: '#e2e8f0'
@@ -144,7 +145,10 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   filled: { name: 'Obturée', color: '#3b82f6' },
   missing: { name: 'Absente', color: '#64748b' },
   crowned: { name: 'Couronnée', color: '#f59e0b' },
-  implant: { name: 'Implant', color: '#8b5cf6' }
+  implant: { name: 'Implant', color: '#8b5cf6' },
+  root_canal: { name: 'Traitement endodontique', color: '#f97316' },
+  extraction_needed: { name: 'Extraction indiquée', color: '#ec4899' },
+  bridge: { name: 'Bridge', color: '#06b6d4' }
 };
   const generateEmptyChart = () =>
     Array.from({ length: 32 }, (_, i) => ({
@@ -192,6 +196,7 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
           '31': 25, '32': 26, '33': 27, '34': 28, '35': 29, '36': 30, '37': 31, '38': 32,
         };
 
+        
         const statusMap = {
           HEALTHY: 'healthy',
           CARIES: 'carious',
@@ -199,9 +204,9 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
           MISSING: 'missing',
           CROWN: 'crowned',
           IMPLANT: 'implant',
-          ROOT_CANAL: 'filled',
-          EXTRACTION_NEEDED: 'carious',
-          BRIDGE: 'crowned',
+          ROOT_CANAL: 'root_canal',
+          EXTRACTION_NEEDED: 'extraction_needed',
+          BRIDGE: 'bridge'
         };
 
         records = generateEmptyChart().map((tooth) => {
@@ -292,23 +297,74 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
     }
   };
 
-  const updateToothStatus = async (status) => {
-    if (!selectedTooth || !status) return;
+  
+const updateToothStatus = async (status) => {
+  if (!selectedTooth || !status) return;
 
-    try {
-      await axios.put(
-        `${API}/patients/${patientId}/dental-chart/tooth/${selectedTooth.tooth_position}`,
-        { ...selectedTooth, status },
-        authHeaders()
-      );
-
-      toast.success('Statut mis à jour');
-      setSelectedTooth((prev) => ({ ...prev, status }));
-      await fetchDentalChart();
-    } catch (error) {
-      toast.error('Erreur mise à jour');
-    }
+  const statusToApi = {
+    healthy: 'HEALTHY',
+    carious: 'CARIES',
+    filled: 'FILLED',
+    missing: 'MISSING',
+    crowned: 'CROWN',
+    implant: 'IMPLANT',
+    root_canal: 'ROOT_CANAL',
+    extraction_needed: 'EXTRACTION_NEEDED',
+    bridge: 'BRIDGE'
   };
+
+  const apiStatus = statusToApi[status];
+
+  if (!apiStatus) {
+    toast.error('État dentaire non reconnu');
+    return;
+  }
+
+  const toothFdi = String(
+    getFDINumber(selectedTooth.tooth_position)
+  );
+
+  try {
+    const response = await axios.put(
+      `${API}/patients/${patientId}/odontogram`,
+      {
+        teeth: [{
+          tooth_fdi: toothFdi,
+          status: apiStatus
+        }]
+      },
+      authHeaders()
+    );
+
+    const results = response.data?.results;
+
+    const confirmed = (
+      results &&
+      Number(results.created) + Number(results.updated) === 1 &&
+      Number(results.skipped) === 0
+    );
+
+    if (!confirmed) {
+      toast.error(
+        'Enregistrement non confirmé. Vérifiez avant de réessayer.'
+      );
+      return;
+    }
+
+    setSelectedTooth(prev =>
+      prev ? { ...prev, status } : null
+    );
+
+    toast.success('État dentaire enregistré dans l’Odontogramme');
+
+    await fetchDentalChart();
+
+  } catch (error) {
+    toast.error(
+      'Enregistrement non confirmé. Vérifiez le dossier.'
+    );
+  }
+};
 
   const renderTooth = (tooth) => {
     // const status = toothStatuses[tooth.status] || toothStatuses.healthy;
