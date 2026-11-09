@@ -77,5 +77,13 @@ jobs:
           node --check routes/dental-chart.js
           node --check routes/odontogram.js
 
-      - name: Exécuter les tests existants
-        run: npm test -- --runInBand
+     
+      - name: Exécuter les tests backend avec diagnostic
+        timeout-minutes: 5
+        run: |
+          timeout --signal=TERM --kill-after=15s 240s \
+            npm test -- \
+            --runInBand \
+            --detectOpenHandles \
+            --testTimeout=15000 \
+            --verbose
