@@ -134,17 +134,17 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   };
 
   const toothStatuses = {
-    healthy: { name: 'Saine', color: '#22c55e' },
-    carious: { name: 'Cariée', color: '#ef4444' },
-    filled: { name: 'Obturée', color: '#3b82f6' },
-    missing: { name: 'Absente', color: '#64748b' },
-    crowned: { name: 'Couronnée', color: '#f59e0b' },
-    implant: { name: 'Implant', color: '#8b5cf6' },
-  };
   unassessed: {
     name: 'Non évaluée',
     color: '#e2e8f0'
   },
+  healthy: { name: 'Saine', color: '#22c55e' },
+  carious: { name: 'Cariée', color: '#ef4444' },
+  filled: { name: 'Obturée', color: '#3b82f6' },
+  missing: { name: 'Absente', color: '#64748b' },
+  crowned: { name: 'Couronnée', color: '#f59e0b' },
+  implant: { name: 'Implant', color: '#8b5cf6' }
+};
   const generateEmptyChart = () =>
     Array.from({ length: 32 }, (_, i) => ({
       tooth_position: String(i + 1),
