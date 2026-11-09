@@ -112,6 +112,7 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   const [teethRecords, setTeethRecords] = useState([]);
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chartError, setChartError] = useState(null);
   const [procedureDialog, setProcedureDialog] = useState(false);
 
   const [procedureData, setProcedureData] = useState({
@@ -166,6 +167,7 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   };
 
   const fetchDentalChart = async () => {
+    setChartError(null);
     try {
       const response = await axios.get(
         `${API}/patients/${patientId}/odontogram`,
@@ -173,6 +175,13 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
       );
 
       const data = response.data;
+      if (
+        !data?.odontogram ||
+        typeof data.odontogram !== 'object' ||
+        Array.isArray(data.odontogram)
+      ) {
+        throw new Error('Réponse odontogramme invalide');
+      }
       let records = generateEmptyChart();
 
       if (data?.odontogram && typeof data.odontogram === 'object') {
@@ -222,11 +231,17 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
         }))
       );
     } catch (error) {
-      console.error('Dental chart error:', error);
-      setTeethRecords(generateEmptyChart());
-    } finally {
-      setLoading(false);
-    }
+        console.error('Erreur chargement fiche dentaire:', error);
+      
+        setChartError(
+          'Impossible de charger les données dentaires. ' +
+          'Le schéma ne peut pas être affiché de manière fiable. ' +
+          'Vérifiez la connexion puis réessayez.'
+        );
+      
+      } finally {
+        setLoading(false);
+      }
   };
 
   useEffect(() => {
@@ -362,7 +377,57 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   if (loading) {
     return <div style={{ padding: 24 }}>Chargement...</div>;
   }
-
+  if (chartError) {
+    return (
+      <div
+        role="alert"
+        style={{
+          maxWidth: 640,
+          margin: '40px auto',
+          padding: 28,
+          background: '#FFF7ED',
+          border: '1px solid #FED7AA',
+          borderRadius: 16,
+          textAlign: 'center'
+        }}
+      >
+        <h2 style={{
+          color: '#9A3412',
+          fontSize: 20,
+          fontWeight: 700,
+          marginBottom: 12
+        }}>
+          Données dentaires indisponibles
+        </h2>
+  
+        <p style={{
+          color: '#9A3412',
+          lineHeight: 1.6,
+          marginBottom: 20
+        }}>
+          {chartError}
+        </p>
+  
+        <Button
+          onClick={() => {
+            setLoading(true);
+            fetchDentalChart();
+          }}
+        >
+          Réessayer le chargement
+        </Button>
+  
+        <p style={{
+          color: '#64748B',
+          fontSize: 12,
+          marginTop: 16
+        }}>
+          Aucune modification des données du patient
+          n'a été effectuée.
+        </p>
+      </div>
+    );
+  }
   return (
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 20 }}>
