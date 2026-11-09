@@ -35,12 +35,55 @@ const getUserId = (req) =>
   || req.user?.userId
   || null;
 
+
+
+const requirePatientClinicAccess = async (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: 'Données invalides'
+    });
+  }
+
+  const clinicId = getClinicId(req);
+
+  if (!clinicId) {
+    return res.status(403).json({
+      error: 'Cabinet non identifié'
+    });
+  }
+
+  try {
+    const patient = await Patient.findOne({
+      where: {
+        id: req.params.patientId,
+        clinic_id: clinicId
+      }
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        error: 'Patient non trouvé dans ce cabinet'
+      });
+    }
+
+    return next();
+  } catch (error) {
+    console.error('Odontogram access error:', error.name);
+
+    return res.status(500).json({
+      error: 'Impossible de vérifier l’accès au dossier'
+    });
+  }
+};
+
 /**
  * GET /api/patients/:patientId/odontogram
  */
 router.get('/patients/:patientId/odontogram', [
   param('patientId').isUUID()
-], async (req, res) => {
+], requirePatientClinicAccess, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
@@ -284,7 +327,7 @@ router.put('/patients/:patientId/odontogram', [
  */
 router.get('/patients/:patientId/odontogram/history', [
   param('patientId').isUUID()
-], async (req, res) => {
+], requirePatientClinicAccess, async (req, res) => {
   try {
     const clinicId = getClinicId(req);
     const whereClause = { patient_id: req.params.patientId };
@@ -310,7 +353,7 @@ router.post('/patients/:patientId/odontogram/history', [
   body('tooth_fdi').isIn(VALID_FDI),
   body('action').notEmpty(),
   body('status').optional().isIn(VALID_STATUSES)
-], async (req, res) => {
+], requirePatientClinicAccess, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ error:'Données invalides', details: errors.array() });
