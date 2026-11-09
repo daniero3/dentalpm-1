@@ -407,19 +407,21 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
             </div>
 
             <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
-              <strong>Légende :</strong>
-
+              
+            <strong>Légende :</strong>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
-                // {Object.entries(toothStatuses).map(([key, value]) => (
-              {Object.entries(toothStatuses).filter(([key]) => key !== 'unassessed').map(([key, value]) => (
-                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {Object.entries(toothStatuses).map(([key, value]) => (
+                  <div
+                    key={key}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
                     <span
                       style={{
                         width: 12,
                         height: 12,
                         borderRadius: '50%',
                         background: value.color,
-                        display: 'inline-block',
+                        display: 'inline-block'
                       }}
                     />
                     <span style={{ fontSize: 13 }}>{value.name}</span>
@@ -465,11 +467,13 @@ const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
                     Nouveau statut...
                   </option>
 
-                  {Object.entries(toothStatuses).map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {value.name}
-                    </option>
-                  ))}
+                  {Object.entries(toothStatuses)
+                    .filter(([key]) => key !== 'unassessed')
+                    .map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {value.name}
+                      </option>
+                    ))}
                 </select>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
