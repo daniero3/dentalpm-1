@@ -19,7 +19,11 @@ const cleanupOldEntries = () => {
 };
 
 // Cleanup every 5 minutes
-setInterval(cleanupOldEntries, 5 * 60 * 1000);
+const cleanupTimer = setInterval(cleanupOldEntries, 5 * 60 * 1000);
+
+if (typeof cleanupTimer.unref === 'function') {
+  cleanupTimer.unref();
+}
 
 // Get real IP behind proxy (X-Forwarded-For)
 const getRealIp = (req) => {
