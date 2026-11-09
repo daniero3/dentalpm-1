@@ -148,22 +148,72 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
       [selectedTooth]: { tooth_fdi:selectedTooth, status:editForm.status, surface:editForm.surface === 'NONE' ? '' : editForm.surface, note:editForm.note, action_date: actionDate }
     }));
     setSelectedTooth(null);
-    notify('success', `Dent ${selectedTooth} modifiee le ${fdatetime(actionDate)}`);
+    notify('info', `Dent ${selectedTooth} préparée. Cliquez sur « Sauvegarder » pour enregistrer les modifications.`);
   }, [selectedTooth, editForm, notify]);
 
   const handleSaveAll = async () => {
     const teeth = Object.values(pendingChanges);
-    if (!teeth.length) { notify('info', 'Aucune modification'); return; }
+  
+    if (!teeth.length) {
+      notify('info', 'Aucune modification à enregistrer.');
+      return;
+    }
+  
+    if (saving) return;
+  
     setSaving(true);
+  
     try {
-      await axios.put(`${API}/patients/${patientId}/odontogram`, { teeth }, authHeaders());
-      notify('success', `${teeth.length} dent(s) sauvegardee(s)`);
+      const response = await axios.put(
+        `${API}/patients/${patientId}/odontogram`,
+        { teeth },
+        authHeaders()
+      );
+  
+      const results = response.data?.results;
+  
+      const created = Number(results?.created);
+      const updated = Number(results?.updated);
+      const skipped = Number(results?.skipped);
+  
+      const confirmed =
+        results &&
+        Number.isFinite(created) &&
+        Number.isFinite(updated) &&
+        Number.isFinite(skipped) &&
+        skipped === 0 &&
+        created + updated === teeth.length;
+  
+      if (!confirmed) {
+        notify(
+          'error',
+          'Enregistrement partiel ou non confirmé. Les modifications restent affichées. Vérifiez le dossier avant de réessayer.'
+        );
+        return;
+      }
+  
       setPendingChanges({});
-      fetchOdontogram();
-      fetchHistory();
+  
+      notify(
+        'success',
+        `${created + updated} dent(s) enregistrée(s) avec succès.`
+      );
+  
+      await Promise.all([
+        fetchOdontogram(),
+        fetchHistory()
+      ]);
+  
     } catch (err) {
-      if (!axios.isCancel(err)) notify('error', err.response?.data?.error || 'Erreur sauvegarde');
-    } finally { setSaving(false); }
+      if (!axios.isCancel(err)) {
+        notify(
+          'error',
+          'Enregistrement non confirmé. Vérifiez les données avant de réessayer.'
+        );
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   // const getToothDisplay = (toothFdi) => {
@@ -205,6 +255,49 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
     ...Object.values(pendingChanges).map(c => ({ ...c, id:`pending-${c.tooth_fdi}`, action:'EN_ATTENTE', created_at:c.action_date, isPending:true })),
     ...toothHistory
   ].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 8);
+  
+const originalTooth = selectedTooth
+  ? (pendingChanges[selectedTooth] || odontogram[selectedTooth] || {})
+  : null;
+
+const editorDirty = Boolean(
+  originalTooth && (
+    editForm.status !== (originalTooth.status || '') ||
+    editForm.surface !== (originalTooth.surface || 'NONE') ||
+    editForm.note !== (originalTooth.note || '')
+  )
+);
+
+const hasUnsavedChanges =
+  Object.keys(pendingChanges).length > 0 || editorDirty;
+
+useEffect(() => {
+  if (!hasUnsavedChanges) return;
+
+  const warnBeforeUnload = (event) => {
+    event.preventDefault();
+    event.returnValue = '';
+  };
+
+  window.addEventListener('beforeunload', warnBeforeUnload);
+
+  return () => {
+    window.removeEventListener('beforeunload', warnBeforeUnload);
+  };
+}, [hasUnsavedChanges]);
+
+const closeEditor = () => {
+  if (
+    editorDirty &&
+    !window.confirm(
+      'Les modifications de cette dent ne sont pas appliquées. Voulez-vous les abandonner ?'
+    )
+  ) {
+    return;
+  }
+
+  setSelectedTooth(null);
+};
 
   if (loading) return (
     <div className="dpm-card mx-auto my-6 grid max-w-xl gap-3">
@@ -220,7 +313,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-4">
           {!embedded && (
-          <Link to="/patients"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Retour</Button></Link>
+          <Link to="/patients" onClick={(event) => {if (hasUnsavedChanges && !window.confirm('Des modifications ne sont pas sauvegardées. Voulez-vous quitter cette page ?')) {event.preventDefault();}}}><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Retour</Button></Link>
           )}
           <div>
             <h1 className="text-2xl font-bold">Odontogramme</h1>
@@ -359,7 +452,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
         </CardContent>
       </Card>
 
-      <Modal open={!!selectedTooth} onClose={() => setSelectedTooth(null)}>
+      <Modal open={!!selectedTooth} onClose={closeEditor}>
         <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:700, fontSize:17, color:'#0F172A', margin:'0 0 16px', paddingRight:24 }}>
           Dent {selectedTooth}
         </h2>
@@ -426,7 +519,7 @@ const PatientOdontogram = ({ patientIdOverride = null, embedded = false }) => {
             </div>
           )}
           <div style={{ display:'flex', justifyContent:'flex-end', gap:8, paddingTop:8, borderTop:'1px solid #F1F5F9' }}>
-            <Button variant="outline" onClick={() => setSelectedTooth(null)}>Annuler</Button>
+            <Button variant="outline" onClick={closeEditor}>Annuler</Button>
             <Button onClick={handleSaveTooth} data-testid="save-tooth-btn">Appliquer</Button>
           </div>
         </div>
