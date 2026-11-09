@@ -1,0 +1,81 @@
+
+name: DentalPM P0 - Validation
+
+on:
+  push:
+    branches:
+      - main
+      - "fix/**"
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Compilation frontend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: dental-pm-mvp/frontend
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Préparer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dental-pm-mvp/frontend/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci --include=dev
+
+      - name: Vérifier les dates Madagascar
+        run: |
+          node --input-type=module -e "
+          import { clinicDateISO, shiftCivilDays } from './src/utils/clinicDate.mjs';
+          if (clinicDateISO(new Date('2026-11-05T22:30:00Z')) !== '2026-11-06') process.exit(1);
+          if (shiftCivilDays('2026-11-06', -1) !== '2026-11-05') process.exit(1);
+          "
+
+      - name: Compiler DentalPM
+        run: npm run build
+
+  backend:
+    name: Vérification backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: dental-pm-mvp
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Préparer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dental-pm-mvp/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci --include=dev
+
+      - name: Vérifier la syntaxe serveur
+        run: |
+          node --check server.js
+          node --check routes/dental-chart.js
+          node --check routes/odontogram.js
+
+      - name: Exécuter les tests existants
+        run: npm test -- --runInBand
