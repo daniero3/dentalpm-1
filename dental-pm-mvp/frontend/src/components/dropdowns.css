@@ -1,0 +1,226 @@
+/*
+ * DentalPM P1.1 — Composants de sélection harmonisés.
+ * Chargé en dernier dans App.js pour éviter les anciennes règles concurrentes.
+ * Les listes ouvertes des <select> natifs restent gérées par le navigateur.
+ */
+
+:root {
+  --dpm-menu-control-height: 44px;
+  --dpm-menu-radius: 12px;
+  --dpm-menu-surface: var(--bg-input, #ffffff);
+  --dpm-menu-text: var(--text-primary, #0f172a);
+  --dpm-menu-border: var(--border-default, #dce5ec);
+  --dpm-menu-accent: var(--brand-primary, #0d766b);
+  --dpm-menu-selected: var(--brand-primary-light, #e8f6f3);
+}
+
+/* Sélecteurs HTML (Patients, Factures, Stock, Laboratoires, etc.) */
+select:not([multiple]):not([size]) {
+  box-sizing: border-box !important;
+  height: var(--dpm-menu-control-height) !important;
+  min-height: var(--dpm-menu-control-height) !important;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 38px 0 14px !important;
+  border: 1px solid var(--dpm-menu-border) !important;
+  border-radius: var(--dpm-menu-radius) !important;
+  background-color: var(--dpm-menu-surface) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364788B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-position: right 12px center !important;
+  background-repeat: no-repeat !important;
+  background-size: 16px 16px !important;
+  color: var(--dpm-menu-text) !important;
+  font-family: var(--font-sans, inherit) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: normal !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 43, 48, 0.035) !important;
+}
+
+select:not([multiple]):not([size]):hover:not(:disabled) {
+  border-color: var(--dpm-menu-accent) !important;
+}
+
+select:not([multiple]):not([size]):focus-visible {
+  border-color: var(--dpm-menu-accent) !important;
+  box-shadow: 0 0 0 3px var(--brand-primary-glow, rgba(13, 118, 107, .15)) !important;
+}
+
+select:not([multiple]):not([size]):disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+/* Ne pas réintroduire la double bordure du sélecteur de langue. */
+.dpm-app-topbar label > select:not([multiple]):not([size]) {
+  height: 42px !important;
+  min-height: 42px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding-left: 2px !important;
+  padding-right: 28px !important;
+  font-size: 13px !important;
+}
+
+.dpm-app-topbar label > select:not([multiple]):not([size]):focus-visible {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Composants Radix Select : mêmes dimensions et état visuel que HTML. */
+button[role="combobox"][data-state].dpm-select-trigger {
+  box-sizing: border-box !important;
+  height: var(--dpm-menu-control-height) !important;
+  min-height: var(--dpm-menu-control-height) !important;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 14px !important;
+  border: 1px solid var(--dpm-menu-border) !important;
+  border-radius: var(--dpm-menu-radius) !important;
+  background: var(--dpm-menu-surface) !important;
+  color: var(--dpm-menu-text) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(15, 43, 48, 0.035) !important;
+}
+
+button[role="combobox"][data-state].dpm-select-trigger:hover:not(:disabled),
+button[role="combobox"][data-state="open"].dpm-select-trigger {
+  border-color: var(--dpm-menu-accent) !important;
+}
+
+button[role="combobox"][data-state].dpm-select-trigger:focus-visible {
+  box-shadow: 0 0 0 3px var(--brand-primary-glow, rgba(13, 118, 107, .15)) !important;
+}
+
+.dpm-select-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.dpm-select-trigger > svg {
+  flex-shrink: 0;
+}
+
+/* Portail Radix : ne pas laisser une liste disparaître sous une modale. */
+.dpm-select-content {
+  z-index: 2100 !important;
+  min-width: min(var(--radix-select-trigger-width, 180px), calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: min(328px, var(--radix-select-content-available-height, 328px));
+  overflow: hidden;
+  border: 1px solid var(--dpm-menu-border) !important;
+  border-radius: 14px !important;
+  background: var(--bg-surface, #ffffff) !important;
+  color: var(--dpm-menu-text) !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, .15) !important;
+}
+
+.dpm-select-viewport {
+  box-sizing: border-box;
+  max-height: min(304px, var(--radix-select-content-available-height, 304px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+[data-radix-popper-content-wrapper] .dpm-select-item,
+.dpm-select-content .dpm-select-item {
+  min-height: 42px;
+  padding: 10px 36px 10px 14px !important;
+  border-radius: 9px !important;
+  color: var(--dpm-menu-text) !important;
+  font-size: 14px !important;
+  line-height: 1.35;
+  font-weight: 500;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+[data-radix-popper-content-wrapper] .dpm-select-item[data-highlighted],
+.dpm-select-content .dpm-select-item[data-highlighted] {
+  background: var(--dpm-menu-selected) !important;
+  color: var(--dpm-menu-text) !important;
+  outline: none;
+}
+
+.dpm-select-content .dpm-select-item[data-state="checked"] {
+  font-weight: 700;
+}
+
+.dpm-select-content .dpm-select-item[data-disabled] {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* Menus d'actions Radix : même surface et même espace entre les lignes. */
+.dpm-dropdown-content {
+  z-index: 2100 !important;
+  max-width: calc(100vw - 24px);
+  border: 1px solid var(--dpm-menu-border) !important;
+  border-radius: 14px !important;
+  background: var(--bg-surface, #ffffff) !important;
+  color: var(--dpm-menu-text) !important;
+  padding: 6px !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, .15) !important;
+}
+
+.dpm-dropdown-item {
+  min-height: 40px;
+  border-radius: 9px !important;
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+  font-size: 14px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.dpm-dropdown-item[data-highlighted],
+.dpm-dropdown-item:focus-visible {
+  background: var(--dpm-menu-selected) !important;
+  color: var(--dpm-menu-text) !important;
+  outline: none;
+}
+
+.dpm-dropdown-item[data-disabled] {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  select:not([multiple]):not([size]),
+  button[role="combobox"][data-state].dpm-select-trigger {
+    font-size: 16px !important;
+  }
+
+  .dpm-app-topbar label > select:not([multiple]):not([size]) {
+    width: 68px !important;
+    padding-right: 23px !important;
+    font-size: 13px !important;
+  }
+
+  .dpm-select-content .dpm-select-item,
+  .dpm-dropdown-item {
+    font-size: 15px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dpm-select-content,
+  .dpm-dropdown-content,
+  .dpm-select-item,
+  .dpm-dropdown-item {
+    animation: none !important;
+    transition: none !important;
+  }
+}
