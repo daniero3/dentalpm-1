@@ -83,7 +83,7 @@ export function ModernTopbar() {
   const { language, setLanguage, locale, options: languageOptions, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
-  const { isMobile, isTablet } = useScreenSize()
+  const { isMobile, width: screenWidth } = useScreenSize()
   const [searchTerm, setSearchTerm]       = useState('')
   const deferredSearchTerm                = React.useDeferredValue(searchTerm)
   const debouncedSearchTerm               = useDebouncedValue(deferredSearchTerm, 300)
@@ -169,6 +169,10 @@ export function ModernTopbar() {
     DENTIST:theme.accent, ASSISTANT:'var(--warning)', ACCOUNTANT:theme.success
   }[role] || theme.textSecondary)
 
+  // Les contrôles essentiels restent accessibles même en fenêtre réduite.
+  const showFullSearch = !isMobile && screenWidth >= 1280
+  const showClock = !isMobile && screenWidth >= 1600
+  const showFullConnection = !isMobile && screenWidth >= 1440
   const topbarHeight = isMobile ? 56 : 64
   const topbarPL     = isMobile ? 62 : 24 // espace pour le bouton hamburger
   const clinicName = user?.clinic_name || user?.clinic?.name || user?.cabinet_name || t('label.defaultClinic')
@@ -218,7 +222,8 @@ export function ModernTopbar() {
         padding: isMobile
           ? `0 max(12px, env(safe-area-inset-right)) 0 ${topbarPL}px`
           : `0 16px 0 ${topbarPL}px`,
-        gap: 12,
+        gap: isMobile ? (screenWidth < 360 ? 4 : 6) : screenWidth < 1280 ? 8 : 12,
+        minWidth: 0,
         position: 'sticky', top: 0, zIndex: 90,
         boxShadow: theme.shadow,
         overflow: 'visible',
@@ -233,8 +238,8 @@ export function ModernTopbar() {
         )}
 
         {/* ── Search — desktop/tablette ── */}
-        {!isMobile && (
-          <div style={{ flex:1, maxWidth: isTablet ? 240 : 380, position:'relative' }}>
+        {showFullSearch && (
+          <div style={{ flex:'1 1 200px', minWidth:0, maxWidth:380, position:'relative' }}>
             <Search size={15} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:theme.textSecondary, pointerEvents:'none' }} />
             <input aria-label="Recherche globale" type="text" placeholder={t('topbar.searchPlaceholder')}
               value={searchTerm} onChange={e => {
@@ -256,43 +261,43 @@ export function ModernTopbar() {
           </div>
         )}
 
-        {/* ── Search icon — mobile ── */}
-        {isMobile && (
+        {/* Recherche compacte : téléphone, tablette et petit ordinateur. */}
+        {!showFullSearch && (
           <button type="button" aria-label="Ouvrir la recherche" onClick={openCommand}
-            style={{ width:36, height:36, borderRadius:theme.radiusSm, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:theme.textSecondary }}>
+            style={{ width:36, height:36, flexShrink:0, borderRadius:theme.radiusSm, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:theme.textSecondary }}>
             <Search size={16} />
           </button>
         )}
 
-        {/* <div style={{ flex:1 }} /> */}
+        {!showFullSearch && <div aria-hidden="true" style={{ flex:'1 1 auto', minWidth:0 }} />}
 
         {!isMobile && (
-          <button type="button" onClick={() => navigate('/appointments')}
-            style={{ height:38, flexShrink: 0, whiteSpace: 'nowrap', display:'inline-flex', alignItems:'center', justifyContent:'center', gap:'var(--space-2)', padding:'0 var(--space-4)', borderRadius:theme.radiusMd, border:`1px solid ${theme.accent}`, background:theme.accent, color:theme.bgSurface, fontSize:'var(--text-sm)', fontWeight:'var(--font-semibold)', cursor:'pointer', boxShadow:'var(--shadow-sm)', transition:theme.transition }}
+          <button type="button" aria-label={t('topbar.newAppointment')} title={t('topbar.newAppointment')} onClick={() => navigate('/appointments')}
+            style={{ height:38, flexShrink: 0, whiteSpace: 'nowrap', display:'inline-flex', alignItems:'center', justifyContent:'center', gap:'var(--space-2)', padding: screenWidth < 1280 ? '0 11px' : '0 var(--space-4)', borderRadius:theme.radiusMd, border:`1px solid ${theme.accent}`, background:theme.accent, color:theme.bgSurface, fontSize:'var(--text-sm)', fontWeight:'var(--font-semibold)', cursor:'pointer', boxShadow:'var(--shadow-sm)', transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.background=theme.accentHover; e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow=theme.shadow }}
             onMouseLeave={e => { e.currentTarget.style.background=theme.accent; e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='var(--shadow-sm)' }}
             onMouseDown={e => { e.currentTarget.style.transform='scale(0.97)' }}
             onMouseUp={e => { e.currentTarget.style.transform='translateY(-1px)' }}>
             <CalendarPlus size={16} />
-            {t('topbar.newAppointment')}
+            {screenWidth >= 1280 && t('topbar.newAppointment')}
           </button>
         )}
 
         {!isMobile && (
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 10px', borderRadius:theme.radiusMd, border:`1px solid ${theme.borderDefault}`, background:theme.bgElevated, color: online ? theme.success : theme.danger, fontSize:12, fontWeight:800, whiteSpace:'nowrap' }}>
+          <div title={online ? t('topbar.online') : t('topbar.offline')} aria-label={online ? t('topbar.online') : t('topbar.offline')} style={{ display:'flex', flexShrink:0, alignItems:'center', gap:8, padding: showFullConnection ? '6px 10px' : '6px 8px', borderRadius:theme.radiusMd, border:`1px solid ${theme.borderDefault}`, background:theme.bgElevated, color: online ? theme.success : theme.danger, fontSize:12, fontWeight:800, whiteSpace:'nowrap' }}>
             {online ? <Wifi size={14}/> : <WifiOff size={14}/>}
-            {online ? t('topbar.online') : t('topbar.offline')}
+            {showFullConnection && (online ? t('topbar.online') : t('topbar.offline'))}
           </div>
         )}
 
-        {!isMobile && !isTablet && (
+        {showClock && (
           <div style={{ padding:'6px 10px', borderRadius:theme.radiusMd, background:theme.bgElevated, border:`1px solid ${theme.borderDefault}`, fontSize:12, fontWeight:800, color:theme.textSecondary, whiteSpace:'nowrap' }}>
             {formatMadagascarTime(now, locale)} {t('topbar.timezone')}
           </div>
         )}
 
-        <label title={t('topbar.language')} style={{ height:38, display:'inline-flex', alignItems:'center', gap:7, padding:isMobile ? '0 8px' : '0 10px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, color:theme.textSecondary }}>
-          <Globe2 size={16} />
+        <label title={t('topbar.language')} style={{ height:38, flexShrink:0, display:'inline-flex', alignItems:'center', gap:7, padding:isMobile ? (screenWidth < 360 ? '0 4px' : '0 8px') : '0 10px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, color:theme.textSecondary }}>
+          {screenWidth >= 360 && <Globe2 size={16} />}
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
@@ -307,14 +312,14 @@ export function ModernTopbar() {
           </select>
         </label>
 
-        <div style={{ width:38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', color:theme.textSecondary }}>
+        <div style={{ width:screenWidth < 360 ? 34 : 38, height:38, flexShrink:0, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', color:theme.textSecondary }}>
           <ThemeToggle />
         </div>
 
         {/* ── Notifications ── */}
-        <div ref={notifRef} style={{ position:'relative' }}>
+        <div ref={notifRef} style={{ position:'relative', flexShrink:0 }}>
           <button type="button" aria-label="Afficher les notifications" onClick={() => setIsNotifOpen(!isNotifOpen)}
-            style={{ width:38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', position:'relative', color:theme.textSecondary, transition:theme.transition }}
+            style={{ width:screenWidth < 360 ? 34 : 38, height:38, borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', position:'relative', color:theme.textSecondary, transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=theme.accent; e.currentTarget.style.color=theme.accent; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor=theme.borderDefault; e.currentTarget.style.color=theme.textSecondary; }}>
             <Bell size={17} />
@@ -348,7 +353,7 @@ export function ModernTopbar() {
         </div>
 
         {/* ── Profile ── */}
-        <div ref={profileRef} style={{ position:'relative' }}>
+        <div ref={profileRef} style={{ position:'relative', flexShrink:0, minWidth:0 }}>
           <button type="button" onClick={() => setIsProfileOpen(!isProfileOpen)}
             className='dpm-topbar-control' style={{ display:'flex', alignItems:'center', gap: isMobile ? 0 : 8, padding: isMobile ? 4 : '6px 10px 6px 6px', borderRadius:theme.radiusMd, border:`1.5px solid ${theme.borderDefault}`, background:theme.bgElevated, cursor:'pointer', transition:theme.transition }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=theme.accent; e.currentTarget.style.background=theme.pressed; }}
@@ -358,8 +363,8 @@ export function ModernTopbar() {
             </div>
             {!isMobile && (
               <>
-                <div style={{ textAlign:'left' }}>
-                  <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.textPrimary, margin:0, lineHeight:1.2, whiteSpace:'nowrap' }}>
+                <div style={{ textAlign:'left', minWidth:0, maxWidth: screenWidth < 1280 ? 130 : 190 }}>
+                  <p style={{ fontFamily:'var(--font-sans)', fontWeight:700, fontSize:13, color:theme.textPrimary, margin:0, lineHeight:1.2, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                     {clinicName}
                   </p>
                   <p style={{ fontSize:10, margin:0, color: getRoleColor(user?.role), fontWeight:700 }}>
