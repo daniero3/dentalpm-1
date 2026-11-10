@@ -80,6 +80,7 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
 import "./App.css";
 import "./components/dpm.css";
 import "./components/mobile.css";
+import "./components/dropdowns.css";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "./components/ui/sonner";
