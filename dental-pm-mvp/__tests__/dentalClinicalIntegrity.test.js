@@ -285,4 +285,77 @@ describe('P0.7 - Odontogramme : validation et transaction', () => {
     expect(models.AuditLog.create).not.toHaveBeenCalled();
     log.mockRestore();
   });
+  
+  test('GET odontogramme : refuse un cabinet absent', async () => {
+    const { app, models } = setupOdontogram({ clinicId: null });
+
+    const res = await request(app).get(odontogramUrl);
+
+    expect(res.status).toBe(403);
+    expect(models.Patient.findOne).not.toHaveBeenCalled();
+    expect(models.ToothStatus.findAll).not.toHaveBeenCalled();
+  });
+
+  test('GET odontogramme : refuse un patient étranger', async () => {
+    const { app, models } = setupOdontogram({
+      patientExists: false
+    });
+
+    const res = await request(app).get(odontogramUrl);
+
+    expect(res.status).toBe(404);
+    expect(models.ToothStatus.findAll).not.toHaveBeenCalled();
+  });
+
+  test('GET historique : refuse un cabinet absent', async () => {
+    const { app, models } = setupOdontogram({ clinicId: null });
+
+    const res = await request(app).get(`${odontogramUrl}/history`);
+
+    expect(res.status).toBe(403);
+    expect(models.ToothHistory.findAll).not.toHaveBeenCalled();
+  });
+
+  test('GET historique : refuse un patient étranger', async () => {
+    const { app, models } = setupOdontogram({
+      patientExists: false
+    });
+
+    const res = await request(app).get(`${odontogramUrl}/history`);
+
+    expect(res.status).toBe(404);
+    expect(models.ToothHistory.findAll).not.toHaveBeenCalled();
+  });
+
+  test('POST historique : refuse un cabinet absent', async () => {
+    const { app, models } = setupOdontogram({ clinicId: null });
+
+    const res = await request(app)
+      .post(`${odontogramUrl}/history`)
+      .send({
+        tooth_fdi: '11',
+        action: 'UPDATE',
+        status: 'CARIES'
+      });
+
+    expect(res.status).toBe(403);
+    expect(models.ToothHistory.create).not.toHaveBeenCalled();
+  });
+
+  test('POST historique : refuse un patient étranger', async () => {
+    const { app, models } = setupOdontogram({
+      patientExists: false
+    });
+
+    const res = await request(app)
+      .post(`${odontogramUrl}/history`)
+      .send({
+        tooth_fdi: '11',
+        action: 'UPDATE',
+        status: 'CARIES'
+      });
+
+    expect(res.status).toBe(404);
+    expect(models.ToothHistory.create).not.toHaveBeenCalled();
+  });
 });
