@@ -267,7 +267,7 @@ button[role="combobox"][data-state].dpm-select-trigger:focus-visible {
     box-shadow: 0 16px 40px rgba(15, 23, 42, .17);
   }
 
-  ::picker(select) option {
+  select:not([multiple]):not([size]) option {
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -286,31 +286,31 @@ button[role="combobox"][data-state].dpm-select-trigger:focus-visible {
     cursor: pointer;
   }
 
-  ::picker(select) option:hover,
-  ::picker(select) option:focus-visible {
+  select:not([multiple]):not([size]) option:hover,
+  select:not([multiple]):not([size]) option:focus-visible {
     outline: none;
     background: var(--dpm-menu-selected, #e8f6f3);
   }
 
-  ::picker(select) option:checked {
+  select:not([multiple]):not([size]) option:checked {
     background: var(--dpm-menu-selected, #e8f6f3);
     color: var(--dpm-menu-text, #0f172a);
     font-weight: 700;
   }
 
-  ::picker(select) option:disabled {
+  select:not([multiple]):not([size]) option:disabled {
     opacity: .45;
     cursor: not-allowed;
   }
 
-  ::picker(select) option::checkmark {
+  select:not([multiple]):not([size]) option::checkmark {
     content: "✓";
     margin-left: auto;
     color: var(--dpm-menu-accent, #0d766b);
     font-weight: 800;
   }
 
-  ::picker(select) optgroup {
+  select:not([multiple]):not([size]) optgroup {
     padding: 6px 4px;
     font-family: var(--font-sans, inherit);
     font-size: 12px;
@@ -324,7 +324,7 @@ button[role="combobox"][data-state].dpm-select-trigger:focus-visible {
       max-height: min(55dvh, 340px);
     }
 
-    ::picker(select) option {
+    select:not([multiple]):not([size]) option {
       min-height: 46px;
       font-size: 16px;
     }
