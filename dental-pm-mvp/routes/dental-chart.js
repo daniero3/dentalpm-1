@@ -1,4 +1,5 @@
 const express = require('express');
+const { isDeepStrictEqual } = require('node:util');
 const { param, validationResult } = require('express-validator');
 const sequelize = require('../database/connection');
 
@@ -211,7 +212,7 @@ router.put('/patients/:patientId/dental-chart/tooth/:toothPosition', [
       const unchangedPrefix =
         incoming.length === previous.length + 1 &&
         previous.every((procedure, i) =>
-          JSON.stringify(procedure) === JSON.stringify(incoming[i])
+          isDeepStrictEqual(procedure, incoming[i])
         );
 
       if (!unchangedPrefix) {
