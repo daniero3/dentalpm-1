@@ -234,7 +234,7 @@ button[role="combobox"][data-state].dpm-select-trigger:focus-visible {
  * navigation clavier restent des mécanismes natifs du navigateur.
  * Firefox sans cette prise en charge conserve le menu système.
  */
-@supports (appearance: base-select) and selector(::picker(select)) {
+@supports (appearance: base-select) {
   select:not([multiple]):not([size]) {
     -webkit-appearance: base-select !important;
     appearance: base-select !important;
