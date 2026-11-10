@@ -87,3 +87,47 @@ jobs:
             --detectOpenHandles \
             --testTimeout=15000 \
             --verbose
+
+  clinical_postgres:
+    name: Intégrité clinique PostgreSQL (base isolée)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: clinical_test
+          POSTGRES_PASSWORD: temporary_ci_only
+          POSTGRES_DB: dentalpm_clinical_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U clinical_test -d dentalpm_clinical_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: dental-pm-mvp
+    env:
+      CI: "true"
+      NODE_ENV: test
+      DENTALPM_PG_TESTS: "1"
+      DATABASE_URL: postgres://clinical_test:temporary_ci_only@127.0.0.1:5432/dentalpm_clinical_test
+      DB_SSL: "false"
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Préparer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dental-pm-mvp/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci --include=dev
+
+      - name: Vérifier les transactions sur PostgreSQL jetable
+        timeout-minutes: 5
+        run: npm test -- --runInBand --detectOpenHandles --testTimeout=15000 --runTestsByPath __tests__/clinicalPostgres.integration.test.js --verbose

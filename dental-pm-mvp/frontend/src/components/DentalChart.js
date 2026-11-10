@@ -393,13 +393,19 @@ const addProcedure = async () => {
       notes: ''
     });
 
-  } catch (error) {
-    console.error('Erreur enregistrement procédure:', error);
-
-    toast.error(
-      'Enregistrement non confirmé. Vérifiez le dossier avant de réessayer.'
-    );
-  }
+  
+    } catch (error) {
+      if (error.response?.status === 409) {
+        toast.error(
+          'Le dossier a été modifié par un autre utilisateur. Rechargez la Fiche dentaire et vérifiez les actes avant de recommencer.'
+        );
+        return;
+      }
+    
+      toast.error(
+        'Enregistrement non confirmé. Vérifiez le dossier avant de réessayer.'
+      );
+    }
 };
   
 const updateToothStatus = async (status) => {
