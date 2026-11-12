@@ -247,8 +247,292 @@ const LabCard = ({lab,onSelect,selected,compact=false}) => {
 
 /* ════════════════════════════════════════════════════════════════════════════ */
 const LabManagement = () => {
+/* Recherche patient pour les commandes laboratoire */
+const LabPatientSearch = ({ value, onChange }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [active, setActive] = useState(0);
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleOutside = (event) => {
+      if (!containerRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutside);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const term = query.trim();
+
+    if (!open || value || term.length < 2) {
+      setResults([]);
+      setLoading(false);
+      setError(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    setLoading(true);
+    setError(false);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await axios.get(`${API}/patients`, {
+          ...authH(),
+          params: {
+            search: term,
+            page: 1,
+            limit: 8,
+            fields: 'lookup',
+            includeTotal: false
+          },
+          signal: controller.signal
+        });
+
+        if (!controller.signal.aborted) {
+          setResults(response.data.patients || []);
+          setActive(0);
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setResults([]);
+          setError(true);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, open, value]);
+
+  const choosePatient = (patient) => {
+    setQuery(
+      [patient.first_name, patient.last_name]
+        .filter(Boolean)
+        .join(' ')
+    );
+    onChange(patient.id);
+    setResults([]);
+    setOpen(false);
+  };
+
+  const showResults =
+    open && !value && query.trim().length >= 2;
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }}>
+        <Search
+          size={17}
+          style={{
+            position: 'absolute',
+            left: 14,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: '#0D7A87',
+            pointerEvents: 'none'
+          }}
+        />
+
+        <input
+          id="lab-order-patient"
+          type="text"
+          role="combobox"
+          aria-label="Rechercher un patient"
+          aria-autocomplete="list"
+          aria-expanded={showResults}
+          aria-controls={
+            showResults ? 'lab-patient-results' : undefined
+          }
+          aria-activedescendant={
+            showResults && results[active]
+              ? `lab-patient-${results[active].id}`
+              : undefined
+          }
+          autoComplete="off"
+          value={query}
+          placeholder="Rechercher un patient..."
+          onFocus={() => setOpen(true)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setResults([]);
+            if (value) onChange('');
+            setOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setOpen(false);
+            }
+
+            if (!showResults || !results.length) return;
+
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setActive(i => Math.min(i + 1, results.length - 1));
+            }
+
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setActive(i => Math.max(i - 1, 0));
+            }
+
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              choosePatient(results[active] || results[0]);
+            }
+          }}
+          style={{
+            width: '100%',
+            height: 46,
+            boxSizing: 'border-box',
+            padding: '10px 42px',
+            borderRadius: 12,
+            border: '1.5px solid #0D7A87',
+            background: '#FFFFFF',
+            color: '#0F172A',
+            fontSize: 14,
+            outline: 'none'
+          }}
+        />
+
+        {value && (
+          <button
+            type="button"
+            aria-label="Effacer le patient sélectionné"
+            onClick={() => {
+              setQuery('');
+              onChange('');
+              setOpen(false);
+            }}
+            style={{
+              position: 'absolute',
+              right: 12,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              border: 0,
+              background: 'transparent',
+              cursor: 'pointer',
+              color: '#64748B'
+            }}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      <div style={{
+        fontSize: 11,
+        marginTop: 5,
+        color: value ? '#0D7A87' : '#64748B'
+      }}>
+        {value
+          ? 'Patient sélectionné'
+          : 'Rechercher par nom, prénom, téléphone ou numéro de dossier'}
+      </div>
+
+      {showResults && (
+        <div
+          id="lab-patient-results"
+          role="listbox"
+          aria-label="Résultats de recherche des patients"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 6000,
+            marginTop: 6,
+            maxHeight: 260,
+            overflowY: 'auto',
+            padding: 6,
+            background: '#FFFFFF',
+            border: '1px solid #DCE5EC',
+            borderRadius: 12,
+            boxShadow: '0 12px 30px rgba(15,23,42,.15)'
+          }}
+        >
+          {loading && (
+            <div style={{ padding: 12, fontSize: 13, color: '#64748B' }}>
+              Recherche en cours...
+            </div>
+          )}
+
+          {error && (
+            <div style={{ padding: 12, fontSize: 13, color: '#DC2626' }}>
+              Recherche indisponible. Réessayez.
+            </div>
+          )}
+
+          {!loading && !error && results.length === 0 && (
+            <div style={{ padding: 12, fontSize: 13, color: '#64748B' }}>
+              Aucun patient trouvé
+            </div>
+          )}
+
+          {!loading && !error && results.map((patient, index) => (
+            <button
+              key={patient.id}
+              id={`lab-patient-${patient.id}`}
+              role="option"
+              aria-selected={index === active}
+              type="button"
+              onMouseEnter={() => setActive(index)}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => choosePatient(patient)}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '10px 12px',
+                border: 0,
+                borderRadius: 8,
+                textAlign: 'left',
+                cursor: 'pointer',
+                background: index === active ? '#E6F7F7' : '#FFFFFF'
+              }}
+            >
+              <div style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: '#0F172A'
+              }}>
+                {patient.first_name} {patient.last_name}
+              </div>
+
+              <div style={{
+                fontSize: 11,
+                color: '#64748B',
+                marginTop: 3
+              }}>
+                {[
+                  patient.patient_number,
+                  patient.phone_primary
+                ].filter(Boolean).join(' · ')}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+	
   const [orders,setOrders]             = useState([]);
-  const [patients,setPatients]         = useState([]);
   const [loading,setLoading]           = useState(true);
   const [isAddOpen,setIsAddOpen]       = useState(false);
   const [isStatOpen,setIsStatOpen]     = useState(false);
@@ -259,18 +543,27 @@ const LabManagement = () => {
   const [selLab,setSelLab]             = useState(null);
   const [tab,setTab]                   = useState('orders');
   const [form,setForm] = useState({patient_id:'',work_type:'CROWN',due_date:'',lab_name:'',shade:'',lab_cost_mga:'',notes:''});
+	const closeNewOrder = () => {
+	  setIsAddOpen(false);
+	  setSelLab(null);
+	  setForm(f => ({
+	    ...f,
+	    patient_id: ''
+	  }));
+	};
 
-  useEffect(()=>{fetchOrders();fetchPatients();},[]);
+useEffect(()=>{fetchOrders();fetchPatients();},[]);
 
+useEffect(() => {
+  fetchOrders();
+}, []);
+	
   const fetchOrders = async()=>{
     try{const r=await axios.get(`${API}/labs/orders`,authH());setOrders(r.data.orders||[]);}
     catch{toast.error('Erreur chargement');}
     finally{setLoading(false);}
   };
-  const fetchPatients = async()=>{
-    try{const r=await axios.get(`${API}/patients`,{params:{limit:500,fields:'lookup',includeTotal:false},...authH()});const l=r.data.patients||r.data.data||r.data||[];setPatients(Array.isArray(l)?l:[]);}
-    catch(e){console.error(e);}
-  };
+  
   const handleCreate = async()=>{
     if(!form.patient_id||!form.due_date){toast.error('Patient et date requis');return;}
     setSaving(true);
@@ -504,8 +797,8 @@ const LabManagement = () => {
       )}
 
       {/* ══ MODAL NOUVELLE COMMANDE ══ */}
-      <Modal open={isAddOpen} onClose={()=>{setIsAddOpen(false);setSelLab(null);}} title="Nouvelle commande labo" maxW={820}>
-        <div style={{display:'flex',flexDirection:'column',gap:13}}>
+<Modal open={isAddOpen} onClose={closeNewOrder} title="Nouvelle commande labo"maxW={820}>        
+	<div style={{display:'flex',flexDirection:'column',gap:13}}>
           {/* Sélection labo partenaire */}
           <div style={{background:'#F0FDFE',border:'1.5px solid #7DD3DA',borderRadius:13,padding:'13px 15px'}}>
             <div style={{fontSize:11,fontWeight:700,color:'#0D7A87',textTransform:'uppercase',letterSpacing:1.5,marginBottom:9,display:'flex',alignItems:'center',gap:5}}>
@@ -544,13 +837,32 @@ const LabManagement = () => {
           </div>
 
           {/* Patient */}
-          <div>
-            <label htmlFor="lab-order-patient" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Patient *</label>
-            <select id="lab-order-patient" aria-label="Patient de la commande labo" value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi}>
-              <option value="">Sélectionner un patient...</option>
-              {patients.map(p=><option key={p.id} value={p.id}>{p.first_name} {p.last_name}</option>)}
-            </select>
-          </div>
+          {/* Recherche patient */}
+<div>
+  <label
+    htmlFor="lab-order-patient"
+    style={{
+      fontSize: 13,
+      fontWeight: 600,
+      color: '#475569',
+      display: 'block',
+      marginBottom: 5
+    }}
+  >
+    Patient *
+  </label>
+
+  <LabPatientSearch
+    value={form.patient_id}
+    onChange={(patientId) =>
+      setForm(f => ({
+        ...f,
+        patient_id: patientId
+      }))
+    }
+  />
+</div>
+			
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div>
               <label htmlFor="lab-order-work-type" style={{fontSize:13,fontWeight:600,color:'#475569',display:'block',marginBottom:4}}>Type de travail</label>
@@ -584,7 +896,7 @@ const LabManagement = () => {
             <textarea id="lab-order-notes" aria-label="Notes de la commande labo" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} rows={2} placeholder="Instructions spéciales..." style={{...inp,resize:'vertical'}} onFocus={fi} onBlur={bi}/>
           </div>
           <div style={{display:'flex',justifyContent:'flex-end',gap:8,paddingTop:8,borderTop:'1px solid #F1F5F9'}}>
-            <button type="button" onClick={()=>{setIsAddOpen(false);setSelLab(null);}} style={{padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569'}}>Annuler</button>
+            <button type="button" onClick={closeNewOrder} style={{padding:'9px 18px',borderRadius:10,border:'1.5px solid #E2E8F0',background:'#fff',cursor:'pointer',fontSize:13,fontWeight:600,color:'#475569'}}>Annuler</button>
             <button type="button" onClick={handleCreate} disabled={saving} style={{padding:'9px 20px',borderRadius:10,background:'linear-gradient(135deg,#0D7A87,#13A3B4)',color:'#fff',border:'none',cursor:'pointer',fontSize:14,fontWeight:700,display:'flex',alignItems:'center',gap:7}}>
               {saving?<Loader2 size={14} style={{animation:'spin .8s linear infinite'}}/>:<Plus size={14}/>}
               Créer la commande
