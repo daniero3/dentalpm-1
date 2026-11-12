@@ -17,6 +17,7 @@ import PatientDocuments from './PatientDocuments';
 import PatientPrescriptions from './PatientPrescriptions';
 import PatientLabOrders from './PatientLabOrders';
 import DentalChart from './DentalChart';
+import PatientSearchPicker from './PatientSearchPicker';
 import {
   Calendar, Clock, Plus, Edit2, Trash2, Download, Upload, User, X,
   AlertCircle, RefreshCw, ChevronLeft, ChevronRight,
@@ -582,6 +583,7 @@ const openCreate = () => {
     e.preventDefault();
     const sm = form.start_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
     const em = form.end_time.split(':').reduce((a,t)=>60*a+parseInt(t),0);
+    if (!form.patient_id) { toast.error('Veuillez sélectionner un patient'); return; }
     if (em <= sm) { toast.error("L'heure de fin doit être après le début"); return; }
     if (!form.dentist_id) { toast.error('Veuillez sélectionner un dentiste'); return; }
     try {
@@ -1605,167 +1607,32 @@ const nextDay = () => {
         <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
           {/* Patient */}
-          <div>
-            <label htmlFor="appointment-patient-search" style={{ fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 6, display: 'block' }}>
-              Patient *
-            </label>
-          
-            <div
-              style={{
-                border: '1.5px solid #E2E8F0',
-                borderRadius: 12,
-                background: '#FFFFFF',
-                overflow: 'hidden'
-              }}
-            >
-              {selectedPatient && (
-                <div
-                  style={{
-                    padding: '10px 12px',
-                    background: '#F8FAFC',
-                    borderBottom: '1px solid #E2E8F0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 10
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>
-                      {selectedPatient.first_name} {selectedPatient.last_name}
-                    </div>
-          
-                    <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
-                      {patientIdentifier(selectedPatient)}
-                    </div>
-                  </div>
-          
-                  <button
-                    type="button"
-                    aria-label="Retirer le patient sélectionné"
-                    onClick={() => {
-                      setForm(prev => ({ ...prev, patient_id: '' }));
-                      setPatientSearch('');
-                      fetchPatients();
-                    }}
-                    style={{
-                      border: 0,
-                      background: 'transparent',
-                      cursor: 'pointer',
-                      color: '#64748B',
-                      display: 'flex',
-                      padding: 4
-                    }}
-                    title="Retirer le patient"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              )}
-          
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  height: 46,
-                  borderRadius: 28,
-                  border: '2px solid #D7E6EA',
-                  background: '#FFFFFF',
-                  boxShadow: '0 4px 14px rgba(13, 122, 135, 0.08)',
-                  overflow: 'hidden'
-                }}
-              >
-                  <Search size={22} style={{ flexShrink: 0, color: '#94A3B8', marginLeft: 10, marginRight: 6}} />
-          
-                <input
-                  id="appointment-patient-search"
-                  aria-label="Rechercher un patient"
-                  value={patientSearch}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setPatientSearch(value);
-                    searchPatients(value);
-                  }}
-                  placeholder="Nom, téléphone, ID patient..."
-                  style={{
-                    border: 'none',
-                    background: 'transparent',
-                    fontSize: 16,
-                    flex: 1,
-                    minWidth: 0,
-                    height: 38,
-                    color: '#0F172A',
-                    paddingLeft: 12,
-                    paddingRight: 70
-                  }}
-                />
-              </div>
-          
-              {patientMatches.length > 0 ? (
-                <div style={{ maxHeight: 180, overflowY: 'auto' }}>
-                  {patientMatches.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setForm(prev => ({ ...prev, patient_id: p.id }));
-                        setPatientSearch(`${p.first_name || ''} ${p.last_name || ''}`.trim());
-                      }}
-                      style={{
-                        width: '100%',
-                        border: 0,
-                        background: form.patient_id === p.id ? '#F5F3FF' : '#FFFFFF',
-                        cursor: 'pointer',
-                        padding: '9px 10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        textAlign: 'left',
-                        borderBottom: '1px solid #F8FAFC'
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: '#0F172A' }}>
-                          {p.first_name} {p.last_name}
-                        </div>
-          
-                        <div style={{ fontSize: 11, color: '#64748B' }}>
-                          {p.phone_primary || p.phone || p.email || 'Contact non renseigné'}
-                        </div>
-                      </div>
-          
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 800,
-                          color: '#7C3AED',
-                          background: '#F3E8FF',
-                          borderRadius: 999,
-                          padding: '3px 7px',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {patientIdentifier(p)}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ padding: '10px 12px', fontSize: 12, color: '#94A3B8' }}>
-                  Aucun patient trouvé
-                </div>
-              )}
-            </div>
-          
-            <input
-              type="hidden"
-              value={form.patient_id}
-              onChange={() => {}}
-              required
-            />
-          </div>
+<div>
+  <label
+    htmlFor="appointment-patient-search"
+    style={{
+      fontSize: 13,
+      fontWeight: 700,
+      color: '#475569',
+      display: 'block',
+      marginBottom: 6
+    }}
+  >
+    Patient *
+  </label>
+
+  <PatientSearchPicker
+    inputId="appointment-patient-search"
+    value={form.patient_id}
+    selectedPatient={selectedPatient || editA?.patient || null}
+    onChange={patient => {
+      setForm(previous => ({
+        ...previous,
+        patient_id: patient?.id || ''
+      }));
+    }}
+  />
+</div>
 
           {/* Dentiste */}
           <div>
