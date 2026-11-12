@@ -709,153 +709,491 @@ const jawSubtitleStyle = {
       </div>
 
 <div style={{
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr)',
-  gap: 16,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 18,
   width: '100%',
   minWidth: 0
-}}>        <Card>
-          <CardHeader>
-            <CardTitle>Schéma Dentaire</CardTitle>
-            <CardDescription>Cliquez sur une dent pour voir les détails</CardDescription>
-          </CardHeader>
+}}>
 
-          <CardContent>
-            <div style={jawCardStyle}>
-              <h3 style={jawTitleStyle}>Mâchoire Supérieure</h3>
-              <div style={toothRowStyle}>
-                {upperTeeth.map(renderTooth)}
-              </div>
-            </div>
-            <div style={jawCardStyle}>
-              <h3 style={jawTitleStyle}>Mâchoire Inférieure</h3>
-              <div style={toothRowStyle}>
-                {lowerTeeth.map(renderTooth)}
-              </div>
-            </div>
-            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
-              <strong>Légende :</strong>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
-                  {Object.entries(toothStatuses).map(([key, value]) => (
-                    <div
-                      key={key}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                      <span
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: '50%',
-                          background: value.color,
-                          display: 'inline-block'
-                        }}
-                      />
-                      <span style={{ fontSize: 13 }}>{value.name}</span>
-                    </div>
-                  ))}
-                </div>
-            </div>
-          </CardContent>
-        </Card>
+  {/* ================= ODONTOGRAMME ================= */}
+  <Card>
+    <CardContent style={{ padding: 20 }}>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
+      {/* En-tête */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: 20
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: 13,
+            background: '#E6F7F8',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <ToothIcon
+              fill="#FFFFFF"
+              stroke="#0D7A87"
+            />
+          </div>
+
+          <div>
+            <div style={{
+              fontSize: 20,
+              fontWeight: 800,
+              color: '#15323D'
+            }}>
+              Odontogramme permanent
+            </div>
+            <div style={{
+              fontSize: 12,
+              color: '#64748B',
+              marginTop: 3
+            }}>
+              Cliquez sur une dent pour consulter son état
+            </div>
+          </div>
+        </div>
+
+        <span style={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#0D7A87',
+          background: '#E6F7F8',
+          padding: '7px 12px',
+          borderRadius: 20
+        }}>
+          32 dents · FDI
+        </span>
+      </div>
+
+      {/* Mâchoire supérieure */}
+      <section style={{
+        padding: '16px 14px',
+        borderRadius: 15,
+        background: '#F8FBFC',
+        border: '1px solid #E2EBF0',
+        marginBottom: 14
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 13
+        }}>
+          <div style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: '#15323D'
+          }}>
+            Mâchoire supérieure
+          </div>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#64748B'
+          }}>
+            16 dents
+          </span>
+        </div>
+
+        <div style={toothRowStyle}>
+          {upperTeeth.map(renderTooth)}
+        </div>
+      </section>
+
+      {/* Mâchoire inférieure */}
+      <section style={{
+        padding: '16px 14px',
+        borderRadius: 15,
+        background: '#F8FBFC',
+        border: '1px solid #E2EBF0',
+        marginBottom: 16
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 13
+        }}>
+          <div style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: '#15323D'
+          }}>
+            Mâchoire inférieure
+          </div>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#64748B'
+          }}>
+            16 dents
+          </span>
+        </div>
+
+        <div style={toothRowStyle}>
+          {lowerTeeth.map(renderTooth)}
+        </div>
+      </section>
+
+      {/* Légende clinique */}
+      <div style={{
+        borderTop: '1px solid #E2E8F0',
+        paddingTop: 14
+      }}>
+        <div style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: '#15323D',
+          marginBottom: 10
+        }}>
+          Légende clinique
+        </div>
+
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '9px 15px'
+        }}>
+          {Object.entries(toothStatuses).map(([key, status]) => (
+            <div
+              key={key}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <span style={{
+                width: 9,
+                height: 9,
+                borderRadius: '50%',
+                background: status.color,
+                flexShrink: 0
+              }} />
+
+              <span style={{
+                fontSize: 12,
+                color: '#475569'
+              }}>
+                {status.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </CardContent>
+  </Card>
+
+  {/* ================= DÉTAILS CLINIQUES ================= */}
+  <Card>
+    <CardContent style={{ padding: 20 }}>
+
+      {/* En-tête du panneau */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: selectedTooth ? 18 : 0
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: 13,
+            background: '#E6F7F8',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <ToothIcon
+              fill="#FFFFFF"
+              stroke="#0D7A87"
+            />
+          </div>
+
+          <div>
+            <div style={{
+              fontSize: 18,
+              fontWeight: 800,
+              color: '#15323D'
+            }}>
               {selectedTooth
                 ? `Dent ${getFDINumber(selectedTooth.tooth_position)}`
                 : 'Sélectionnez une dent'}
-            </CardTitle>
-          </CardHeader>
+            </div>
 
-          <CardContent>
-            {selectedTooth ? (
-              <>
-                <Label>Statut actuel</Label>
-                <p style={{ marginTop: 6, marginBottom: 12 }}>
-                  {toothStatuses[selectedTooth.status]?.name || selectedTooth.status}
-                </p>
+            <div style={{
+              fontSize: 12,
+              color: '#64748B',
+              marginTop: 3
+            }}>
+              {selectedTooth
+                ? 'État clinique et interventions'
+                : 'Cliquez sur une dent dans le schéma ci-dessus'}
+            </div>
+          </div>
+        </div>
 
-                <Label htmlFor="dental-chart-status">Changer le statut</Label>
-                <select
-                  id="dental-chart-status"
-                  onChange={(e) => updateToothStatus(e.target.value)}
-                  defaultValue=""
-                  style={{
-                    width: '100%',
-                    marginTop: 6,
-                    marginBottom: 18,
-                    padding: '8px 12px',
-                    borderRadius: 10,
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
-                  <option value="" disabled>
-                    Nouveau statut...
-                  </option>
+        {selectedTooth && (
+          <span style={{
+            padding: '6px 12px',
+            borderRadius: 20,
+            background: '#E6F7F8',
+            color: '#0D7A87',
+            fontSize: 12,
+            fontWeight: 700
+          }}>
+            FDI {getFDINumber(selectedTooth.tooth_position)}
+          </span>
+        )}
+      </div>
 
-                  {Object.entries(toothStatuses)
-                    .filter(([key]) => key !== 'unassessed')
-                    .map(([key, value]) => (
-                      <option key={key} value={key}>
-                        {value.name}
-                      </option>
-                    ))}
-                </select>
+      {/* Informations seulement si une dent est sélectionnée */}
+      {selectedTooth && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+          gap: 16,
+          alignItems: 'start'
+        }}>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <strong>Procédures ({(selectedTooth.procedures || []).length})</strong>
+          {/* COLONNE 1 : ÉTAT CLINIQUE */}
+          <section style={{
+            padding: 18,
+            background: '#F8FBFC',
+            border: '1px solid #E2EBF0',
+            borderRadius: 15
+          }}>
+            <div style={{
+              fontSize: 15,
+              fontWeight: 800,
+              color: '#15323D',
+              marginBottom: 14
+            }}>
+              État clinique
+            </div>
 
-                  <Button size="sm" onClick={() => setProcedureDialog(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter
-                  </Button>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 9,
+              padding: '12px 14px',
+              border: '1px solid #E2EBF0',
+              borderRadius: 11,
+              background: '#FFFFFF',
+              marginBottom: 18
+            }}>
+              <span style={{
+                width: 11,
+                height: 11,
+                borderRadius: '50%',
+                background:
+                  toothStatuses[selectedTooth.status]?.color
+                  || '#CBD5E1'
+              }} />
+
+              <div>
+                <div style={{
+                  fontSize: 11,
+                  color: '#64748B',
+                  marginBottom: 3
+                }}>
+                  Statut actuel
                 </div>
 
-                {(selectedTooth.procedures || []).length === 0 ? (
-                  <p style={{ marginTop: 12, color: '#64748b' }}>
-                    Aucune procédure
-                  </p>
-                ) : (
-                  (selectedTooth.procedures || []).map((procedure, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        marginTop: 12,
-                        padding: 12,
-                        border: '1px solid #e2e8f0',
-                        borderRadius: 12,
-                      }}
-                    >
-                      <strong>
-                        {procedureTypes[procedure.procedure_type]?.name || procedure.procedure_type}
-                      </strong>
+                <div style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: '#15323D'
+                }}>
+                  {toothStatuses[selectedTooth.status]?.name
+                    || 'Non évaluée'}
+                </div>
+              </div>
+            </div>
 
-                      <p>{procedure.procedure_name}</p>
+            <Label htmlFor="dental-chart-status">
+              Modifier le statut
+            </Label>
 
-                      {procedure.cost_mga > 0 && (
-                        <p>{new Intl.NumberFormat('fr-MG').format(procedure.cost_mga)} MGA</p>
-                      )}
+            <select
+              key={selectedTooth.tooth_position}
+              id="dental-chart-status"
+              defaultValue=""
+              onChange={(e) => updateToothStatus(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: 44,
+                marginTop: 8,
+                padding: '10px 12px',
+                border: '1px solid #CBD5E1',
+                borderRadius: 10,
+                background: '#FFFFFF',
+                color: '#15323D',
+                fontSize: 13,
+                fontFamily: 'inherit'
+              }}
+            >
+              <option value="" disabled>
+                Choisir un nouveau statut...
+              </option>
 
-                      {procedure.date_performed && (
-                        <p>
-                          <Calendar className="h-4 w-4 inline mr-1" />
-                          {new Date(procedure.date_performed).toLocaleDateString('fr-FR')}
-                        </p>
-                      )}
+              {Object.entries(toothStatuses)
+                .filter(([key]) => key !== 'unassessed')
+                .map(([key, value]) => (
+                  <option key={key} value={key}>
+                    {value.name}
+                  </option>
+                ))}
+            </select>
+          </section>
 
-                      {procedure.description && <p>{procedure.description}</p>}
-                    </div>
-                  ))
-                )}
-              </>
+          {/* COLONNE 2 : PROCÉDURES */}
+          <section style={{
+            padding: 18,
+            background: '#F8FBFC',
+            border: '1px solid #E2EBF0',
+            borderRadius: 15
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 10,
+              marginBottom: 15
+            }}>
+              <div style={{
+                fontSize: 15,
+                fontWeight: 800,
+                color: '#15323D'
+              }}>
+                Procédures ({(selectedTooth.procedures || []).length})
+              </div>
+
+              <Button
+                size="sm"
+                onClick={() => setProcedureDialog(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
+            </div>
+
+            {(selectedTooth.procedures || []).length === 0 ? (
+              <div style={{
+                padding: '18px 12px',
+                background: '#FFFFFF',
+                border: '1px dashed #CBD5E1',
+                borderRadius: 12,
+                textAlign: 'center',
+                color: '#64748B',
+                fontSize: 13
+              }}>
+                Aucune procédure enregistrée
+              </div>
             ) : (
-              <p style={{ color: '#64748b' }}>
-                Cliquez sur une dent pour voir les détails
-              </p>
+              (selectedTooth.procedures || []).map((procedure, index) => (
+                <div
+                  key={index}
+                  style={{
+                    padding: 14,
+                    background: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: 12,
+                    marginBottom: 10
+                  }}
+                >
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: '#15323D'
+                  }}>
+                    {procedureTypes[procedure.procedure_type]?.name
+                      || procedure.procedure_type}
+                  </div>
+
+                  <div style={{
+                    fontSize: 13,
+                    color: '#475569',
+                    marginTop: 6
+                  }}>
+                    {procedure.procedure_name}
+                  </div>
+
+                  {procedure.cost_mga > 0 && (
+                    <div style={{
+                      fontSize: 12,
+                      color: '#0D7A87',
+                      fontWeight: 700,
+                      marginTop: 8
+                    }}>
+                      {new Intl.NumberFormat('fr-MG').format(
+                        procedure.cost_mga
+                      )} Ar
+                    </div>
+                  )}
+
+                  {procedure.date_performed && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      color: '#64748B',
+                      fontSize: 12,
+                      marginTop: 8
+                    }}>
+                      <Calendar size={14} />
+                      {new Date(
+                        procedure.date_performed
+                      ).toLocaleDateString('fr-FR')}
+                    </div>
+                  )}
+
+                  {procedure.description && (
+                    <div style={{
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                      color: '#64748B',
+                      marginTop: 8
+                    }}>
+                      {procedure.description}
+                    </div>
+                  )}
+                </div>
+              ))
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </section>
+        </div>
+      )}
+
+    </CardContent>
+  </Card>
+
+</div>
+
 
       <Modal
         open={procedureDialog}
