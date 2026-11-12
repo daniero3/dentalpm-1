@@ -290,20 +290,17 @@ const LoginForm = () => {
           .login-premium-grid { grid-template-columns: 1fr !important; max-width: 480px !important; }
           .login-showcase { display:none !important; }
         }
-        <CodeBlock language="css" editable>
-          /* DentalPM — Titre premium de la page de connexion */
-          .login-premium-page .login-showcase h2 {
-            color: #F8FAFC !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-            font-size: clamp(26px, 2.3vw, 32px) !important;
-            font-weight: 900 !important;
-            line-height: 1.18 !important;
-            letter-spacing: -0.025em;
-            text-wrap: balance;
-            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-          }
-        </CodeBlock>
-      `}</style>
+        /* Titre premium : contraste blanc */
+        .login-premium-page .login-showcase h2 {
+          color: #FFFFFF !important;
+          font-family: 'Plus Jakarta Sans', sans-serif !important;
+          font-size: clamp(26px, 2.3vw, 32px) !important;
+          font-weight: 900 !important;
+          line-height: 1.18 !important;
+          letter-spacing: -0.025em;
+          text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        }
+      '}</style>
 
       <div className="login-glow" style={{ position:'absolute', width:360, height:360, borderRadius:'50%', background:'rgba(13,122,135,.16)', left:-120, top:-120, filter:'blur(18px)', zIndex:1 }}/>
       <div className="login-glow" style={{ position:'absolute', width:420, height:420, borderRadius:'50%', background:'rgba(59,79,216,.14)', right:-150, bottom:-160, filter:'blur(22px)', zIndex:1 }}/>
