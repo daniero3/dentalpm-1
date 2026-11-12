@@ -708,8 +708,13 @@ const jawSubtitleStyle = {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
-        <Card>
+<div style={{
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  gap: 16,
+  width: '100%',
+  minWidth: 0
+}}>        <Card>
           <CardHeader>
             <CardTitle>Schéma Dentaire</CardTitle>
             <CardDescription>Cliquez sur une dent pour voir les détails</CardDescription>
