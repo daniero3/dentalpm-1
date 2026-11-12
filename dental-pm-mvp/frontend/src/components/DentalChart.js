@@ -507,109 +507,71 @@ const updateToothStatus = async (status) => {
 };
 
   const renderTooth = (tooth) => {
-    // const status = toothStatuses[tooth.status] || toothStatuses.healthy;
-    const status = toothStatuses[tooth.status] || toothStatuses.unassessed;
-    const isSelected = selectedTooth?.tooth_position === tooth.tooth_position;
+  const status =
+    toothStatuses[tooth.status] || toothStatuses.unassessed;
 
-    return (
-      <button
-        type="button"
-        key={tooth.tooth_position}
-        aria-label={`Sélectionner la dent ${getFDINumber(tooth.tooth_position)}`}
-        onClick={() => setSelectedTooth(tooth)}
-        style={{
-          cursor: 'pointer',
-          textAlign: 'center',
-          padding: '6px 4px',
-          borderRadius: 10,
-          border: isSelected ? '2px solid #0f172a' : '1px solid #e2e8f0',
-          background: '#ffffff',
-          minWidth: 0,
-          width: '100%',
-          font: 'inherit',
-        }}
-      >
-        {(() => {
-  const visual = getToothStatusStyle(
-    currentToothStatus,
-    toothStatuses,
-    selectedTooth === toothNumber
-  );
+  const isSelected =
+    selectedTooth?.tooth_position === tooth.tooth_position;
+
+  const toothNumber = getFDINumber(tooth.tooth_position);
+
+  const iconColor =
+    tooth.status ? status.color : '#94A3B8';
 
   return (
-    <div
+    <button
+      type="button"
+      key={tooth.tooth_position}
+      aria-label={`Sélectionner la dent ${toothNumber}`}
+      aria-pressed={isSelected}
+      onClick={() => setSelectedTooth(tooth)}
       style={{
-        width: 68,
-        minHeight: 118,
-        borderRadius: 18,
-        border: `2px solid ${visual.cardBorder}`,
-        background: visual.cardBg,
-        boxShadow:
-          selectedTooth === toothNumber
-            ? '0 8px 20px rgba(15,23,42,0.12)'
-            : '0 2px 8px rgba(15,23,42,0.05)',
+        cursor: 'pointer',
+        textAlign: 'center',
+        padding: '10px 4px',
+        borderRadius: 12,
+        border: isSelected
+          ? '2px solid #0F172A'
+          : '1px solid #DCE5EC',
+        background: isSelected ? '#F0FDFE' : '#FFFFFF',
+        minWidth: 0,
+        width: '100%',
+        minHeight: 94,
+        font: 'inherit',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '10px 6px 12px',
+        justifyContent: 'center',
+        gap: 6,
         transition: 'all 0.2s ease'
       }}
     >
-      <div
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: 999,
-          background: visual.badgeBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <ToothIcon
-          fill={visual.iconFill}
-          stroke={visual.iconStroke}
-        />
-      </div>
+      <ToothIcon
+        fill="#FFFFFF"
+        stroke={iconColor}
+      />
 
-      <div
+      <span
         style={{
-          fontSize: 12,
-          fontWeight: 700,
-          color: '#0F172A',
-          marginTop: 6
-        }}
-      >
-        Dent
-      </div>
-
-      <div
-        style={{
-          fontSize: 18,
+          fontSize: 13,
           fontWeight: 800,
-          color: '#15323D',
-          lineHeight: 1
+          color: '#15323D'
         }}
       >
         {toothNumber}
-      </div>
+      </span>
 
-      <div
+      <span
         style={{
-          width: 10,
-          height: 10,
-          borderRadius: 999,
-          background: visual.accent,
-          marginTop: 6
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: status.color
         }}
       />
-    </div>
+    </button>
   );
-})()}
-      </button>
-    );
-  };
+};
 
   const upperTeeth = teethRecords
     .filter((tooth) => {
