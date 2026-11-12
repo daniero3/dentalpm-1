@@ -104,6 +104,36 @@ const Modal = ({ open, onClose, title, description, children }) => {
   );
 };
 
+const ToothIcon = ({ fill = '#F8FAFC', stroke = '#CBD5E1' }) => (
+  <svg
+    viewBox="0 0 64 64"
+    width="34"
+    height="42"
+    aria-hidden="true"
+  >
+    <path
+      d="M20 8
+         C14 8, 10 13, 10 21
+         C10 28, 12 34, 15 39
+         C17 42, 18 46, 18 50
+         C18 55, 19 59, 22 59
+         C26 59, 27 51, 28 47
+         C29 43, 30 40, 32 40
+         C34 40, 35 43, 36 47
+         C37 51, 38 59, 42 59
+         C45 59, 46 55, 46 50
+         C46 46, 47 42, 49 39
+         C52 34, 54 28, 54 21
+         C54 13, 50 8, 44 8
+         C40 8, 36 10, 32 13
+         C28 10, 24 8, 20 8 Z"
+      fill={fill}
+      stroke={stroke}
+      strokeWidth="2.5"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 const DentalChart = ({ patientIdOverride = null, embedded = false }) => {
   const params = useParams();
   const patientId = patientIdOverride || params.patientId || params.id;
@@ -499,20 +529,84 @@ const updateToothStatus = async (status) => {
           font: 'inherit',
         }}
       >
-        <div
-          style={{
-            width: 28,
-            height: 36,
-            borderRadius: '50% 50% 45% 45%',
-            background: status.color,
-            margin: '0 auto 5px',
-            opacity: tooth.status === 'healthy' ? 0.35 : 0.85,
-          }}
-        />
+        {(() => {
+  const visual = getToothStatusStyle(
+    currentToothStatus,
+    toothStatuses,
+    selectedTooth === toothNumber
+  );
 
-        <div style={{ fontSize: 11, fontWeight: 700 }}>
-          {getFDINumber(tooth.tooth_position)}
-        </div>
+  return (
+    <div
+      style={{
+        width: 68,
+        minHeight: 118,
+        borderRadius: 18,
+        border: `2px solid ${visual.cardBorder}`,
+        background: visual.cardBg,
+        boxShadow:
+          selectedTooth === toothNumber
+            ? '0 8px 20px rgba(15,23,42,0.12)'
+            : '0 2px 8px rgba(15,23,42,0.05)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '10px 6px 12px',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      <div
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 999,
+          background: visual.badgeBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <ToothIcon
+          fill={visual.iconFill}
+          stroke={visual.iconStroke}
+        />
+      </div>
+
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#0F172A',
+          marginTop: 6
+        }}
+      >
+        Dent
+      </div>
+
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 800,
+          color: '#15323D',
+          lineHeight: 1
+        }}
+      >
+        {toothNumber}
+      </div>
+
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: 999,
+          background: visual.accent,
+          marginTop: 6
+        }}
+      />
+    </div>
+  );
+})()}
       </button>
     );
   };
