@@ -551,9 +551,7 @@ const LabPatientSearch = ({ value, onChange }) => {
 	    patient_id: ''
 	  }));
 	};
-
-useEffect(()=>{fetchOrders();fetchPatients();},[]);
-
+	
 useEffect(() => {
   fetchOrders();
 }, []);
