@@ -717,43 +717,38 @@ const jawSubtitleStyle = {
 
           <CardContent>
             <div style={jawCardStyle}>
-  <div style={jawSubtitleStyle}>Odontogramme</div>
-  <h3 style={jawTitleStyle}>Mâchoire Supérieure</h3>
-  <div style={toothRowStyle}>
-    {upperTeeth.map(renderTooth)}
-  </div>
-</div>
-
-<div style={jawCardStyle}>
-  <div style={jawSubtitleStyle}>Odontogramme</div>
-  <h3 style={jawTitleStyle}>Mâchoire Inférieure</h3>
-  <div style={toothRowStyle}>
-    {lowerTeeth.map(renderTooth)}
-  </div>
-</div>
-
-            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
-              
-            <strong>Légende :</strong>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
-                {Object.entries(toothStatuses).map(([key, value]) => (
-                  <div
-                    key={key}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                  >
-                    <span
-                      style={{
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        background: value.color,
-                        display: 'inline-block'
-                      }}
-                    />
-                    <span style={{ fontSize: 13 }}>{value.name}</span>
-                  </div>
-                ))}
+              <h3 style={jawTitleStyle}>Mâchoire Supérieure</h3>
+              <div style={toothRowStyle}>
+                {upperTeeth.map(renderTooth)}
               </div>
+            </div>
+            <div style={jawCardStyle}>
+              <h3 style={jawTitleStyle}>Mâchoire Inférieure</h3>
+              <div style={toothRowStyle}>
+                {lowerTeeth.map(renderTooth)}
+              </div>
+            </div>
+            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
+              <strong>Légende :</strong>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10 }}>
+                  {Object.entries(toothStatuses).map(([key, value]) => (
+                    <div
+                      key={key}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      <span
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          background: value.color,
+                          display: 'inline-block'
+                        }}
+                      />
+                      <span style={{ fontSize: 13 }}>{value.name}</span>
+                    </div>
+                  ))}
+                </div>
             </div>
           </CardContent>
         </Card>
