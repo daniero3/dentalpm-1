@@ -107,8 +107,8 @@ const Modal = ({ open, onClose, title, description, children }) => {
 const ToothIcon = ({ fill = '#F8FAFC', stroke = '#CBD5E1' }) => (
   <svg
     viewBox="0 0 64 64"
-    width="34"
-    height="42"
+    width="23"
+    height="28"
     aria-hidden="true"
   >
     <path
@@ -506,6 +506,7 @@ const updateToothStatus = async (status) => {
   }
 };
 
+  
 const renderTooth = (tooth) => {
   const status =
     toothStatuses[tooth.status] || toothStatuses.unassessed;
@@ -515,99 +516,71 @@ const renderTooth = (tooth) => {
 
   const toothNumber = getFDINumber(tooth.tooth_position);
   const iconColor = tooth.status ? status.color : '#94A3B8';
-  const softBg = `${iconColor}14`;
 
   return (
     <button
       type="button"
       key={tooth.tooth_position}
-      aria-label={`Sélectionner la dent ${toothNumber}`}
+      title={`Dent ${toothNumber} — ${status.name}`}
+      aria-label={`Dent ${toothNumber} — ${status.name}`}
       aria-pressed={isSelected}
       onClick={() => setSelectedTooth(tooth)}
       style={{
-        cursor: 'pointer',
         width: '100%',
-        minWidth: 72,
-        minHeight: 132,
-        borderRadius: 22,
+        minWidth: 0,
+        height: 88,
+        padding: '8px 2px',
+        borderRadius: 12,
         border: isSelected
-          ? '2px solid #0F172A'
-          : '1px solid #D6E2EA',
-        background: isSelected
-          ? 'linear-gradient(180deg, #F8FDFF 0%, #EDF7FB 100%)'
-          : 'linear-gradient(180deg, #FFFFFF 0%, #F8FBFD 100%)',
+          ? '2px solid #0D7A87'
+          : '1px solid #DCE5EC',
+        background: isSelected ? '#EAF8FA' : '#FFFFFF',
         boxShadow: isSelected
-          ? '0 10px 24px rgba(15, 23, 42, 0.14)'
-          : '0 4px 12px rgba(15, 23, 42, 0.05)',
-        padding: '12px 8px 10px',
+          ? '0 4px 12px rgba(13,122,135,0.16)'
+          : 'none',
+        cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 8,
-        textAlign: 'center',
         font: 'inherit',
-        transition: 'all 0.2s ease',
+        transition: 'all 0.18s ease'
       }}
     >
-      <div
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 16,
-          background: softBg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: `1px solid ${iconColor}22`,
-        }}
-      >
+      <div style={{
+        width: 32,
+        height: 32,
+        borderRadius: 9,
+        background: isSelected ? '#D6F2F5' : '#F5F8FB',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
         <ToothIcon
           fill="#FFFFFF"
           stroke={iconColor}
         />
       </div>
 
-      <div
-        style={{
-          fontSize: 24,
-          fontWeight: 800,
-          lineHeight: 1,
-          color: '#16303B',
-          letterSpacing: '-0.02em',
-        }}
-      >
+      <span style={{
+        fontSize: 16,
+        fontWeight: 800,
+        lineHeight: 1,
+        color: '#15323D'
+      }}>
         {toothNumber}
-      </div>
+      </span>
 
-      <div
-        style={{
-          width: '70%',
-          height: 6,
-          borderRadius: 999,
-          background: tooth.status ? status.color : '#E2E8F0',
-          opacity: tooth.status ? 1 : 0.9,
-        }}
-      />
-
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          color: tooth.status ? '#4B5563' : '#94A3B8',
-          lineHeight: 1.1,
-          minHeight: 24,
-          display: 'flex',
-          alignItems: 'center',
-          textTransform: 'uppercase',
-          letterSpacing: '0.04em',
-        }}
-      >
-        {status.name}
-      </div>
+      <span style={{
+        width: 7,
+        height: 7,
+        borderRadius: '50%',
+        background: status.color
+      }}/>
     </button>
   );
 };
+
 
   const upperTeeth = teethRecords
     .filter((tooth) => {
@@ -623,22 +596,21 @@ const renderTooth = (tooth) => {
     })
     .sort((a, b) => parseInt(a.tooth_position, 10) - parseInt(b.tooth_position, 10));
 
-  const toothRowStyle = {
+ const toothRowStyle = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(16, minmax(72px, 1fr))',
-  gap: 12,
+  gridTemplateColumns: 'repeat(16, minmax(39px, 1fr))',
+  gap: 4,
   alignItems: 'stretch',
   overflowX: 'auto',
-  paddingBottom: 6,
+  paddingBottom: 4,
 };
 
 const jawCardStyle = {
-  background: 'linear-gradient(180deg, #F9FCFE 0%, #EEF6FA 100%)',
+  background: 'linear-gradient(180deg, #F9FCFE, #F1F8FA)',
   border: '1px solid #DCE8EF',
-  borderRadius: 28,
-  padding: '22px 18px 20px',
-  boxShadow: '0 10px 28px rgba(15, 23, 42, 0.05)',
-  marginBottom: 28,
+  borderRadius: 18,
+  padding: '14px 12px',
+  marginBottom: 14,
 };
 
 const jawTitleStyle = {
