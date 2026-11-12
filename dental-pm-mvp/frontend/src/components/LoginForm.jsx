@@ -300,7 +300,7 @@ const LoginForm = () => {
           letter-spacing: -0.025em;
           text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         }
-      '}</style>
+      `}</style>
 
       <div className="login-glow" style={{ position:'absolute', width:360, height:360, borderRadius:'50%', background:'rgba(13,122,135,.16)', left:-120, top:-120, filter:'blur(18px)', zIndex:1 }}/>
       <div className="login-glow" style={{ position:'absolute', width:420, height:420, borderRadius:'50%', background:'rgba(59,79,216,.14)', right:-150, bottom:-160, filter:'blur(22px)', zIndex:1 }}/>
