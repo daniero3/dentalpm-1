@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
 import { renderHtmlInPopup } from '../utils/printHtml';
+import PatientSearchPicker from './PatientSearchPicker';
 import {
   FileText, Plus, Search, Eye, Printer, Download, X, RefreshCw,
   Clock, CheckCircle, AlertCircle, DollarSign, CreditCard,
@@ -218,7 +219,14 @@ const InvoiceManagement = () => {
   const total = () => { const s=sub(); return s-(s*form.discount_percentage/100); };
 
   const handleSubmit = async e => {
-    e.preventDefault(); setSaving(true);
+    e.preventDefault();
+
+if (!form.patient_id) {
+  toast.error('Veuillez sélectionner un patient');
+  return;
+}
+
+setSaving(true);
     try {
       if (!form.schedule_id) { toast.error('Grille tarifaire requise'); setSaving(false); return; }
       await axios.post(`${API}/invoices`, {
@@ -755,32 +763,30 @@ const InvoiceManagement = () => {
         <form onSubmit={handleSubmit} style={{ display:'flex',flexDirection:'column',gap:14 }}>
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
             <div>
-              <label htmlFor="invoice-patient-search" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
-              <div style={{ position:'relative', marginBottom:7 }}>
-                <Search size={13} color="#94A3B8" style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)' }}/>
-                <input
-                  id="invoice-patient-search"
-                  aria-label="Rechercher un patient"
-                  value={patientSearch}
-                  onChange={e=>setPatientSearch(e.target.value)}
-                  placeholder="Rechercher par nom, ID, téléphone, email..."
-                  style={{ ...inp, paddingLeft:32 }}
-                  onFocus={fi}
-                  onBlur={bi}
-                />
-              </div>
-              <select aria-label="Patient de la facture" value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})} style={inp} onFocus={fi} onBlur={bi} required>
-                <option value="">Sélectionner...</option>
-                {patientOptions.map(p=><option key={p.id} value={p.id}>{patientIdentifier(p)} · {p.first_name} {p.last_name}{p.phone_primary ? ` · ${p.phone_primary}` : ''}</option>)}
-              </select>
-              <div style={{ fontSize:11, color:'#94A3B8', marginTop:5 }}>
-                {patientSearch.trim().length < 2
-                  ? 'Tapez au moins 2 caractères pour rechercher'
-                  : patientLoading
-                    ? 'Recherche en cours...'
-                    : `${patientOptions.length} patient(s) trouvé(s)`}
-              </div>
-            </div>
+  <label
+    htmlFor="invoice-patient-search"
+    style={{
+      fontSize: 12,
+      fontWeight: 600,
+      color: '#475569',
+      display: 'block',
+      marginBottom: 5
+    }}
+  >
+    Patient *
+  </label>
+
+  <PatientSearchPicker
+    inputId="invoice-patient-search"
+    value={form.patient_id}
+    onChange={patient => {
+      setForm(previous => ({
+        ...previous,
+        patient_id: patient?.id || ''
+      }));
+    }}
+  />
+</div>
             <div>
               <label htmlFor="invoice-pricing-schedule" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire *</label>
               <select id="invoice-pricing-schedule" aria-label="Grille tarifaire" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi} required>
