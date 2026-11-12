@@ -761,40 +761,25 @@ setSaving(true);
       {/* ══ MODAL NOUVELLE FACTURE ══ */}
       <Modal open={isOpen} onClose={()=>setIsOpen(false)} title="🧾 Nouvelle facture" maxW={720}>
         <form onSubmit={handleSubmit} style={{ display:'flex',flexDirection:'column',gap:14 }}>
-          <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-            <div>
-  <label
-    htmlFor="invoice-patient-search"
-    style={{
-      fontSize: 12,
-      fontWeight: 600,
-      color: '#475569',
-      display: 'block',
-      marginBottom: 5
-    }}
-  >
-    Patient *
-  </label>
-
-  <PatientSearchPicker
-    inputId="invoice-patient-search"
-    value={form.patient_id}
-    onChange={patient => {
-      setForm(previous => ({
-        ...previous,
-        patient_id: patient?.id || ''
-      }));
-    }}
-  />
-</div>
-            <div>
-              <label htmlFor="invoice-pricing-schedule" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire *</label>
-              <select id="invoice-pricing-schedule" aria-label="Grille tarifaire" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi} required>
-                <option value="">Sélectionner...</option>
-                {schedules.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-          </div>
+          
+		{/* Grille tarifaire et patient — pleine largeur */}
+		<div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+			{/* Recherche patient */}
+		  <div style={{ width: '100%' }}>
+		    <label htmlFor="invoice-patient-search" style={{ fontSize: 13, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 6 }} > Patient * </label>
+		    <PatientSearchPicker inputId="invoice-patient-search" value={form.patient_id} onChange={patient => { setForm(previous => ({...previous, patient_id: patient?.id || '' })); }} />
+		  </div>
+		  {/* Grille tarifaire */}
+			<div style={{ width: '100%' }}>
+		    	<label htmlFor="invoice-pricing-schedule" style={{ fontSize: 13, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 6 }} > Grille tarifaire * </label>
+		    	<select id="invoice-pricing-schedule" aria-label="Grille tarifaire" value={form.schedule_id} onChange={e => { setForm(previous => ({ ...previous, schedule_id: e.target.value })); fetchFees(e.target.value); }} style={{ ...inp, width: '100%', minHeight: 46, boxSizing: 'border-box' }} onFocus={fi} onBlur={bi} required >
+		      		<option value=""> Sélectionner une grille tarifaire... </option>
+					{schedules.map(s => ( 
+						<option key={s.id} value={s.id}> {s.name} </option> 
+					))}
+		      	</select>
+		  	</div>
+		</div>
 
           {/* Remise présets */}
           <div>
