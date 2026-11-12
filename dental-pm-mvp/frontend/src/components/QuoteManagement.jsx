@@ -6,6 +6,7 @@ import { useAuth } from '../App';
 import { toast } from 'sonner';
 import { cachedGet, CACHE_TTL } from '../utils/clientCache';
 import { matchesSearch, patientIdentifier, patientSearchText, scoreSearchMatch } from '../utils/search';
+import PatientSearchPicker from './PatientSearchPicker';
 import { renderHtmlInPopup } from '../utils/printHtml';
 import {
   FileText, Plus, Search, Eye, Printer, Download, ArrowRight,
@@ -254,8 +255,15 @@ const openNewQuote = () => {
   const total = () => { const s=sub(); return s-(s*form.discount_percentage/100); };
 
   const handleSubmit = async e => {
-    e.preventDefault(); setSaving(true);
-    try {
+e.preventDefault();
+
+if (!form.patient_id) {
+  toast.error('Veuillez sélectionner un patient');
+  return;
+}
+
+setSaving(true);
+try {
       const payload = { patient_id:form.patient_id, items:form.items.filter(i=>i.description&&i.unit_price_mga), discount_percentage:form.discount_percentage, validity_days:form.validity_days, notes:form.notes };
       if (form.schedule_id) payload.schedule_id = form.schedule_id;
       await axios.post(`${API}/quotes`, payload, authH());
@@ -611,105 +619,33 @@ const filtFees = fees
       <Modal open={isOpen} onClose={()=>setIsOpen(false)} title="📋 Nouveau devis" maxW={960}>
         <form onSubmit={handleSubmit} style={{ display:'flex',flexDirection:'column',gap:14 }}>
           <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:12 }}>
-            <div>
-              <label htmlFor="quote-patient-search" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Patient *</label>
-              <div style={{ border:'1.5px solid #E2E8F0',borderRadius:12,background:'#fff',overflow:'hidden' }}>
-                {selectedPatient && (
-                  <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 10px',background:'#F0FDFE',borderBottom:'1px solid #CCFBF1' }}>
-                    <div style={{ minWidth:0 }}>
-                      <div style={{ fontSize:13,fontWeight:800,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{selectedPatient.first_name} {selectedPatient.last_name}</div>
-                      <div style={{ fontSize:11,color:'#0D7A87',fontWeight:700 }}>{patientIdentifier(selectedPatient)}</div>
-                    </div>
-                    <button type="button" aria-label="Retirer le patient sélectionné" onClick={()=>setForm({...form,patient_id:''})} style={{ border:0,background:'transparent',cursor:'pointer',color:'#64748B',display:'flex' }}><X size={14}/></button>
-                  </div>
-                )}
-                <div style={{ display:'flex',alignItems:'center',gap:7,padding:'8px 10px' }}>
-                  <Search size={13} color="#94A3B8"/>
-                  <input id="quote-patient-search" aria-label="Rechercher un patient" value={patientSearch} 
-					  /* onChange={e=>setPatientSearch(e.target.value)}  */
-					onChange={e => {
-					  setPatientSearch(e.target.value);
-					  setPatientSearchPage(1);
-					  setPatientSearchResults([]);
-					
-					  if (form.patient_id) {
-					    setForm(f => ({ ...f, patient_id: '' }));
-					  }
-					}}
-					  placeholder="Nom, téléphone, ID patient..." style={{ border:'none',background:'transparent',fontSize:13,flex:1,minWidth:0 }} />
-                </div>
-                <div style={{ maxHeight:170,overflowY:'auto',borderTop:'1px solid #F1F5F9' }}>
-                  {patientMatches.map(p=>(
-                    <button key={p.id} type="button" 
-						/* onClick={()=>{setForm({...form,patient_id:p.id});setPatientSearch(`${p.first_name} ${p.last_name}`);}} */
-						onClick={() => {
-						  setPatients(previous =>
-						    previous.some(patient => patient.id === p.id)
-						      ? previous
-						      : [...previous, p]
-						  );
-						
-						  setForm(f => ({ ...f, patient_id: p.id }));
-						  setPatientSearch(`${p.first_name} ${p.last_name}`);
-						  setPatientSearchPage(1);
-						}}
-                      style={{ width:'100%',border:0,background:form.patient_id===p.id?'#F0FDFE':'#fff',cursor:'pointer',padding:'8px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,textAlign:'left',borderBottom:'1px solid #F8FAFC' }}>
-                      <span style={{ minWidth:0 }}>
-                        <span style={{ display:'block',fontSize:13,fontWeight:700,color:'#0F172A',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{p.first_name} {p.last_name}</span>
-                        <span style={{ display:'block',fontSize:11,color:'#64748B' }}>{p.phone_primary || p.email || 'Contact non renseigné'}</span>
-                      </span>
-                      <span style={{ fontSize:10,color:'#0D7A87',fontWeight:800,background:'#E6FAFC',borderRadius:99,padding:'2px 7px',whiteSpace:'nowrap' }}>{patientIdentifier(p)}</span>
-                    </button>
-                  ))}
-                    {/*patientMatches.length===0 && <div style={{ padding:'10px',fontSize:12,color:'#94A3B8' }}>Aucun patient trouvé</div>*/} 
-					{patientSearchLoading && (
-  			<div style={{ padding: 10, fontSize: 12, color: '#0D7A87' }}>
-				    Recherche en cours...
-				  </div>
-				)}
-				
-				{patientSearchError && (
-				  <div style={{ padding: 10, fontSize: 12, color: '#DC2626' }}>
-				    Erreur de recherche. Réessayez.
-				  </div>
-				)}
-				
-				{!patientSearchLoading &&
-				 !patientSearchError &&
-				 patientMatches.length === 0 && (
-				  <div style={{ padding: 10, fontSize: 12, color: '#94A3B8' }}>
-				    Aucun patient trouvé
-				  </div>
-				)}
-				
-				{patientSearch.trim() &&
-				 !patientSearchError &&
-				 patientSearchResults.length < patientSearchTotal && (
-				  <button
-				    type="button"
-				    disabled={patientSearchLoading}
-				    onClick={() => setPatientSearchPage(p => p + 1)}
-				    style={{
-				      width: '100%',
-				      padding: 10,
-				      border: 0,
-				      background: '#E6FAFC',
-				      color: '#0D7A87',
-				      fontSize: 12,
-				      fontWeight: 700,
-				      cursor: 'pointer'
-				    }}
-				  >
-				    {patientSearchLoading
-				      ? 'Chargement...'
-				      : `Afficher plus (${patientSearchResults.length}/${patientSearchTotal})`}
-				  </button>
-				)}
-					
-                </div>
-              </div>
-              <input aria-label="Patient sélectionné" tabIndex={-1} style={{ position:'absolute',opacity:0,pointerEvents:'none',width:1,height:1 }} value={form.patient_id} onChange={()=>{}} required />
-            </div>
+
+			  <div>
+  <label
+    htmlFor="quote-patient-search"
+    style={{
+      fontSize: 12,
+      fontWeight: 600,
+      color: '#475569',
+      display: 'block',
+      marginBottom: 5
+    }}
+  >
+    Patient *
+  </label>
+
+  <PatientSearchPicker
+    inputId="quote-patient-search"
+    value={form.patient_id}
+    selectedPatient={selectedPatient}
+    onChange={patient => {
+      setForm(previous => ({
+        ...previous,
+        patient_id: patient?.id || ''
+      }));
+    }}
+  />
+</div>
             <div>
               <label htmlFor="quote-pricing-schedule" style={{ fontSize:12,fontWeight:600,color:'#475569',display:'block',marginBottom:5 }}>Grille tarifaire</label>
               <select id="quote-pricing-schedule" aria-label="Grille tarifaire" value={form.schedule_id} onChange={e=>{setForm({...form,schedule_id:e.target.value});fetchFees(e.target.value);}} style={inp} onFocus={fi} onBlur={bi}>
