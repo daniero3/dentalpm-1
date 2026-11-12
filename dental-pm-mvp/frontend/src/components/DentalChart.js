@@ -506,7 +506,7 @@ const updateToothStatus = async (status) => {
   }
 };
 
-  const renderTooth = (tooth) => {
+const renderTooth = (tooth) => {
   const status =
     toothStatuses[tooth.status] || toothStatuses.unassessed;
 
@@ -514,9 +514,8 @@ const updateToothStatus = async (status) => {
     selectedTooth?.tooth_position === tooth.tooth_position;
 
   const toothNumber = getFDINumber(tooth.tooth_position);
-
-  const iconColor =
-    tooth.status ? status.color : '#94A3B8';
+  const iconColor = tooth.status ? status.color : '#94A3B8';
+  const softBg = `${iconColor}14`;
 
   return (
     <button
@@ -527,48 +526,85 @@ const updateToothStatus = async (status) => {
       onClick={() => setSelectedTooth(tooth)}
       style={{
         cursor: 'pointer',
-        textAlign: 'center',
-        padding: '10px 4px',
-        borderRadius: 12,
+        width: '100%',
+        minWidth: 72,
+        minHeight: 132,
+        borderRadius: 22,
         border: isSelected
           ? '2px solid #0F172A'
-          : '1px solid #DCE5EC',
-        background: isSelected ? '#F0FDFE' : '#FFFFFF',
-        minWidth: 0,
-        width: '100%',
-        minHeight: 94,
-        font: 'inherit',
+          : '1px solid #D6E2EA',
+        background: isSelected
+          ? 'linear-gradient(180deg, #F8FDFF 0%, #EDF7FB 100%)'
+          : 'linear-gradient(180deg, #FFFFFF 0%, #F8FBFD 100%)',
+        boxShadow: isSelected
+          ? '0 10px 24px rgba(15, 23, 42, 0.14)'
+          : '0 4px 12px rgba(15, 23, 42, 0.05)',
+        padding: '12px 8px 10px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        transition: 'all 0.2s ease'
+        justifyContent: 'space-between',
+        gap: 8,
+        textAlign: 'center',
+        font: 'inherit',
+        transition: 'all 0.2s ease',
       }}
     >
-      <ToothIcon
-        fill="#FFFFFF"
-        stroke={iconColor}
-      />
-
-      <span
+      <div
         style={{
-          fontSize: 13,
+          width: 48,
+          height: 48,
+          borderRadius: 16,
+          background: softBg,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: `1px solid ${iconColor}22`,
+        }}
+      >
+        <ToothIcon
+          fill="#FFFFFF"
+          stroke={iconColor}
+        />
+      </div>
+
+      <div
+        style={{
+          fontSize: 24,
           fontWeight: 800,
-          color: '#15323D'
+          lineHeight: 1,
+          color: '#16303B',
+          letterSpacing: '-0.02em',
         }}
       >
         {toothNumber}
-      </span>
+      </div>
 
-      <span
+      <div
         style={{
-          width: 7,
-          height: 7,
-          borderRadius: '50%',
-          background: status.color
+          width: '70%',
+          height: 6,
+          borderRadius: 999,
+          background: tooth.status ? status.color : '#E2E8F0',
+          opacity: tooth.status ? 1 : 0.9,
         }}
       />
+
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: tooth.status ? '#4B5563' : '#94A3B8',
+          lineHeight: 1.1,
+          minHeight: 24,
+          display: 'flex',
+          alignItems: 'center',
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+        }}
+      >
+        {status.name}
+      </div>
     </button>
   );
 };
@@ -588,13 +624,38 @@ const updateToothStatus = async (status) => {
     .sort((a, b) => parseInt(a.tooth_position, 10) - parseInt(b.tooth_position, 10));
 
   const toothRowStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(16, minmax(34px, 1fr))',
-    gap: 6,
-    marginBottom: 24,
-    alignItems: 'center',
-    overflowX: 'auto',
-  };
+  display: 'grid',
+  gridTemplateColumns: 'repeat(16, minmax(72px, 1fr))',
+  gap: 12,
+  alignItems: 'stretch',
+  overflowX: 'auto',
+  paddingBottom: 6,
+};
+
+const jawCardStyle = {
+  background: 'linear-gradient(180deg, #F9FCFE 0%, #EEF6FA 100%)',
+  border: '1px solid #DCE8EF',
+  borderRadius: 28,
+  padding: '22px 18px 20px',
+  boxShadow: '0 10px 28px rgba(15, 23, 42, 0.05)',
+  marginBottom: 28,
+};
+
+const jawTitleStyle = {
+  fontSize: 20,
+  fontWeight: 800,
+  color: '#15323D',
+  margin: '0 0 16px',
+};
+
+const jawSubtitleStyle = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: '#6B7C8F',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  marginBottom: 14,
+};
 
   if (loading) {
     return <div style={{ padding: 24 }}>Chargement...</div>;
@@ -683,15 +744,21 @@ const updateToothStatus = async (status) => {
           </CardHeader>
 
           <CardContent>
-            <h3 style={{ fontWeight: 700, marginBottom: 10 }}>Mâchoire Supérieure</h3>
-            <div style={toothRowStyle}>
-              {upperTeeth.map(renderTooth)}
-            </div>
+            <div style={jawCardStyle}>
+  <div style={jawSubtitleStyle}>Odontogramme</div>
+  <h3 style={jawTitleStyle}>Mâchoire Supérieure</h3>
+  <div style={toothRowStyle}>
+    {upperTeeth.map(renderTooth)}
+  </div>
+</div>
 
-            <h3 style={{ fontWeight: 700, marginBottom: 10 }}>Mâchoire Inférieure</h3>
-            <div style={toothRowStyle}>
-              {lowerTeeth.map(renderTooth)}
-            </div>
+<div style={jawCardStyle}>
+  <div style={jawSubtitleStyle}>Odontogramme</div>
+  <h3 style={jawTitleStyle}>Mâchoire Inférieure</h3>
+  <div style={toothRowStyle}>
+    {lowerTeeth.map(renderTooth)}
+  </div>
+</div>
 
             <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
               
