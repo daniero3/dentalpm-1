@@ -8,7 +8,13 @@ const { dateOnly, buildPlan, computeDueStatus } = require('../utils/orthodontics
 const router = express.Router();
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const clinicId = req => req.clinic_id || req.user?.clinic_id || req.user?.dataValues?.clinic_id;
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const todayISO = () => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone:'Indian/Antananarivo', year:'numeric', month:'2-digit', day:'2-digit'
+  }).formatToParts(new Date());
+  const d = Object.fromEntries(parts.map(part => [part.type,part.value]));
+  return d.year + '-' + d.month + '-' + d.day;
+};
 const mayViewFinance = req => hasPermission(req.user?.role, 'payments', 'read');
 
 async function findCase(req, id) {
@@ -79,6 +85,10 @@ router.get('/', requirePermission('patients','read'), async (req, res) => {
     const limit = 20;
     const status = String(req.query.status || 'ACTIVE');
     const where = { clinic_id: clinic };
+    if (req.query.patient_id) {
+      if (!uuid(req.query.patient_id)) return res.status(400).json({ error:'Patient invalide' });
+      where.patient_id = req.query.patient_id;
+    }
     if (status !== 'ALL') {
       if (!['ACTIVE','PLANNED','PAUSED','COMPLETED','CANCELLED'].includes(status)) return res.status(400).json({ error:'Statut invalide' });
       where.status = status;
