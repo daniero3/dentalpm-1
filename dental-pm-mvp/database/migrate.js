@@ -22,6 +22,7 @@ async function runMigrations() {
     '../migrations/20260615-restore-blocked-legacy-7-day-trials',
     '../migrations/20260615-backfill-unrestored-legacy-7-day-trials',
     '../migrations/20260711-audit-log-import-action',
+    '../migrations/20261113-orthodontics-mvp',
   ];
 
   for (const migrationPath of migrations) {
