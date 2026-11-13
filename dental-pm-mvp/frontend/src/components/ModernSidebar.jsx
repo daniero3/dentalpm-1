@@ -4,7 +4,7 @@ import {
   Home, Users, FileText, FilePenLine, ReceiptText, Calendar, Settings, Package, Truck,
   ShoppingCart, FlaskConical, Mail, ChevronLeft, ChevronRight,
   Building2, CreditCard, LayoutDashboard, BarChart3,
-  Sparkles, Menu, X, Lock
+  Sparkles, Menu, X, Lock, Smile
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../App"
@@ -62,6 +62,7 @@ const ALL_NAV = [
   { labelKey:"nav.dashboard", href:"/",            icon:Home,         plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.patients",  href:"/patients",    icon:Users,        plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.appointments", href:"/appointments", icon:Calendar, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
+  { labelKey:"nav.orthodontics", href:"/orthodontics", icon:Smile, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.quotes", href:"/quotes", icon:FilePenLine, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.invoices", href:"/invoices", icon:ReceiptText, plans:['ESSENTIAL','PRO','GROUP','TRIAL'] },
   { labelKey:"nav.purchases", href:"/purchases",   icon:ShoppingCart, plans:['PRO','GROUP'] },
@@ -87,6 +88,7 @@ const NAV_COLORS = {
   '/': theme.accent,
   '/patients': theme.accent,
   '/appointments': theme.accent,
+  '/orthodontics': theme.accent,
   '/quotes': theme.accent,
   '/invoices': theme.accent,
   '/reports': theme.accent,
@@ -339,7 +341,7 @@ const SidebarContent = ({ collapsed, onNavClick }) => {
 {[
   {
     title: 'ACTIVITÉ CLINIQUE',
-    paths: ['/', '/patients', '/appointments', '/lab']
+    paths: ['/', '/patients', '/appointments', '/orthodontics', '/lab']
   },
   {
     title: 'DEVIS ET FACTURATION',
