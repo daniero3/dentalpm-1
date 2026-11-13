@@ -13,6 +13,7 @@ const sequelize = require('./database/connection');
 const authRoutes          = require('./routes/auth');
 const patientRoutes       = require('./routes/patients');
 const appointmentRoutes   = require('./routes/appointments');
+const orthodonticRoutes    = require('./routes/orthodontics');
 const invoiceRoutes       = require('./routes/invoices');
 const quoteRoutes         = require('./routes/quotes');
 const integrationRoutes   = require('./routes/integrations');
@@ -328,6 +329,7 @@ app.use('/static', (req, res, next) => {
 app.use('/api/auth',             authRoutes);
 app.use('/api/patients',         requireAuth, requireClinicScope, blockMedical, requireModuleAccess('patients'), patientRoutes);
 app.use('/api/appointments',     requireAuth, requireClinicScope, blockMedical, requireModuleAccess('appointments'), appointmentRoutes);
+app.use('/api/orthodontics',     requireAuth, requireClinicScope, blockMedical, requireModuleAccess('patients'), orthodonticRoutes);
 app.use('/api/invoices',         requireAuth, requireClinicScope, blockMedical, requireModuleAccess('invoices'), invoiceRoutes);
 app.use('/api/quotes',           requireAuth, requireClinicScope, blockMedical, requireModuleAccess('quotes'), quoteRoutes);
 app.use('/api/integrations',     integrationRoutes);

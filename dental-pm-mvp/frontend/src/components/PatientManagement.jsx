@@ -10,7 +10,7 @@ import {
   AlertTriangle, User, Calendar, FileText, ClipboardList,
   FlaskConical, X, Save, Loader2, ChevronRight, Filter,
   BarChart2, UserCheck, UserX, Heart, RefreshCw, Download,
-  MapPin, Shield, Pill, Eye, Grid, List, SortAsc, Upload, History
+  MapPin, Shield, Pill, Eye, Grid, List, SortAsc, Upload, History, Smile
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL
@@ -1328,6 +1328,7 @@ const openPatientDetail = async (patient) => {
   }}>
     {[
       { icon: Activity, l: 'Odontogramme', to: `/patients/${detail.id}/odontogram`, c: '#7C3AED' },
+      { icon: Smile, l: 'Orthodontie', to: '/orthodontics?patient_id=' + detail.id, c: '#0D7A87' },
       { icon: History, l: 'Historique', onClick: () => { setDetail(null); openHistory(detail); }, c: '#DC2626' },
       { icon: FileText, l: 'Documents', to: `/patients/${detail.id}/documents`, c: '#2563EB' },
       { icon: ClipboardList, l: 'Ordonnances', to: `/patients/${detail.id}/prescriptions`, c: '#059669' },

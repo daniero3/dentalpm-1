@@ -119,6 +119,7 @@ const SuperAdminClinics = React.lazy(() => import("./components/SuperAdminClinic
 import LicensingGuard from "./components/LicensingGuard";
 const SubscriptionExpiredPage = React.lazy(() => import("./components/SubscriptionExpiredPage"));
 const AppointmentManagement = React.lazy(() => import("./components/AppointmentManagement"));
+const OrthodonticManagement = React.lazy(() => import("./components/OrthodonticManagement"));
 const PaymentValidationPage = React.lazy(() => import("./components/PaymentValidationPage"));
 const LegalPages = React.lazy(() => import("./components/LegalPages"));
 const PricingSettings = React.lazy(() => import("./components/PricingSettings"));
@@ -365,7 +366,7 @@ const LoginRedirect = () => {
 };
 
 // Pages médicales — SUPER_ADMIN redirigé vers son dashboard
-const MEDICAL_PATHS = ['/', '/patients', '/appointments', '/invoices', '/quotes',
+const MEDICAL_PATHS = ['/', '/patients', '/appointments', '/orthodontics', '/invoices', '/quotes',
   '/reports', '/inventory', '/purchases', '/suppliers', '/lab', '/mailing', '/settings'];
 
 const ProtectedRoute = ({ children }) => {
@@ -534,6 +535,7 @@ function App() {
                 <Route path="/invoices" element={<ProtectedRoute><LicensingGuard><MainLayout><InvoiceManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/quotes" element={<ProtectedRoute><LicensingGuard><MainLayout><QuoteManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/appointments" element={<ProtectedRoute><LicensingGuard><MainLayout><AppointmentManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
+                <Route path="/orthodontics" element={<ProtectedRoute><LicensingGuard><MainLayout><OrthodonticManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/inventory" element={<ProtectedRoute><LicensingGuard><MainLayout><InventoryManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/suppliers" element={<ProtectedRoute><LicensingGuard><MainLayout><SupplierManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
                 <Route path="/purchases" element={<ProtectedRoute><LicensingGuard><MainLayout><PurchaseManagement /></MainLayout></LicensingGuard></ProtectedRoute>} />
