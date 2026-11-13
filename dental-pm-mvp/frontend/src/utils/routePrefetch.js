@@ -2,6 +2,7 @@ const routeLoaders = {
   '/': () => import('../components/Dashboard'),
   '/patients': () => import('../components/PatientManagement'),
   '/appointments': () => import('../components/AppointmentManagement'),
+  '/orthodontics': () => import('../components/OrthodonticManagement'),
   '/invoices': () => import('../components/InvoiceManagement'),
   '/quotes': () => import('../components/QuoteManagement'),
   '/reports': () => import('../components/ReportsManagement'),
