@@ -355,9 +355,6 @@ export default function OrthodonticManagement() {
                         ...f, patient_id:patient?.id || ''
                       }))}
                     />
-                    <p style={odfModal.helper}>
-                      Choisissez un patient existant dans DentalPM.
-                    </p>
                   </div>
                 </section>
 
