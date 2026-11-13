@@ -1,3 +1,4 @@
+import './OrthodonticManagement.css';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
@@ -600,87 +601,273 @@ export default function OrthodonticManagement() {
         document.body
       )}
 
-      {detailId && <div role="dialog" aria-modal="true" aria-label="Dossier orthodontique" style={{position:'fixed',inset:0,zIndex:5000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'center',justifyContent:'center',padding:12}}>
-        <div style={{background:'#fff',borderRadius:20,width:'min(1050px,100%)',height:'min(92vh,950px)',overflowY:'auto',padding:22,boxSizing:'border-box'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,marginBottom:18}}>
-            <div><h2 style={{margin:'0 0 6px',fontSize:21}}>Dossier orthodontique</h2>
-              <div style={{color:C.muted,fontSize:13}}>{renderName(dossier)} · {dossier ? typeLabel[dossier.appliance_type] : ''}</div>
-            </div>
-            <button type="button" style={subtle} aria-label="Fermer les détails" onClick={()=>{setDetailId(null);setDetail(null);}}><X size={18}/></button>
-          </div>
-          {detailLoading || !dossier ? <p style={{color:C.muted}}>Chargement du dossier...</p> : <>
-            <div style={{display:'flex',flexWrap:'wrap',gap:9,marginBottom:15}}>
-              <Badge tone="teal">{caseLabel[dossier.status] || dossier.status}</Badge>
-              <Badge>{modeLabel[dossier.billing_mode]}</Badge>
-              <Badge>Début : {dossier.start_date}</Badge>
-              {dossier.expected_end_date && <Badge>Fin estimée : {dossier.expected_end_date}</Badge>}
-            </div>
-            {dossier.clinical_notes && <div style={{...panel,background:C.bg,marginBottom:16,fontSize:13,whiteSpace:'pre-wrap'}}><strong>Notes cliniques : </strong>{dossier.clinical_notes}</div>}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,330px),1fr))',gap:16}}>
-              <section style={panel}>
-                <h3 style={{margin:'0 0 12px',fontSize:16}}>Suivi clinique</h3>
-                {clinicalWriter && <form onSubmit={saveVisit} style={{display:'grid',gap:10,marginBottom:16}}>
-                  <div><label style={label}>Date du contrôle *</label><input type="date" style={input} required value={visit.visit_date} onChange={e=>setVisit(s=>({...s,visit_date:e.target.value}))}/></div>
-                  <div><label style={label}>Prochain contrôle</label><input type="date" style={input} value={visit.next_visit_date} onChange={e=>setVisit(s=>({...s,next_visit_date:e.target.value}))}/></div>
-                  <div><label style={label}>Observation</label><textarea style={{...input,minHeight:66}} value={visit.notes} onChange={e=>setVisit(s=>({...s,notes:e.target.value}))}/></div>
-                  <button type="submit" style={subtle} disabled={actionBusy}><CheckCircle2 size={15}/> Enregistrer le contrôle</button>
-                </form>}
-                <div style={{fontWeight:750,fontSize:13,marginBottom:10}}>Contrôles précédents</div>
-                {!dossier.visits?.length && <p style={{fontSize:12,color:C.muted}}>Aucun contrôle renseigné.</p>}
-                {(dossier.visits || []).map(v => <div key={v.id} style={{padding:'10px 0',borderTop:'1px solid '+C.border,fontSize:12}}>
-                  <strong>{v.visit_date}</strong> {v.next_visit_date && <span style={{color:C.teal}}>· Prochain : {v.next_visit_date}</span>}
-                  <div style={{color:C.muted,marginTop:4,whiteSpace:'pre-wrap'}}>{v.notes}</div>
-                </div>)}
-                <p style={{fontSize:12,color:C.muted}}>Les rendez-vous sont toujours gérés dans l’agenda central de DentalPM.</p>
-                <Link to="/appointments" style={{...subtle,textDecoration:'none',marginTop:8}}>Ouvrir les rendez-vous</Link>
-              </section>
-              {financeReader && <section style={panel}>
-                <h3 style={{margin:'0 0 12px',fontSize:16}}>Suivi financier</h3>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10,marginBottom:12}}>
-                  {[['Facturé',financial?.totals?.billed_mga],['Encaissé',financial?.totals?.paid_mga],
-                    ['Solde facturé',financial?.totals?.balance_mga],['En retard',financial?.totals?.overdue_mga]].map(([l,v])=>
-                    <div key={l} style={{background:C.bg,borderRadius:10,padding:12}}>
-                      <div style={{color:C.muted,fontSize:11}}>{l}</div>
-                      <div style={{fontSize:16,fontWeight:800,marginTop:5}}>{amount(v)}</div>
-                    </div>
-                  )}
-                </div>
-                <div style={{fontSize:12,color:C.muted,marginBottom:12}}>
-                  {dossier.billing_mode === 'FORFAIT' ? 'Montant du forfait : ' + amount(dossier.total_mga) : 'Honoraires par période : ' + amount(dossier.monthly_mga)}
-                  <br/>Les encaissements proviennent exclusivement des factures DentalPM.
-                </div>
-                <h4 style={{fontSize:13,margin:'12px 0'}}>Échéances</h4>
-                <div style={{maxHeight:230,overflowY:'auto',border:'1px solid '+C.border,borderRadius:10}}>
-                  <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-                    <thead><tr style={{textAlign:'left',background:C.bg}}>{['Date','Montant','Statut'].map(h=><th key={h} style={{padding:8}}>{h}</th>)}</tr></thead>
-                    <tbody>{(financial?.dues || []).map(d=><tr key={d.id} style={{borderTop:'1px solid '+C.border}}>
-                      <td style={{padding:8}}>{d.due_date}{d.sequence===0?' · acompte':''}</td>
-                      <td style={{padding:8}}>{amount(d.amount_mga)}{d.paid_mga>0 && <div style={{color:C.muted,fontSize:10}}>Payé : {amount(d.paid_mga)}</div>}</td>
-                      <td style={{padding:8}}><Badge tone={d.status==='OVERDUE'?'red':d.status==='PAID'?'green':'neutral'}>{dueLabel[d.status] || d.status}</Badge></td>
-                    </tr>)}</tbody>
-                  </table>
-                </div>
-                {financeWriter && <div style={{marginTop:14,background:C.bg,padding:12,borderRadius:12}}>
-                  <div style={{fontSize:13,fontWeight:750,marginBottom:8}}>Rapprocher une facture existante</div>
-                  {dossier.billing_mode === 'MONTHLY' && <div style={{marginBottom:8}}><label style={label}>Échéance non facturée</label>
-                    <select style={input} value={dueSeq} onChange={e=>setDueSeq(e.target.value)}>
-                      <option value="">Choisir une échéance...</option>
-                      {(financial?.dues || []).filter(d=>!d.invoice_id).map(d=><option key={d.id} value={d.sequence}>{d.due_date} · {amount(d.amount_mga)}</option>)}
-                    </select></div>}
-                  <div><label style={label}>Facture du patient</label><select style={input} value={invoiceSelection} onChange={e=>setInvoiceSelection(e.target.value)}>
-                    <option value="">Choisir une facture déjà créée...</option>
-                    {invoiceOptions.filter(i=>!financial?.invoices?.some(x=>x.id===i.id)).map(i=><option key={i.id} value={i.id}>{i.invoice_number} · {amount(i.total_mga)}</option>)}
-                  </select></div>
-                  <button type="button" style={{...btn,marginTop:10}} disabled={actionBusy || !invoiceSelection} onClick={linkInvoice}><CreditCard size={15}/> Associer la facture</button>
-                  <div style={{marginTop:12,fontSize:12,color:C.muted}}>
-                    Si elle n'existe pas, créez-la une seule fois dans <Link to="/invoices">Factures</Link>, puis revenez l'associer.
-                  </div>
-                </div>}
-              </section>}
-            </div>
-          </>}
+    {selectedCase && showDetailModal && (
+  <div
+    className="odf-modal-overlay"
+    onClick={() => setShowDetailModal(false)}
+  >
+    <div
+      className="odf-modal-shell odf-modal-shell--xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="odf-modal-close"
+        onClick={() => setShowDetailModal(false)}
+      >
+        ×
+      </button>
+
+      {/* HEADER */}
+      <div className="odf-modal-header">
+        <div className="odf-modal-heading">
+          <div className="odf-modal-eyebrow">ORTHODONTIE</div>
+          <h2 className="odf-modal-title">Suivi du traitement</h2>
+          <p className="odf-modal-subtitle">
+            {selectedCase.patient_name || selectedCase.patientName || 'Patient'} ·{' '}
+            {selectedCase.appliance_type_label ||
+              selectedCase.appliance_type ||
+              'Appareil'}
+          </p>
         </div>
-      </div>}
+
+        <div className="odf-header-badges">
+          <span className="odf-badge odf-badge--success">
+            {selectedCase.status_label || selectedCase.status || 'Actif'}
+          </span>
+
+          <span className="odf-badge">
+            {selectedCase.financial_mode_label ||
+              selectedCase.financial_mode ||
+              'Mode financier'}
+          </span>
+
+          <span className="odf-badge">
+            Début :{' '}
+            {selectedCase.start_date
+              ? selectedCase.start_date
+              : '—'}
+          </span>
+
+          <span className="odf-badge">
+            Fin estimée :{' '}
+            {selectedCase.estimated_end_date ||
+              selectedCase.end_date ||
+              '—'}
+          </span>
+        </div>
+      </div>
+
+      {/* BODY */}
+      <div className="odf-modal-body">
+        <div className="odf-followup-grid">
+          {/* COLONNE GAUCHE */}
+          <section className="odf-panel">
+            <div className="odf-panel-header">
+              <h3 className="odf-panel-title">Suivi clinique</h3>
+              <p className="odf-panel-subtitle">
+                Enregistrez le contrôle clinique et préparez la prochaine visite.
+              </p>
+            </div>
+
+            <div className="odf-form-grid odf-form-grid--single">
+              <div className="odf-field">
+                <label className="odf-label">Date du contrôle *</label>
+                <input
+                  type="date"
+                  className="odf-input"
+                  value={controlForm.control_date || ''}
+                  onChange={(e) =>
+                    setControlForm((prev) => ({
+                      ...prev,
+                      control_date: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="odf-field">
+                <label className="odf-label">Prochain contrôle</label>
+                <input
+                  type="date"
+                  className="odf-input"
+                  value={controlForm.next_control_date || ''}
+                  onChange={(e) =>
+                    setControlForm((prev) => ({
+                      ...prev,
+                      next_control_date: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="odf-field">
+                <label className="odf-label">Observation</label>
+                <textarea
+                  className="odf-textarea"
+                  rows={4}
+                  value={controlForm.observation || ''}
+                  onChange={(e) =>
+                    setControlForm((prev) => ({
+                      ...prev,
+                      observation: e.target.value,
+                    }))
+                  }
+                  placeholder="Ex. évolution, douleur, activation, recommandations..."
+                />
+              </div>
+
+              <button
+                type="button"
+                className="odf-primary-btn odf-primary-btn--full"
+                onClick={handleSaveControl}
+              >
+                Enregistrer le contrôle
+              </button>
+            </div>
+
+            <div className="odf-section-separator" />
+
+            <div className="odf-subsection">
+              <h4 className="odf-subsection-title">Contrôles précédents</h4>
+
+              {Array.isArray(previousControls) && previousControls.length > 0 ? (
+                <div className="odf-history-list">
+                  {previousControls.map((item, index) => (
+                    <div className="odf-history-item" key={item.id || index}>
+                      <div className="odf-history-top">
+                        <strong>{item.control_date || '—'}</strong>
+                        {item.next_control_date && (
+                          <span className="odf-history-next">
+                            Prochain : {item.next_control_date}
+                          </span>
+                        )}
+                      </div>
+                      {item.observation && (
+                        <div className="odf-history-note">{item.observation}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="odf-empty-box">
+                  Aucun contrôle enregistré pour le moment.
+                </div>
+              )}
+            </div>
+
+            <div className="odf-helper-box">
+              <p>
+                Les rendez-vous restent gérés dans l’agenda central de DentalPM.
+              </p>
+              <button
+                type="button"
+                className="odf-secondary-btn"
+                onClick={openAppointments}
+              >
+                Ouvrir les rendez-vous
+              </button>
+            </div>
+          </section>
+
+          {/* COLONNE DROITE */}
+          <section className="odf-panel">
+            <div className="odf-panel-header">
+              <h3 className="odf-panel-title">Suivi financier</h3>
+              <p className="odf-panel-subtitle">
+                Vue synthétique de la facturation et des échéances.
+              </p>
+            </div>
+
+            <div className="odf-stats-grid">
+              <div className="odf-stat-card">
+                <div className="odf-stat-label">Facturé</div>
+                <div className="odf-stat-value">{financialSummary?.billed || '0 Ar'}</div>
+              </div>
+
+              <div className="odf-stat-card">
+                <div className="odf-stat-label">Encaissé</div>
+                <div className="odf-stat-value">{financialSummary?.paid || '0 Ar'}</div>
+              </div>
+
+              <div className="odf-stat-card">
+                <div className="odf-stat-label">Solde facturé</div>
+                <div className="odf-stat-value">{financialSummary?.balance || '0 Ar'}</div>
+              </div>
+
+              <div className="odf-stat-card">
+                <div className="odf-stat-label">En retard</div>
+                <div className="odf-stat-value">{financialSummary?.overdue || '0 Ar'}</div>
+              </div>
+            </div>
+
+            <div className="odf-finance-note">
+              <div>
+                Honoraires par période :{' '}
+                <strong>{financialSummary?.period_amount || '—'}</strong>
+              </div>
+              <div>
+                Les encaissements proviennent exclusivement des factures DentalPM.
+              </div>
+            </div>
+
+            <div className="odf-subsection">
+              <h4 className="odf-subsection-title">Échéances</h4>
+
+              <div className="odf-table-wrap">
+                <table className="odf-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.isArray(scheduleRows) && scheduleRows.length > 0 ? (
+                      scheduleRows.map((row, index) => (
+                        <tr key={row.id || index}>
+                          <td>{row.due_date || '—'}</td>
+                          <td>{row.amount_label || row.amount || '—'}</td>
+                          <td>
+                            <span className="odf-status-pill">
+                              {row.status_label || row.status || 'Non facturée'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3">
+                          <div className="odf-empty-inline">
+                            Aucune échéance disponible.
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="odf-subsection">
+              <h4 className="odf-subsection-title">Rapprocher une facture existante</h4>
+
+              <div className="odf-helper-box">
+                <p>
+                  Utilisez cette zone pour lier une facture existante à une échéance orthodontique.
+                </p>
+
+                {/* GARDE ICI TON BLOC EXISTANT DE RAPPROCHEMENT */}
+                {renderInvoiceLinkingSection && renderInvoiceLinkingSection()}
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
