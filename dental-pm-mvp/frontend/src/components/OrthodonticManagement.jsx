@@ -600,9 +600,10 @@ export default function OrthodonticManagement() {
         document.body
       )}
 
-      {detailId && <div role="dialog" aria-modal="true" aria-label="Dossier orthodontique" style={{position:'fixed',inset:0,zIndex:5000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'center',justifyContent:'center',padding:12}}>
-        <div style={{background:'#fff',borderRadius:20,width:'min(1050px,100%)',height:'min(92vh,950px)',overflowY:'auto',padding:22,boxSizing:'border-box'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,marginBottom:18}}>
+      {detailId && createPortal(
+        <div role="dialog" aria-modal="true" aria-label="Dossier orthodontique" style={{position:'fixed',inset:0,zIndex:20000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'84px 12px 12px',boxSizing:'border-box',overflowY:'auto'}}>
+          <div style={{background:'#fff',borderRadius:20,width:'min(1050px,100%)',maxHeight:'calc(100dvh - 96px)',overflowY:'auto',overscrollBehavior:'contain',padding:'0 22px 22px',boxSizing:'border-box',boxShadow:'0 24px 70px rgba(15,23,42,.2)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12,marginBottom:18,position:'sticky',top:0,zIndex:5,background:'#fff',padding:'18px 0 14px',borderBottom:'1px solid #E2E8F0'}}>
             <div><h2 style={{margin:'0 0 6px',fontSize:21}}>Dossier orthodontique</h2>
               <div style={{color:C.muted,fontSize:13}}>{renderName(dossier)} · {dossier ? typeLabel[dossier.appliance_type] : ''}</div>
             </div>
@@ -679,8 +680,10 @@ export default function OrthodonticManagement() {
               </section>}
             </div>
           </>}
-        </div>
-      </div>}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
