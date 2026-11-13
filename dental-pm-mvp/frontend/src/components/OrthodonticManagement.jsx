@@ -22,7 +22,7 @@ const today = () => {
 const modeLabel = { FORFAIT:'Forfait global', MONTHLY:'Honoraires mensuels' };
 const typeLabel = { FIXED:'Appareil fixe', ALIGNERS:'Aligneurs', REMOVABLE:'Amovible', MIXED:'Mixte', OTHER:'Autre' };
 const caseLabel = { ACTIVE:'Actif', PLANNED:'Planifié', PAUSED:'Suspendu', COMPLETED:'Terminé', CANCELLED:'Arrêté' };
-const dueLabel = { PAID:'Payée', PARTIAL:'Partielle', OVERDUE:'En retard', PENDING:'À échéance', UNBILLED:'À facturer' };
+const dueLabel = { PAID:'Payée', PARTIAL:'Partielle', OVERDUE:'En retard', PENDING:'À échéance', UNBILLED:'Non facturée' };
 const C = { teal:'#0D7A87', ink:'#15323D', muted:'#64748B', border:'#E0E8EE', bg:'#F8FBFC' };
 const panel = { border:'1px solid ' + C.border, borderRadius:16, padding:18, background:'#fff' };
 const input = { width:'100%', minHeight:42, border:'1px solid #CBD5E1', borderRadius:10, padding:'9px 11px', font:'inherit', fontSize:13, color:C.ink, boxSizing:'border-box', background:'#fff' };
@@ -215,7 +215,7 @@ export default function OrthodonticManagement() {
                   {financeReader && <><td style={{padding:'12px 10px'}}>{modeLabel[c.billing_mode]}</td>
                     <td style={{padding:'12px 10px'}}>
                       {c.finance?.overdue_mga > 0 ? <Badge tone="red">{amount(c.finance.overdue_mga)} en retard</Badge>
-                        : c.finance?.unbilled_periods > 0 ? <Badge>Facturation à rapprocher</Badge>
+                        : c.finance?.unbilled_due_periods > 0 ? <Badge>Facturation à rapprocher</Badge>
                           : <Badge tone="green">Aucun retard identifié</Badge>}
                     </td></>}
                   <td style={{padding:'12px 10px'}}><button type="button" style={subtle} onClick={() => setDetailId(c.id)}>Ouvrir <ChevronRight size={15}/></button></td>
