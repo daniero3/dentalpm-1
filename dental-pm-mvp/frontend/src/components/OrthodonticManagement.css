@@ -1,0 +1,203 @@
+/* DentalPM — Tableau orthodontique. Styles limités à cette page. */
+.dpm-odf-patients-section { min-width: 0; }
+.dpm-odf-patients-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.dpm-odf-patients-heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #15323d;
+}
+.dpm-odf-patients-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+.dpm-odf-search-box {
+  position: relative;
+  width: clamp(205px, 23vw, 285px);
+  min-width: 0;
+}
+.dpm-odf-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #64748b;
+}
+.dpm-odf-search-box input { width: 100%; }
+.dpm-odf-status-filter { width: 158px; max-width: 100%; }
+
+.dpm-odf-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid #e2eaf0;
+  border-radius: 13px;
+}
+.dpm-odf-table {
+  width: 100%;
+  min-width: 1100px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+  color: #15323d;
+}
+.dpm-odf-table--clinical { min-width: 760px; }
+.dpm-odf-table--finance col:nth-child(1) { width: 22%; }
+.dpm-odf-table--finance col:nth-child(2) { width: 14%; }
+.dpm-odf-table--finance col:nth-child(3) { width: 10%; }
+.dpm-odf-table--finance col:nth-child(4) { width: 13%; }
+.dpm-odf-table--finance col:nth-child(5) { width: 14%; }
+.dpm-odf-table--finance col:nth-child(6) { width: 18%; }
+.dpm-odf-table--finance col:nth-child(7) { width: 9%; }
+.dpm-odf-table--clinical col:nth-child(1) { width: 29%; }
+.dpm-odf-table--clinical col:nth-child(2) { width: 25%; }
+.dpm-odf-table--clinical col:nth-child(3) { width: 14%; }
+.dpm-odf-table--clinical col:nth-child(4) { width: 17%; }
+.dpm-odf-table--clinical col:nth-child(5) { width: 15%; }
+
+.dpm-odf-table thead { background: #edf5f6; }
+.dpm-odf-table th {
+  padding: 13px 14px;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #547f89;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  border-bottom: 1px solid #d8e6e9;
+}
+.dpm-odf-table td {
+  padding: 17px 14px;
+  text-align: left;
+  line-height: 1.5;
+  vertical-align: middle;
+  border-bottom: 1px solid #e8eef2;
+  white-space: normal;
+  word-break: normal;
+}
+.dpm-odf-table tbody tr:last-child td { border-bottom: 0; }
+.dpm-odf-table tbody tr:hover { background: #f8fcfd; }
+.dpm-odf-table td:first-child { border-left: 3px solid #0d7a87; }
+.dpm-odf-patient-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+.dpm-odf-patient-code { font-size: 11px; color: #64748b; margin-top: 3px; }
+.dpm-odf-cell-meta { margin-top: 6px; }
+.dpm-odf-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dpm-odf-status-cell { overflow: visible; }
+.dpm-odf-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  min-width: 104px;
+  white-space: nowrap;
+  word-break: keep-all;
+  flex-shrink: 0;
+}
+.dpm-odf-empty-row { text-align: center !important; padding: 28px 12px !important; color: #64748b; }
+
+.dpm-odf-mobile-cards { display: none; }
+.dpm-odf-patient-card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid #dfe8ed;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(15,23,42,.025);
+}
+.dpm-odf-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #e8eef2;
+}
+.dpm-odf-card-patient { min-width: 0; }
+.dpm-odf-card-name {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 800;
+  color: #15323d;
+  overflow-wrap: anywhere;
+}
+.dpm-odf-card-code { margin-top: 4px; font-size: 11px; color: #64748b; }
+.dpm-odf-card-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 12px 14px;
+  margin: 14px 0;
+}
+.dpm-odf-card-field { min-width: 0; }
+.dpm-odf-card-label {
+  margin-bottom: 4px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.dpm-odf-card-value {
+  font-size: 13px;
+  font-weight: 650;
+  color: #15323d;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+.dpm-odf-card-finance { border-top: 1px solid #e8eef2; padding: 12px 0 0; margin-bottom: 13px; }
+.dpm-odf-card-finance-label { margin-bottom: 8px; color: #64748b; font-size: 11px; font-weight: 700; }
+.dpm-odf-card-action { width: 100%; }
+.dpm-odf-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 1200px) {
+  .dpm-odf-table-scroll { display: none; }
+  .dpm-odf-mobile-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 740px) {
+  .dpm-odf-patients-toolbar { align-items: stretch; }
+  .dpm-odf-patients-filters { width: 100%; }
+  .dpm-odf-search-box { flex: 1 1 175px; width: auto; }
+  .dpm-odf-status-filter { flex: 0 1 145px; width: 145px; }
+  .dpm-odf-mobile-cards { grid-template-columns: minmax(0,1fr); }
+  .dpm-odf-pagination { justify-content: center; }
+}
+
+@media (max-width: 440px) {
+  .dpm-odf-patients-filters { flex-direction: column; align-items: stretch; }
+  .dpm-odf-search-box, .dpm-odf-status-filter { width: 100%; max-width: none; flex-basis: auto; }
+  .dpm-odf-card-fields { gap: 12px 8px; }
+}

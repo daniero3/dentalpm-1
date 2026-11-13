@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardList, CreditCard, FilePlus2, Search, Smile, Wallet, X } from 'lucide-react';
 import { useAuth } from '../App';
 import PatientSearchPicker from './PatientSearchPicker';
+import './OrthodonticManagement.css';
 
 const API = process.env.REACT_APP_BACKEND_URL
   ? process.env.REACT_APP_BACKEND_URL + '/api'
@@ -34,9 +35,28 @@ const renderName = record => record?.patient
   ? [record.patient.first_name, record.patient.last_name].filter(Boolean).join(' ')
   : 'Patient indisponible';
 
+const displayCivilDate = value => {
+  const text = String(value || '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(text)
+    ? text.slice(8,10) + '/' + text.slice(5,7) + '/' + text.slice(0,4)
+    : '—';
+};
+
+
 function Badge({ children, tone = 'neutral' }) {
   const palette = tone === 'red' ? ['#FEF2F2','#B91C1C'] : tone === 'green' ? ['#ECFDF5','#047857'] : tone === 'teal' ? ['#E7F7F9','#0D7A87'] : ['#F1F5F9','#475569'];
   return <span style={{ padding:'4px 9px', borderRadius:99, background:palette[0], color:palette[1], fontSize:11, fontWeight:750, whiteSpace:'nowrap' }}>{children}</span>;
+}
+
+function FinanceStatus({ record }) {
+  if (!record.finance) return <Badge>Situation non disponible</Badge>;
+  if (Number(record.finance.overdue_mga || 0) > 0) {
+    return <Badge tone="red">{amount(record.finance.overdue_mga)} en retard</Badge>;
+  }
+  if (Number(record.finance.unbilled_due_periods || 0) > 0) {
+    return <Badge>Facturation à rapprocher</Badge>;
+  }
+  return <Badge tone="green">Aucun retard identifié</Badge>;
 }
 
 // Fenêtre ODF — harmonie visuelle avec « Nouveau patient ».
@@ -262,56 +282,190 @@ export default function OrthodonticManagement() {
         ))}
       </div>
 
-      <section style={panel}>
-        <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <h2 style={{fontSize:17,margin:0,color:C.ink}}>Patients en traitement</h2>
-          <div style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:8}}>
-            <div style={{position:'relative'}}>
-              <Search size={15} style={{position:'absolute',left:12,top:12,color:C.muted}}/>
-              <input aria-label="Rechercher un patient ODF" placeholder="Nom, dossier..." value={search}
-                onChange={e => {setSearch(e.target.value);setPage(1);}}
-                style={{...input,paddingLeft:34,width:215,maxWidth:'100%'}}/>
+      <section style={panel} className="dpm-odf-patients-section">
+        <div className="dpm-odf-patients-toolbar">
+          <h2 className="dpm-odf-patients-heading">Patients en traitement</h2>
+
+          <div className="dpm-odf-patients-filters">
+            <div className="dpm-odf-search-box">
+              <Search size={17} className="dpm-odf-search-icon" aria-hidden="true" />
+              <input
+                aria-label="Rechercher un patient ODF"
+                placeholder="Nom, dossier..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                style={{...input, paddingLeft:40, width:'100%'}}
+              />
             </div>
-            <select aria-label="Filtrer les traitements" style={{...input,width:160}} value={status}
-              onChange={e => {setStatus(e.target.value);setPage(1);}}>
-              <option value="ACTIVE">Actifs</option><option value="ALL">Tous</option>
-              <option value="PLANNED">Planifiés</option><option value="PAUSED">Suspendus</option>
-              <option value="COMPLETED">Terminés</option><option value="CANCELLED">Arrêtés</option>
+            <select
+              className="dpm-odf-status-filter"
+              aria-label="Filtrer les traitements"
+              style={input}
+              value={status}
+              onChange={e => { setStatus(e.target.value); setPage(1); }}
+            >
+              <option value="ACTIVE">Actifs</option>
+              <option value="ALL">Tous</option>
+              <option value="PLANNED">Planifiés</option>
+              <option value="PAUSED">Suspendus</option>
+              <option value="COMPLETED">Terminés</option>
+              <option value="CANCELLED">Arrêtés</option>
             </select>
           </div>
         </div>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',minWidth:660,fontSize:13}}>
-            <thead><tr style={{background:C.bg,textAlign:'left'}}>
-              {['Patient','Traitement','Début','Prochain contrôle',...(financeReader?['Mode','Situation financière']:[]),'Dossier'].map(h =>
-                <th key={h} style={{padding:'12px 10px',fontSize:11,color:C.muted,fontWeight:800,borderBottom:'1px solid ' + C.border}}>{h}</th>
-              )}
-            </tr></thead>
+
+        {/* Ordinateur grand format : tableau avec colonnes lisibles. */}
+        <div className="dpm-odf-table-scroll">
+          <table className={'dpm-odf-table ' + (financeReader ? 'dpm-odf-table--finance' : 'dpm-odf-table--clinical')}>
+            <colgroup>
+              {Array.from({length:financeReader ? 7 : 5}, (_, index) => <col key={index} />)}
+            </colgroup>
+            <thead>
+              <tr>
+                {[
+                  'Patient', 'Traitement', 'Début', 'Prochain contrôle',
+                  ...(financeReader ? ['Mode', 'Situation financière'] : []),
+                  'Dossier'
+                ].map(heading => <th key={heading} scope="col">{heading}</th>)}
+              </tr>
+            </thead>
             <tbody>
-              {!loading && cases.map(c => (
-                <tr key={c.id} style={{borderBottom:'1px solid #ECF0F3'}}>
-                  <td style={{padding:'12px 10px',fontWeight:700}}>{renderName(c)}<div style={{fontSize:11,color:C.muted}}>{c.patient?.patient_number || ''}</div></td>
-                  <td style={{padding:'12px 10px'}}>{typeLabel[c.appliance_type] || c.appliance_type}<div><Badge tone="teal">{caseLabel[c.status] || c.status}</Badge></div></td>
-                  <td style={{padding:'12px 10px',whiteSpace:'nowrap'}}>{c.start_date}</td>
-                  <td style={{padding:'12px 10px'}}>{c.next_visit_date || '—'}</td>
-                  {financeReader && <><td style={{padding:'12px 10px'}}>{modeLabel[c.billing_mode]}</td>
-                    <td style={{padding:'12px 10px'}}>
-                      {c.finance?.overdue_mga > 0 ? <Badge tone="red">{amount(c.finance.overdue_mga)} en retard</Badge>
-                        : c.finance?.unbilled_due_periods > 0 ? <Badge>Facturation à rapprocher</Badge>
-                          : <Badge tone="green">Aucun retard identifié</Badge>}
-                    </td></>}
-                  <td style={{padding:'12px 10px'}}><button type="button" style={subtle} onClick={() => setDetailId(c.id)}>Ouvrir <ChevronRight size={15}/></button></td>
+              {!loading && cases.map(record => (
+                <tr key={record.id}>
+                  <td>
+                    <span className="dpm-odf-patient-name">{renderName(record)}</span>
+                    <div className="dpm-odf-patient-code">{record.patient?.patient_number || '—'}</div>
+                  </td>
+                  <td>
+                    {typeLabel[record.appliance_type] || record.appliance_type}
+                    <div className="dpm-odf-cell-meta">
+                      <Badge tone="teal">{caseLabel[record.status] || record.status}</Badge>
+                    </div>
+                  </td>
+                  <td><span className="dpm-odf-date">{displayCivilDate(record.start_date)}</span></td>
+                  <td><span className="dpm-odf-date">{displayCivilDate(record.next_visit_date)}</span></td>
+                  {financeReader && (
+                    <>
+                      <td>{modeLabel[record.billing_mode] || '—'}</td>
+                      <td className="dpm-odf-status-cell">
+                        <FinanceStatus record={record} />
+                      </td>
+                    </>
+                  )}
+                  <td>
+                    <button
+                      type="button"
+                      className="dpm-odf-open-btn"
+                      style={{...subtle, padding:'9px 12px'}}
+                      onClick={() => setDetailId(record.id)}
+                      aria-label={'Ouvrir le dossier de ' + renderName(record)}
+                    >
+                      Ouvrir <ChevronRight size={16} aria-hidden="true"/>
+                    </button>
+                  </td>
                 </tr>
               ))}
-              {!loading && !cases.length && <tr><td colSpan={financeReader?7:5} style={{padding:30,textAlign:'center',color:C.muted}}>Aucun dossier trouvé. Créez le premier traitement orthodontique.</td></tr>}
-              {loading && <tr><td colSpan={financeReader?7:5} style={{padding:24,textAlign:'center',color:C.muted}}>Chargement des dossiers...</td></tr>}
+              {!loading && cases.length === 0 && (
+                <tr>
+                  <td className="dpm-odf-empty-row" colSpan={financeReader ? 7 : 5}>
+                    Aucun dossier trouvé pour ce filtre.
+                  </td>
+                </tr>
+              )}
+              {loading && (
+                <tr>
+                  <td className="dpm-odf-empty-row" colSpan={financeReader ? 7 : 5}>
+                    Chargement des dossiers...
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-        <div style={{display:'flex',justifyContent:'flex-end',alignItems:'center',gap:12,marginTop:14,fontSize:12}}>
-          <span style={{color:C.muted}}>Page {pagination.page} / {Math.max(1,pagination.pages)}</span>
-          <button type="button" aria-label="Page précédente" disabled={page<=1} onClick={() => setPage(p=>p-1)} style={{...subtle,padding:8,opacity:page<=1?.4:1}}><ChevronLeft size={16}/></button>
-          <button type="button" aria-label="Page suivante" disabled={page>=pagination.pages} onClick={() => setPage(p=>p+1)} style={{...subtle,padding:8,opacity:page>=pagination.pages?.4:1}}><ChevronRight size={16}/></button>
+
+        {/* Tablettes et mobiles : cartes patient, sans défilement horizontal. */}
+        <div className="dpm-odf-mobile-cards">
+          {!loading && cases.map(record => (
+            <article className="dpm-odf-patient-card" key={record.id}>
+              <div className="dpm-odf-card-head">
+                <div className="dpm-odf-card-patient">
+                  <div className="dpm-odf-card-name">{renderName(record)}</div>
+                  <div className="dpm-odf-card-code">{record.patient?.patient_number || '—'}</div>
+                </div>
+                <Badge tone="teal">{caseLabel[record.status] || record.status}</Badge>
+              </div>
+
+              <div className="dpm-odf-card-fields">
+                <div className="dpm-odf-card-field">
+                  <div className="dpm-odf-card-label">Traitement</div>
+                  <div className="dpm-odf-card-value">{typeLabel[record.appliance_type] || record.appliance_type}</div>
+                </div>
+                <div className="dpm-odf-card-field">
+                  <div className="dpm-odf-card-label">Début</div>
+                  <div className="dpm-odf-card-value">{displayCivilDate(record.start_date)}</div>
+                </div>
+                <div className="dpm-odf-card-field">
+                  <div className="dpm-odf-card-label">Prochain contrôle</div>
+                  <div className="dpm-odf-card-value">{displayCivilDate(record.next_visit_date)}</div>
+                </div>
+                {financeReader && (
+                  <div className="dpm-odf-card-field">
+                    <div className="dpm-odf-card-label">Mode financier</div>
+                    <div className="dpm-odf-card-value">{modeLabel[record.billing_mode] || '—'}</div>
+                  </div>
+                )}
+              </div>
+
+              {financeReader && (
+                <div className="dpm-odf-card-finance">
+                  <div className="dpm-odf-card-finance-label">Situation financière</div>
+                  <FinanceStatus record={record} />
+                </div>
+              )}
+
+              <button
+                type="button"
+                className="dpm-odf-open-btn dpm-odf-card-action"
+                style={{...subtle, padding:'10px 13px'}}
+                onClick={() => setDetailId(record.id)}
+                aria-label={'Ouvrir le dossier de ' + renderName(record)}
+              >
+                Ouvrir le dossier <ChevronRight size={16} aria-hidden="true"/>
+              </button>
+            </article>
+          ))}
+          {!loading && cases.length === 0 && (
+            <div style={{...panel, color:C.muted, textAlign:'center', fontSize:13, gridColumn:'1 / -1'}}>
+              Aucun dossier trouvé pour ce filtre.
+            </div>
+          )}
+          {loading && (
+            <div style={{...panel, color:C.muted, textAlign:'center', fontSize:13, gridColumn:'1 / -1'}}>
+              Chargement des dossiers...
+            </div>
+          )}
+        </div>
+
+        <div className="dpm-odf-pagination">
+          <span>Page {pagination.page} / {Math.max(1, pagination.pages)}</span>
+          <button
+            type="button"
+            aria-label="Page précédente"
+            disabled={page <= 1}
+            onClick={() => setPage(p => p - 1)}
+            style={{...subtle, padding:8, opacity:page<=1?.4:1}}
+          >
+            <ChevronLeft size={16}/>
+          </button>
+          <button
+            type="button"
+            aria-label="Page suivante"
+            disabled={page >= pagination.pages}
+            onClick={() => setPage(p => p + 1)}
+            style={{...subtle, padding:8, opacity:page>=pagination.pages?.4:1}}
+          >
+            <ChevronRight size={16}/>
+          </button>
         </div>
       </section>
 
