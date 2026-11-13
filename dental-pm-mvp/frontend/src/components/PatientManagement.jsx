@@ -1328,7 +1328,7 @@ const openPatientDetail = async (patient) => {
   }}>
     {[
       { icon: Activity, l: 'Odontogramme', to: `/patients/${detail.id}/odontogram`, c: '#7C3AED' },
-      { icon: Smile, l: 'Orthodontie', to: '/orthodontics', c: '#0D7A87' },
+      { icon: Smile, l: 'Orthodontie', to: '/orthodontics?patient_id=' + detail.id, c: '#0D7A87' },
       { icon: History, l: 'Historique', onClick: () => { setDetail(null); openHistory(detail); }, c: '#DC2626' },
       { icon: FileText, l: 'Documents', to: `/patients/${detail.id}/documents`, c: '#2563EB' },
       { icon: ClipboardList, l: 'Ordonnances', to: `/patients/${detail.id}/prescriptions`, c: '#059669' },
