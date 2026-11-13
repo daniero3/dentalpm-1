@@ -1080,89 +1080,189 @@ const openPatientDetail = async (patient) => {
       {/* ══ MODAL FICHE DÉTAILLÉE ══ */}
       {/* <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={520}> */}
       {/* AJOUT (03/11/26) */}
-    <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={680} compact>
+    <Modal open={!!detail} onClose={()=>setDetail(null)} title="" maxW={760} compact>
       {detail && (
           <div>
-            <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
-              <Avatar p={detail} size={60}/>
-              <div>
-                <h2 style={{ fontFamily:'Plus Jakarta Sans', fontWeight:800, fontSize:20, color:'#0F172A', margin:'0 0 6px' }}>{detail.first_name} {detail.last_name}</h2>
-                <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
-                  <span style={{ background:'#F0FDFE', color:'#0D7A87', border:'1px solid #BFECEF', fontSize:12, fontWeight:800, padding:'2px 10px', borderRadius:99 }}>{patientIdentifier(detail)}</span>
-                  {calcAge(detail.date_of_birth) && <span style={{ background:'#F1F5F9', color:'#475569', fontSize:12, fontWeight:600, padding:'2px 10px', borderRadius:99 }}>{calcAge(detail.date_of_birth)} ans · né(e) le {fdate(detail.date_of_birth)}</span>}
-                  {detail.gender && <span style={{ background:GENDER_BG[detail.gender], color:GENDER_COLOR[detail.gender], fontSize:12, fontWeight:700, padding:'2px 10px', borderRadius:99 }}>{GENDER_LABEL[detail.gender]}</span>}
-                </div>
-              </div>
-            </div>
-           {/* Infos */}
-
-{/* Informations du patient */}
+            
+{/* ===== IDENTITÉ DU PATIENT ===== */}
 <div style={{
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))',
-  gap: 10,
-  marginBottom: 16
+  display: 'flex',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+  gap: 16,
+  paddingRight: 45,
+  paddingBottom: 18,
+  marginBottom: 18,
+  borderBottom: '1px solid #E2E8F0'
 }}>
-  {[
-    { icon: Phone, l: 'Téléphone', v: detail.phone_primary },
-    { icon: Mail, l: 'Email', v: detail.email },
-    { icon: MapPin, l: 'Adresse', v: detail.address },
-    {
-      icon: Shield,
-      l: "Contact d'urgence",
-      v: detail.emergency_contact_name
-        ? `${detail.emergency_contact_name} · ${detail.emergency_contact_phone || ''}`
-        : null
-    }
-  ].filter(row => row.v).map(row => (
-    <div
-      key={row.l}
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 10,
-        padding: '12px 14px',
-        border: '1px solid #E2E8F0',
-        borderRadius: 12,
-        background: '#F8FAFC',
-        minWidth: 0
-      }}
-    >
-      <row.icon size={17} color="#0D7A87"/>
+  <Avatar p={detail} size={54} />
 
-      <div style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
-        <div style={{
-          fontSize: 11,
-          color: '#64748B',
-          fontWeight: 700,
-          marginBottom: 4
-        }}>
-          {row.l}
-        </div>
-        <div style={{
-          fontSize: 13,
-          color: '#0F172A',
+  <div style={{
+    flex: 1,
+    minWidth: 0
+  }}>
+    <h2 style={{
+      fontFamily: 'Plus Jakarta Sans, sans-serif',
+      fontSize: 21,
+      fontWeight: 800,
+      lineHeight: 1.3,
+      color: '#15323D',
+      margin: '0 0 10px',
+      overflowWrap: 'anywhere'
+    }}>
+      {detail.first_name} {detail.last_name}
+    </h2>
+
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 7
+    }}>
+      {/* Numéro patient */}
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '5px 10px',
+        background: '#EAF8FA',
+        border: '1px solid #BCE8EC',
+        borderRadius: 8,
+        color: '#0D7A87',
+        fontSize: 12,
+        fontWeight: 800
+      }}>
+        {patientIdentifier(detail)}
+      </span>
+
+      {/* Âge et naissance */}
+      {detail.date_of_birth && (
+        <span style={{
+          padding: '5px 10px',
+          background: '#F1F5F9',
+          borderRadius: 8,
+          color: '#475569',
+          fontSize: 12,
           fontWeight: 600
         }}>
-          {row.v}
+          {calcAge(detail.date_of_birth)} ans
+          {' · '}
+          {fdate(detail.date_of_birth)}
+        </span>
+      )}
+
+      {/* Sexe */}
+      {detail.gender && (
+        <span style={{
+          padding: '5px 10px',
+          borderRadius: 8,
+          background: GENDER_BG[detail.gender] || '#F1F5F9',
+          color: GENDER_COLOR[detail.gender] || '#64748B',
+          fontSize: 12,
+          fontWeight: 700
+        }}>
+          {GENDER_LABEL[detail.gender] || detail.gender}
+        </span>
+      )}
+    </div>
+  </div>
+</div>
+
+{/* ===== COORDONNÉES ===== */}
+<div style={{
+  display: 'grid',
+  gridTemplateColumns:
+    'repeat(auto-fit, minmax(min(100%, 270px), 1fr))',
+  gap: 12,
+  marginBottom: 20
+}}>
+  {[
+    {
+      icon: Phone,
+      label: 'Téléphone',
+      value: detail.phone_primary
+    },
+    {
+      icon: Mail,
+      label: 'Adresse e-mail',
+      value: detail.email
+    },
+    {
+      icon: MapPin,
+      label: 'Adresse',
+      value: detail.address,
+      full: true
+    },
+    {
+      icon: Shield,
+      label: "Contact d'urgence",
+      value: detail.emergency_contact_name
+        ? `${detail.emergency_contact_name} · ${detail.emergency_contact_phone || ''}`
+        : null,
+      full: true
+    }
+  ].filter(row => row.value).map(row => {
+    const Icon = row.icon;
+
+    return (
+      <div
+        key={row.label}
+        style={{
+          gridColumn: row.full ? '1 / -1' : undefined,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 12,
+          padding: '14px 16px',
+          minHeight: 72,
+          minWidth: 0,
+          boxSizing: 'border-box',
+          background: '#F8FAFC',
+          border: '1px solid #E2E8F0',
+          borderRadius: 14
+        }}
+      >
+        <div style={{
+          width: 36,
+          height: 36,
+          flexShrink: 0,
+          borderRadius: 10,
+          background: '#E6F7F8',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <Icon size={18} color="#0D7A87" />
+        </div>
+
+        <div style={{
+          flex: 1,
+          minWidth: 0
+        }}>
+          <div style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#64748B',
+            marginBottom: 5
+          }}>
+            {row.label}
+          </div>
+
+          <div
+            title={row.value}
+            style={{
+              fontSize: 13,
+              fontWeight: 650,
+              lineHeight: 1.5,
+              color: '#15323D',
+              overflowWrap: 'anywhere'
+            }}
+          >
+            {row.value}
+          </div>
         </div>
       </div>
-    </div>
-  ))}
+    );
+  })}
 </div>
-            
-             {
-               /* [ */
-            //   { icon:Phone,    l:'Téléphone',          v:detail.phone_primary },
-            //   { icon:Mail,     l:'Email',              v:detail.email },
-            //   { icon:MapPin,   l:'Adresse',            v:detail.address },
-            //   { icon:Shield,   l:'Contact urgence',    v:detail.emergency_contact_name ? `${detail.emergency_contact_name} · ${detail.emergency_contact_phone||''}` : null },
-            // ].filter(r=>r.v).map((row,i) => (
-            //   <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 0', borderBottom:'1px solid #F8FAFC' }}>
-            //     <div style={{ width:30, height:30, borderRadius:8, background:'#F8FAFC', display:'flex', alignItems:'center', justifyContent:'center' }}><row.icon size={13} color="#64748B"/></div>
-            //     <div><div style={{ fontSize:10, fontWeight:600, color:'#94A3B8', textTransform:'uppercase', letterSpacing:1 }}>{row.l}</div><div style={{ fontSize:13, color:'#0F172A', fontWeight:500 }}>{row.v}</div></div>
-            //   </div>
-            /* ))}  */}
                
             {/* Médical */}
             {(detail.allergies||detail.medical_history||detail.current_medications) && (
