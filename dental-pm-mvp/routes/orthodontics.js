@@ -83,10 +83,25 @@ router.get('/', requirePermission('patients','read'), async (req, res) => {
       if (!['ACTIVE','PLANNED','PAUSED','COMPLETED','CANCELLED'].includes(status)) return res.status(400).json({ error:'Statut invalide' });
       where.status = status;
     }
+    const search = String(req.query.q || '').trim().slice(0, 80);
+    const patientInclude = {
+      model: Patient, as: 'patient', required: true,
+      attributes: ['id','first_name','last_name','patient_number'],
+      where: { clinic_id: clinic }
+    };
+    if (search) {
+      const needle = '%' + search + '%';
+      patientInclude.where[Op.or] = [
+        { first_name:{ [Op.iLike]:needle } },
+        { last_name:{ [Op.iLike]:needle } },
+        { patient_number:{ [Op.iLike]:needle } },
+        { phone_primary:{ [Op.iLike]:needle } }
+      ];
+    }
     const { rows, count } = await OrthodonticCase.findAndCountAll({
       where, limit, offset: (page - 1) * limit, distinct: true,
       order: [['created_at','DESC']],
-      include: [{ model: Patient, as: 'patient', attributes: ['id','first_name','last_name','patient_number'] }]
+      include: [patientInclude]
     });
     const cases = await Promise.all(rows.map(async (row) => {
       const data = row.toJSON();
