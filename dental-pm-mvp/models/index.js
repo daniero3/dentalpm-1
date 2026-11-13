@@ -9,6 +9,9 @@ const Procedure = require('./Procedure');
 const Invoice = require('./Invoice');
 const InvoiceItem = require('./InvoiceItem');
 const Payment = require('./Payment');
+const OrthodonticCase = require('./OrthodonticCase');
+const OrthodonticDue = require('./OrthodonticDue');
+const OrthodonticVisit = require('./OrthodonticVisit');
 const SmsLog = require('./SmsLog');
 const AuditLog = require('./AuditLog');
 
@@ -92,6 +95,13 @@ function defineAssociations() {
   InvoiceItem.belongsTo(Procedure, { foreignKey: 'procedure_id', as: 'procedure' });
 
   Payment.belongsTo(Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+
+  Patient.hasMany(OrthodonticCase, { foreignKey: 'patient_id', as: 'orthodonticCases' });
+  OrthodonticCase.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+  OrthodonticCase.hasMany(OrthodonticDue, { foreignKey: 'case_id', as: 'dues' });
+  OrthodonticDue.belongsTo(OrthodonticCase, { foreignKey: 'case_id', as: 'case' });
+  OrthodonticCase.hasMany(OrthodonticVisit, { foreignKey: 'case_id', as: 'visits' });
+  OrthodonticVisit.belongsTo(OrthodonticCase, { foreignKey: 'case_id', as: 'case' });
 
   SmsLog.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
   SmsLog.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
@@ -225,6 +235,9 @@ module.exports = {
   Invoice,
   InvoiceItem,
   Payment,
+  OrthodonticCase,
+  OrthodonticDue,
+  OrthodonticVisit,
   SmsLog,
   AuditLog,
   // New models
