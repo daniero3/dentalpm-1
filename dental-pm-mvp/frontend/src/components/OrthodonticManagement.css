@@ -1,7 +1,92 @@
 /* =========================
    MODALE SUIVI ORTHODONTIE
    ========================= */
+/* Overlay global */
+.ortho-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.28);
 
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* IMPORTANT : plus de centrage vertical */
+
+  padding: 88px 24px 24px; /* espace en haut pour bien voir le titre */
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Fenêtre principale */
+.ortho-detail-modal {
+  width: min(1280px, 100%);
+  max-height: calc(100vh - 112px);
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  border: 1px solid #dbe7ee;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* En-tête */
+.ortho-detail-header {
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid #e6eef3;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* Corps scrollable */
+.ortho-detail-body {
+  padding: 24px 32px 32px;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+}
+
+/* Bouton fermer */
+.ortho-detail-close {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid #d7e3ea;
+  background: #f8fbfc;
+  color: #64748b;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ortho-detail-close:hover {
+  background: #eef6f8;
+  color: #0f172a;
+}
+
+/* Pour les petits écrans */
+@media (max-width: 768px) {
+  .ortho-detail-overlay {
+    padding: 72px 12px 12px;
+  }
+
+  .ortho-detail-modal {
+    width: 100%;
+    max-height: calc(100vh - 84px);
+    border-radius: 20px;
+  }
+
+  .ortho-detail-header {
+    padding: 20px 18px 16px;
+  }
+
+  .ortho-detail-body {
+    padding: 18px;
+    max-height: calc(100vh - 170px);
+  }
+}
 .odf-modal-overlay {
   position: fixed;
   inset: 0;
