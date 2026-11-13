@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, ClipboardList, CreditCard, FilePlus2, Search, Smile, Wallet, X } from 'lucide-react';
 import { useAuth } from '../App';
@@ -12,7 +12,13 @@ const API = process.env.REACT_APP_BACKEND_URL
     ? 'http://localhost:8001/api' : '/api';
 const auth = () => ({ withCredentials: true });
 const amount = value => new Intl.NumberFormat('fr-MG').format(Number(value || 0)) + ' Ar';
-const today = () => new Date().toISOString().slice(0,10);
+const today = () => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone:'Indian/Antananarivo', year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date());
+  const d = Object.fromEntries(parts.map(part => [part.type,part.value]));
+  return d.year + '-' + d.month + '-' + d.day;
+};
 const modeLabel = { FORFAIT:'Forfait global', MONTHLY:'Honoraires mensuels' };
 const typeLabel = { FIXED:'Appareil fixe', ALIGNERS:'Aligneurs', REMOVABLE:'Amovible', MIXED:'Mixte', OTHER:'Autre' };
 const caseLabel = { ACTIVE:'Actif', PLANNED:'Planifié', PAUSED:'Suspendu', COMPLETED:'Terminé', CANCELLED:'Arrêté' };
@@ -40,13 +46,15 @@ const emptyForm = () => ({
 
 export default function OrthodonticManagement() {
   const { user } = useAuth();
+  const [urlParams] = useSearchParams();
+  const selectedPatientId = urlParams.get('patient_id') || '';
   const clinicalWriter = ['ADMIN','DENTIST','ASSISTANT'].includes(user?.role);
   const financeWriter = ['ADMIN','DENTIST','ASSISTANT','ACCOUNTANT'].includes(user?.role);
   const financeReader = financeWriter;
   const [cases, setCases] = useState([]);
   const [pagination, setPagination] = useState({page:1,pages:1,total:0});
   const [page,setPage] = useState(1);
-  const [status,setStatus] = useState('ACTIVE');
+  const [status,setStatus] = useState(selectedPatientId ? 'ALL' : 'ACTIVE');
   const [search,setSearch] = useState('');
   const [loading,setLoading] = useState(true);
   const [creating,setCreating] = useState(false);
@@ -65,14 +73,14 @@ export default function OrthodonticManagement() {
     setLoading(true);
     try {
       const response = await axios.get(API + '/orthodontics', {
-        ...auth(), params: { status, page, q:search.trim() }
+        ...auth(), params: { status, page, q:search.trim(), ...(selectedPatientId ? { patient_id:selectedPatientId } : {}) }
       });
       setCases(response.data.cases || []);
       setPagination(response.data.pagination || {page,pages:1,total:0});
     } catch {
       toast.error('Impossible de charger les dossiers orthodontiques');
     } finally { setLoading(false); }
-  }, [status,page,search]);
+  }, [status,page,search,selectedPatientId]);
 
   const fetchDetail = useCallback(async (id) => {
     if (!id) return;
@@ -152,6 +160,7 @@ export default function OrthodonticManagement() {
       <header style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, marginBottom:20 }}>
         <div>
           <h1 style={{ margin:'0 0 5px',fontSize:26,fontWeight:850,color:C.ink }}>Orthodontie</h1>
+          {selectedPatientId && <Link to="/orthodontics" style={{fontSize:12,color:C.teal}}>Voir tous les dossiers</Link>}
           <p style={{ margin:0,fontSize:13,color:C.muted }}>Dossiers, contrôles cliniques et échéances financières</p>
         </div>
         {clinicalWriter && <button style={btn} type="button" onClick={() => setCreating(true)}><FilePlus2 size={17}/> Nouveau traitement</button>}
