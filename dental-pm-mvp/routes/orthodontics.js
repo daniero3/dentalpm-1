@@ -35,7 +35,7 @@ async function financialDetails(record) {
     : [];
   const payments = invoices.length
     ? await Payment.findAll({
-        where: { invoice_id: { [Op.in]: invoices.map(i => i.id) }, clinic_id: record.clinic_id, status: 'COMPLETED' },
+        where: { invoice_id: { [Op.in]: invoices.map(i => i.id) }, status: 'COMPLETED' },
         attributes: ['id','invoice_id','amount_mga','payment_date','payment_method','payment_number'],
         order: [['payment_date','ASC'],['created_at','ASC']]
       })
