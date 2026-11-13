@@ -29,7 +29,7 @@ async function findCase(req, id) {
 }
 
 async function financialDetails(record) {
-  const dues = (record.dues || []).map(d => d.toJSON ? d.toJSON() : d);
+  const dues = (record.dues || []).map(d => d.toJSON ? d.toJSON() : d).sort((a,b) => a.sequence - b.sequence);
   const invoiceIds = record.billing_mode === 'FORFAIT'
     ? [record.global_invoice_id].filter(Boolean)
     : dues.map(d => d.invoice_id).filter(Boolean);
@@ -61,7 +61,7 @@ async function financialDetails(record) {
   const paid = payments.reduce((sum, p) => sum + Number(p.amount_mga), 0);
   const invoiced = invoices.reduce((sum, i) => sum + Number(i.total_mga), 0);
   const late = detailDues.reduce((sum, d) => sum + (d.status === 'OVERDUE' ? d.outstanding_mga : 0), 0);
-  const unbilled = detailDues.filter(d => d.status === 'UNBILLED').length;
+  const unbilled = detailDues.filter(d => d.status === 'UNBILLED' && d.due_date <= stamp).length;
   return {
     dues: detailDues,
     invoices: invoices.map(i => i.toJSON()),
@@ -71,7 +71,7 @@ async function financialDetails(record) {
       paid_mga: paid,
       balance_mga: Math.max(0, invoiced - paid),
       overdue_mga: late,
-      unbilled_periods: unbilled
+      unbilled_due_periods: unbilled
     }
   };
 }
@@ -115,6 +115,15 @@ router.get('/', requirePermission('patients','read'), async (req, res) => {
     });
     const cases = await Promise.all(rows.map(async (row) => {
       const data = row.toJSON();
+      if (!mayViewFinance(req)) {
+        delete data.total_mga;
+        delete data.monthly_mga;
+        delete data.upfront_mga;
+        delete data.first_due_date;
+        delete data.months;
+        delete data.billing_mode;
+        delete data.global_invoice_id;
+      }
       if (mayViewFinance(req)) {
         const record = await OrthodonticCase.findOne({ where: { id: row.id, clinic_id: clinic }, include: [{ model: OrthodonticDue, as: 'dues' }] });
         data.finance = (await financialDetails(record)).totals;
@@ -176,6 +185,9 @@ router.get('/:id', requirePermission('patients','read'), async (req, res) => {
       delete result.case.monthly_mga;
       delete result.case.upfront_mga;
       delete result.case.global_invoice_id;
+      delete result.case.billing_mode;
+      delete result.case.first_due_date;
+      delete result.case.months;
     }
     res.json(result);
   } catch (error) { res.status(500).json({ error:'Dossier orthodontique indisponible' }); }
