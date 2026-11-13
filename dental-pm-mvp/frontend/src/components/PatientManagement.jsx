@@ -1163,6 +1163,39 @@ const openPatientDetail = async (patient) => {
           {GENDER_LABEL[detail.gender] || detail.gender}
         </span>
       )}
+      
+{/* Modifier les informations du patient */}
+<button
+  type="button"
+  onClick={() => {
+    setDetail(null);
+    openEdit(detail);
+  }}
+  title="Modifier les informations du patient"
+  aria-label="Modifier les informations du patient"
+  style={{
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 30,
+    padding: '0 11px',
+    borderRadius: 8,
+    border: '1px solid #BCE8EC',
+    background: '#EAF8FA',
+    color: '#0D7A87',
+    fontSize: 12,
+    fontWeight: 700,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    flexShrink: 0
+  }}
+>
+  <Edit size={13} strokeWidth={2} />
+  Modifier
+</button>
+
     </div>
   </div>
 </div>
@@ -1300,7 +1333,6 @@ const openPatientDetail = async (patient) => {
       { icon: ClipboardList, l: 'Ordonnances', to: `/patients/${detail.id}/prescriptions`, c: '#059669' },
       { icon: FlaskConical, l: 'Laboratoire', to: `/patients/${detail.id}/lab-orders`, c: '#8B5CF6' },
       { icon: ChevronRight, l: 'Fiche dentaire', to: `/patients/${detail.id}/chart`, c: '#D97706' },
-      { icon: Edit, l: 'Modifier', onClick: () => { setDetail(null); openEdit(detail); }, c: '#0D7A87' }
     ].map(a => {
       const Action = a.to ? Link : 'button';
 
