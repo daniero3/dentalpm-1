@@ -39,6 +39,87 @@ function Badge({ children, tone = 'neutral' }) {
   return <span style={{ padding:'4px 9px', borderRadius:99, background:palette[0], color:palette[1], fontSize:11, fontWeight:750, whiteSpace:'nowrap' }}>{children}</span>;
 }
 
+// Fenêtre ODF — harmonie visuelle avec « Nouveau patient ».
+const odfModal = {
+  overlay: {
+    position:'fixed', inset:0, zIndex:20000,
+    background:'rgba(15,23,42,.55)',
+    padding:'14px', boxSizing:'border-box',
+    display:'flex', alignItems:'flex-start', justifyContent:'center'
+  },
+  shell: {
+    width:'min(1100px, 100%)', maxHeight:'calc(100dvh - 28px)',
+    background:'#FFFFFF', borderRadius:28, overflow:'hidden',
+    display:'flex', flexDirection:'column',
+    boxShadow:'0 24px 80px rgba(15,23,42,.25)',
+    border:'1px solid #E2E8F0', boxSizing:'border-box'
+  },
+  header: {
+    flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center',
+    gap:16, padding:'24px clamp(16px, 3vw, 30px) 17px',
+    background:'#FFFFFF', borderBottom:'1px solid #EDF2F7'
+  },
+  title: {
+    margin:0, fontSize:'clamp(22px, 2.6vw, 29px)', fontWeight:800,
+    lineHeight:1.3, color:'#0F172A', letterSpacing:'-.025em'
+  },
+  close: {
+    width:44, height:44, flexShrink:0, borderRadius:'50%',
+    background:'#FFFFFF', color:'#64748B', border:'1px solid #DFE7EF',
+    boxShadow:'0 8px 24px rgba(15,23,42,.1)',
+    display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer'
+  },
+  scroll: {
+    flex:1, minHeight:0, overflowY:'auto', overscrollBehavior:'contain',
+    padding:'18px clamp(16px, 3vw, 30px) 22px'
+  },
+  section: {
+    padding:'20px clamp(14px, 2.2vw, 24px)',
+    marginBottom:16, border:'1.5px solid #DDE6EF',
+    borderRadius:22, background:'#FFFFFF'
+  },
+  sectionTitle: {
+    display:'flex', alignItems:'center', gap:9,
+    margin:'0 0 18px', color:'#087C8B',
+    fontWeight:800, fontSize:14, letterSpacing:'.09em',
+    textTransform:'uppercase'
+  },
+  grid: {
+    display:'grid',
+    gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+    gap:'17px 20px'
+  },
+  label: {
+    display:'block', fontSize:15, fontWeight:700,
+    color:'#4B7C87', marginBottom:9
+  },
+  field: {
+    width:'100%', minHeight:52, boxSizing:'border-box',
+    border:'2px solid #D3E4E8', borderRadius:16,
+    padding:'11px 16px', font:'inherit', fontSize:16,
+    color:'#15323D', background:'#FFFFFF'
+  },
+  helper: { margin:'8px 0 0', fontSize:12, lineHeight:1.5, color:'#64748B' },
+  footer: {
+    flexShrink:0, display:'flex', justifyContent:'flex-end', alignItems:'center',
+    flexWrap:'wrap', gap:10, padding:'14px clamp(16px, 3vw, 30px)',
+    background:'#FFFFFF', borderTop:'1px solid #E2E8F0',
+    boxShadow:'0 -6px 18px rgba(15,23,42,.035)'
+  },
+  secondary: {
+    minHeight:48, padding:'10px 20px', border:'1.5px solid #DFE7EF',
+    borderRadius:13, background:'#FFFFFF', color:'#475569',
+    font:'inherit', fontSize:15, fontWeight:700, cursor:'pointer'
+  },
+  primary: {
+    minHeight:48, padding:'10px 23px', border:0, borderRadius:13,
+    background:'linear-gradient(135deg,#0D7A87,#13A3B4)', color:'#FFFFFF',
+    font:'inherit', fontSize:15, fontWeight:800,
+    cursor:'pointer', display:'inline-flex', alignItems:'center',
+    justifyContent:'center', gap:9
+  }
+};
+
 const emptyForm = () => ({
   patient_id:'', appliance_type:'FIXED', start_date:today(), expected_end_date:'',
   clinical_notes:'', billing_mode:'FORFAIT', total_mga:'', upfront_mga:'0',
@@ -235,43 +316,292 @@ export default function OrthodonticManagement() {
       </section>
 
       {creating && createPortal(
-        <div role="dialog" aria-modal="true" aria-label="Nouveau traitement orthodontique" style={{position:'fixed',inset:0,zIndex:20000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'88px 16px 16px',boxSizing:'border-box',overflowY:'auto'}}>
-        <div style={{...panel,width:'min(760px,100%)',maxHeight:'calc(100dvh - 104px)',overflowY:'auto',overscrollBehavior:'contain',padding:'0 24px 24px',boxSizing:'border-box',boxShadow:'0 24px 70px rgba(15,23,42,.2)'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:18,padding:'18px 0 14px',position:'sticky',top:0,zIndex:3,background:'#fff',borderBottom:'1px solid #E2E8F0'}}>
-            <h2 style={{fontSize:19,margin:0}}>Nouveau traitement ODF</h2>
-            <button type="button" style={subtle} aria-label="Fermer" onClick={() => setCreating(false)}><X size={18}/></button>
+        <div style={odfModal.overlay}>
+          <div role="dialog" aria-modal="true" aria-labelledby="odf-create-title" style={odfModal.shell}>
+            <div style={odfModal.header}>
+              <h2 id="odf-create-title" style={odfModal.title}>
+                Nouveau traitement orthodontique
+              </h2>
+              <button
+                type="button"
+                aria-label="Fermer la fenêtre"
+                title="Fermer"
+                style={odfModal.close}
+                onClick={() => setCreating(false)}
+              >
+                <X size={22} strokeWidth={2} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={submitCase}
+              style={{display:'flex', flexDirection:'column', flex:1, minHeight:0}}
+            >
+              <div className="dpm-subtle-scroll" style={odfModal.scroll}>
+                {/* 1. PATIENT */}
+                <section style={odfModal.section}>
+                  <h3 style={odfModal.sectionTitle}>
+                    <ClipboardList size={18} aria-hidden="true" />
+                    Patient
+                  </h3>
+                  <div>
+                    <label htmlFor="ortho-case-patient" style={odfModal.label}>
+                      Rechercher un patient *
+                    </label>
+                    <PatientSearchPicker
+                      inputId="ortho-case-patient"
+                      value={form.patient_id}
+                      onChange={patient => setForm(f => ({
+                        ...f, patient_id:patient?.id || ''
+                      }))}
+                    />
+                    <p style={odfModal.helper}>
+                      Choisissez un patient existant dans DentalPM.
+                    </p>
+                  </div>
+                </section>
+
+                {/* 2. TRAITEMENT */}
+                <section style={odfModal.section}>
+                  <h3 style={odfModal.sectionTitle}>
+                    <Smile size={18} aria-hidden="true" />
+                    Traitement
+                  </h3>
+                  <div style={odfModal.grid}>
+                    <div>
+                      <label htmlFor="ortho-appliance" style={odfModal.label}>
+                        Type d'appareil *
+                      </label>
+                      <select
+                        id="ortho-appliance"
+                        required
+                        style={odfModal.field}
+                        value={form.appliance_type}
+                        onChange={e => setForm(f => ({
+                          ...f, appliance_type:e.target.value
+                        }))}
+                      >
+                        {Object.entries(typeLabel).map(([key, name]) => (
+                          <option key={key} value={key}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="ortho-start" style={odfModal.label}>
+                        Début du traitement *
+                      </label>
+                      <input
+                        id="ortho-start"
+                        type="date"
+                        required
+                        style={odfModal.field}
+                        value={form.start_date}
+                        onChange={e => setForm(f => ({
+                          ...f, start_date:e.target.value
+                        }))}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="ortho-end" style={odfModal.label}>
+                        Fin prévisionnelle
+                      </label>
+                      <input
+                        id="ortho-end"
+                        type="date"
+                        style={odfModal.field}
+                        value={form.expected_end_date}
+                        onChange={e => setForm(f => ({
+                          ...f, expected_end_date:e.target.value
+                        }))}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* 3. MODALITÉS FINANCIÈRES */}
+                <section style={odfModal.section}>
+                  <h3 style={odfModal.sectionTitle}>
+                    <Wallet size={18} aria-hidden="true" />
+                    Modalités financières
+                  </h3>
+                  <div style={odfModal.grid}>
+                    <div>
+                      <label htmlFor="ortho-mode" style={odfModal.label}>
+                        Mode financier *
+                      </label>
+                      <select
+                        id="ortho-mode"
+                        required
+                        style={odfModal.field}
+                        value={form.billing_mode}
+                        onChange={e => setForm(f => ({
+                          ...f, billing_mode:e.target.value
+                        }))}
+                      >
+                        <option value="FORFAIT">Forfait global échelonné</option>
+                        <option value="MONTHLY">Honoraires mensuels</option>
+                      </select>
+                    </div>
+
+                    {form.billing_mode === 'FORFAIT' ? (
+                      <>
+                        <div>
+                          <label htmlFor="ortho-total" style={odfModal.label}>
+                            Prix global (Ar) *
+                          </label>
+                          <input
+                            id="ortho-total"
+                            type="number"
+                            min="1"
+                            step="1"
+                            required
+                            placeholder="Ex. 3 600 000"
+                            style={odfModal.field}
+                            value={form.total_mga}
+                            onChange={e => setForm(f => ({
+                              ...f, total_mga:e.target.value
+                            }))}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="ortho-upfront" style={odfModal.label}>
+                            Acompte (Ar)
+                          </label>
+                          <input
+                            id="ortho-upfront"
+                            type="number"
+                            min="0"
+                            step="1"
+                            style={odfModal.field}
+                            value={form.upfront_mga}
+                            onChange={e => setForm(f => ({
+                              ...f, upfront_mga:e.target.value
+                            }))}
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <label htmlFor="ortho-monthly" style={odfModal.label}>
+                          Honoraires mensuels (Ar) *
+                        </label>
+                        <input
+                          id="ortho-monthly"
+                          type="number"
+                          min="1"
+                          step="1"
+                          required
+                          style={odfModal.field}
+                          value={form.monthly_mga}
+                          onChange={e => setForm(f => ({
+                            ...f, monthly_mga:e.target.value
+                          }))}
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label htmlFor="ortho-months" style={odfModal.label}>
+                        Nombre de mensualités prévues *
+                      </label>
+                      <input
+                        id="ortho-months"
+                        type="number"
+                        min="1"
+                        max="60"
+                        step="1"
+                        required
+                        style={odfModal.field}
+                        value={form.months}
+                        onChange={e => setForm(f => ({
+                          ...f, months:e.target.value
+                        }))}
+                      />
+                      <p style={odfModal.helper}>
+                        Entre 1 et 60 échéances. Différent de la durée clinique.
+                      </p>
+                    </div>
+                    <div>
+                      <label htmlFor="ortho-first-due" style={odfModal.label}>
+                        {form.billing_mode === 'FORFAIT'
+                          ? "Date de première échéance / acompte *"
+                          : "Date de première mensualité *"}
+                      </label>
+                      <input
+                        id="ortho-first-due"
+                        type="date"
+                        required
+                        style={odfModal.field}
+                        value={form.first_due_date}
+                        onChange={e => setForm(f => ({
+                          ...f, first_due_date:e.target.value
+                        }))}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{
+                    marginTop:18,
+                    padding:'12px 15px',
+                    background:'#F0FAFB',
+                    border:'1px solid #D3EDEF',
+                    borderRadius:12,
+                    fontSize:13,
+                    lineHeight:1.6,
+                    color:'#47727D'
+                  }}>
+                    Aucune facture ni aucun paiement n'est créé ici.
+                    L'échéancier sera rapproché des factures existantes du patient.
+                  </div>
+                </section>
+
+                {/* 4. OBSERVATIONS */}
+                <section style={{...odfModal.section, marginBottom:0}}>
+                  <h3 style={odfModal.sectionTitle}>
+                    <ClipboardList size={18} aria-hidden="true" />
+                    Diagnostic et observations
+                  </h3>
+                  <label htmlFor="ortho-notes" style={odfModal.label}>
+                    Observations cliniques
+                  </label>
+                  <textarea
+                    id="ortho-notes"
+                    style={{...odfModal.field, minHeight:105, resize:'vertical'}}
+                    placeholder="Diagnostic, objectifs thérapeutiques, remarques..."
+                    value={form.clinical_notes}
+                    onChange={e => setForm(f => ({
+                      ...f, clinical_notes:e.target.value
+                    }))}
+                  />
+                </section>
+              </div>
+
+              <div style={odfModal.footer}>
+                <button
+                  type="button"
+                  style={odfModal.secondary}
+                  onClick={() => setCreating(false)}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || !form.patient_id}
+                  style={{
+                    ...odfModal.primary,
+                    opacity:saving || !form.patient_id ? .6 : 1,
+                    cursor:saving || !form.patient_id ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <CheckCircle2 size={17} />
+                  {saving ? 'Enregistrement...' : 'Créer le traitement'}
+                </button>
+              </div>
+            </form>
           </div>
-          <form onSubmit={submitCase}>
-            <div style={{marginBottom:15}}><label style={label}>Patient *</label>
-              <PatientSearchPicker inputId="ortho-case-patient" value={form.patient_id}
-                onChange={patient => setForm(f => ({...f,patient_id:patient?.id || ''}))}/>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
-              <div><label style={label}>Appareil *</label><select style={input} value={form.appliance_type} onChange={e => setForm(f=>({...f,appliance_type:e.target.value}))}>
-                {Object.entries(typeLabel).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>
-              <div><label style={label}>Début du traitement *</label><input style={input} type="date" required value={form.start_date} onChange={e=>setForm(f=>({...f,start_date:e.target.value}))}/></div>
-              <div><label style={label}>Fin prévisionnelle</label><input style={input} type="date" value={form.expected_end_date} onChange={e=>setForm(f=>({...f,expected_end_date:e.target.value}))}/></div>
-              <div><label style={label}>Mode financier *</label><select style={input} value={form.billing_mode} onChange={e=>setForm(f=>({...f,billing_mode:e.target.value}))}>
-                <option value="FORFAIT">Forfait global échelonné</option><option value="MONTHLY">Honoraires mensuels</option></select></div>
-              {form.billing_mode === 'FORFAIT' && <>
-                <div><label style={label}>Prix global (Ar) *</label><input style={input} type="number" min="1" step="1" required value={form.total_mga} onChange={e=>setForm(f=>({...f,total_mga:e.target.value}))}/></div>
-                <div><label style={label}>Acompte (Ar)</label><input style={input} type="number" min="0" step="1" value={form.upfront_mga} onChange={e=>setForm(f=>({...f,upfront_mga:e.target.value}))}/></div>
-              </>}
-              {form.billing_mode === 'MONTHLY' && <div><label style={label}>Honoraires mensuels (Ar) *</label><input style={input} type="number" min="1" step="1" required value={form.monthly_mga} onChange={e=>setForm(f=>({...f,monthly_mga:e.target.value}))}/></div>}
-              <div><label style={label}>Périodes prévisionnelles (1–60) *</label><input style={input} type="number" min="1" max="60" step="1" required value={form.months} onChange={e=>setForm(f=>({...f,months:e.target.value}))}/></div>
-              <div><label style={label}>{form.billing_mode === 'FORFAIT' ? 'Date de première échéance / acompte' : 'Date de première mensualité'} *</label><input style={input} type="date" required value={form.first_due_date} onChange={e=>setForm(f=>({...f,first_due_date:e.target.value}))}/></div>
-            </div>
-            <div style={{marginTop:12}}><label style={label}>Diagnostic et observations</label><textarea style={{...input,minHeight:74}} value={form.clinical_notes} onChange={e=>setForm(f=>({...f,clinical_notes:e.target.value}))}/></div>
-            <p style={{fontSize:12,color:C.muted,background:C.bg,padding:12,borderRadius:10}}>
-              Aucun paiement ni aucune facture ne sont créés ici. L'échéancier est rapproché ensuite des factures du patient.
-            </p>
-            <div style={{display:'flex',justifyContent:'flex-end',gap:10}}>
-              <button type="button" style={subtle} onClick={()=>setCreating(false)}>Annuler</button>
-              <button type="submit" style={btn} disabled={saving || !form.patient_id}>{saving?'Enregistrement...':'Créer le traitement'}</button>
-            </div>
-          </form>
-        </div>
-      </div>, document.body)}
+        </div>,
+        document.body
+      )}
 
       {detailId && <div role="dialog" aria-modal="true" aria-label="Dossier orthodontique" style={{position:'fixed',inset:0,zIndex:5000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'center',justifyContent:'center',padding:12}}>
         <div style={{background:'#fff',borderRadius:20,width:'min(1050px,100%)',height:'min(92vh,950px)',overflowY:'auto',padding:22,boxSizing:'border-box'}}>
