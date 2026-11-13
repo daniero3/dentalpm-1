@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -233,9 +234,10 @@ export default function OrthodonticManagement() {
         </div>
       </section>
 
-      {creating && <div role="dialog" aria-modal="true" aria-label="Nouveau traitement orthodontique" style={{position:'fixed',inset:0,zIndex:5000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
-        <div style={{...panel,width:'min(760px,100%)',maxHeight:'90vh',overflowY:'auto',padding:24,boxSizing:'border-box'}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
+      {creating && createPortal(
+        <div role="dialog" aria-modal="true" aria-label="Nouveau traitement orthodontique" style={{position:'fixed',inset:0,zIndex:20000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'88px 16px 16px',boxSizing:'border-box',overflowY:'auto'}}>
+        <div style={{...panel,width:'min(760px,100%)',maxHeight:'calc(100dvh - 104px)',overflowY:'auto',overscrollBehavior:'contain',padding:'0 24px 24px',boxSizing:'border-box',boxShadow:'0 24px 70px rgba(15,23,42,.2)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:18,padding:'18px 0 14px',position:'sticky',top:0,zIndex:3,background:'#fff',borderBottom:'1px solid #E2E8F0'}}>
             <h2 style={{fontSize:19,margin:0}}>Nouveau traitement ODF</h2>
             <button type="button" style={subtle} aria-label="Fermer" onClick={() => setCreating(false)}><X size={18}/></button>
           </div>
@@ -269,7 +271,7 @@ export default function OrthodonticManagement() {
             </div>
           </form>
         </div>
-      </div>}
+      </div>, document.body)}
 
       {detailId && <div role="dialog" aria-modal="true" aria-label="Dossier orthodontique" style={{position:'fixed',inset:0,zIndex:5000,background:'rgba(15,23,42,.58)',display:'flex',alignItems:'center',justifyContent:'center',padding:12}}>
         <div style={{background:'#fff',borderRadius:20,width:'min(1050px,100%)',height:'min(92vh,950px)',overflowY:'auto',padding:22,boxSizing:'border-box'}}>
