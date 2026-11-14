@@ -227,11 +227,47 @@ router.get('/:id/invoices', requirePermission('invoices','read'), async (req, re
     const record = await OrthodonticCase.findOne({ where:{ id:req.params.id, clinic_id:clinicId(req) } });
     if (!record) return res.status(404).json({ error:'Dossier non trouvé' });
     const invoices = await Invoice.findAll({
-      where: { clinic_id:record.clinic_id, patient_id:record.patient_id },
+      where: { clinic_id:record.clinic_id, patient_id:record.patient_id,
+        document_type:'INVOICE', status:{ [Op.ne]:'CANCELLED' } },
       order: [['invoice_date','DESC']], limit:100,
       attributes:['id','invoice_number','total_mga','status','document_type','invoice_date']
     });
-    res.json({ invoices:invoices.filter(i => i.document_type === 'INVOICE' && i.status !== 'CANCELLED') });
+    const ids = invoices.map(i => i.id);
+    if (!ids.length) return res.json({ invoices:[] });
+    // Identify links to any ODF case without changing accounting records.
+    const [linkedCases, linkedDues, payments] = await Promise.all([
+      OrthodonticCase.findAll({
+        where: { clinic_id:record.clinic_id, global_invoice_id:{ [Op.in]:ids } },
+        attributes:['id','global_invoice_id']
+      }),
+      OrthodonticDue.findAll({
+        where: { clinic_id:record.clinic_id, invoice_id:{ [Op.in]:ids } },
+        attributes:['case_id','invoice_id']
+      }),
+      Payment.findAll({
+        where: { invoice_id:{ [Op.in]:ids }, status:'COMPLETED' },
+        attributes:['invoice_id','amount_mga']
+      })
+    ]);
+    const caseByInvoice = new Map();
+    linkedCases.forEach(item => caseByInvoice.set(item.global_invoice_id, item.id));
+    linkedDues.forEach(item => caseByInvoice.set(item.invoice_id, item.case_id));
+    const paidByInvoice = new Map();
+    payments.forEach(payment => paidByInvoice.set(
+      payment.invoice_id, (paidByInvoice.get(payment.invoice_id) || 0) + Number(payment.amount_mga)
+    ));
+    res.json({ invoices:invoices.map(item => {
+      const invoice = item.toJSON();
+      const associatedCase = caseByInvoice.get(invoice.id);
+      const paid = Number(paidByInvoice.get(invoice.id) || 0);
+      return {
+        ...invoice,
+        paid_mga:paid,
+        balance_mga:Math.max(0, Number(invoice.total_mga) - paid),
+        odf_association: associatedCase
+          ? (associatedCase === record.id ? 'CURRENT' : 'OTHER') : 'NONE'
+      };
+    }) });
   } catch (error) { res.status(500).json({ error:'Factures indisponibles' }); }
 });
 
