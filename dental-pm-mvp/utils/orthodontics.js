@@ -59,18 +59,29 @@ function buildPlan(input) {
   throw new Error('Mode financier non reconnu');
 }
 
-// Calculate the schedule display from existing, completed payments ONLY.
-// Never create a Payment row here. For fixed fee, allocate total paid FIFO.
+// Paid amounts come ONLY from existing completed DentalPM payments.
+// Contractual arrears are independent from invoice issuance: an unpaid instalment
+// becomes due on its due_date (inclusive), even if no invoice has been linked yet.
+// Keep status UNBILLED for accounting visibility; is_overdue and overdue_mga
+// separately describe the contractual payment obligation.
 function computeDueStatus(record, paid, today, invoiced) {
   const amount = Number(record.amount_mga);
-  const applied = Math.max(0, Math.min(amount, paid));
+  const applied = Math.max(0, Math.min(amount, Number(paid) || 0));
   const rest = amount - applied;
+  const isOverdue = rest > 0 && record.due_date <= today;
   let status = 'UNBILLED';
   if (invoiced) {
-    status = rest === 0 ? 'PAID' : applied > 0 ? 'PARTIAL' : record.due_date < today ? 'OVERDUE' : 'PENDING';
-    if (rest > 0 && record.due_date < today) status = 'OVERDUE';
+    status = rest === 0 ? 'PAID' : isOverdue ? 'OVERDUE' : applied > 0 ? 'PARTIAL' : 'PENDING';
   }
-  return { ...record, amount_mga: amount, paid_mga: applied, outstanding_mga: rest, status };
+  return {
+    ...record,
+    amount_mga: amount,
+    paid_mga: applied,
+    outstanding_mga: rest,
+    status,
+    is_overdue: isOverdue,
+    overdue_mga: isOverdue ? rest : 0
+  };
 }
 
 module.exports = { dateOnly, positiveMoney, monthDate, buildPlan, computeDueStatus };

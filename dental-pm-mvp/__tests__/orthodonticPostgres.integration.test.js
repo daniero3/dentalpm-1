@@ -106,6 +106,58 @@ describePg('Orthodontie — PostgreSQL isolé', () => {
     expect(result.body.finance.dues[2].paid_mga).toBe(0);
   });
 
+  test('retard cumulé = échéances contractuelles impayées, facturées ou non', async () => {
+    // Use the first day of the month ten months before today, for a durable
+    // test with eleven matured periods and one future period in any month.
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone:'Indian/Antananarivo', year:'numeric', month:'2-digit', day:'2-digit'
+    }).formatToParts(new Date());
+    const local = Object.fromEntries(parts.map(p => [p.type,p.value]));
+    const first = new Date(Date.UTC(Number(local.year), Number(local.month) - 1 - 10, 1))
+      .toISOString().slice(0, 10);
+
+    const created = await request(app).post('/api/orthodontics')
+      .set(headers(clinicA)).send({
+        patient_id:patientA, appliance_type:'FIXED', start_date:first,
+        billing_mode:'MONTHLY', monthly_mga:250000, months:12,
+        first_due_date:first
+      });
+    expect(created.status).toBe(201);
+
+    const invoice = await models.Invoice.create({
+      invoice_number:'ODF-LATE-001', patient_id:patientA, clinic_id:clinicA,
+      document_type:'INVOICE', total_mga:250000, subtotal_mga:250000
+    });
+    const linked = await request(app).post(
+      '/api/orthodontics/' + created.body.case_id + '/link-invoice'
+    ).set(headers(clinicA)).send({invoice_id:invoice.id,sequence:1});
+    expect(linked.status).toBe(200);
+
+    await models.Payment.create({
+      invoice_id:invoice.id, clinic_id:clinicA, payment_number:'ODF-LATE-PAY-001',
+      amount_mga:250000, payment_method:'CASH', status:'COMPLETED'
+    });
+
+    const response = await request(app).get(
+      '/api/orthodontics/' + created.body.case_id
+    ).set(headers(clinicA));
+    expect(response.status).toBe(200);
+    const financial = response.body.finance;
+
+    // First of eleven matured periods was fully paid; ten are overdue.
+    expect(financial.totals.billed_mga).toBe(250000);
+    expect(financial.totals.paid_mga).toBe(250000);
+    expect(financial.totals.balance_mga).toBe(0);
+    expect(financial.totals.overdue_mga).toBe(2500000);
+    expect(financial.totals.overdue_unbilled_mga).toBe(2500000);
+    expect(financial.totals.unbilled_due_periods).toBe(10);
+    expect(financial.dues[0].status).toBe('PAID');
+    expect(financial.dues[1].status).toBe('UNBILLED');
+    expect(financial.dues[1].is_overdue).toBe(true);
+    expect(financial.dues[10].overdue_mga).toBe(250000);
+    expect(financial.dues[11].overdue_mga).toBe(0);
+  });
+
   test('les honoraires mensuels exigent une facture distincte pour chaque période', async () => {
     const resp = await request(app).post('/api/orthodontics').set(headers(clinicA)).send({
       patient_id:patientA,appliance_type:'ALIGNERS',start_date:'2026-01-31',

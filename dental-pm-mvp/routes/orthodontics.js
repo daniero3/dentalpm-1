@@ -60,7 +60,12 @@ async function financialDetails(record) {
   });
   const paid = payments.reduce((sum, p) => sum + Number(p.amount_mga), 0);
   const invoiced = invoices.reduce((sum, i) => sum + Number(i.total_mga), 0);
-  const late = detailDues.reduce((sum, d) => sum + (d.status === 'OVERDUE' ? d.outstanding_mga : 0), 0);
+  // Contractual arrears include unpaid due instalments even when no invoice exists.
+  // The accounting invoice balance is calculated separately below.
+  const late = detailDues.reduce((sum, d) => sum + d.overdue_mga, 0);
+  const unbilledOverdue = detailDues.reduce(
+    (sum, d) => sum + (d.status === 'UNBILLED' ? d.overdue_mga : 0), 0
+  );
   const unbilled = detailDues.filter(d => d.status === 'UNBILLED' && d.due_date <= stamp).length;
   return {
     dues: detailDues,
@@ -71,6 +76,7 @@ async function financialDetails(record) {
       paid_mga: paid,
       balance_mga: Math.max(0, invoiced - paid),
       overdue_mga: late,
+      overdue_unbilled_mga: unbilledOverdue,
       unbilled_due_periods: unbilled
     }
   };

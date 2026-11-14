@@ -45,11 +45,40 @@ describe('Orthodontie : échéanciers de règlement', () => {
     expect(monthDate('2026-01-31', 1)).toBe('2026-02-28');
   });
 
-  test('sans facture associée, une mensualité ne devient pas un impayé comptable', () => {
+  test('une échéance non facturée peut être en retard contractuel sans devenir une facture impayée', () => {
     const due = { sequence:1, due_date:'2026-01-05', amount_mga:150000 };
-    expect(computeDueStatus(due,0,'2026-04-01',false).status).toBe('UNBILLED');
+    const unbilled = computeDueStatus(due,0,'2026-04-01',false);
+    expect(unbilled.status).toBe('UNBILLED');
+    expect(unbilled.is_overdue).toBe(true);
+    expect(unbilled.overdue_mga).toBe(150000);
     expect(computeDueStatus(due,0,'2026-04-01',true).status).toBe('OVERDUE');
     expect(computeDueStatus(due,50000,'2026-04-01',true).outstanding_mga).toBe(100000);
+    expect(computeDueStatus(due,50000,'2026-04-01',true).overdue_mga).toBe(100000);
     expect(computeDueStatus(due,150000,'2026-04-01',true).status).toBe('PAID');
+    expect(computeDueStatus(due,150000,'2026-04-01',true).overdue_mga).toBe(0);
+  });
+
+  test('janvier payé : février à novembre sont 10 mensualités échues le 14 novembre', () => {
+    const plan = buildPlan({
+      billing_mode:'MONTHLY', monthly_mga:250000, months:12, first_due_date:'2026-01-13'
+    });
+    const calculate = today => plan.dues.map((due, index) =>
+      computeDueStatus(due, index === 0 ? 250000 : 0, today, index === 0)
+    ).reduce((total, due) => total + due.overdue_mga, 0);
+
+    expect(calculate('2026-11-12')).toBe(2250000);
+    expect(calculate('2026-11-13')).toBe(2500000);
+    expect(calculate('2026-11-14')).toBe(2500000);
+    expect(calculate('2026-12-12')).toBe(2500000);
+    expect(calculate('2026-12-13')).toBe(2750000);
+  });
+
+  test('ne compte ni échéance future ni avance payée, et déduit un règlement partiel', () => {
+    const due = { sequence:2, due_date:'2026-11-13', amount_mga:250000 };
+    expect(computeDueStatus(due,100000,'2026-11-12',true).overdue_mga).toBe(0);
+    const partial = computeDueStatus(due,100000,'2026-11-13',true);
+    expect(partial.is_overdue).toBe(true);
+    expect(partial.overdue_mga).toBe(150000);
+    expect(computeDueStatus(due,300000,'2026-11-13',true).overdue_mga).toBe(0);
   });
 });
