@@ -158,6 +158,55 @@ describePg('Orthodontie — PostgreSQL isolé', () => {
     expect(financial.dues[11].overdue_mga).toBe(0);
   });
 
+  test('deux factures du même patient restent visibles, mais seule la facture associée entre dans le solde ODF', async () => {
+    const created = await request(app).post('/api/orthodontics').set(headers(clinicA)).send({
+      patient_id:patientA, appliance_type:'FIXED', start_date:'2026-01-13',
+      billing_mode:'MONTHLY', monthly_mga:250000, months:12,
+      first_due_date:'2026-01-13'
+    });
+    expect(created.status).toBe(201);
+    const linked = await models.Invoice.create({
+      invoice_number:'ODF-VISIBLE-001', patient_id:patientA, clinic_id:clinicA,
+      document_type:'INVOICE', total_mga:250000, subtotal_mga:250000, status:'PARTIAL'
+    });
+    const unlinked = await models.Invoice.create({
+      invoice_number:'ODF-VISIBLE-002', patient_id:patientA, clinic_id:clinicA,
+      document_type:'INVOICE', total_mga:250000, subtotal_mga:250000, status:'SENT'
+    });
+    // A different clinic's invoice must not be exposed.
+    await models.Invoice.create({
+      invoice_number:'ODF-VISIBLE-OTHER', patient_id:patientB, clinic_id:clinicB,
+      document_type:'INVOICE', total_mga:950000, subtotal_mga:950000, status:'SENT'
+    });
+    await models.Payment.create({
+      invoice_id:linked.id, clinic_id:clinicA, payment_number:'ODF-VISIBLE-PAY',
+      amount_mga:100000, payment_method:'CASH', status:'COMPLETED'
+    });
+    const attached = await request(app)
+      .post('/api/orthodontics/' + created.body.case_id + '/link-invoice')
+      .set(headers(clinicA)).send({invoice_id:linked.id,sequence:1});
+    expect(attached.status).toBe(200);
+
+    const list = await request(app)
+      .get('/api/orthodontics/' + created.body.case_id + '/invoices')
+      .set(headers(clinicA));
+    expect(list.status).toBe(200);
+    expect(list.body.invoices).toHaveLength(2);
+    const mapped = Object.fromEntries(list.body.invoices.map(item=>[item.id,item]));
+    expect(mapped[linked.id].odf_association).toBe('CURRENT');
+    expect(mapped[linked.id].paid_mga).toBe(100000);
+    expect(mapped[linked.id].balance_mga).toBe(150000);
+    expect(mapped[unlinked.id].odf_association).toBe('NONE');
+    expect(mapped[unlinked.id].paid_mga).toBe(0);
+    expect(mapped[unlinked.id].balance_mga).toBe(250000);
+
+    const detail = await request(app)
+      .get('/api/orthodontics/' + created.body.case_id).set(headers(clinicA));
+    expect(detail.body.finance.totals.billed_mga).toBe(250000);
+    expect(detail.body.finance.totals.paid_mga).toBe(100000);
+    expect(detail.body.finance.totals.balance_mga).toBe(150000);
+  });
+
   test('les honoraires mensuels exigent une facture distincte pour chaque période', async () => {
     const resp = await request(app).post('/api/orthodontics').set(headers(clinicA)).send({
       patient_id:patientA,appliance_type:'ALIGNERS',start_date:'2026-01-31',
