@@ -640,7 +640,7 @@ export default function OrthodonticManagement() {
                 <h3 style={{margin:'0 0 12px',fontSize:16}}>Suivi financier</h3>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10,marginBottom:12}}>
                   {[['Facturé',financial?.totals?.billed_mga],['Encaissé',financial?.totals?.paid_mga],
-                    ['Solde facturé',financial?.totals?.balance_mga],['En retard',financial?.totals?.overdue_mga]].map(([l,v])=>
+                    ['Solde facturé',financial?.totals?.balance_mga],['Retard cumulé',financial?.totals?.overdue_mga]].map(([l,v])=>
                     <div key={l} style={{background:C.bg,borderRadius:10,padding:12}}>
                       <div style={{color:C.muted,fontSize:11}}>{l}</div>
                       <div style={{fontSize:16,fontWeight:800,marginTop:5}}>{amount(v)}</div>
@@ -650,6 +650,7 @@ export default function OrthodonticManagement() {
                 <div style={{fontSize:12,color:C.muted,marginBottom:12}}>
                   {dossier.billing_mode === 'FORFAIT' ? 'Montant du forfait : ' + amount(dossier.total_mga) : 'Honoraires par période : ' + amount(dossier.monthly_mga)}
                   <br/>Les encaissements proviennent exclusivement des factures DentalPM.
+                  <br/>Le retard cumulé inclut les mensualités exigibles non réglées, même non facturées. Il est distinct du solde facturé.
                 </div>
                 <h4 style={{fontSize:13,margin:'12px 0'}}>Échéances</h4>
                 <div style={{maxHeight:230,overflowY:'auto',border:'1px solid '+C.border,borderRadius:10}}>
@@ -658,7 +659,7 @@ export default function OrthodonticManagement() {
                     <tbody>{(financial?.dues || []).map(d=><tr key={d.id} style={{borderTop:'1px solid '+C.border}}>
                       <td style={{padding:8}}>{d.due_date}{d.sequence===0?' · acompte':''}</td>
                       <td style={{padding:8}}>{amount(d.amount_mga)}{d.paid_mga>0 && <div style={{color:C.muted,fontSize:10}}>Payé : {amount(d.paid_mga)}</div>}</td>
-                      <td style={{padding:8}}><Badge tone={d.status==='OVERDUE'?'red':d.status==='PAID'?'green':'neutral'}>{dueLabel[d.status] || d.status}</Badge></td>
+                      <td style={{padding:8}}><Badge tone={d.is_overdue?'red':d.status==='PAID'?'green':'neutral'}>{d.status === 'UNBILLED' && d.is_overdue ? 'En retard · non facturée' : (dueLabel[d.status] || d.status)}</Badge></td>
                     </tr>)}</tbody>
                   </table>
                 </div>
