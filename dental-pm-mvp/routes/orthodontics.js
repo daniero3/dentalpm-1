@@ -222,7 +222,7 @@ router.post('/:id/visits', requirePermission('dental_chart','write'), async (req
 });
 
 // List only eligible invoices for this patient; link them, never recreate them.
-router.get('/:id/invoices', requirePermission('invoices','read'), async (req, res) => {
+router.get('/:id/invoices', requirePermission('invoices','read'), requirePermission('payments','read'), async (req, res) => {
   try {
     const record = await OrthodonticCase.findOne({ where:{ id:req.params.id, clinic_id:clinicId(req) } });
     if (!record) return res.status(404).json({ error:'Dossier non trouvé' });
