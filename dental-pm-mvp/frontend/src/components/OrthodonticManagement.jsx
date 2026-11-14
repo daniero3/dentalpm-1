@@ -639,8 +639,8 @@ export default function OrthodonticManagement() {
               {financeReader && <section style={panel}>
                 <h3 style={{margin:'0 0 12px',fontSize:16}}>Suivi financier</h3>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10,marginBottom:12}}>
-                  {[['Facturé',financial?.totals?.billed_mga],['Encaissé',financial?.totals?.paid_mga],
-                    ['Solde facturé',financial?.totals?.balance_mga],['Retard cumulé',financial?.totals?.overdue_mga]].map(([l,v])=>
+                  {[['Facturé ODF',financial?.totals?.billed_mga],['Encaissé ODF',financial?.totals?.paid_mga],
+                    ['Solde facturé ODF',financial?.totals?.balance_mga],['Retard cumulé',financial?.totals?.overdue_mga]].map(([l,v])=>
                     <div key={l} style={{background:C.bg,borderRadius:10,padding:12}}>
                       <div style={{color:C.muted,fontSize:11}}>{l}</div>
                       <div style={{fontSize:16,fontWeight:800,marginTop:5}}>{amount(v)}</div>
@@ -649,6 +649,7 @@ export default function OrthodonticManagement() {
                 </div>
                 <div style={{fontSize:12,color:C.muted,marginBottom:12}}>
                   {dossier.billing_mode === 'FORFAIT' ? 'Montant du forfait : ' + amount(dossier.total_mga) : 'Honoraires par période : ' + amount(dossier.monthly_mga)}
+                  <br/>Les indicateurs ODF ne comptent que les factures associées à ce traitement. Les autres factures du patient sont présentées séparément.
                   <br/>Les encaissements proviennent exclusivement des factures DentalPM.
                   <br/>Le retard cumulé inclut les mensualités exigibles non réglées, même non facturées. Il est distinct du solde facturé.
                 </div>
@@ -663,6 +664,72 @@ export default function OrthodonticManagement() {
                     </tr>)}</tbody>
                   </table>
                 </div>
+                {/* Factures du patient, toutes spécialités : visibles mais non ajoutées
+                    automatiquement aux montants du contrat orthodontique. */}
+                <div style={{marginTop:18,padding:'14px 12px',background:'#F8FBFC',border:'1px solid '+C.border,borderRadius:12}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap',marginBottom:9}}>
+                    <div style={{fontSize:14,fontWeight:800}}>Factures du patient ({invoiceOptions.length})</div>
+                    <Link to="/invoices" style={{fontSize:12,color:C.teal,fontWeight:700}}>Voir dans Factures</Link>
+                  </div>
+                  <div style={{fontSize:12,color:C.muted,lineHeight:1.5,marginBottom:10}}>
+                    Toutes spécialités confondues. Solde des factures validées du patient :{' '}
+                    <strong style={{color:C.ink}}>
+                      {amount(invoiceOptions
+                        .filter(i=>i.status !== 'DRAFT')
+                        .reduce((sum,i)=>sum+Number(i.balance_mga || 0),0))}
+                    </strong>.
+                    Ces montants sont distincts du solde facturé ODF ci-dessus.
+                  </div>
+                  {invoiceOptions.length === 0 ? (
+                    <div style={{fontSize:12,color:C.muted,padding:'10px 0'}}>
+                      Aucune facture trouvée au nom de ce patient dans ce cabinet.
+                    </div>
+                  ) : (
+                    <div style={{display:'grid',gap:8,maxHeight:250,overflowY:'auto'}}>
+                      {invoiceOptions.map(invoice => (
+                        <div key={invoice.id} style={{
+                          padding:'11px 12px',borderRadius:10,border:'1px solid '+C.border,
+                          background:'#FFFFFF',fontSize:12
+                        }}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                            <strong>{invoice.invoice_number || 'Facture'}</strong>
+                            <Badge tone={invoice.odf_association === 'CURRENT' ? 'green' : 'neutral'}>
+                              {invoice.odf_association === 'CURRENT'
+                                ? 'Associée à ce traitement'
+                                : invoice.odf_association === 'OTHER'
+                                  ? 'Associée à un autre traitement ODF'
+                                  : 'Non associée à ce traitement'}
+                            </Badge>
+                          </div>
+                          <div style={{color:C.muted,marginTop:5}}>
+                            {invoice.invoice_date || 'Date inconnue'} · {invoice.status === 'DRAFT' ? 'Brouillon' :
+                              ({SENT:'Envoyée',PAID:'Payée',PARTIAL:'Partiellement payée',OVERDUE:'En retard'}[invoice.status] || invoice.status)}
+                          </div>
+                          <div style={{marginTop:5,lineHeight:1.5}}>
+                            Montant : <strong>{amount(invoice.total_mga)}</strong>
+                            {' · '}Encaissé : <strong>{amount(invoice.paid_mga)}</strong>
+                            {' · '}Reste : <strong>{amount(invoice.balance_mga)}</strong>
+                          </div>
+                          {financeWriter && invoice.odf_association === 'NONE' && (
+                            <button
+                              type="button"
+                              onClick={()=>setInvoiceSelection(invoice.id)}
+                              style={{...subtle,marginTop:9,padding:'6px 10px',fontSize:12}}
+                            >
+                              {invoiceSelection === invoice.id ? 'Facture sélectionnée' : 'Sélectionner pour association'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {invoiceOptions.some(i=>i.odf_association === 'NONE') && (
+                    <p style={{fontSize:12,color:'#805F22',margin:'10px 0 0',lineHeight:1.5}}>
+                      Associez uniquement les factures correspondant réellement à ce traitement orthodontique.
+                      En mode mensuel, choisissez également l'échéance concernée dans le formulaire ci-dessous.
+                    </p>
+                  )}
+                </div>
                 {financeWriter && <div style={{marginTop:14,background:C.bg,padding:12,borderRadius:12}}>
                   <div style={{fontSize:13,fontWeight:750,marginBottom:8}}>Rapprocher une facture existante</div>
                   {dossier.billing_mode === 'MONTHLY' && <div style={{marginBottom:8}}><label style={label}>Échéance non facturée</label>
@@ -672,7 +739,7 @@ export default function OrthodonticManagement() {
                     </select></div>}
                   <div><label style={label}>Facture du patient</label><select style={input} value={invoiceSelection} onChange={e=>setInvoiceSelection(e.target.value)}>
                     <option value="">Choisir une facture déjà créée...</option>
-                    {invoiceOptions.filter(i=>!financial?.invoices?.some(x=>x.id===i.id)).map(i=><option key={i.id} value={i.id}>{i.invoice_number} · {amount(i.total_mga)}</option>)}
+                    {invoiceOptions.filter(i=>i.odf_association === 'NONE').map(i=><option key={i.id} value={i.id}>{i.invoice_number} · {amount(i.total_mga)}</option>)}
                   </select></div>
                   <button type="button" style={{...btn,marginTop:10}} disabled={actionBusy || !invoiceSelection} onClick={linkInvoice}><CreditCard size={15}/> Associer la facture</button>
                   <div style={{marginTop:12,fontSize:12,color:C.muted}}>
